@@ -1,0 +1,13 @@
+ &DIAGNOSTICS_LIST
+  fileName(1)     = 'diags/ssp',
+  fields(1:1,1)   = 'ihop_ssp',
+  frequency(1)    = 2592000.,
+
+  fileName(2)     = 'diags/dynDiag',
+  fields(1:6,2)   = 'THETA   ', 'SALT    ', 'PHIHYD  ',
+                    'UVEL    ', 'VVEL    ', 'WVEL    ',
+  frequency(2)    = 2592000.,
+ &
+
+ &DIAG_STATIS_PARMS
+ &
