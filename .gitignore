@@ -1,0 +1,8 @@
+#-- Documentation --
+/doc/_build/
+
+#-- Python --
+*.pyc
+
+#-- OSX system files --
+.DS_Store
