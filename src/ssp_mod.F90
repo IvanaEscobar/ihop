@@ -825,7 +825,7 @@ SUBROUTINE ExtractSSP( Depth, freq, myThid )
   INTEGER                       :: ii, jj, njj(IHOP_NPTS_RANGE), k
   REAL (KIND=_RL90), INTENT(IN) :: Depth, freq
   REAL (KIND=_RL90)             :: sumweights(IHOP_NPTS_RANGE, Nr), &
-                                   dcdz
+                                   dcdz, tolerance
   REAL (KIND=_RL90), ALLOCATABLE:: tmpSSP(:,:,:,:)
 
   SSP%Nz = Nr+2 ! add z=0 z=Depth layers 
@@ -849,6 +849,7 @@ SUBROUTINE ExtractSSP( Depth, freq, myThid )
   tmpSSP    = 0.0 _d 0
   njj       = 0
   dcdz      = 0.0 _d 0
+  tolerance = 5 _d -5
 
   ! set SSP%Seg%r from data.ihop -> ihop_ranges
   SSP%Seg%r( 1:SSP%Nr ) = ihop_ranges( 1:SSP%Nr )
@@ -873,8 +874,8 @@ SUBROUTINE ExtractSSP( Depth, freq, myThid )
           DO ii=1,IHOP_npts_range
             ! IDW Interpolation weight sum
             DO jj=1,IHOP_npts_idw
-              IF (xC(i,j,bi,bj) .eq. ihop_xc(ii,jj) .and. &
-                  yC(i,j,bi,bj) .eq. ihop_yc(ii,jj)) THEN 
+              IF ( ABS(xC(i,j,bi,bj)-ihop_xc(ii,jj)).LE.tolerance .and. &
+                   ABS(yC(i,j,bi,bj)-ihop_yc(ii,jj)).LE.tolerance ) THEN 
                 DO k=1,Nr
                   IF ( hFacC(i,j,k,bi,bj).eq.0.0 ) THEN
                     sumweights(ii,k) = sumweights(ii,k) - ihop_idw_weights(ii,jj)
@@ -898,8 +899,8 @@ SUBROUTINE ExtractSSP( Depth, freq, myThid )
           DO ii=1,IHOP_npts_range
             ! IDW Interpolate SSP at second order
             interp: DO jj=1,IHOP_npts_idw
-            IF (xC(i,j,bi,bj) .eq. ihop_xc(ii,jj) .and. &
-                yC(i,j,bi,bj) .eq. ihop_yc(ii,jj)) THEN
+            IF ( ABS(xC(i,j,bi,bj)-ihop_xc(ii,jj)).LE.tolerance .and. &
+                 ABS(yC(i,j,bi,bj)-ihop_yc(ii,jj)).LE.tolerance ) THEN 
               njj(ii) = njj(ii) + 1
 
               DO iz=1,SSP%Nz-1
