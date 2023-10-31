@@ -881,7 +881,7 @@ SUBROUTINE ExtractSSP( Depth, freq, myThid )
                     sumweights(ii,k) = sumweights(ii,k) - ihop_idw_weights(ii,jj)
                   ENDIF
                   ! Set TINY values to 0.0
-                  IF ( ABS(sumweights(ii,k)).LT.1D-24 ) sumweights(ii,k) = 0.0
+                  IF ( ABS(sumweights(ii,k)).LT.1D-13 ) sumweights(ii,k) = 0.0
                 ENDDO
               END IF
             ENDDO
@@ -899,6 +899,7 @@ SUBROUTINE ExtractSSP( Depth, freq, myThid )
           DO ii=1,IHOP_npts_range
             ! IDW Interpolate SSP at second order
             interp: DO jj=1,IHOP_npts_idw
+            ! If on grid center, then interpolate
             IF ( ABS(xC(i,j,bi,bj)-ihop_xc(ii,jj)).LE.tolerance .and. &
                  ABS(yC(i,j,bi,bj)-ihop_yc(ii,jj)).LE.tolerance ) THEN 
               njj(ii) = njj(ii) + 1
@@ -910,12 +911,11 @@ SUBROUTINE ExtractSSP( Depth, freq, myThid )
                     CHEN_MILLERO(i,j,0,bi,bj,myThid)* &
                     ihop_idw_weights(ii,jj)/sumweights(ii,iz)
                 ELSE ! 2:(SSP%Nz-1)
-                  ! Middle depth layers
+                  ! Middle depth layers, only when not already underground
                   IF (sumweights(ii,iz-1).gt.0.0) THEN
                     IF (ihop_idw_weights(ii,jj).eq.0.0) THEN
                       ! Exactly on a cell center, ignore interpolation
                       tmpSSP(iz,ii,bi,bj) = ihop_ssp(i,j,iz-1,bi,bj)
-                      EXIT interp
                     ELSE
                       tmpSSP(iz,ii,bi,bj) = tmpSSP(iz,ii,bi,bj) + &
                         ihop_ssp(i,j,iz-1,bi,bj)* &
@@ -923,12 +923,12 @@ SUBROUTINE ExtractSSP( Depth, freq, myThid )
                     END IF
                   END IF 
                   
+                  ! Extrapolate through bathymetry; don't interpolate
                   IF ( iz.eq.SSP%Nz-1 .or. sumweights(ii,iz-1).eq.0.0 ) THEN 
-                    ! Extrapolate through bathymetry
                     k=iz
                     
                     IF ( njj(ii).eq.IHOP_npts_idw ) THEN 
-                      ! Last gcm vlevel extrapolation
+                      ! Determine if you are at the last vlevel
                       IF ( iz.eq.SSP%Nz-1 .and. sumweights(ii,iz-1).ne.0.0 ) k = k+1
                        
                       ! Calc depth gradient
