@@ -822,7 +822,8 @@ SUBROUTINE ExtractSSP( Depth, freq, myThid )
   CHARACTER*(80)          :: fmtstr
 
   ! == Local Variables ==
-  INTEGER                       :: ii, jj, njj(IHOP_NPTS_RANGE), k
+  INTEGER                       :: ii, jj, k
+  INTEGER                       :: njj(IHOP_NPTS_RANGE), nii(IHOP_NPTS_RANGE)
   REAL (KIND=_RL90), INTENT(IN) :: Depth, freq
   REAL (KIND=_RL90)             :: sumweights(IHOP_NPTS_RANGE, Nr), &
                                    dcdz, tolerance
