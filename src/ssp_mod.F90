@@ -867,39 +867,53 @@ SUBROUTINE ExtractSSP( Depth, freq, myThid )
     sumweights(ii,:) = sum(ihop_idw_weights(ii,:))
   END DO 
 
+  ! Adapt IDW interpolation by bathymetry
   DO bj=myByLo(myThid),myByHi(myThid)
     DO bi=myBxLo(myThid),myBxHi(myThid)
       DO j=1,sNy
         DO i=1,sNx
-          DO ii=1,IHOP_npts_range
-            ! IDW Interpolation weight sum
+          ranges: DO ii=1,IHOP_npts_range
+
             DO jj=1,IHOP_npts_idw
               IF ( ABS(xC(i,j,bi,bj)-ihop_xc(ii,jj)).LE.tolerance .and. &
                    ABS(yC(i,j,bi,bj)-ihop_yc(ii,jj)).LE.tolerance ) THEN 
                 DO k=1,Nr
+                  ! no IDW interp on xc,yc centered ranges
+                  IF (nii(ii).eq.1 .and. k.gt.njj(ii)) CYCLE ranges
+                  
                   IF ( hFacC(i,j,k,bi,bj).eq.0.0 ) THEN
                     sumweights(ii,k) = sumweights(ii,k) - ihop_idw_weights(ii,jj)
+
+                    ! no iterpolation on xc,yc centered ranges
+                    IF (ihop_idw_weights(ii,jj).eq.0.) THEN
+                        sumweights(ii, k:Nr) = 0.0
+                        nii(ii) = 1
+                        njj(ii) = k
+                    ENDIF
+
                   ENDIF
-                  ! Set TINY values to 0.0
-                  IF ( ABS(sumweights(ii,k)).LT.1D-13 ) sumweights(ii,k) = 0.0
+                  ! Set TINY and negative values to 0.0
+                  IF ( sumweights(ii,k).LT.1D-13 ) sumweights(ii,k) = 0.0
                 ENDDO
               END IF
             ENDDO
-          ENDDO
+          ENDDO ranges
         ENDDO
       ENDDO
     ENDDO
   ENDDO
 
-  ! from ocean grid to acoustic grid with IDW
+  ! Reset counter
+  njj = 0
+
+  ! interpolate SSP with adaptive IDW from gcm grid to ihop grid 
   DO bj=myByLo(myThid),myByHi(myThid)
     DO bi=myBxLo(myThid),myBxHi(myThid)
       DO j=1,sNy
         DO i=1,sNx
           DO ii=1,IHOP_npts_range
-            ! IDW Interpolate SSP at second order
             interp: DO jj=1,IHOP_npts_idw
-            ! If on grid center, then interpolate
+            ! Interpolate from gcm grid cell centers
             IF ( ABS(xC(i,j,bi,bj)-ihop_xc(ii,jj)).LE.tolerance .and. &
                  ABS(yC(i,j,bi,bj)-ihop_yc(ii,jj)).LE.tolerance ) THEN 
               njj(ii) = njj(ii) + 1
@@ -913,10 +927,13 @@ SUBROUTINE ExtractSSP( Depth, freq, myThid )
                 ELSE ! 2:(SSP%Nz-1)
                   ! Middle depth layers, only when not already underground
                   IF (sumweights(ii,iz-1).gt.0.0) THEN
+                    ! Exactly on a cell center, ignore interpolation
                     IF (ihop_idw_weights(ii,jj).eq.0.0) THEN
-                      ! Exactly on a cell center, ignore interpolation
                       tmpSSP(iz,ii,bi,bj) = ihop_ssp(i,j,iz-1,bi,bj)
-                    ELSE
+                      njj(ii) = IHOP_npts_idw + 1
+
+                    ! Apply IDW interpolation
+                    ELSE IF (njj(ii).LE.IHOP_npts_idw) THEN
                       tmpSSP(iz,ii,bi,bj) = tmpSSP(iz,ii,bi,bj) + &
                         ihop_ssp(i,j,iz-1,bi,bj)* &
                         ihop_idw_weights(ii,jj)/sumweights(ii,iz-1)
@@ -927,7 +944,7 @@ SUBROUTINE ExtractSSP( Depth, freq, myThid )
                   IF ( iz.eq.SSP%Nz-1 .or. sumweights(ii,iz-1).eq.0.0 ) THEN 
                     k=iz
                     
-                    IF ( njj(ii).eq.IHOP_npts_idw ) THEN 
+                    IF ( njj(ii).ge.IHOP_npts_idw ) THEN 
                       ! Determine if you are at the last vlevel
                       IF ( iz.eq.SSP%Nz-1 .and. sumweights(ii,iz-1).ne.0.0 ) k = k+1
                        
