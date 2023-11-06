@@ -240,7 +240,7 @@ C     Check paramters of IHOP_PARM02
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 C--   Default values for IHOP_PARM03 some are populated in
 C     ihop_init_fixed.f
-      useSSPFile        = .TRUE.
+      useSSPFile        = .FALSE.
       IHOP_interpfile   = ''
       ihop_iter         = 0
       IHOP_npts_range   = 0

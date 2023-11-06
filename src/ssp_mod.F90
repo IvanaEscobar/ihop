@@ -822,10 +822,11 @@ SUBROUTINE ExtractSSP( Depth, freq, myThid )
   CHARACTER*(80)          :: fmtstr
 
   ! == Local Variables ==
-  INTEGER                       :: ii, jj, njj(IHOP_NPTS_RANGE), k
+  INTEGER                       :: ii, jj, k
+  INTEGER                       :: njj(IHOP_NPTS_RANGE), nii(IHOP_NPTS_RANGE)
   REAL (KIND=_RL90), INTENT(IN) :: Depth, freq
   REAL (KIND=_RL90)             :: sumweights(IHOP_NPTS_RANGE, Nr), &
-                                   dcdz
+                                   dcdz, tolerance
   REAL (KIND=_RL90), ALLOCATABLE:: tmpSSP(:,:,:,:)
 
   SSP%Nz = Nr+2 ! add z=0 z=Depth layers 
@@ -849,6 +850,7 @@ SUBROUTINE ExtractSSP( Depth, freq, myThid )
   tmpSSP    = 0.0 _d 0
   njj       = 0
   dcdz      = 0.0 _d 0
+  tolerance = 5 _d -5
 
   ! set SSP%Seg%r from data.ihop -> ihop_ranges
   SSP%Seg%r( 1:SSP%Nr ) = ihop_ranges( 1:SSP%Nr )
@@ -866,40 +868,55 @@ SUBROUTINE ExtractSSP( Depth, freq, myThid )
     sumweights(ii,:) = sum(ihop_idw_weights(ii,:))
   END DO 
 
+  ! Adapt IDW interpolation by bathymetry
   DO bj=myByLo(myThid),myByHi(myThid)
     DO bi=myBxLo(myThid),myBxHi(myThid)
       DO j=1,sNy
         DO i=1,sNx
-          DO ii=1,IHOP_npts_range
-            ! IDW Interpolation weight sum
+          ranges: DO ii=1,IHOP_npts_range
+
             DO jj=1,IHOP_npts_idw
-              IF (xC(i,j,bi,bj) .eq. ihop_xc(ii,jj) .and. &
-                  yC(i,j,bi,bj) .eq. ihop_yc(ii,jj)) THEN 
+              IF ( ABS(xC(i,j,bi,bj)-ihop_xc(ii,jj)).LE.tolerance .and. &
+                   ABS(yC(i,j,bi,bj)-ihop_yc(ii,jj)).LE.tolerance ) THEN 
                 DO k=1,Nr
+                  ! no IDW interp on xc,yc centered ranges
+                  IF (nii(ii).eq.1 .and. k.gt.njj(ii)) CYCLE ranges
+                  
                   IF ( hFacC(i,j,k,bi,bj).eq.0.0 ) THEN
                     sumweights(ii,k) = sumweights(ii,k) - ihop_idw_weights(ii,jj)
+
+                    ! no iterpolation on xc,yc centered ranges
+                    IF (ihop_idw_weights(ii,jj).eq.0.) THEN
+                        sumweights(ii, k:Nr) = 0.0
+                        nii(ii) = 1
+                        njj(ii) = k
+                    ENDIF
+
                   ENDIF
-                  ! Set TINY values to 0.0
-                  IF ( ABS(sumweights(ii,k)).LT.1D-24 ) sumweights(ii,k) = 0.0
+                  ! Set TINY and negative values to 0.0
+                  IF ( sumweights(ii,k).LT.1D-13 ) sumweights(ii,k) = 0.0
                 ENDDO
               END IF
             ENDDO
-          ENDDO
+          ENDDO ranges
         ENDDO
       ENDDO
     ENDDO
   ENDDO
 
-  ! from ocean grid to acoustic grid with IDW
+  ! Reset counter
+  njj = 0
+
+  ! interpolate SSP with adaptive IDW from gcm grid to ihop grid 
   DO bj=myByLo(myThid),myByHi(myThid)
     DO bi=myBxLo(myThid),myBxHi(myThid)
       DO j=1,sNy
         DO i=1,sNx
           DO ii=1,IHOP_npts_range
-            ! IDW Interpolate SSP at second order
             interp: DO jj=1,IHOP_npts_idw
-            IF (xC(i,j,bi,bj) .eq. ihop_xc(ii,jj) .and. &
-                yC(i,j,bi,bj) .eq. ihop_yc(ii,jj)) THEN
+            ! Interpolate from gcm grid cell centers
+            IF ( ABS(xC(i,j,bi,bj)-ihop_xc(ii,jj)).LE.tolerance .and. &
+                 ABS(yC(i,j,bi,bj)-ihop_yc(ii,jj)).LE.tolerance ) THEN 
               njj(ii) = njj(ii) + 1
 
               DO iz=1,SSP%Nz-1
@@ -909,25 +926,27 @@ SUBROUTINE ExtractSSP( Depth, freq, myThid )
                     CHEN_MILLERO(i,j,0,bi,bj,myThid)* &
                     ihop_idw_weights(ii,jj)/sumweights(ii,iz)
                 ELSE ! 2:(SSP%Nz-1)
-                  ! Middle depth layers
+                  ! Middle depth layers, only when not already underground
                   IF (sumweights(ii,iz-1).gt.0.0) THEN
+                    ! Exactly on a cell center, ignore interpolation
                     IF (ihop_idw_weights(ii,jj).eq.0.0) THEN
-                      ! Exactly on a cell center, ignore interpolation
                       tmpSSP(iz,ii,bi,bj) = ihop_ssp(i,j,iz-1,bi,bj)
-                      EXIT interp
-                    ELSE
+                      njj(ii) = IHOP_npts_idw + 1
+
+                    ! Apply IDW interpolation
+                    ELSE IF (njj(ii).LE.IHOP_npts_idw) THEN
                       tmpSSP(iz,ii,bi,bj) = tmpSSP(iz,ii,bi,bj) + &
                         ihop_ssp(i,j,iz-1,bi,bj)* &
                         ihop_idw_weights(ii,jj)/sumweights(ii,iz-1)
                     END IF
                   END IF 
                   
+                  ! Extrapolate through bathymetry; don't interpolate
                   IF ( iz.eq.SSP%Nz-1 .or. sumweights(ii,iz-1).eq.0.0 ) THEN 
-                    ! Extrapolate through bathymetry
                     k=iz
                     
-                    IF ( njj(ii).eq.IHOP_npts_idw ) THEN 
-                      ! Last gcm vlevel extrapolation
+                    IF ( njj(ii).ge.IHOP_npts_idw ) THEN 
+                      ! Determine if you are at the last vlevel
                       IF ( iz.eq.SSP%Nz-1 .and. sumweights(ii,iz-1).ne.0.0 ) k = k+1
                        
                       ! Calc depth gradient
