@@ -31,7 +31,7 @@ C     msgBuf     :: Informational/error message buffer
 C     iUnit      :: Work variable for IO unit number
       CHARACTER*(MAX_LEN_MBUF) msgBuf
       INTEGER iUnit
-      INTEGER i, j, v
+      INTEGER i, j
 
       NAMELIST /IHOP_PARM01/
      &      IHOP_fileroot,
@@ -64,8 +64,6 @@ C     iUnit      :: Work variable for IO unit number
      &      IHOP_rr,
      &      IHOP_alpha,
      &      IHOP_step,
-     &      IHOP_zbox,
-     &      IHOP_rbox
 
       NAMELIST /IHOP_PARM03/
      &      useSSPFile,
@@ -73,9 +71,6 @@ C     iUnit      :: Work variable for IO unit number
      &      ihop_iter,
      &      IHOP_npts_range,
      &      IHOP_npts_idw,
-     &      ihop_v_xc,
-     &      ihop_v_yc,
-     &      ihop_v_weight,
      &      ihop_xc,
      &      ihop_yc,
      &      ihop_idw_weights,
@@ -245,17 +240,11 @@ C     ihop_init_fixed.f
       ihop_iter         = 0
       IHOP_npts_range   = 0
       IHOP_npts_idw     = 0
-      v=1
       DO i=1,IHOP_MAX_NC_SIZE
        DO j=1,IHOP_MAX_NC_SIZE
-        ihop_v_xc(v)            = 0. _d 0
-        ihop_v_yc(v)            = 0. _d 0
-        ihop_v_weight(v)        = 0. _d 0
-
         ihop_xc(i,j)            = 0. _d 0
         ihop_yc(i,j)            = 0. _d 0
         ihop_idw_weights(i,j)   = 0. _d 0
-        v=v+1
        ENDDO
        ihop_ranges(i)  = 0. _d 0
       ENDDO
