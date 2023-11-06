@@ -63,7 +63,7 @@ C     iUnit      :: Work variable for IO unit number
      &      IHOP_rd,
      &      IHOP_rr,
      &      IHOP_alpha,
-     &      IHOP_step,
+     &      IHOP_step
 
       NAMELIST /IHOP_PARM03/
      &      useSSPFile,
@@ -153,8 +153,6 @@ C--   Default values for IHOP_PARM02
       ENDDO
       IHOP_alpha    = 0. _d 0
       IHOP_step     = 0. _d 0
-      IHOP_zbox     = 0. _d 0
-      IHOP_rbox     = 0. _d 0
       IHOP_bcsoundI         = 0. _d 0
       IHOP_bcsoundshearI    = 0. _d 0
       IHOP_bcsoundshear     = 0. _d 0

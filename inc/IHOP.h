@@ -107,7 +107,7 @@
      &      IHOP_freq, IHOP_depth, IHOP_bcsound, IHOP_bcsoundshear,                                                                     &
      &      ihop_brho, IHOP_bcsoundI, IHOP_bcsoundshearI,                                                                               &
      &      IHOP_sd, IHOP_rd, IHOP_rr, IHOP_alpha, IHOP_step,                                                                           &
-     &      ihop_yc, ihop_xc, ihop_idw_weights, ihop_ranges,                                                                            &
+     &      ihop_yc, ihop_xc, ihop_idw_weights, ihop_ranges
 
 
 #ifdef IHOP_3D_STATE

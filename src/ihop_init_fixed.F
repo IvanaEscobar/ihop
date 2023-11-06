@@ -105,10 +105,6 @@ C get data variables
         STOP 'ABNORMAL END: S/R IHOP_INIT_FIXED'
       END IF
 
-      print *, 'escobar: ', data1vec
-      print *, 'escobar: ', data2vec
-      print *, 'escobar: ', data3vec
-
 C 'reshape' data variables to 2D array
       k=1
       DO i=1,IHOP_npts_range
