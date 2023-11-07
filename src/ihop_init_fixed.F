@@ -100,7 +100,7 @@ C get data variables
       err = NF_GET_VAR( ncid, varid1, data1vec )
       err = NF_GET_VAR( ncid, varid2, data2vec )
       err = NF_GET_VAR( ncid, varid3, data3vec )
-      err = NF_GET_VAR( ncid, varid3, data4vec )
+      err = NF_GET_VAR( ncid, varid4, data4vec )
 
       IF (err .NE. NF_NOERR) THEN
         WRITE(msgBuf, '(2A)') 'S/R IHOP_INIT_FIXED: ',
