@@ -98,11 +98,6 @@
       _RL IHOP_rr (nrr)
       _RL IHOP_alpha (2)
       _RL IHOP_step
-      _RL IHOP_zbox
-      _RL IHOP_rbox
-      _RL ihop_v_weight ( IHOP_MAX_NC_SIZE*IHOP_MAX_NC_SIZE )
-      _RS ihop_v_xc ( IHOP_MAX_NC_SIZE*IHOP_MAX_NC_SIZE )
-      _RS ihop_v_yc ( IHOP_MAX_NC_SIZE*IHOP_MAX_NC_SIZE )
       _RL ihop_idw_weights ( IHOP_MAX_NC_SIZE, IHOP_MAX_NC_SIZE )
       _RS ihop_xc ( IHOP_MAX_NC_SIZE, IHOP_MAX_NC_SIZE )
       _RS ihop_yc ( IHOP_MAX_NC_SIZE, IHOP_MAX_NC_SIZE )
@@ -112,8 +107,7 @@
      &      IHOP_freq, IHOP_depth, IHOP_bcsound, IHOP_bcsoundshear,                                                                     &
      &      ihop_brho, IHOP_bcsoundI, IHOP_bcsoundshearI,                                                                               &
      &      IHOP_sd, IHOP_rd, IHOP_rr, IHOP_alpha, IHOP_step,                                                                           &
-     &      ihop_yc, ihop_xc, ihop_idw_weights, ihop_ranges,                                                                            &
-     &      ihop_v_yc, ihop_v_xc, ihop_v_weight, IHOP_zbox, IHOP_rbox
+     &      ihop_yc, ihop_xc, ihop_idw_weights, ihop_ranges
 
 
 #ifdef IHOP_3D_STATE

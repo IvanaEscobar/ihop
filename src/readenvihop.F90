@@ -249,17 +249,10 @@ CONTAINS
     END IF
 
     ! Domain size
-    IF ( IHOP_zbox.NE.0 ) THEN
-        Beam%Box%z = IHOP_zbox
-    ELSE
-        Beam%Box%z = Bdry%Bot%HS%Depth ! in m
-    END IF
-    IF ( IHOP_rbox.NE.0 ) THEN
-        Beam%Box%r = IHOP_rbox
-    ELSE
-        ! Extend beam box by a single step size forward
-        Beam%Box%r = ihop_rr(nrd) + Beam%deltas/1000. ! in [km]
-    END IF
+    Beam%Box%z = Bdry%Bot%HS%Depth ! in m
+    ! Extend beam box by a single step size forward
+    Beam%Box%r = ihop_rr(nrd) + Beam%deltas/1000. ! in [km]
+
 #ifdef IHOP_WRITE_OUT
     WRITE(msgBuf,'(A)') 
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
