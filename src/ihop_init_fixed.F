@@ -37,11 +37,13 @@ C     !EXTERNAL VARIABLES:
       CHARACTER*(MAX_LEN_MBUF) :: msgBuf
 C     !LOCAL VARIABLES:
       INTEGER :: iUnit
-      INTEGER :: IL, err, ncid, dimid1, dimid2, varid1, varid2, varid3
+      INTEGER :: IL, err, ncid, dimid1, dimid2
+      INTEGER :: varid1, varid2, varid3, varid4
       INTEGER :: k, i, j
-      _RS :: data1vec( IHOP_MAX_NC_SIZE*IHOP_MAX_NC_SIZE )
+      _RS :: data1vec( IHOP_MAX_NC_SIZE )
       _RS :: data2vec( IHOP_MAX_NC_SIZE*IHOP_MAX_NC_SIZE )
-      _RL :: data3vec( IHOP_MAX_NC_SIZE*IHOP_MAX_NC_SIZE )
+      _RS :: data3vec( IHOP_MAX_NC_SIZE*IHOP_MAX_NC_SIZE )
+      _RL :: data4vec( IHOP_MAX_NC_SIZE*IHOP_MAX_NC_SIZE )
       CHARACTER*(80) :: ihop_file
 
 C ==================== External Functions ==========================
@@ -82,9 +84,10 @@ C Get dimension IDs and lengths
       END IF
 
 C Get data variable IDs
-      err = NF_INQ_VARID( ncid, 'ihop_xc', varid1 )
-      err = NF_INQ_VARID( ncid, 'ihop_yc', varid2 )
-      err = NF_INQ_VARID( ncid, 'ihop_idw_weights', varid3 )
+      err = NF_INQ_VARID( ncid, 'ihop_ranges', varid1 )
+      err = NF_INQ_VARID( ncid, 'ihop_xc', varid2 )
+      err = NF_INQ_VARID( ncid, 'ihop_yc', varid3 )
+      err = NF_INQ_VARID( ncid, 'ihop_idw_weights', varid4 )
 
       IF (err .NE. NF_NOERR) THEN
         WRITE(msgBuf, '(2A)') 'S/R IHOP_INIT_FIXED: ',
@@ -97,6 +100,7 @@ C get data variables
       err = NF_GET_VAR( ncid, varid1, data1vec )
       err = NF_GET_VAR( ncid, varid2, data2vec )
       err = NF_GET_VAR( ncid, varid3, data3vec )
+      err = NF_GET_VAR( ncid, varid3, data4vec )
 
       IF (err .NE. NF_NOERR) THEN
         WRITE(msgBuf, '(2A)') 'S/R IHOP_INIT_FIXED: ',
@@ -108,10 +112,11 @@ C get data variables
 C 'reshape' data variables to 2D array
       k=1
       DO i=1,IHOP_npts_range
+       ihop_ranges(i) = data1vec(i)
        DO j=1,IHOP_npts_idw
-        ihop_xc(i,j) = data1vec(k)
-        ihop_yc(i,j) = data2vec(k)
-        ihop_idw_weights(i,j) = data3vec(k)
+        ihop_xc(i,j) = data2vec(k)
+        ihop_yc(i,j) = data3vec(k)
+        ihop_idw_weights(i,j) = data4vec(k)
         k = k+1
        END DO
       END DO
@@ -125,17 +130,6 @@ CC Close NetCDF file
         STOP 'ABNORMAL END: S/R IHOP_INIT_FIXED'
       END IF
 
-
-C 'reshape' ihop_v_* arrays to 2D arrays
-      k=1
-      DO i=1,IHOP_npts_range
-       DO j=1,IHOP_npts_idw
-        ihop_xc(i,j) = data1vec(k)
-        ihop_yc(i,j) = data2vec(k)
-        ihop_idw_weights(i,j) = data3vec(k)
-        k = k+1
-       END DO
-      END DO
 C Only do I/O if in the main thread
       _END_MASTER( myThid )
 
