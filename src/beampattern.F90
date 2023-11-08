@@ -62,6 +62,7 @@ CONTAINS
        WRITE( PRTFile, * ) 'Number of source beam pattern points', NSBPPts
 #endif /* IHOP_WRITE_OUT */
 
+       IF (ALLOCATED(SrcBmPat)) DEALLOCATE(SrcBmPat)
        ALLOCATE( SrcBmPat( NSBPPts, 2 ), Stat = IAllocStat )
        IF ( IAllocStat /= 0 ) THEN
 #ifdef IHOP_WRITE_OUT
@@ -86,6 +87,7 @@ CONTAINS
 
     ELSE   ! no pattern given, use omni source pattern
         NSBPPts = 2
+        IF (ALLOCATED(SrcBmPat)) DEALLOCATE(SrcBmPat)
         ALLOCATE( SrcBmPat( 2, 2 ), Stat = IAllocStat )
         IF ( IAllocStat /= 0 ) THEN
 #ifdef IHOP_WRITE_OUT

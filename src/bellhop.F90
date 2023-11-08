@@ -28,7 +28,7 @@ MODULE BELLHOP
   USE ihop_mod,     only:   rad2deg, i, MaxN, Title, Beam, ray2D, istep,       &
                             NRz_per_range, afreq, SrcDeclAngle,                &
                             PRTFile, SHDFile, ARRFile, RAYFile, DELFile   
-  USE readEnviHop,  only:   ReadEnvironment, OpenOutputFiles
+  USE readEnviHop,  only:   ReadEnvironment, OpenOutputFiles, resetMemory
   USE angle_mod,    only:   Angles, ialpha
   USE srPos_mod,    only:   Pos
   USE ssp_mod,      only:   EvaluateSSP, HSInfo, Bdry, SSP, betaPowerLaw, fT
@@ -65,11 +65,13 @@ MODULE BELLHOP
     EXTERNAL ILNBLNK
 
 CONTAINS
-  SUBROUTINE IHOP_INIT ( myThid )
+  SUBROUTINE IHOP_INIT ( myTime, myIter, myThid )
   !     !INPUT/OUTPUT PARAMETERS:
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO
   !     msgBuf :: Used to build messages for printing.
+    _RL, INTENT( IN )       :: myTime
+    INTEGER, INTENT( IN )   :: myIter
     INTEGER, INTENT( IN )   :: myThid
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
   
@@ -81,25 +83,26 @@ CONTAINS
   ! added locally previously read in from unknown mod ... IEsco2022
     CHARACTER ( LEN=2 ) :: AttenUnit
   ! For MPI writing: copying eeboot_minimal.F
-    CHARACTER*(13)      :: fNam
-    CHARACTER*(6)       :: fmtStr
-    INTEGER             :: mpiRC, iTmp
+    CHARACTER*(MAX_LEN_FNAM)    :: fNam
+    CHARACTER*(6)               :: fmtStr
+    INTEGER                     :: mpiRC, IL
   ! ===========================================================================
  
     ! Open the print file: template from eeboot_minimal.F
 #ifdef IHOP_WRITE_OUT
     IF ( .NOT.usingMPI ) THEN
-        WRITE(myProcessStr, '(I4.4)') myProcId
-        WRITE(fNam,'(A,A,A,A)') TRIM(IHOP_fileroot),'.',myProcessStr(1:4),'.prt'
+        WRITE(myProcessStr, '(I10.10)') myIter
+        IL=ILNBLNK( myProcessStr )
+        WRITE(fNam,'(A,A,A,A)') TRIM(IHOP_fileroot),'.',myProcessStr(1:IL),'.prt'
         OPEN(PRTFile, FILE = fNam, STATUS = 'UNKNOWN', IOSTAT = iostat )
 #ifdef ALLOW_USE_MPI
     ELSE ! using MPI
         CALL MPI_COMM_RANK( MPI_COMM_MODEL, mpiMyId, mpiRC )
         myProcId = mpiMyId
-        iTmp = MAX(4,1+INT(LOG10(DFLOAT(nPx*nPy))))
-        WRITE(fmtStr,'(2(A,I1),A)') '(I',iTmp,'.',iTmp,')'
+        IL = MAX(4,1+INT(LOG10(DFLOAT(nPx*nPy))))
+        WRITE(fmtStr,'(2(A,I1),A)') '(I',IL,'.',IL,')'
         WRITE(myProcessStr,fmtStr) myProcId
-        iTmp = ILNBLNK( myProcessStr )
+        IL = ILNBLNK( myProcessStr )
         mpiPidIo = myProcId
         pidIO    = mpiPidIo
 
@@ -107,8 +110,14 @@ CONTAINS
 #  ifdef SINGLE_DISK_IO
          IF( myProcId.eq.0) THEN
 #  endif
-            WRITE(fNam,'(A,A,A,A)') &
-                TRIM(IHOP_fileroot),'.',myProcessStr(1:iTmp),'.prt'
+            IF (myIter.GE.0) THEN
+                WRITE(fNam,'(4A,I10.10,A)') &
+                    TRIM(IHOP_fileroot),'.',myProcessStr(1:IL),'.',myIter,'.prt'
+            ELSE
+                WRITE(fNam,'(4A)') &
+                    TRIM(IHOP_fileroot),'.',myProcessStr(1:IL),'.prt'
+            ENDIF
+
             OPEN(PRTFile, FILE=fNam, STATUS='UNKNOWN', IOSTAT=iostat )
             IF ( iostat /= 0 ) THEN
                 WRITE(*,*) 'ihop: IHOP_fileroot not recognized, ', &
@@ -124,7 +133,9 @@ CONTAINS
 # endif /* ALLOW_USE_MPI */
     END IF
 #endif /* IHOP_WRITE_OUT */
-  
+
+    ! Reset memory
+    CALL resetMemory() 
   ! ===========================================================================
     ! Read in or otherwise initialize inline all the variables by BELLHOP 
     IF ( Inline ) THEN
@@ -230,8 +241,8 @@ CONTAINS
   
   
     ELSE ! Read and allocate user input 
-       ! Read .env file: REQUIRED
-       CALL ReadEnvironment( IHOP_fileroot, myThid )
+       ! save data.ihop, gcm SSP: REQUIRED
+       CALL ReadEnvironment( myTime, myIter, myThid )
        ! AlTImetry: OPTIONAL, default is no ATIFile
        CALL ReadATI( IHOP_fileroot, Bdry%Top%HS%Opt( 5:5 ), Bdry%Top%HS%Depth, myThid )
        ! BaThYmetry: OPTIONAL, default is BTYFile
@@ -255,9 +266,9 @@ CONTAINS
     END IF
   
     ! open all output files
-    CALL OpenOutputFiles( IHOP_fileroot )
+    CALL OpenOutputFiles( IHOP_fileroot, myTime, myIter, myThid )
   
-    ! Run Bellhop solver
+    ! Run Bellhop solver on a single processor
     if (numberOfProcs.gt.1) then
         if(myProcId.eq.(numberOfProcs-1)) then
             CALL CPU_TIME( Tstart )
@@ -274,7 +285,7 @@ CONTAINS
     ! print run time
     if (numberOfProcs.gt.1) then
         if(myProcId.ne.(numberOfProcs-1)) then
-            WRITE(msgBuf,'(A,I4,A)') 'Proc ',myProcId, " didn't run ihop"
+            WRITE(msgBuf,'(A,I4,A)') 'NOTE: Proc ',myProcId, " didn't run ihop"
             CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
         endif
     endif
@@ -315,7 +326,7 @@ CONTAINS
   
   !     == Local Variables ==
     INTEGER              :: iAllocStat  
-    INTEGER, PARAMETER   :: ArrivalsStorage = 200000, MinNArr = 10
+    INTEGER, PARAMETER   :: ArrivalsStorage = 20000, MinNArr = 10
     INTEGER              :: IBPvec( 1 ), ibp, is, iBeamWindow2, Irz1, Irec, &
                             NalphaOpt, iSeg
     REAL    (KIND=_RL90) :: Amp0, DalphaOpt, xs( 2 ), RadMax, s, &
@@ -369,6 +380,7 @@ CONTAINS
        NRz_per_range = Pos%NRz   ! rectilinear grid
     END SELECT
   
+      IF (ALLOCATED(U)) DEALLOCATE(U)
       SELECT CASE ( Beam%RunType( 1 : 1 ) )
       ! for a TL calculation, allocate space for the pressure matrix
       CASE ( 'C', 'S', 'I' )        ! TL calculation

@@ -24,17 +24,19 @@ MODULE readEnviHop
 #include "IHOP_SIZE.h"
 #include "IHOP.h"
 
+!   == External Functions ==
+    INTEGER  ILNBLNK
+    EXTERNAL ILNBLNK
+
   PRIVATE
 
-! public interfaces
+!   == Public Interfaces ==
 !=======================================================================
-
-  public    ReadEnvironment, OpenOutputFiles
-  
+  public    ReadEnvironment, OpenOutputFiles, resetMemory
 !=======================================================================
 
 CONTAINS
-  SUBROUTINE ReadEnvironment( FileRoot, myThid )
+  SUBROUTINE ReadEnvironment( myTime, myIter, myThid )
 
     ! I/O routine for acoustic fixed inputS
 
@@ -45,15 +47,17 @@ CONTAINS
 #endif /* IHOP_THREED */
                               ReadFreqVec
 
-  !     == Routine Arguments ==
-  !     myThid :: Thread number. Unused by IESCO
-  !     msgBuf :: Used to build messages for printing.
-    INTEGER, INTENT( IN )   :: myThid
+  ! == Routine Arguments ==
+  ! myTime  :: Current time in simulation
+  ! myIter  :: Current time-step number
+  ! myThid  :: my Thread Id number
+  ! msgBuf  :: Used to build messages for printing.
+    _RL, INTENT(IN)     ::  myTime
+    INTEGER, INTENT(IN) ::  myIter, myThid
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
   
-  !     == Local Variables ==
-    REAL (KIND=_RL90),  PARAMETER   :: c0 = 1500.0
-    CHARACTER (LEN=80), INTENT(IN ) :: FileRoot
+  ! == Local Variables ==
+    REAL (KIND=_RL90),  PARAMETER :: c0 = 1500.0
     REAL               :: ZMin, ZMax
     REAL (KIND=_RL90)  :: x( 2 ), c, cimag, gradc( 2 ), crr, crz, czz, rho, &
                           Depth
@@ -85,19 +89,29 @@ CONTAINS
 #endif /* IHOP_THREED */
 
 #ifdef IHOP_WRITE_OUT
-    WRITE(msgbuf,'(A)') Title
+    WRITE(msgbuf,'(A)') Title ! , ACHAR(10)
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(2A)')'___________________________________________________', &
+                        '________'
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
     WRITE(msgbuf,'(A)')
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE( msgBuf, '(A,G11.4,A)' )'Frequency ', IHOP_freq, 'Hz'
+    WRITE( msgBuf, '(A,I,A,F20.2,A)') 'GCM iter ', myIter,' at time = ', &
+        myTime,' [sec]'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgbuf,'(A)')
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE( msgBuf, '(A,F11.4,A)' )'Frequency ', IHOP_freq, ' [Hz]'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(2A)')'___________________________________________________', &
+                        '________'
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 #endif /* IHOP_WRITE_OUT */
 
     ! *** Top Boundary ***
     Bdry%Top%HS%Opt = IHOP_topopt
     Bdry%Top%HS%Depth = 0 !initiate to dummy value
-    CALL ReadTopOpt( Bdry%Top%HS%Opt, Bdry%Top%HS%BC, AttenUnit, FileRoot, &
-                     myThid )
+    CALL ReadTopOpt( Bdry%Top%HS%Opt, Bdry%Top%HS%BC, AttenUnit, myThid )
 
     CALL TopBot( IHOP_freq, AttenUnit, Bdry%Top%HS, myThid )
 
@@ -106,7 +120,7 @@ CONTAINS
         Bdry%Bot%HS%Depth = IHOP_depth
     ELSE
         ! Extend by 5 wavelengths
-        Bdry%Bot%HS%Depth = rkSign*rF( Nr+1 ) + 5*1500.0/IHOP_freq 
+        Bdry%Bot%HS%Depth = rkSign*rF( Nr+1 ) + 5*c0/IHOP_freq 
     END IF
     x = [ 0.0 _d 0, Bdry%Bot%HS%Depth ]   ! tells SSP Depth to read to
 
@@ -387,7 +401,7 @@ CONTAINS
 
   !**********************************************************************!
 
-  SUBROUTINE ReadTopOpt( TopOpt, BC, AttenUnit, FileRoot, myThid )
+  SUBROUTINE ReadTopOpt( TopOpt, BC, AttenUnit, myThid )
 
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO
@@ -399,7 +413,6 @@ CONTAINS
     CHARACTER (LEN= 6), INTENT( OUT ) :: TopOpt
     CHARACTER (LEN= 1), INTENT( OUT ) :: BC         ! Boundary condition type
     CHARACTER (LEN= 2), INTENT( OUT ) :: AttenUnit
-    CHARACTER (LEN=80), INTENT( IN  ) :: FileRoot
 
     TopOpt = IHOP_topopt
 #ifdef IHOP_WRITE_OUT
@@ -920,23 +933,38 @@ CONTAINS
 
   ! **********************************************************************!
 
-  SUBROUTINE OpenOutputFiles( FileRoot )
+  SUBROUTINE OpenOutputFiles( fName, myTime, myIter, myThid )
     ! Write appropriate header information
 
     USE angle_mod,  only: Angles
     USE srPos_mod,  only: Pos
 
     ! == Routine Arguments ==
+    !  myTime   :: Current time in simulation
+    !  myIter   :: Current time-step number
+    !  myThid   :: my Thread Id number
+    _RL, INTENT(IN)     ::  myTime
+    INTEGER, INTENT(IN) ::  myIter, myThid
 
     ! == Local variables ==
-    CHARACTER (LEN=80), INTENT( IN ) :: FileRoot
+    CHARACTER*(MAX_LEN_FNAM), INTENT(IN) :: fName
+    CHARACTER*(MAX_LEN_FNAM) :: fullName
+    INTEGER             :: IL
     REAL               :: atten
     CHARACTER (LEN=10) :: PlotType
+
+    ! add time step to filename
+    IF (myIter.GE.0) THEN
+        IL=ILNBLNK( fName )
+        WRITE(fullName, '(2A,I10.10)') fName(1:IL),'.',myIter
+    ELSE
+        fullName = fName
+    ENDIF
 
     SELECT CASE ( Beam%RunType( 1 : 1 ) )
     CASE ( 'R', 'E' )   ! Ray trace or Eigenrays
 #ifdef IHOP_WRITE_OUT
-       OPEN ( FILE = TRIM( FileRoot ) // '.ray', UNIT = RAYFile, &
+       OPEN ( FILE = TRIM( fullName ) // '.ray', UNIT = RAYFile, &
               FORM = 'FORMATTED' )
        WRITE( RAYFile, * ) '''', Title( 1 : 50 ), ''''
        WRITE( RAYFile, * ) IHOP_freq
@@ -954,7 +982,7 @@ CONTAINS
 
     CASE ( 'A' )        ! arrival file in ascii format
 #ifdef IHOP_WRITE_OUT
-       OPEN ( FILE = TRIM( FileRoot ) // '.arr', UNIT = ARRFile, &
+       OPEN ( FILE = TRIM( fullName ) // '.arr', UNIT = ARRFile, &
               FORM = 'FORMATTED' )
 
 # ifdef IHOP_THREED
@@ -982,7 +1010,7 @@ CONTAINS
 # endif /* IHOP_THREED */
 
        ! IEsco22: add to arrivals output
-       OPEN ( FILE = TRIM( FileRoot ) // '.ray', UNIT = RAYFile, &
+       OPEN ( FILE = TRIM( fullName ) // '.ray', UNIT = RAYFile, &
               FORM = 'FORMATTED' )
        WRITE( RAYFile, * ) '''', Title( 1 : 50 ), ''''
        WRITE( RAYFile, * ) IHOP_freq
@@ -997,7 +1025,7 @@ CONTAINS
        WRITE( RAYFile, * ) '''rz'''
 # endif /* IHOP_THREED */
 
-       OPEN ( FILE = TRIM( FileRoot ) // '.delay', UNIT = DELFile, &
+       OPEN ( FILE = TRIM( fullName ) // '.delay', UNIT = DELFile, &
               FORM = 'FORMATTED' )
        WRITE( DELFile, * ) '''', Title( 1 : 50 ), ''''
        WRITE( DELFile, * ) IHOP_freq
@@ -1014,7 +1042,7 @@ CONTAINS
 #endif /* IHOP_WRITE_OUT */
     CASE ( 'a' )        ! arrival file in binary format
 #ifdef IHOP_WRITE_OUT
-       OPEN ( FILE = TRIM( FileRoot ) // '.arr', UNIT = ARRFile, &
+       OPEN ( FILE = TRIM( fullName ) // '.arr', UNIT = ARRFile, &
               FORM = 'UNFORMATTED' )
 
 # ifdef IHOP_THREED
@@ -1056,7 +1084,7 @@ CONTAINS
           PlotType = 'rectilin  '
        END SELECT
 
-       CALL WriteSHDHeader( TRIM( FileRoot ) // '.shd', Title, REAL( IHOP_freq ), &
+       CALL WriteSHDHeader( TRIM( fullName ) // '.shd', Title, REAL( IHOP_freq ), &
                          atten, PlotType )
     END SELECT
 
@@ -1186,5 +1214,41 @@ CONTAINS
   END !SUBROUTINE AllocateSR
 
   !**********************************************************************!
+
+  SUBROUTINE resetMemory()
+    USE srpos_mod,  only: Pos
+    USE bdry_mod,   only: Top,Bot
+    USE angle_mod,  only: Angles
+    USE arr_mod,    only: Narr, Arr
+    
+    ! From angle_mod
+    IF (ALLOCATED(Angles%alpha))DEALLOCATE(Angles%alpha)
+    IF (ALLOCATED(Angles%beta)) DEALLOCATE(Angles%beta)
+    ! From bdry_mod
+    IF (ALLOCATED(Top))         DEALLOCATE(Top)
+    IF (ALLOCATED(Bot))         DEALLOCATE(Bot)
+    ! From bellhop
+    IF (ALLOCATED(Pos%theta))   DEALLOCATE(Pos%theta)
+    IF (ALLOCATED(Arr))         DEALLOCATE(Arr)
+    IF (ALLOCATED(NArr))        DEALLOCATE(NArr)
+    ! from readenvihop
+    IF (ALLOCATED(Pos%Sx))      DEALLOCATE(Pos%Sx)
+    IF (ALLOCATED(Pos%Sy))      DEALLOCATE(Pos%Sy)
+    IF (ALLOCATED(Pos%Sz))      DEALLOCATE(Pos%Sz)
+    ! From srpos_mod
+    IF (ALLOCATED(Pos%ws))      DEALLOCATE(Pos%ws)
+    IF (ALLOCATED(Pos%isz))     DEALLOCATE(Pos%isz)
+    IF (ALLOCATED(Pos%wr))      DEALLOCATE(Pos%wr)
+    IF (ALLOCATED(Pos%irz))     DEALLOCATE(Pos%irz)
+    IF (ALLOCATED(Pos%rr))      DEALLOCATE(Pos%rr)
+    IF (ALLOCATED(Pos%rz))      DEALLOCATE(Pos%rz)
+    ! From ssp_mod
+    IF (ALLOCATED(SSP%cMat))    DEALLOCATE(SSP%cMat)
+    IF (ALLOCATED(SSP%czMat))   DEALLOCATE(SSP%czMat)
+    IF (ALLOCATED(SSP%cMat3))   DEALLOCATE(SSP%cMat3)
+    IF (ALLOCATED(SSP%czMat3))  DEALLOCATE(SSP%czMat3)
+    IF (ALLOCATED(SSP%Seg%r))   DEALLOCATE(SSP%Seg%r)
+
+  END ! SUBROUTINE resetMemory
 
 END MODULE readEnviHop

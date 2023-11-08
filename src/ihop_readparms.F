@@ -235,7 +235,9 @@ C--   Default values for IHOP_PARM03 some are populated in
 C     ihop_init_fixed.f
       useSSPFile        = .FALSE.
       IHOP_interpfile   = ''
-      ihop_iter         = 0
+      DO i=1,nts
+       ihop_iter(i)     = -1
+      ENDDO
       IHOP_npts_range   = 0
       IHOP_npts_idw     = 0
       DO i=1,IHOP_MAX_NC_SIZE
@@ -255,13 +257,13 @@ C     Read parameters from open data file
       CALL PRINT_MESSAGE( msgBuf, standardMessageUnit,
      &                    SQUEEZE_RIGHT, myThid )
 
-CC     Check paramters of IHOP_PARM03
-C      IF ( IHOP_interpfile.EQ.'' ) THEN
-C       WRITE(msgBuf, '(2A)') 'S/R IHOP_READPARMS: "IHOP_interpfile" ',
-C     &  'Provide interpolation file name for ihop package'  
-C       CALL PRINT_ERROR( msgBuf, myThid )
-C       STOP 'ABNORMAL END: S/R IHOP_READPARMS'
-C      ENDIF
+C     Check paramters of IHOP_PARM03
+      IF ( IHOP_interpfile.EQ.'' ) THEN
+       WRITE(msgBuf, '(2A)') 'S/R IHOP_READPARMS: "IHOP_interpfile" ',
+     &  'Provide interpolation file name for ihop package'  
+       CALL PRINT_ERROR( msgBuf, myThid )
+       STOP 'ABNORMAL END: S/R IHOP_READPARMS'
+      ENDIF
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 

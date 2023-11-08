@@ -136,6 +136,7 @@ CONTAINS
        ! we'll be extending the altimetry to infinity to the left and right
        NatiPts = NatiPts + 2  
 
+       IF (ALLOCATED(phi)) DEALLOCATE(phi)
        ALLOCATE( Top(  NatiPts ), phi( NatiPts ), Stat = IAllocStat )
        IF ( IAllocStat /= 0 ) THEN
 #ifdef IHOP_WRITE_OUT
@@ -538,6 +539,7 @@ END !SUBROUTINE ReadBTY
        END SELECT
 
        ! compute curvature in each segment
+       IF (ALLOCATED(phi)) DEALLOCATE(phi)
        ALLOCATE( phi( NPts ), Stat = IAllocStat )
        ! phi is the angle at each node
        phi = atan2( Bdry( : )%Nodet( 2 ), Bdry( : )%Nodet( 1 ) )
