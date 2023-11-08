@@ -52,20 +52,23 @@
 
 !-- COMMON /IHOP_PARAMS_I/ IHOP Integer-type parameters:
 !   IHOP_nalpha :: No. of rays to propagate
+!   IHOP_nts    :: No. of sample times
 !   IHOP_nsd    :: No. of source depths (m)
 !   IHOP_nrd    :: No. of receiver depths (m)
 !   IHOP_nrr    :: No. of receiver ranges (km)
+!   IHOP_iter   :: GCM iteration to run ihop
 
       INTEGER IHOP_nalpha
+      INTEGER IHOP_nts
       INTEGER IHOP_nsd
       INTEGER IHOP_nrd
       INTEGER IHOP_nrr
-      INTEGER ihop_iter
+      INTEGER ihop_iter(nts)
       INTEGER IHOP_npts_range
       INTEGER IHOP_npts_idw
 
       COMMON /IHOP_PARAMS_I/                                                                                                            &
-     &      IHOP_nsd,                                                                                                                   &
+     &      IHOP_nts, IHOP_nsd,                                                                                                         &
      &      IHOP_nrd, IHOP_nrr,                                                                                                         &
      &      IHOP_npts_range, IHOP_npts_idw,                                                                                             &
      &      IHOP_nalpha, ihop_iter
@@ -83,8 +86,6 @@
 !   IHOP_rr             :: receiver ranges (km)
 !   IHOP_alpha          :: bearing launch angles (degrees)
 !   IHOP_step           :: step length (m)
-!   IHOP_zbox           :: acoustic domain depth (m)
-!   IHOP_rbox           :: acoustic domain range (km)
 
       _RL IHOP_freq
       _RL IHOP_depth

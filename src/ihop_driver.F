@@ -13,13 +13,6 @@ C !FORTRAN90 USE MODULES: ===============================================
       USE bellhop
 
       IMPLICIT NONE
-C  == Global variables ==
-C#include "SIZE.h"
-C#include "GRID.h"
-C#include "EEPARAMS.h"
-C#include "PARAMS.h"
-C#include "IHOP_SIZE.h"
-C#include "IHOP.h"
 
 C !INPUT PARAMETERS: ===================================================
 C  myTime   :: Current time in simulation
@@ -31,36 +24,17 @@ C  myThid   :: my Thread Id number
 C !OUTPUT PARAMETERS: ==================================================
 
 C !LOCAL VARIABLES: ====================================================
-C  bi,bj    :: Tile indices
-C  lat2d    :: latitude of grid-cell center          [rad]
-C pHalf3d   :: pressure at interface between 2 levels [Pa]
-C pFull3d   :: pressure at level center               [Pa]
-C zHalf3d   :: height of interface between 2 levels   [m]
-C zFull3d   :: height of level center                 [m]
-C  t3d      :: absolute temperature                   [K]
-C  q3d      :: specific humidity                    [kg/kg]
-C  u3d      :: wind speed, 1rst component (X-dir)    [m/s]
-C  v3d      :: wind speed, 2nd  component (Y-dir)    [m/s]
-      INTEGER bi, bj
-      _RL lat2d   (sNx,sNy)
-      _RL pHalf3d (sNx,sNy,Nr+1)
-      _RL pFull3d (sNx,sNy,Nr)
-      _RL zHalf3d (sNx,sNy,Nr+1)
-      _RL zFull3d (sNx,sNy,Nr)
-      _RL t3d     (sNx,sNy,Nr)
-      _RL q3d     (sNx,sNy,Nr)
-      _RL u3d     (sNx,sNy,Nr)
-      _RL v3d     (sNx,sNy,Nr)
-      _RL tdt3d   (sNx,sNy,Nr)
-      _RL qdt3d   (sNx,sNy,Nr)
-      _RL udt3d   (sNx,sNy,Nr)
-      _RL vdt3d   (sNx,sNy,Nr)
+      INTEGER t
 CEOP
 
 #ifdef ALLOW_IHOP
-      IF ( ihop_iter .EQ. myIter ) THEN
-       CALL IHOP_INIT( myThid )
-      ENDIF
+      DO t=1,nts
+        IF ( IHOP_iter(t).GE.0 ) THEN
+            IF ( IHOP_iter(t).EQ.myIter ) THEN
+                CALL IHOP_INIT( myTime, myIter, myThid )
+            ENDIF
+        ENDIF
+      ENDDO
 #endif /* ALLOW_IHOP */
 
       RETURN

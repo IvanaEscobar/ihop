@@ -973,6 +973,7 @@ SUBROUTINE ExtractSSP( Depth, freq, myThid )
 
   CALL GLOBAL_VEC_SUM_R8(SSP%Nz*SSP%Nr,SSP%Nz*SSP%Nr,tmpSSP,myThid)
   SSP%cMAT = tmpSSP(:,:,1,1)
+  IF(ALLOCATED(tmpSSP)) DEALLOCATE(tmpSSP)
   !==================================================
   ! END IDW Interpolate
   !==================================================

@@ -11,6 +11,18 @@
 !     \ev
 !EOP
 
+!   nts    :: No. of time series points
+!     ================================
+!     Number of time series:
+!     ================================
+      INTEGER nts
+#ifdef IHOP_MULTIPLE_TIMES
+      PARAMETER ( nts=10 )
+#else 
+      PARAMETER ( nts=1 )
+#endif
+
+
 !   nsd    :: No. of sound sources at range of 0 m
 !   nrd    :: No. of sound receivers at a single range
 !   nrr    :: No. of sound receivers at a single depth
