@@ -306,7 +306,15 @@ CONTAINS
        CLOSE( RAYFile )
     END SELECT
   
-    CLOSE( PRTFile )
+    if (numberOfProcs.gt.1) then
+        if(myProcId.ne.(numberOfProcs-1)) then
+            CLOSE(PRTFile, STATUS='DELETE')
+        else
+            CLOSE(PRTFile)
+        endif
+    else
+        CLOSE(PRTFile)
+    endif
 #endif /* IHOP_WRITE_OUT */
   
   RETURN
