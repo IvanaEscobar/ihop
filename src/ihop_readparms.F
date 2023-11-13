@@ -66,6 +66,7 @@ C     iUnit      :: Work variable for IO unit number
      &      IHOP_step
 
       NAMELIST /IHOP_PARM03/
+     &      writeDelay, 
      &      useSSPFile,
      &      IHOP_interpfile,
      &      ihop_iter,
@@ -233,6 +234,7 @@ C     Check paramters of IHOP_PARM02
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 C--   Default values for IHOP_PARM03 some are populated in
 C     ihop_init_fixed.f
+      writeDelay        = .TRUE.
       useSSPFile        = .FALSE.
       IHOP_interpfile   = ''
       DO i=1,nts

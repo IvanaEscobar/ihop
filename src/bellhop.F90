@@ -301,7 +301,7 @@ CONTAINS
     CASE ( 'A', 'a' )       ! arrivals calculation
        CLOSE( ARRFile )
        CLOSE( RAYFile )
-       CLOSE( DELFile )
+       IF ( writeDelay ) CLOSE( DELFile )
     CASE ( 'R', 'E' )       ! ray and eigen ray trace
        CLOSE( RAYFile )
     END SELECT
@@ -519,7 +519,7 @@ CONTAINS
                 CALL WriteRay2D( SrcDeclAngle, Beam%Nsteps )
              ELSE ! Compute the contribution to the field
                 CALL WriteRay2D( SrcDeclAngle, Beam%Nsteps )
-                CALL WriteDel2D( SrcDeclAngle, Beam%Nsteps )
+                IF (writeDelay) CALL WriteDel2D( SrcDeclAngle, Beam%Nsteps )
                 
                 SELECT CASE ( Beam%Type( 1 : 1 ) )
                 CASE ( 'g' )

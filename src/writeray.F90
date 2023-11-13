@@ -17,6 +17,8 @@ MODULE writeRay
   USE ssp_mod,  only: Bdry
 
   IMPLICIT NONE
+!   == Global variables ==
+
   PRIVATE
 
 ! public interfaces
@@ -92,7 +94,7 @@ CONTAINS
        END IF
     END DO Stepping
 
-    ! write to ray file
+    ! write to delay file
 
 #ifdef IHOP_WRITE_OUT
     WRITE( DELFile, * ) alpha0

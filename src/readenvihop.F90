@@ -1024,20 +1024,22 @@ CONTAINS
        WRITE( RAYFile, * ) '''rz'''
 # endif /* IHOP_THREED */
 
-       OPEN ( FILE = TRIM( fullName ) // '.delay', UNIT = DELFile, &
-              FORM = 'FORMATTED' )
-       WRITE( DELFile, * ) '''', Title( 1 : 50 ), ''''
-       WRITE( DELFile, * ) IHOP_freq
-       WRITE( DELFile, * ) Pos%NSx, Pos%NSy, Pos%NSz
-       WRITE( DELFile, * ) Angles%Nalpha, Angles%Nbeta
-       WRITE( DELFile, * ) Bdry%Top%HS%Depth
-       WRITE( DELFile, * ) Bdry%Bot%HS%Depth
+       IF (writeDelay) THEN
+        OPEN ( FILE = TRIM( fullName ) // '.delay', UNIT = DELFile, &
+               FORM = 'FORMATTED' )
+        WRITE( DELFile, * ) '''', Title( 1 : 50 ), ''''
+        WRITE( DELFile, * ) IHOP_freq
+        WRITE( DELFile, * ) Pos%NSx, Pos%NSy, Pos%NSz
+        WRITE( DELFile, * ) Angles%Nalpha, Angles%Nbeta
+        WRITE( DELFile, * ) Bdry%Top%HS%Depth
+        WRITE( DELFile, * ) Bdry%Bot%HS%Depth
 
 #ifdef IHOP_THREED
-       WRITE( DELFile, * ) '''xyz'''
+        WRITE( DELFile, * ) '''xyz'''
 # else /* IHOP_THREED */
-       WRITE( DELFile, * ) '''rz'''
+        WRITE( DELFile, * ) '''rz'''
 # endif /* IHOP_THREED */
+       ENDIF
 #endif /* IHOP_WRITE_OUT */
     CASE ( 'a' )        ! arrival file in binary format
 #ifdef IHOP_WRITE_OUT
