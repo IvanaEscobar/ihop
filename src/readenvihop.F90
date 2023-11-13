@@ -23,6 +23,9 @@ MODULE readEnviHop
 #include "GRID.h"
 #include "IHOP_SIZE.h"
 #include "IHOP.h"
+#ifdef ALLOW_CAL
+#include "cal.h"
+#endif /* ALLOW_CAL */
 
 !   == External Functions ==
     INTEGER  ILNBLNK
@@ -64,49 +67,8 @@ CONTAINS
     CHARACTER (LEN= 2) :: AttenUnit
     CHARACTER (LEN=10) :: PlotType
 
-    !   Only do I/O if in the main thread
-    _BARRIER
-    _BEGIN_MASTER(myThid)
-
-#ifdef IHOP_WRITE_OUT
-    WRITE(msgbuf,'(A)') 'iHOP Print File'
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgbuf,'(A)') 
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-#endif /* IHOP_WRITE_OUT */
-
-    ! *** TITLE ***
-#ifdef IHOP_THREED
-    WRITE(msgBuf,'(2A)') 'READENVIHOP ReadEnvironment: ', & 
-                         '3D not supported in ihop'
-    CALL PRINT_ERROR( msgBuf,myThid )
-    STOP 'ABNORMAL END: S/R ReadEnvironment'
-    Title( 1 :11 ) = 'iHOP3D - '
-    Title( 12:80 ) = IHOP_title
-#else /* not IHOP_THREED */
-    Title( 1 : 9 ) = 'iHOP - '
-    Title( 10:80 ) = IHOP_title
-#endif /* IHOP_THREED */
-
-#ifdef IHOP_WRITE_OUT
-    WRITE(msgbuf,'(A)') Title ! , ACHAR(10)
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(2A)')'___________________________________________________', &
-                        '________'
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgbuf,'(A)')
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE( msgBuf, '(A,I,A,F20.2,A)') 'GCM iter ', myIter,' at time = ', &
-        myTime,' [sec]'
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgbuf,'(A)')
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE( msgBuf, '(A,F11.4,A)' )'Frequency ', IHOP_freq, ' [Hz]'
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(2A)')'___________________________________________________', &
-                        '________'
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-#endif /* IHOP_WRITE_OUT */
+    ! *** ihop info to PRTFile ***
+    CALL openPRTFile( myTime, myIter, myThid )
 
     ! *** Top Boundary ***
     Bdry%Top%HS%Opt = IHOP_topopt
@@ -125,27 +87,30 @@ CONTAINS
     x = [ 0.0 _d 0, Bdry%Bot%HS%Depth ]   ! tells SSP Depth to read to
 
 #ifdef IHOP_WRITE_OUT
+    !   Only do I/O in the main thread
+    _BEGIN_MASTER(myThid)
+
     WRITE(msgBuf,'(A)') 
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
     WRITE(msgBuf,'(A,F10.2,A)' ) 'Depth = ',Bdry%Bot%HS%Depth,' m'
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
     WRITE(msgBuf,'(2A)') 'Top options: ', Bdry%Top%HS%Opt
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+
+    !   Only do I/O in the main thread
+    _END_MASTER(myThid)
 #endif /* IHOP_WRITE_OUT */
 
-    !   Only do I/O if in the main thread
-    _END_MASTER(myThid)
-
     CALL EvaluateSSP( x, c, cimag, gradc, crr, crz, czz, rho, IHOP_freq, 'INI', myThid )
-
-    !   Only do I/O if in the main thread
-    _BEGIN_MASTER(myThid)
 
     Bdry%Top%HS%Depth = SSP%z( 1 )   ! first SSP point is top depth
 
     ! *** Bottom Boundary ***
     ! bottom depth should perhaps be set the same way?
     Bdry%Bot%HS%Opt = IHOP_botopt 
+
+    !   Only do I/O if in the main thread
+    _BEGIN_MASTER(myThid)
 #ifdef IHOP_WRITE_OUT
     WRITE(msgBuf,'(A)') 
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
@@ -168,6 +133,9 @@ CONTAINS
 #endif /* IHOP_WRITE_OUT */
         STOP 'ABNORMAL END: S/R ReadEnvironment'
     END SELECT
+
+    !   Only do I/O in the main thread
+    _END_MASTER(myThid)
 
     Bdry%Bot%HS%BC = Bdry%Bot%HS%Opt( 1 : 1 )
     CALL TopBot( IHOP_freq, AttenUnit, Bdry%Bot%HS, myThid )
@@ -204,6 +172,9 @@ CONTAINS
 #endif /* IHOP_THREED */
 
 #ifdef IHOP_WRITE_OUT
+    !   Only do I/O if in the main thread
+    _BEGIN_MASTER(myThid)
+
     WRITE(msgBuf,'(A)') 
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
     WRITE(msgBuf,'(2A)')'___________________________________________________', &
@@ -211,6 +182,9 @@ CONTAINS
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
     WRITE(msgBuf,'(A)') 
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+
+    !   Only do I/O in the main thread
+    _END_MASTER(myThid)
 #endif /* IHOP_WRITE_OUT */
 
     ! Limits for tracing beams
@@ -247,6 +221,10 @@ CONTAINS
 #else /* not IHOP_THREED */
     ! Step size in meters [m]
     Beam%deltas = IHOP_step
+    
+    !   Only do I/O if in the main thread
+    _BEGIN_MASTER(myThid)
+
     IF ( Beam%deltas == 0.0 ) THEN ! Automatic step size option
         Beam%deltas = ( Bdry%Bot%HS%Depth - Bdry%Top%HS%Depth ) / 10.0   
 #ifdef IHOP_WRITE_OUT
@@ -262,12 +240,18 @@ CONTAINS
 #endif /* IHOP_WRITE_OUT */
     END IF
 
+    !   Only do I/O in the main thread
+    _END_MASTER(myThid)
+
     ! Domain size
     Beam%Box%z = Bdry%Bot%HS%Depth ! in m
     ! Extend beam box by a single step size forward
     Beam%Box%r = ihop_rr(nrd) + Beam%deltas/1000. ! in [km]
 
 #ifdef IHOP_WRITE_OUT
+    !   Only do I/O if in the main thread
+    _BEGIN_MASTER(myThid)
+
     WRITE(msgBuf,'(A)') 
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
     WRITE(msgBuf,'(A,G11.4,A)') &
@@ -276,27 +260,36 @@ CONTAINS
     WRITE(msgBuf,'(A,G11.4,A)') &
         ' Maximum ray depth, Box%Z = ', Beam%Box%Z,' m'
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+
+    !   Only do I/O in the main thread
+    _END_MASTER(myThid)
 #endif /* IHOP_WRITE_OUT */
 
     Beam%Box%r = Beam%Box%r*1000.   ! convert km to m
 #endif /* IHOP_THREED */
 
     ! *** Beam characteristics ***
-       Beam%Type( 4 : 4 ) = Beam%RunType( 7 : 7 )   ! selects beam shift option
+    Beam%Type( 4 : 4 ) = Beam%RunType( 7 : 7 )   ! selects beam shift option
           
 #ifdef IHOP_WRITE_OUT
-       SELECT CASE ( Beam%Type( 4 : 4 ) )
-       CASE ( 'S' )
-          WRITE(msgBuf,'(A)') ' Beam shift in effect'
-          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-       CASE DEFAULT
-          WRITE(msgBuf,'(A)') ' No beam shift in effect'
-          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-       END SELECT
+    !   Only do I/O if in the main thread
+    _BEGIN_MASTER(myThid)
+
+    SELECT CASE ( Beam%Type( 4 : 4 ) )
+    CASE ( 'S' )
+       WRITE(msgBuf,'(A)') ' Beam shift in effect'
+       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    CASE DEFAULT
+       WRITE(msgBuf,'(A)') ' No beam shift in effect'
+       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    END SELECT
+
+    !   Only do I/O in the main thread
+    _END_MASTER(myThid)
 #endif /* IHOP_WRITE_OUT */
 
-       ! no worry about the beam type if this is a ray trace run
-       IF ( Beam%RunType( 1:1 ) /= 'R' .OR. Beam%RunType( 1:1 ) /= 'E' ) THEN 
+    ! no worry about the beam type if this is a ray trace run
+    IF ( Beam%RunType( 1:1 ) /= 'R' .OR. Beam%RunType( 1:1 ) /= 'E' ) THEN 
 
        ! Beam%Type( 1 : 1 ) is
        !   'G' or '^' Geometric hat beams in Cartesian coordinates
@@ -323,12 +316,12 @@ CONTAINS
        ! Suppress by setting BeamType( 3 : 3 ) = 'Z'
 
        Beam%Type( 1 : 1 ) = Beam%RunType( 2 : 2 )
+       !   Only do I/O if in the main thread
+       _BEGIN_MASTER(myThid)
+
        SELECT CASE ( Beam%Type( 1 : 1 ) )
-! geometric hat beams, geometric Gaussian beams, or simple Gaussian beams
        CASE ( 'G', 'g' , '^', 'B', 'b', 'S' )   
-! Cerveny Gaussian Beams; read extra lines to specify the beam options
        CASE ( 'R', 'C' )   
-          !READ(  ENVFile, * ) Beam%Type( 2 : 3 ), Beam%epsMultiplier, Beam%rLoop
 #ifdef IHOP_WRITE_OUT
           WRITE(msgBuf,'(A)') 
           CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
@@ -387,15 +380,21 @@ CONTAINS
 #endif /* IHOP_WRITE_OUT */
             STOP 'ABNORMAL END: S/R ReadEnvironment'
        END SELECT
+
+       !   Only do I/O in the main thread
+       _END_MASTER(myThid)
     END IF
 
 #ifdef IHOP_WRITE_OUT
+    !   Only do I/O if in the main thread
+    _BEGIN_MASTER(myThid)
+
     WRITE(msgBuf,'(A)') 
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    
+    !   Only do I/O in the main thread
+    _END_MASTER(myThid)
 #endif /* IHOP_WRITE_OUT */
-
-    !-- Only do I/O if in the main thread
-    _END_MASTER( myThid)
   RETURN
   END !SUBROUTINE ReadEnvironment
 
@@ -1212,6 +1211,79 @@ CONTAINS
 
   RETURN
   END !SUBROUTINE AllocateSR
+
+  !**********************************************************************!
+  SUBROUTINE openPRTFile ( myTime, myIter, myThid )
+
+  !     == Routine Arguments ==
+  !     myThid :: Thread number. Unused by IESCO
+  !     myTime :: Current time in simulation
+  !     myIter :: Current time-step number
+  !     msgBuf :: Used to build messages for printing.
+    _RL, INTENT(IN)     ::  myTime
+    INTEGER, INTENT(IN) ::  myIter, myThid
+    CHARACTER*(MAX_LEN_MBUF):: msgBuf
+
+  !     == Local Arguments ==
+#ifdef ALLOW_CAL
+    INTEGER :: mydate(4)
+#endif
+
+    !   Only do I/O in the main thread
+    _BARRIER
+    _BEGIN_MASTER(myThid)
+
+#ifdef IHOP_WRITE_OUT
+    WRITE(msgbuf,'(A)') 'iHOP Print File'
+    CALL PRINT_MESSAGE( msgBuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgbuf,'(A)') 
+    CALL PRINT_MESSAGE( msgBuf, PRTFile, SQUEEZE_RIGHT, myThid )
+#endif /* IHOP_WRITE_OUT */
+
+    ! *** TITLE ***
+#ifdef IHOP_THREED
+    WRITE(msgBuf,'(2A)') 'READENVIHOP ReadEnvironment: ', & 
+                         '3D not supported in ihop'
+    CALL PRINT_ERROR( msgBuf,myThid )
+    STOP 'ABNORMAL END: S/R ReadEnvironment'
+    Title( 1 :11 ) = 'iHOP3D - '
+    Title( 12:80 ) = IHOP_title
+#else /* not IHOP_THREED */
+    Title( 1 : 9 ) = 'iHOP - '
+    Title( 10:80 ) = IHOP_title
+#endif /* IHOP_THREED */
+
+#ifdef IHOP_WRITE_OUT
+    WRITE(msgbuf,'(A)') Title ! , ACHAR(10)
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(2A)')'___________________________________________________', &
+                        '________'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgbuf,'(A)')
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE( msgBuf, '(A,I,A,F20.2,A)') 'GCM iter ', myIter,' at time = ', &
+        myTime,' [sec]'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+# ifdef ALLOW_CAL
+    CALL CAL_GETDATE( myIter,myTime,mydate,myThid )
+    WRITE (msgBuf,'(A,I8,I6,I3,I4)') 'GCM cal date ', mydate(1), mydate(2), &
+                                                       mydate(3), mydate(4)
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+# endif /* ALLOW_CAL */
+    WRITE(msgbuf,'(A)')
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE( msgBuf, '(A,F11.4,A)' )'Frequency ', IHOP_freq, ' [Hz]'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(2A)')'___________________________________________________', &
+                        '________'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+#endif /* IHOP_WRITE_OUT */
+
+    !   Only do I/O in the main thread
+    _END_MASTER(myThid)
+
+  END ! SUBROUTINE openPRTFile
+
 
   !**********************************************************************!
 

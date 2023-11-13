@@ -117,7 +117,7 @@ CONTAINS
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 
     IF ( Angles%Nalpha >= 1 ) THEN
-        WRITE(msgBuf,'(10F12.6)') Angles%alpha( 1:MIN(Angles%Nalpha,Number_to_Echo) )
+        WRITE(msgBuf,'(10F12.3)') Angles%alpha( 1:MIN(Angles%Nalpha,Number_to_Echo) )
         CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
     END IF
     IF ( Angles%Nalpha > Number_to_Echo ) THEN
