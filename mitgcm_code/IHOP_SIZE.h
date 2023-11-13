@@ -17,7 +17,7 @@
 !     ================================
       INTEGER nts
 #ifdef IHOP_MULTIPLE_TIMES
-      PARAMETER ( nts=721 )
+      PARAMETER ( nts=1080 )
 #else 
       PARAMETER ( nts=1 )
 #endif

@@ -21,14 +21,14 @@
 !     IHOP parameters
 !     ===============
 !--   COMMON /IHOP_PARAMS_L/ IHOP logical-type parameters:
-!     IHOP_bellOn   :: true if bellhop driver needs to run (UNUSED)
+!     writeDelay    :: true if delay is a desired output 
 !     useSSPFile    :: true if *.ssp is used instead MITgcm SSP
 
-      LOGICAL IHOP_bellOn
+      LOGICAL writeDelay
       LOGICAL useSSPFile
 
       COMMON /IHOP_PARAMS_L/                                                                                                             &
-     &      IHOP_bellOn, useSSPFile
+     &      writeDelay, useSSPFile
 
 !-- COMMON /IHOP_PARAMS_C/ IHOP Character-type parameters:
 !   IHOP_fileroot   :: File name for reading in an environment
