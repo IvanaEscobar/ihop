@@ -44,7 +44,6 @@ C     !FUNCTIONS:
 
 C     !LOCAL VARIABLES:
 C     == Local variables ==
-      CHARACTER*(MAX_LEN_MBUF) msgBuf
       INTEGER bi,bj
       INTEGER i,j,k
       _RL c0,cw,a,b,d
