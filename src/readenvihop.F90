@@ -614,7 +614,7 @@ CONTAINS
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 #endif /* IHOP_WRITE_OUT */
 
-    SELECT CASE ( RunType( 1 : 1 ) )
+    SELECT CASE ( RunType( 1:1 ) )
     CASE ( 'R' )
 #ifdef IHOP_WRITE_OUT
        WRITE(msgBuf,'(A)') 'Ray trace run'
@@ -648,6 +648,11 @@ CONTAINS
     CASE ( 'a' )
 #ifdef IHOP_WRITE_OUT
        WRITE(msgBuf,'(A)') 'Arrivals calculation, binary file output'
+       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+#endif /* IHOP_WRITE_OUT */
+    CASE ( 'e' )
+#ifdef IHOP_WRITE_OUT
+       WRITE(msgBuf,'(A)') 'Eigenrays + Arrivals run, ASCII file output'
        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 #endif /* IHOP_WRITE_OUT */
     CASE DEFAULT
@@ -960,7 +965,7 @@ CONTAINS
         fullName = fName
     ENDIF
 
-    SELECT CASE ( Beam%RunType( 1 : 1 ) )
+    SELECT CASE ( Beam%RunType( 1:1 ) )
     CASE ( 'R', 'E' )   ! Ray trace or Eigenrays
 #ifdef IHOP_WRITE_OUT
        OPEN ( FILE = TRIM( fullName ) // '.ray', UNIT = RAYFile, &
@@ -978,8 +983,7 @@ CONTAINS
        WRITE( RAYFile, * ) '''rz'''
 #endif /* IHOP_THREED */
 #endif /* IHOP_WRITE_OUT */
-
-    CASE ( 'A' )        ! arrival file in ascii format
+    CASE ( 'e' )        ! eigenrays + arrival file in ascii format
 #ifdef IHOP_WRITE_OUT
        OPEN ( FILE = TRIM( fullName ) // '.arr', UNIT = ARRFile, &
               FORM = 'FORMATTED' )
@@ -1008,7 +1012,7 @@ CONTAINS
        WRITE( ARRFile, * ) Pos%Ntheta, Pos%theta( 1 : Pos%Ntheta )
 # endif /* IHOP_THREED */
 
-       ! IEsco22: add to arrivals output
+       ! IEsco22: add erays to arrivals output
        OPEN ( FILE = TRIM( fullName ) // '.ray', UNIT = RAYFile, &
               FORM = 'FORMATTED' )
        WRITE( RAYFile, * ) '''', Title( 1 : 50 ), ''''
@@ -1040,6 +1044,33 @@ CONTAINS
         WRITE( DELFile, * ) '''rz'''
 # endif /* IHOP_THREED */
        ENDIF
+#endif /* IHOP_WRITE_OUT */
+    CASE ( 'A' )        ! arrival file in ascii format
+#ifdef IHOP_WRITE_OUT
+       OPEN ( FILE = TRIM( fullName ) // '.arr', UNIT = ARRFile, &
+              FORM = 'FORMATTED' )
+
+# ifdef IHOP_THREED
+       WRITE( ARRFile, * ) '''3D'''
+# else /* IHOP_THREED */
+       WRITE( ARRFile, * ) '''2D'''
+# endif /* IHOP_THREED */
+
+       WRITE( ARRFile, * ) IHOP_freq
+
+       ! write source locations
+# ifdef IHOP_THREED
+       WRITE( ARRFile, * ) Pos%NSx,    Pos%Sx(    1 : Pos%NSx )
+       WRITE( ARRFile, * ) Pos%NSy,    Pos%Sy(    1 : Pos%NSy )
+# endif /* IHOP_THREED */
+       WRITE( ARRFile, * ) Pos%NSz,    Pos%Sz(    1 : Pos%NSz )
+
+       ! write receiver locations
+       WRITE( ARRFile, *    ) Pos%NRz,    Pos%Rz(    1 : Pos%NRz )
+       WRITE( ARRFile, *    ) Pos%NRr,    Pos%Rr(    1 : Pos%NRr )
+# ifdef IHOP_THREED
+       WRITE( ARRFile, * ) Pos%Ntheta, Pos%theta( 1 : Pos%Ntheta )
+# endif /* IHOP_THREED */
 #endif /* IHOP_WRITE_OUT */
     CASE ( 'a' )        ! arrival file in binary format
 #ifdef IHOP_WRITE_OUT
@@ -1263,7 +1294,7 @@ CONTAINS
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
     WRITE(msgbuf,'(A)')
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE( msgBuf, '(A,I,A,F20.2,A)') 'GCM iter ', myIter,' at time = ', &
+    WRITE( msgBuf, '(A,I10,A,F20.2,A)') 'GCM iter ', myIter,' at time = ', &
         myTime,' [sec]'
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 # ifdef ALLOW_CAL
@@ -1294,6 +1325,7 @@ CONTAINS
     USE bdry_mod,   only: Top,Bot
     USE angle_mod,  only: Angles
     USE arr_mod,    only: Narr, Arr
+    USE ihop_mod,   only: ray2D, MaxN, iStep
     
     ! From angle_mod
     IF (ALLOCATED(Angles%alpha))DEALLOCATE(Angles%alpha)
@@ -1322,6 +1354,17 @@ CONTAINS
     IF (ALLOCATED(SSP%cMat3))   DEALLOCATE(SSP%cMat3)
     IF (ALLOCATED(SSP%czMat3))  DEALLOCATE(SSP%czMat3)
     IF (ALLOCATED(SSP%Seg%r))   DEALLOCATE(SSP%Seg%r)
+    ! From ihop_mod
+    DO iStep = 1,MaxN
+        ray2D(iStep)%x = [zeroRL, zeroRL]
+        ray2D(iStep)%t = [zeroRL, zeroRL]
+        ray2D(iStep)%p = [zeroRL, zeroRL]
+        ray2D(iStep)%q = [zeroRL, zeroRL]
+        ray2D(iStep)%c = zeroRL
+        ray2D(iStep)%Amp = zeroRL
+        ray2D(iStep)%Phase = zeroRL
+        ray2D(iStep)%tau = (zeroRL, zeroRl)
+    END DO
 
   END ! SUBROUTINE resetMemory
 

@@ -28,7 +28,7 @@ MODULE writeRay
 
 !=======================================================================
 
-  INTEGER, PRIVATE :: MaxNRayPoints = 500000   ! this is the maximum length of 
+  INTEGER, PRIVATE :: MaxNRayPoints = 50000   ! this is the maximum length of 
   ! the ray vector that is written out
   INTEGER, PRIVATE :: is, N2, iSkip
 
@@ -91,6 +91,7 @@ CONTAINS
             MOD( is, iSkip ) == 0 .OR. is == Nsteps1 ) THEN
           N2 = N2 + 1
           ray2D( N2 )%x = ray2D( is )%x
+          ray2D( N2 )%tau = ray2D( is )%tau
        END IF
     END DO Stepping
 
