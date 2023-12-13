@@ -59,12 +59,12 @@ CONTAINS
     ! write to ray file
 
 #ifdef IHOP_WRITE_OUT
-    WRITE( RAYFile, * ) alpha0
-    WRITE( RAYFile, * ) N2, ray2D( Nsteps1 )%NumTopBnc, &
+    WRITE( RAYFile, '(G)') alpha0
+    WRITE( RAYFile, '(3I)' ) N2, ray2D( Nsteps1 )%NumTopBnc, &
                         ray2D( Nsteps1 )%NumBotBnc
 
     DO is = 1, N2
-       WRITE( RAYFile, * ) ray2D( is )%x
+       WRITE( RAYFile, '(2G)' ) ray2D( is )%x
     END DO
 #endif /* IHOP_WRITE_OUT */
 
@@ -98,12 +98,12 @@ CONTAINS
     ! write to delay file
 
 #ifdef IHOP_WRITE_OUT
-    WRITE( DELFile, * ) alpha0
-    WRITE( DELFile, * ) N2, ray2D( Nsteps1 )%NumTopBnc, &
+    WRITE( DELFile, '(G)' ) alpha0
+    WRITE( DELFile, '(3I)' ) N2, ray2D( Nsteps1 )%NumTopBnc, &
                         ray2D( Nsteps1 )%NumBotBnc
 
     DO is = 1, N2
-       WRITE( DELFile, * ) REAL(ray2D( is )%tau), ray2D( is )%x(2)
+       WRITE( DELFile, '(2G)' ) REAL(ray2D( is )%tau), ray2D( is )%x(2)
     END DO
 #endif /* IHOP_WRITE_OUT */
 

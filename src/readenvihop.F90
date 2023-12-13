@@ -1363,7 +1363,7 @@ CONTAINS
         ray2D(iStep)%c = zeroRL
         ray2D(iStep)%Amp = zeroRL
         ray2D(iStep)%Phase = zeroRL
-        ray2D(iStep)%tau = (zeroRL, zeroRl)
+        ray2D(iStep)%tau = (zeroRL, zeroRL)
     END DO
 
   END ! SUBROUTINE resetMemory
