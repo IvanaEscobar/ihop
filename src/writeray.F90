@@ -58,6 +58,7 @@ CONTAINS
 
     ! write to ray file
 
+    WRITE(*, '(A,G,3I)') "Escobar:",alpha0, N2, ray2D(N2)%NumTopBnc, ray2D(N2)%NumBotBnc
 #ifdef IHOP_WRITE_OUT
     WRITE( RAYFile, '(G)') alpha0
     WRITE( RAYFile, '(3I)' ) N2, ray2D( Nsteps1 )%NumTopBnc, &

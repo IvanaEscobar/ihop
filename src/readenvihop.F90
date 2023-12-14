@@ -982,6 +982,7 @@ CONTAINS
 #else /* IHOP_THREED */
        WRITE( RAYFile, * ) '''rz'''
 #endif /* IHOP_THREED */
+       FLUSH( RAYFile )
 #endif /* IHOP_WRITE_OUT */
     CASE ( 'e' )        ! eigenrays + arrival file in ascii format
 #ifdef IHOP_WRITE_OUT
@@ -1044,6 +1045,10 @@ CONTAINS
         WRITE( DELFile, * ) '''rz'''
 # endif /* IHOP_THREED */
        ENDIF
+
+       FLUSH( RAYFile )
+       IF (writeDelay) FLUSH( DELFile )
+       FLUSH( ARRFile )
 #endif /* IHOP_WRITE_OUT */
     CASE ( 'A' )        ! arrival file in ascii format
 #ifdef IHOP_WRITE_OUT
@@ -1071,6 +1076,7 @@ CONTAINS
 # ifdef IHOP_THREED
        WRITE( ARRFile, * ) Pos%Ntheta, Pos%theta( 1 : Pos%Ntheta )
 # endif /* IHOP_THREED */
+       FLUSH( ARRFile )
 #endif /* IHOP_WRITE_OUT */
     CASE ( 'a' )        ! arrival file in binary format
 #ifdef IHOP_WRITE_OUT
@@ -1100,8 +1106,8 @@ CONTAINS
 # ifdef IHOP_THREED
        WRITE( ARRFile    ) Pos%Ntheta, Pos%theta( 1 : Pos%Ntheta )
 # endif /* IHOP_THREED */
+       FLUSH( ARRFile )
 #endif /* IHOP_WRITE_OUT */
-
     CASE DEFAULT
        atten = 0.0
 
