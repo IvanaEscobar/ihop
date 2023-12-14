@@ -28,7 +28,7 @@ MODULE writeRay
 
 !=======================================================================
 
-  INTEGER, PRIVATE :: MaxNRayPoints = 500000   ! this is the maximum length of 
+  INTEGER, PRIVATE :: MaxNRayPoints = 50000   ! this is the maximum length of 
   ! the ray vector that is written out
   INTEGER, PRIVATE :: is, N2, iSkip
 
@@ -58,13 +58,14 @@ CONTAINS
 
     ! write to ray file
 
+    WRITE(*, '(A,G,3I)') "Escobar:",alpha0, N2, ray2D(N2)%NumTopBnc, ray2D(N2)%NumBotBnc
 #ifdef IHOP_WRITE_OUT
-    WRITE( RAYFile, * ) alpha0
-    WRITE( RAYFile, * ) N2, ray2D( Nsteps1 )%NumTopBnc, &
+    WRITE( RAYFile, '(G)') alpha0
+    WRITE( RAYFile, '(3I)' ) N2, ray2D( Nsteps1 )%NumTopBnc, &
                         ray2D( Nsteps1 )%NumBotBnc
 
     DO is = 1, N2
-       WRITE( RAYFile, * ) ray2D( is )%x
+       WRITE( RAYFile, '(2G)' ) ray2D( is )%x
     END DO
 #endif /* IHOP_WRITE_OUT */
 
@@ -91,18 +92,19 @@ CONTAINS
             MOD( is, iSkip ) == 0 .OR. is == Nsteps1 ) THEN
           N2 = N2 + 1
           ray2D( N2 )%x = ray2D( is )%x
+          ray2D( N2 )%tau = ray2D( is )%tau
        END IF
     END DO Stepping
 
     ! write to delay file
 
 #ifdef IHOP_WRITE_OUT
-    WRITE( DELFile, * ) alpha0
-    WRITE( DELFile, * ) N2, ray2D( Nsteps1 )%NumTopBnc, &
+    WRITE( DELFile, '(G)' ) alpha0
+    WRITE( DELFile, '(3I)' ) N2, ray2D( Nsteps1 )%NumTopBnc, &
                         ray2D( Nsteps1 )%NumBotBnc
 
     DO is = 1, N2
-       WRITE( DELFile, * ) REAL(ray2D( is )%tau), ray2D( is )%x(2)
+       WRITE( DELFile, '(2G)' ) REAL(ray2D( is )%tau), ray2D( is )%x(2)
     END DO
 #endif /* IHOP_WRITE_OUT */
 

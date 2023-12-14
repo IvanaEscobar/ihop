@@ -16,7 +16,7 @@ MODULE influence
 ! sspMod used to construct image beams in the Cerveny style beam routines
   USE ssp_mod,       only: Bdry 
   USE arr_mod,       only: WriteArrivalsASCII, WriteArrivalsBinary, AddArr
-  USE writeRay,     only: WriteRay2D
+  USE writeRay,     only: WriteRay2D, WriteDel2D
 
 ! ! USES
   implicit none
@@ -474,9 +474,16 @@ CONTAINS
   SUBROUTINE ApplyContribution( U )
     COMPLEX, INTENT( INOUT ) :: U
 
-    SELECT CASE( Beam%RunType( 1 : 1 ) )
+    SELECT CASE( Beam%RunType( 1:1 ) )
     CASE ( 'E' )                ! eigenrays
        CALL WriteRay2D( SrcDeclAngle, iS )
+    CASE ( 'e' )                ! eigenrays AND arrivals
+       CALL WriteRay2D( SrcDeclAngle, iS )
+       IF (writeDelay) CALL WriteDel2D( SrcDeclAngle, iS )
+
+       CALL AddArr( afreq, iz, ir, Amp, phaseInt, delay, SrcDeclAngle, &
+                    RcvrDeclAngle, ray2D( iS )%NumTopBnc, &
+                    ray2D( iS )%NumBotBnc )
     CASE ( 'A', 'a' )           ! arrivals
        CALL AddArr( afreq, iz, ir, Amp, phaseInt, delay, SrcDeclAngle, &
                     RcvrDeclAngle, ray2D( iS )%NumTopBnc, &
@@ -556,10 +563,11 @@ CONTAINS
              deltaz =  Pos%Rz( iz ) - x( 2 )   ! ray to rcvr distance
              ! Adeltaz    = ABS( deltaz )
              ! IF ( Adeltaz < RadiusMax ) THEN
-             SELECT CASE( Beam%RunType( 1 : 1 ) )
-             CASE ( 'E' )         ! eigenrays
+             SELECT CASE( Beam%RunType( 1:1 ) )
+             CASE ( 'E', 'e' )         ! eigenrays
                 SrcDeclAngle = rad2deg * alpha   ! take-off angle in degrees
                 CALL WriteRay2D( SrcDeclAngle, iS )
+                IF (writeDelay) CALL WriteDel2D( SrcDeclAngle, iS )
              CASE DEFAULT         ! coherent TL
                 CPA    = ABS( deltaz * ( rB - rA ) ) / SQRT( ( rB - rA )**2 &
                          + ( ray2D( iS )%x( 2 ) - ray2D( iS-1 )%x( 2 ) )**2  )

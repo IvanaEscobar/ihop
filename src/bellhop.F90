@@ -295,15 +295,17 @@ CONTAINS
     CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
   
     ! close all files
-    SELECT CASE ( Beam%RunType( 1 : 1 ) )
+    SELECT CASE ( Beam%RunType( 1:1 ) )
     CASE ( 'C', 'S', 'I' )  ! TL calculation
        CLOSE( SHDFile )
     CASE ( 'A', 'a' )       ! arrivals calculation
        CLOSE( ARRFile )
-       CLOSE( RAYFile )
-       IF ( writeDelay ) CLOSE( DELFile )
     CASE ( 'R', 'E' )       ! ray and eigen ray trace
        CLOSE( RAYFile )
+    CASE ( 'e' )
+       CLOSE( RAYFile ) 
+       CLOSE( ARRFile )
+       IF ( writeDelay ) CLOSE( DELFile )
     END SELECT
   
     if (numberOfProcs.gt.1) then
@@ -389,7 +391,7 @@ CONTAINS
     END SELECT
   
       IF (ALLOCATED(U)) DEALLOCATE(U)
-      SELECT CASE ( Beam%RunType( 1 : 1 ) )
+      SELECT CASE ( Beam%RunType( 1:1 ) )
       ! for a TL calculation, allocate space for the pressure matrix
       CASE ( 'C', 'S', 'I' )        ! TL calculation
           ALLOCATE ( U( NRz_per_range, Pos%NRr ), Stat = iAllocStat )
@@ -401,13 +403,13 @@ CONTAINS
 #endif /* IHOP_WRITE_OUT */
               STOP 'ABNORMAL END: S/R BellhopCore'
           END IF
-      CASE ( 'A', 'a', 'R', 'E' )   ! Arrivals calculation
+      CASE ( 'A', 'a', 'R', 'E', 'e' )   ! Arrivals calculation
           ALLOCATE ( U( 1, 1 ), Stat = iAllocStat )   ! open a dummy variable
       END SELECT
   
       ! for an arrivals run, allocate space for arrivals matrices
-      SELECT CASE ( Beam%RunType( 1 : 1 ) )
-      CASE ( 'A', 'a' )
+      SELECT CASE ( Beam%RunType( 1:1 ) )
+      CASE ( 'A', 'a', 'e' )
           ! allow space for at least MinNArr arrivals
           MaxNArr = MAX( ArrivalsStorage / ( NRz_per_range * Pos%NRr ), MinNArr )
 #ifdef IHOP_WRITE_OUT
@@ -446,10 +448,10 @@ CONTAINS
     SourceDepth: DO is = 1, Pos%NSz
        xs = [ zeroRL, Pos%Sz( is ) ]   ! source coordinate, assuming source @ r=0
   
-       SELECT CASE ( Beam%RunType( 1 : 1 ) )
+       SELECT CASE ( Beam%RunType( 1:1 ) )
        CASE ( 'C', 'S', 'I' ) ! TL calculation, zero out pressure matrix
           U = 0.0
-       CASE ( 'A', 'a' )      ! Arrivals calculation, zero out arrival matrix
+       CASE ( 'A', 'a', 'e' )   ! Arrivals calculation, zero out arrival matrix
           NArr = 0
        END SELECT
   
@@ -458,7 +460,7 @@ CONTAINS
   
        !!IESCO22: BEAM stuff !!
        RadMax = 5 * c / IHOP_freq  ! 5 wavelength max radius IEsco22: unused
-       IF ( Beam%RunType( 1 : 1 ) == 'C' ) THEN ! for Coherent TL Run
+       IF ( Beam%RunType( 1:1 ) == 'C' ) THEN ! for Coherent TL Run
        ! Are there enough rays?
           DalphaOpt = SQRT( c / ( 6.0 * IHOP_freq * Pos%Rr( Pos%NRr ) ) )
           NalphaOpt = 2 + INT( ( Angles%alpha( Angles%Nalpha ) &
@@ -496,7 +498,7 @@ CONTAINS
              ! IEsco22: When a beam pattern isn't specified, Amp0 = 0
   
              ! Lloyd mirror pattern for semi-coherent option
-             IF ( Beam%RunType( 1 : 1 ) == 'S' ) &
+             IF ( Beam%RunType( 1:1 ) == 'S' ) &
                 Amp0 = Amp0 * SQRT( 2.0 ) * ABS( SIN( afreq / c * xs( 2 ) &
                        * SIN( Angles%alpha( ialpha ) ) ) )
              !!IESCO22: end BEAM stuff !!
@@ -517,11 +519,10 @@ CONTAINS
              ! Write the ray trajectory to RAYFile
              IF ( Beam%RunType(1:1) == 'R') THEN   
                 CALL WriteRay2D( SrcDeclAngle, Beam%Nsteps )
-             ELSE ! Compute the contribution to the field
-                CALL WriteRay2D( SrcDeclAngle, Beam%Nsteps )
                 IF (writeDelay) CALL WriteDel2D( SrcDeclAngle, Beam%Nsteps )
+             ELSE ! Compute the contribution to the field
                 
-                SELECT CASE ( Beam%Type( 1 : 1 ) )
+                SELECT CASE ( Beam%Type( 1:1 ) )
                 CASE ( 'g' )
                    CALL InfluenceGeoHatRayCen(    U, Angles%alpha( ialpha ), &
                                                   Angles%Dalpha, myThid )
@@ -541,7 +542,7 @@ CONTAINS
   
        ! write results to disk
   
-       SELECT CASE ( Beam%RunType( 1 : 1 ) )
+       SELECT CASE ( Beam%RunType( 1:1 ) )
        CASE ( 'C', 'S', 'I' )   ! TL calculation
           CALL ScalePressure( Angles%Dalpha, ray2D( 1 )%c, Pos%Rr, U, &
                               NRz_per_range, Pos%NRr, Beam%RunType, IHOP_freq )
@@ -550,7 +551,7 @@ CONTAINS
              IRec = IRec + 1
              WRITE( SHDFile, REC = IRec ) U( Irz1, 1 : Pos%NRr )
           END DO RcvrDepth
-       CASE ( 'A' )             ! arrivals calculation, ascii
+       CASE ( 'A', 'e' )             ! arrivals calculation, ascii
           CALL WriteArrivalsASCII(  Pos%Rr, NRz_per_range, Pos%NRr, &
                                     Beam%RunType( 4:4 ) )
        CASE ( 'a' )             ! arrivals calculation, binary
@@ -599,8 +600,8 @@ CONTAINS
     ray2D( 1 )%p         = [ 1.0, 0.0 ]   ! IESCO22: slowness vector
     ! second component of qv is not supported in geometric beam tracing
     ! set I.C. to 0 in hopes of saving run time
-    IF ( Beam%RunType( 2:2 ) == 'G' ) THEN ! IESCO22: geometric hat in Cartesian
-        ray2D( 1 )%q = [ 0.0, 0.0 ]        ! IESCO22: ray centered coords
+    IF ( Beam%RunType( 2:2 ) == 'G' .or. Beam%RunType( 2:2 ) == 'B')  THEN 
+        ray2D( 1 )%q = [ 0.0, 0.0 ]   ! IESCO22: geometric beam in Cartesian
     ELSE
         ray2D( 1 )%q = [ 0.0, 1.0 ]   ! IESCO22: ray centered coords 
     END IF

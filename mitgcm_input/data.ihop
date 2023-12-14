@@ -2,7 +2,7 @@
 # IHOP package parameters
 # ***********************
  &IHOP_PARM01 
- IHOP_fileroot='baro',
+ IHOP_fileroot='baroA',
  IHOP_title='baroclinic_gyre+ihop',
  &
 
@@ -19,12 +19,12 @@
 # rr + ihop_step < ihop_ranges(end)
  IHOP_rr=2542.0,
 
- IHOP_runopt='A',
+ IHOP_runopt='e',
  IHOP_nalpha=4,
  IHOP_alpha=-20.0, 20.0,
  &
 
  &IHOP_PARM03
  IHOP_interpfile = 'bc-gyre_ihop-grid.nc',
- ihop_iter = 1,2,3,4,5,6,7,8,9,
+ ihop_iter = 1,2,3,4,5,6,7,8,
  &
