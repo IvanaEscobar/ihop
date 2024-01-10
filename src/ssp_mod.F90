@@ -1003,7 +1003,7 @@ SUBROUTINE ExtractSSP( Depth, freq, myThid )
 
     ! Compute gradient, cz
     IF ( iz>1 ) SSP%cz( iz-1 ) = ( SSP%c( iz ) - SSP%c( iz-1 ) ) / &
-                                  ( SSP%z( iz ) - SSP%z( iz-1 ) )
+                                 ( SSP%z( iz ) - SSP%z( iz-1 ) )
   END DO
 
   ! Write relevant diagnostics
