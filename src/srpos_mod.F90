@@ -351,7 +351,7 @@ CONTAINS
 
     IF ( Nx <= 0 ) THEN
 #ifdef IHOP_WRITE_OUT
-        WRITE(msgBuf,'(2A)') 'SRPOSITIONS ReadVector: ', &
+        WRITE(msgBuf,'(2A)') 'SRPOS_MOD ReadVector: ', &
                              'Number of ' // Description // 'must be positive'
         CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
@@ -362,7 +362,7 @@ CONTAINS
         ALLOCATE( x( MAX( 3, Nx ) ), Stat = IAllocStat )
         IF ( IAllocStat /= 0 ) THEN
 #ifdef IHOP_WRITE_OUT
-            WRITE(msgBuf,'(2A)') 'SRPOSITIONS ReadVector: ', &
+            WRITE(msgBuf,'(2A)') 'SRPOS_MOD ReadVector: ', &
                                 'Too many ' // Description
             CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
