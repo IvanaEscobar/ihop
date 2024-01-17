@@ -133,18 +133,18 @@ CONTAINS
 #endif /* IHOP_THREED */
 
     SELECT CASE ( SSP%Type )
-    CASE ( 'N' )  !  N2-linear profile option
-       CALL n2Linear( x, c, cimag, gradc, crr, crz, czz, rho, freq, Task, myThid )
-    CASE ( 'C' )  !  C-linear profile option
-       CALL cLinear(  x, c, cimag, gradc, crr, crz, czz, rho, freq, Task, myThid )
-    CASE ( 'P' )  !  monotone PCHIP ACS profile option
-       CALL cPCHIP(   x, c, cimag, gradc, crr, crz, czz, rho, freq, Task, myThid )
-    CASE ( 'S' )  !  Cubic spline profile option
-       CALL cCubic(   x, c, cimag, gradc, crr, crz, czz, rho, freq, Task, myThid )
+    !CASE ( 'N' )  !  N2-linear profile option
+    !   CALL n2Linear( x, c, cimag, gradc, crr, crz, czz, rho, freq, Task, myThid )
+    !CASE ( 'C' )  !  C-linear profile option
+    !   CALL cLinear(  x, c, cimag, gradc, crr, crz, czz, rho, freq, Task, myThid )
+    !CASE ( 'P' )  !  monotone PCHIP ACS profile option
+    !   CALL cPCHIP(   x, c, cimag, gradc, crr, crz, czz, rho, freq, Task, myThid )
+    !CASE ( 'S' )  !  Cubic spline profile option
+    !   CALL cCubic(   x, c, cimag, gradc, crr, crz, czz, rho, freq, Task, myThid )
     CASE ( 'Q' )
        CALL Quad(     x, c, cimag, gradc, crr, crz, czz, rho, freq, Task, myThid )
-    CASE ( 'A' )  !  Analytic profile option
-       CALL Analytic( x, c, cimag, gradc, crr, crz, czz, rho, Task, myThid )
+    !CASE ( 'A' )  !  Analytic profile option
+    !   CALL Analytic( x, c, cimag, gradc, crr, crz, czz, rho, Task, myThid )
     CASE DEFAULT
 #ifdef IHOP_WRITE_OUT
         WRITE(msgBuf,'(2A)') 'Profile option: ', SSP%Type
