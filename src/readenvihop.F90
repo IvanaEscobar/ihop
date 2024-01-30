@@ -147,12 +147,12 @@ CONTAINS
 
     Pos%NSz = IHOP_nsd
     Pos%NRz = IHOP_nrd
-    CALL AllocateSR( Pos%NSz, Pos%Sz, IHOP_sd )
-    CALL AllocateSR( Pos%NRz, Pos%Rz, IHOP_rd )
+    CALL AllocatePos( Pos%NSz, Pos%Sz, IHOP_sd )
+    CALL AllocatePos( Pos%NRz, Pos%Rz, IHOP_rd )
     CALL ReadSzRz( ZMin, ZMax, myThid )
 
     Pos%NRr = IHOP_nrr
-    CALL AllocateSR( Pos%NRr, Pos%Rr, IHOP_rr )
+    CALL AllocatePos( Pos%NRr, Pos%Rr, IHOP_rr )
     CALL ReadRcvrRanges( myThid )
 
 #ifdef IHOP_THREED
@@ -1231,7 +1231,7 @@ CONTAINS
 
   !**********************************************************************!
 
-  SUBROUTINE AllocateSR( Nx, x_out, x_in )
+  SUBROUTINE AllocatePos( Nx, x_out, x_in )
 
     ! Allocate and populate Pos structure from data.ihop
 
@@ -1249,7 +1249,7 @@ CONTAINS
     END DO
 
   RETURN
-  END !SUBROUTINE AllocateSR
+  END !SUBROUTINE AllocatePos
 
   !**********************************************************************!
   SUBROUTINE openPRTFile ( myTime, myIter, myThid )

@@ -28,15 +28,15 @@ MODULE BELLHOP
   USE ihop_mod,     only:   rad2deg, i, MaxN, Title, Beam, ray2D, istep,       &
                             NRz_per_range, afreq, SrcDeclAngle,                &
                             PRTFile, SHDFile, ARRFile, RAYFile, DELFile   
-  USE readEnviHop,  only:   ReadEnvironment, OpenOutputFiles, resetMemory
+  USE readEnviHop,  only:   readEnvironment, openOutputFiles, resetMemory
   USE angle_mod,    only:   Angles, ialpha
   USE srPos_mod,    only:   Pos
   USE ssp_mod,      only:   EvaluateSSP, HSInfo, Bdry, SSP, betaPowerLaw, fT
-  USE bdry_mod,     only:   ReadATI, ReadBTY, GetTopSeg, GetBotSeg, Bot, Top,  &
+  USE bdry_mod,     only:   readATI, readBTY, GetTopSeg, GetBotSeg, Bot, Top,  &
                             atiType, btyType, NatiPts, NbtyPts, iSmallStepCtr, &
                             IsegTop, IsegBot, rTopSeg, rBotSeg,                &
                             ComputeBdryTangentNormal
-  USE refCoef,      only:   ReadReflectionCoefficient,                         &
+  USE refCoef,      only:   readReflectionCoefficient,                         &
                             InterpolateReflectionCoefficient, ReflectionCoef,  &
                             RTop, RBot, NBotPts, NTopPts
   USE influence,    only:   InfluenceGeoHatRayCen, InfluenceSGB,               &
@@ -136,134 +136,28 @@ CONTAINS
 
     ! Reset memory
     CALL resetMemory() 
-  ! ===========================================================================
-    ! Read in or otherwise initialize inline all the variables by BELLHOP 
-    IF ( Inline ) THEN
-       ! NPts, Sigma not supported by BELLHOP
-       Title = 'iHOP- Calibration case with envfil passed as parameters'
-       IHOP_freq  = 250
-       ! NMedia variable is not supported by BELLHOP
-  
-       ! *** Boundary information (type of boundary condition and, if a 
-       !     halfspace, then halfspace info)
-  
-       AttenUnit         = 'W'
-       Bdry%Top%HS%BC    = 'V'
-       Bdry%Top%HS%Depth = 0
-       Bdry%Bot%HS%Depth = 100
-       Bdry%Bot%HS%Opt   = 'A_'
-       Bdry%Bot%HS%BC    = 'A'
-       Bdry%Bot%HS%cp    = CRCI( 1D20, 1590D0,    0.5D0, IHOP_freq, IHOP_freq, AttenUnit, &
-                                 betaPowerLaw, fT, myThid )   ! compressional wave speed
-       Bdry%Bot%HS%cs    = CRCI( 1D20,    0D0,      0D0, IHOP_freq, IHOP_freq, AttenUnit, &
-                                 betaPowerLaw, fT, myThid )   ! shear wave speed
-       Bdry%Bot%HS%rho   = 1.2                        ! density
-  
-       ! *** sound speed in the water column ***
-  
-       SSP%Type = 'C'   ! interpolation method for SSP
-       SSP%NPts = 2     ! number of SSP points
-       SSP%z(  1 : 2 ) = [    0,  100 ]
-       SSP%c(  1 : 2 ) = [ 1500, 1500 ]
-       SSP%cz( 1 : 2 ) = [    0,    0 ]   ! user should not supply this ...
-  
-       ! *** source and receiver positions ***
-  
-       Pos%NSz = 1
-       Pos%NRz = 100
-       Pos%NRr  = 500
-  
-       ALLOCATE( Pos%Sz( Pos%NSz ), Pos%ws( Pos%NSz ), Pos%isz( Pos%NSz ) )
-       ALLOCATE( Pos%Rz( Pos%NRz ), Pos%wr( Pos%NRz ), Pos%irz( Pos%NRz ) )
-       ALLOCATE( Pos%Rr( Pos%NRr ) )
-  
-       Pos%Sz( 1 ) = 50.
-       Pos%Rz      = [ ( jj, jj = 1, Pos%NRz ) ]
-       Pos%Rr      = 10. * [ ( jj, jj = 1 , Pos%NRr ) ]   ! meters !!!
-  
-       Beam%RunType = 'C'
-       Beam%Type    = 'G   '
-       Beam%deltas  = 0
-       Beam%Box%z   = 101.
-       Beam%Box%r   = 5100 ! meters
-  
-       Angles%Nalpha = 1789
-       Angles%alpha  = ( 180. / Angles%Nalpha ) * &
-                       [ ( jj, jj = 1, Angles%Nalpha ) ] - 90.
-  
-       ! *** Altimetry ***
-       ALLOCATE( Top( 2 ), Stat = iAllocStat )
-       IF ( iAllocStat /= 0 ) THEN
+    ! save data.ihop, gcm SSP: REQUIRED
+    CALL readEnvironment( myTime, myIter, myThid )
+    ! AlTImetry: OPTIONAL, default is no ATIFile
+    CALL readATI( IHOP_fileroot, Bdry%Top%HS%Opt( 5:5 ), Bdry%Top%HS%Depth, myThid )
+    ! BaThYmetry: OPTIONAL, default is BTYFile
+    CALL readBTY( IHOP_fileroot, Bdry%Bot%HS%Opt( 2:2 ), Bdry%Bot%HS%Depth, myThid )
+    ! (top and bottom): OPTIONAL
+    CALL readReflectionCoefficient( IHOP_fileroot, Bdry%Bot%HS%Opt( 1:1 ), &
+                                    Bdry%Top%HS%Opt( 2:2 ), PRTFile ) 
+    ! Source Beam Pattern: OPTIONAL, default is omni source pattern
+    SBPFlag = Beam%RunType( 3:3 )
+    CALL readPat( IHOP_fileroot, myThid )
+    Pos%Ntheta = 1
+    ALLOCATE( Pos%theta( Pos%Ntheta ), Stat = IAllocStat )
+    IF ( IAllocStat/=0 ) THEN
 #ifdef IHOP_WRITE_OUT
-        WRITE(msgBuf,'(2A)') 'BELLHOP IHOP_INIT: ', & 
-                             'Insufficient memory for altimetry data'
-        CALL PRINT_ERROR( msgBuf,myThid )
+        WRITE(msgBuf,'(2A)') 'BELLHOP IHOP_INIT: failed allocation Pos%theta'
+        CALL PRINT_ERROR( msgBuf, myThid )
 #endif /* IHOP_WRITE_OUT */
-        STOP 'ABNORMAL END: S/R IHOP_INIT'
-       END IF
-       Top( 1 )%x = [ -sqrt( huge( Top( 1 )%x( 1 ) ) ) / 1.0d5, 0.d0 ]
-       Top( 2 )%x = [  sqrt( huge( Top( 1 )%x( 1 ) ) ) / 1.0d5, 0.d0 ]
-  
-       CALL ComputeBdryTangentNormal( Top, 'Top' )
-  
-       ! *** Bathymetry ***
-       ALLOCATE( Bot( 2 ), Stat = iAllocStat )
-       IF ( iAllocStat /= 0 ) THEN
-#ifdef IHOP_WRITE_OUT
-        WRITE(msgBuf,'(2A)') 'BELLHOP IHOP_INIT: ', & 
-                             'Insufficient memory for bathymetry data'
-        CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
-        STOP 'ABNORMAL END: S/R IHOP_INIT'
-       END IF
-       Bot( 1 )%x = [ -sqrt( huge( Bot( 1 )%x( 1 ) ) ) / 1.0d5, 5000.d0 ]
-       Bot( 2 )%x = [  sqrt( huge( Bot( 1 )%x( 1 ) ) ) / 1.0d5, 5000.d0 ]
-  
-       CALL ComputeBdryTangentNormal( Bot, 'Bot' )
-  
-       ALLOCATE( RBot( 1 ), Stat = iAllocStat )   ! bottom reflection coefficient
-       ALLOCATE( RTop( 1 ), Stat = iAllocStat )   ! top    reflection coefficient
-  
-       ! *** Source Beam Pattern ***
-       NSBPPts = 2
-       ALLOCATE( SrcBmPat( 2, 2 ), Stat = iAllocStat )
-       IF ( iAllocStat /= 0 ) THEN 
-#ifdef IHOP_WRITE_OUT
-        WRITE(msgBuf,'(2A)') 'BELLHOP IHOP_INIT: ', & 
-                             'Insufficient memory for beam pattern'
-        CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
-        STOP 'ABNORMAL END: S/R IHOP_INIT'
-       END IF
-       SrcBmPat( 1, : ) = [ -180.0, 0.0 ]
-       SrcBmPat( 2, : ) = [  180.0, 0.0 ]
-       SrcBmPat( :, 2 ) = 10**( SrcBmPat( :, 2 ) / 20 )  ! convert dB to linear scale
-  
-  
-    ELSE ! Read and allocate user input 
-       ! save data.ihop, gcm SSP: REQUIRED
-       CALL ReadEnvironment( myTime, myIter, myThid )
-       ! AlTImetry: OPTIONAL, default is no ATIFile
-       CALL ReadATI( IHOP_fileroot, Bdry%Top%HS%Opt( 5:5 ), Bdry%Top%HS%Depth, myThid )
-       ! BaThYmetry: OPTIONAL, default is BTYFile
-       CALL ReadBTY( IHOP_fileroot, Bdry%Bot%HS%Opt( 2:2 ), Bdry%Bot%HS%Depth, myThid )
-       ! (top and bottom): OPTIONAL
-       CALL ReadReflectionCoefficient( IHOP_fileroot, Bdry%Bot%HS%Opt( 1:1 ), &
-                                       Bdry%Top%HS%Opt( 2:2 ), PRTFile ) 
-       ! Source Beam Pattern: OPTIONAL, default is omni source pattern
-       SBPFlag = Beam%RunType( 3:3 )
-       CALL ReadPat( IHOP_fileroot, myThid )
-       Pos%Ntheta = 1
-       ALLOCATE( Pos%theta( Pos%Ntheta ), Stat = IAllocStat )
-       IF ( IAllocStat/=0 ) THEN
-#ifdef IHOP_WRITE_OUT
-           WRITE(msgBuf,'(2A)') 'BELLHOP IHOP_INIT: failed allocation Pos%theta'
-           CALL PRINT_ERROR( msgBuf, myThid )
-#endif /* IHOP_WRITE_OUT */
-           STOP 'ABNORMAL END: S/R  IHOP_INIT'
-       ENDIF
-       Pos%theta( 1 ) = 0.
-    END IF
+        STOP 'ABNORMAL END: S/R  IHOP_INIT'
+    ENDIF
+    Pos%theta( 1 ) = 0.
   
     ! open all output files
     CALL OpenOutputFiles( IHOP_fileroot, myTime, myIter, myThid )
