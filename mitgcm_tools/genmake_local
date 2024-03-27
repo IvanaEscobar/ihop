@@ -1,0 +1,7 @@
+# Options needed for hybrid genmake AD
+
+FFLAGS="$FFLAGS -ffixed-line-length-132"
+F90FLAGS="$F90FLAGS -ffree-line-length-132"
+
+TAF_FORTRAN_VERS='F95'
+TAF_COMMON_FLAGS="-e $TAF_COMMON_FLAGS"
