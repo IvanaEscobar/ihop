@@ -74,6 +74,7 @@
      &      IHOP_nalpha, ihop_iter
 
 !-- COMMON /IHOP_PARAMS_R/ IHOP Real-type parameters:
+!   IHOP_dumpfreq       :: frequency of output dump to run directory
 !   IHOP_freq           :: frequency (Hz)
 !   IHOP_depth          :: depth of bottom (m)
 !   IHOP_bcsound        :: bottom sound speed (m/s) 
@@ -87,6 +88,7 @@
 !   IHOP_alpha          :: bearing launch angles (degrees)
 !   IHOP_step           :: step length (m)
 
+      _RL IHOP_dumpfreq
       _RL IHOP_freq
       _RL IHOP_depth
       _RL IHOP_bcsound
@@ -105,6 +107,7 @@
       _RL ihop_ranges ( IHOP_MAX_NC_SIZE )
 
       COMMON /IHOP_PARAMS_R/                                                                                                            &
+     &      IHOP_dumpfreq,                                                                                                              &
      &      IHOP_freq, IHOP_depth, IHOP_bcsound, IHOP_bcsoundshear,                                                                     &
      &      ihop_brho, IHOP_bcsoundI, IHOP_bcsoundshearI,                                                                               &
      &      IHOP_sd, IHOP_rd, IHOP_rr, IHOP_alpha, IHOP_step,                                                                           &
