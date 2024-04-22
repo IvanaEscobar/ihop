@@ -1,0 +1,11 @@
+# Packages (lines beginning "#" are comments)
+ &PACKAGES
+ useMNC=.false.,
+ useIHOP=.true.,
+ useDiagnostics=.true.,
+# AD packages 
+ useCal=.true.,
+ useGrdChk=.true.,
+ useProfiles=.true.,
+ useEcco=.true.,
+ &
