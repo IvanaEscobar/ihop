@@ -409,16 +409,15 @@ CONTAINS
              !!IESCO22: end BEAM stuff !!
   
 #ifdef IHOP_WRITE_OUT
-            ! In adjoint mode we do not write output besides on the first run
-            IF (IHOP_dumpfreq.GE.0) THEN
              ! report progress in PRTFile (skipping some angles)
              IF ( MOD( ialpha - 1, max( Angles%Nalpha / 50, 1 ) ) == 0 ) THEN
                 WRITE(msgBuf,'(A,I7,F10.2)') 'Tracing ray ', &
                        ialpha, SrcDeclAngle
-                CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
+                ! In adjoint mode we do not write output besides on the first run
+                IF (IHOP_dumpfreq.GE.0) &
+                    CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
                 FLUSH( PRTFile )
              END IF
-            ENDIF
 #endif /* IHOP_WRITE_OUT */
              
              ! Trace a ray, update ray2D structure
@@ -679,67 +678,75 @@ CONTAINS
        END IF
      
 #ifdef IHOP_WRITE_OUT
-       IF ( IHOP_dumpfreq .GE. 0) &
-        CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
+       IF ( ( ray2D( is+1 )%x( 1 ) > Beam%Box%r ) .OR. & 
+            ( ray2D( is+1 )%x( 1 ) < 0 ) .OR. &
+            ( ray2D( is+1 )%x( 2 ) > Beam%Box%z ) .OR. &
+            ( ABS( ray2D( is+1 )%Amp ) < 0.005 ) .OR. &
+            ( DistBegTop < 0.0 .AND. DistEndTop < 0.0 ) .OR. &
+            ( DistBegBot < 0.0 .AND. DistEndBot < 0.0 ) .OR. &
+            ( is >= MaxN - 3 ) ) THEN
+            IF ( IHOP_dumpfreq .GE. 0) &
+                CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
+       ENDIF
 #endif /* IHOP_WRITE_OUT */
-       IF (INDEX(msgBuf, 'TraceRay2D') == 1) THEN
+       IF (INDEX(msgBuf, 'TraceRay2D').eq.1) THEN
            Beam%Nsteps = is+1
            Exit Stepping
-       ELSE IF (INDEX(msgBuf, 'WARNING: TraceRay2D') == 1) THEN
+       ELSE IF (INDEX(msgBuf, 'WARNING: TraceRay2D').eq.1) THEN
            Beam%Nsteps = is
            Exit Stepping
        END IF 
 
-!       IF ( ray2D( is+1 )%x( 1 ) > Beam%Box%r ) THEN
-!          Beam%Nsteps = is + 1
-!#ifdef IHOP_WRITE_OUT
-!          WRITE(msgBuf,'(A)') 'TraceRay2D: ray left Box%r'
-!          CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
-!#endif /* IHOP_WRITE_OUT */
-!          EXIT Stepping
-!       ELSE IF ( ray2D( is+1 )%x( 1 ) < 0 ) THEN
-!          Beam%Nsteps = is + 1
-!#ifdef IHOP_WRITE_OUT
-!          WRITE(msgBuf,'(A)') 'TraceRay2D: ray left Box r=0'
-!          CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
-!#endif /* IHOP_WRITE_OUT */
-!          EXIT Stepping
-!       ELSE IF ( ray2D( is+1 )%x( 2 ) > Beam%Box%z ) THEN 
-!          Beam%Nsteps = is + 1
-!#ifdef IHOP_WRITE_OUT
-!          WRITE(msgBuf,'(A)') 'TraceRay2D: ray left Box%z'
-!          CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
-!#endif /* IHOP_WRITE_OUT */
-!          EXIT Stepping
-!       ELSE IF ( ABS( ray2D( is+1 )%Amp ) < 0.005 ) THEN
-!          Beam%Nsteps = is + 1
-!#ifdef IHOP_WRITE_OUT
-!          WRITE(msgBuf,'(A)') 'TraceRay2D: ray lost energy'
-!          CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
-!#endif /* IHOP_WRITE_OUT */
-!          EXIT Stepping
-!       ELSE IF ( DistBegTop < 0.0 .AND. DistEndTop < 0.0 ) THEN 
-!          Beam%Nsteps = is + 1
-!#ifdef IHOP_WRITE_OUT
-!          WRITE(msgBuf,'(A)') 'TraceRay2D: ray escaped top bound'
-!          CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
-!#endif /* IHOP_WRITE_OUT */
-!          EXIT Stepping
-!       ELSE IF ( DistBegBot < 0.0 .AND. DistEndBot < 0.0 ) THEN
-!          Beam%Nsteps = is + 1
-!#ifdef IHOP_WRITE_OUT
-!          WRITE(msgBuf,'(A)') 'TraceRay2D: ray escaped bot bound'
-!          CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
-!#endif /* IHOP_WRITE_OUT */
-!          EXIT Stepping
-!       ELSE IF ( is >= MaxN - 3 ) THEN
-!#ifdef IHOP_WRITE_OUT
-!          WRITE(msgBuf,'(A)') 'WARNING: TraceRay2D: Check storage for ray trajectory'
-!          CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
-!#endif /* IHOP_WRITE_OUT */
-!          Beam%Nsteps = is
-!          EXIT Stepping
-!       END IF
+!!       IF ( ray2D( is+1 )%x( 1 ) > Beam%Box%r ) THEN
+!!          Beam%Nsteps = is + 1
+!!#ifdef IHOP_WRITE_OUT
+!!          WRITE(msgBuf,'(A)') 'TraceRay2D: ray left Box%r'
+!!          CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
+!!#endif /* IHOP_WRITE_OUT */
+!!          EXIT Stepping
+!!       ELSE IF ( ray2D( is+1 )%x( 1 ) < 0 ) THEN
+!!          Beam%Nsteps = is + 1
+!!#ifdef IHOP_WRITE_OUT
+!!          WRITE(msgBuf,'(A)') 'TraceRay2D: ray left Box r=0'
+!!          CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
+!!#endif /* IHOP_WRITE_OUT */
+!!          EXIT Stepping
+!!       ELSE IF ( ray2D( is+1 )%x( 2 ) > Beam%Box%z ) THEN 
+!!          Beam%Nsteps = is + 1
+!!#ifdef IHOP_WRITE_OUT
+!!          WRITE(msgBuf,'(A)') 'TraceRay2D: ray left Box%z'
+!!          CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
+!!#endif /* IHOP_WRITE_OUT */
+!!          EXIT Stepping
+!!       ELSE IF ( ABS( ray2D( is+1 )%Amp ) < 0.005 ) THEN
+!!          Beam%Nsteps = is + 1
+!!#ifdef IHOP_WRITE_OUT
+!!          WRITE(msgBuf,'(A)') 'TraceRay2D: ray lost energy'
+!!          CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
+!!#endif /* IHOP_WRITE_OUT */
+!!          EXIT Stepping
+!!       ELSE IF ( DistBegTop < 0.0 .AND. DistEndTop < 0.0 ) THEN 
+!!          Beam%Nsteps = is + 1
+!!#ifdef IHOP_WRITE_OUT
+!!          WRITE(msgBuf,'(A)') 'TraceRay2D: ray escaped top bound'
+!!          CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
+!!#endif /* IHOP_WRITE_OUT */
+!!          EXIT Stepping
+!!       ELSE IF ( DistBegBot < 0.0 .AND. DistEndBot < 0.0 ) THEN
+!!          Beam%Nsteps = is + 1
+!!#ifdef IHOP_WRITE_OUT
+!!          WRITE(msgBuf,'(A)') 'TraceRay2D: ray escaped bot bound'
+!!          CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
+!!#endif /* IHOP_WRITE_OUT */
+!!          EXIT Stepping
+!!       ELSE IF ( is >= MaxN - 3 ) THEN
+!!#ifdef IHOP_WRITE_OUT
+!!          WRITE(msgBuf,'(A)') 'WARNING: TraceRay2D: Check storage for ray trajectory'
+!!          CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
+!!#endif /* IHOP_WRITE_OUT */
+!!          Beam%Nsteps = is
+!!          EXIT Stepping
+!!       END IF
   
        DistBegTop = DistEndTop
        DistBegBot = DistEndBot
