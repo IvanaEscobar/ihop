@@ -12,11 +12,13 @@ MODULE refCoef
 
 ! ! USES
   implicit none
-!  == Global variables ==
+! == Global variables ==
 #include "SIZE.h"
-#include "GRID.h"
 #include "EEPARAMS.h"
 #include "PARAMS.h"
+#include "GRID.h"
+#include "IHOP_SIZE.h"
+#include "IHOP.h"
 
   PRIVATE
 
