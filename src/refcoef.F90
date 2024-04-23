@@ -57,17 +57,18 @@ CONTAINS
     CHARACTER (LEN=80) :: Title2
 
     IF ( BotRC == 'F' ) THEN
-#ifdef IHOP_WRITE_OUT
-       WRITE( PRTFile, * ) '_______________________________________________', &
-                           '___________________________'
-       WRITE( PRTFile, * )
-       WRITE( PRTFile, * ) 'Using tabulated bottom reflection coef.'
-#endif /* IHOP_WRITE_OUT */
        OPEN( FilE = TRIM( FileRoot ) // '.brc', UNIT = BRCFile, STATUS = 'OLD',&
              IOSTAT = IOStat, ACTION = 'READ' )
        IF ( IOStat /= 0 ) THEN
 #ifdef IHOP_WRITE_OUT
+        ! In adjoint mode we do not write output besides on the first run
+        IF (IHOP_dumpfreq.GE.0) THEN
+            WRITE( PRTFile, * ) '__________________________________________', &
+                                '________________________________'
+            WRITE( PRTFile, * )
+            WRITE( PRTFile, * ) 'Using tabulated bottom reflection coef.'
             WRITE( PRTFile, * ) 'BRCFile = ', TRIM( FileRoot ) // '.brc'
+        ENDIF
             WRITE(msgBuf,'(2A)')'REFCOEF ReadReflectionCoeffcient: ',&
                             'Unable to open Bottom Reflection Coefficient file'
             CALL PRINT_ERROR( msgBuf,myThid )
@@ -77,7 +78,9 @@ CONTAINS
 
        READ(  BRCFile, * ) NBotPts
 #ifdef IHOP_WRITE_OUT
-       WRITE( PRTFile, * ) 'Number of points in bottom reflection ',&
+       ! In adjoint mode we do not write output besides on the first run
+       IF (IHOP_dumpfreq.GE.0) &
+        WRITE( PRTFile, * ) 'Number of points in bottom reflection ',&
                            'coefficient = ', NBotPts
 #endif /* IHOP_WRITE_OUT */
 
@@ -102,17 +105,18 @@ CONTAINS
     ! Optionally read in top reflection coefficient
 
     IF ( TopRC == 'F' ) THEN
-#ifdef IHOP_WRITE_OUT
-       WRITE( PRTFile, * ) '_______________________________________________', &
-                           '___________________________'
-       WRITE( PRTFile, * )
-       WRITE( PRTFile, * ) 'Using tabulated top    reflection coef.'
-#endif /* IHOP_WRITE_OUT */
        OPEN( FILE = TRIM( FileRoot ) // '.trc', UNIT = TRCFile, STATUS = 'OLD',&
              IOSTAT = IOStat, ACTION = 'READ' )
        IF ( IOStat /= 0 ) THEN
 #ifdef IHOP_WRITE_OUT
-        WRITE( PRTFile, * ) 'TRCFile = ', TRIM( FileRoot ) // '.trc'
+        ! In adjoint mode we do not write output besides on the first run
+        IF (IHOP_dumpfreq.GE.0) THEN
+            WRITE( PRTFile, * ) '__________________________________________', &
+                            '________________________________'
+            WRITE( PRTFile, * )
+            WRITE( PRTFile, * ) 'Using tabulated top    reflection coef.'
+            WRITE( PRTFile, * ) 'TRCFile = ', TRIM( FileRoot ) // '.trc'
+        ENDIF
         WRITE(msgBuf,'(2A)') 'REFCOEF ReadReflectionCoeffcient: ', &
                                'Unable to open Top Reflection Coefficient file'
         CALL PRINT_ERROR( msgBuf,myThid )
@@ -122,7 +126,9 @@ CONTAINS
 
        READ(  TRCFile, * ) NTopPts
 #ifdef IHOP_WRITE_OUT
-       WRITE( PRTFile, * ) 'Number of points in top reflection ',& 
+       ! In adjoint mode we do not write output besides on the first run
+       IF (IHOP_dumpfreq.GE.0) &
+        WRITE( PRTFile, * ) 'Number of points in top reflection ',& 
                            'coefficient = ', NTopPts
 #endif /* IHOP_WRITE_OUT */
 
@@ -147,13 +153,13 @@ CONTAINS
     ! Optionally read in internal reflection coefficient data
 
     IF ( BotRC == 'P' ) THEN
-#ifdef IHOP_WRITE_OUT
-       WRITE( PRTFile, * ) 'Reading precalculated refl. coeff. table'
-#endif /* IHOP_WRITE_OUT */
        OPEN( FILE = TRIM( FileRoot ) // '.irc', UNIT = IRCFile, STATUS = 'OLD',&
              IOSTAT = IOStat, ACTION = 'READ' )
        IF ( IOStat /= 0 ) THEN
 #ifdef IHOP_WRITE_OUT
+        ! In adjoint mode we do not write output besides on the first run
+        IF (IHOP_dumpfreq.GE.0) &
+            WRITE( PRTFile, * ) 'Reading precalculated refl. coeff. table'
         WRITE(msgBuf,'(2A)') 'REFCOEF ReadReflectionCoeffcient: ', &
                         'Unable to open Internal Reflection Coefficient file'
         CALL PRINT_ERROR( msgBuf,myThid )
@@ -164,9 +170,12 @@ CONTAINS
        READ(  IRCFile, * ) Title2, freq
        READ(  IRCFile, * ) NkTab
 #ifdef IHOP_WRITE_OUT
-       WRITE( PRTFile, * )
-       WRITE( PRTFile, * ) 'Number of points in internal reflection ', &
-                           'coefficient = ', NkTab
+       ! In adjoint mode we do not write output besides on the first run
+       IF (IHOP_dumpfreq.GE.0) THEN
+        WRITE( PRTFile, * )
+        WRITE( PRTFile, * ) 'Number of points in internal reflection ', &
+                            'coefficient = ', NkTab
+       ENDIF
 #endif /* IHOP_WRITE_OUT */
 
        IF ( ALLOCATED( xTab ) )  DEALLOCATE( xTab, fTab, gTab, iTab )
@@ -217,10 +226,13 @@ CONTAINS
        RInt%R   = 0.0     ! R( iLeft  )%R
        RInt%phi = 0.0     ! R( iLeft  )%phi
 #ifdef IHOP_WRITE_OUT
-       WRITE( PRTFile, * ) 'Warning in InterpolateReflectionCoefficient : ',&
-                           'Refl. Coef. being set to 0 outside tabulated domain'
-       WRITE( PRTFile, * ) 'angle = ', thetaintr, 'lower limit = ', &
-                           R( iLeft)%theta
+       ! In adjoint mode we do not write output besides on the first run
+       IF (IHOP_dumpfreq.GE.0) THEN
+        WRITE( PRTFile, * ) 'Warning in InterpolateReflectionCoefficient : ',&
+                            'Ref. Coef. being set to 0 outside tabulated domain'
+        WRITE( PRTFile, * ) 'angle = ', thetaintr, 'lower limit = ', &
+                            R( iLeft)%theta
+       ENDIF
 #endif /* IHOP_WRITE_OUT */
 
     ELSE IF( thetaIntr > R( iRight )%theta ) THEN

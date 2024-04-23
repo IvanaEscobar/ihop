@@ -72,28 +72,31 @@ CONTAINS
     INTEGER :: ifreq
 
 
-    ! Broadband run?
-    IF ( BroadbandOption == 'B' ) THEN
+    ! In adjoint mode we do not write output besides on the first run
+    IF (IHOP_dumpfreq.GE.0) THEN
+        ! Broadband run?
+        IF ( BroadbandOption == 'B' ) THEN
 #ifdef IHOP_WRITE_OUT
-        WRITE(msgBuf,'(2A)')'________________________________________________',&
-                            '___________'
-        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-        WRITE(msgBuf,'(A)') 
-        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-        WRITE(msgBuf,'(A)') 
-        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-        WRITE(msgBuf,'(A,I10)') 'Number of frequencies =', Nfreq
-        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+            WRITE(msgBuf,'(2A)')'___________________________________________',&
+                                '________________'
+            CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+            WRITE(msgBuf,'(A)') 
+            CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+            WRITE(msgBuf,'(A)') 
+            CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+            WRITE(msgBuf,'(A,I10)') 'Number of frequencies =', Nfreq
+            CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 #endif /* IHOP_WRITE_OUT */
-        IF ( Nfreq <= 0 ) THEN
+            IF ( Nfreq <= 0 ) THEN
 #ifdef IHOP_WRITE_OUT
-            WRITE(msgBuf,'(2A)') 'SRPOSITIONS ReadfreqVec: ', &
+                WRITE(msgBuf,'(2A)') 'SRPOSITIONS ReadfreqVec: ', &
                                  'Number of frequencies must be positive'
-            CALL PRINT_ERROR( msgBuf,myThid )
+                CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
-            STOP 'ABNORMAL END: S/R ReadfreqVec'
+                STOP 'ABNORMAL END: S/R ReadfreqVec'
+            END IF
         END IF
-    END IF
+    ENDIF
 
     IF ( ALLOCATED( freqVec ) ) DEALLOCATE( freqVec )
     ALLOCATE( freqVec( MAX( 3, Nfreq ) ), Stat = IAllocStat )
@@ -109,19 +112,24 @@ CONTAINS
     IF ( BroadbandOption == 'B' ) THEN
 #ifdef IHOP_WRITE_OUT
        WRITE(msgBuf,'(A)') 'Frequencies (Hz)'
-       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+       ! In adjoint mode we do not write output besides on the first run
+       IF (IHOP_dumpfreq.GE.0) &
+        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 #endif /* IHOP_WRITE_OUT */
        freqVec( 3 ) = -999.9
        !READ(  ENVFile, * ) freqVec( 1 : Nfreq )
        CALL SubTab( freqVec, Nfreq )
 
 #ifdef IHOP_WRITE_OUT
-       WRITE( msgBuf, '(5G14.6)' ) ( freqVec( ifreq ), ifreq = 1, &
-           MIN( Nfreq, Number_to_Echo ) )
-       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-       IF ( Nfreq > Number_to_Echo ) &
-           WRITE( msgBuf,'(G14.6)' ) ' ... ', freqVec( Nfreq )
-           CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+       ! In adjoint mode we do not write output besides on the first run
+       IF (IHOP_dumpfreq.GE.0) THEN
+        WRITE( msgBuf, '(5G14.6)' ) ( freqVec( ifreq ), ifreq = 1, &
+            MIN( Nfreq, Number_to_Echo ) )
+        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+        IF ( Nfreq > Number_to_Echo ) &
+            WRITE( msgBuf,'(G14.6)' ) ' ... ', freqVec( Nfreq )
+            CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+       ENDIF
 #endif /* IHOP_WRITE_OUT */
     ELSE
        freqVec( 1 ) = freq0
@@ -212,33 +220,36 @@ CONTAINS
     ! *** Check for Sz/Rz in water column ***
 
 #ifdef IHOP_WRITE_OUT
-    IF ( ANY( Pos%Sz( 1 : Pos%NSz ) < zMin ) ) THEN
-       WHERE ( Pos%Sz < zMin ) Pos%Sz = zMin
-       WRITE(msgBuf,'(2A)') 'Warning in ReadSzRz : Source above or too ',&
-                           'near the top bdry has been moved down'
-       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    END IF
+    ! In adjoint mode we do not write output besides on the first run
+    IF (IHOP_dumpfreq.GE.0) THEN
+        IF ( ANY( Pos%Sz( 1 : Pos%NSz ) < zMin ) ) THEN
+           WHERE ( Pos%Sz < zMin ) Pos%Sz = zMin
+           WRITE(msgBuf,'(2A)') 'Warning in ReadSzRz : Source above or too ',&
+                               'near the top bdry has been moved down'
+           CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+        END IF
 
-    IF ( ANY( Pos%Sz( 1 : Pos%NSz ) > zMax ) ) THEN
-       WHERE( Pos%Sz > zMax ) Pos%Sz = zMax
-       WRITE(msgBuf,'(2A)') 'Warning in ReadSzRz : Source below or too ',&
-                           'near the bottom bdry has been moved up'
-       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    END IF
+        IF ( ANY( Pos%Sz( 1 : Pos%NSz ) > zMax ) ) THEN
+           WHERE( Pos%Sz > zMax ) Pos%Sz = zMax
+           WRITE(msgBuf,'(2A)') 'Warning in ReadSzRz : Source below or too ',&
+                               'near the bottom bdry has been moved up'
+           CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+        END IF
 
-    IF ( ANY( Pos%Rz( 1 : Pos%NRz ) < zMin ) ) THEN
-       WHERE( Pos%Rz < zMin ) Pos%Rz = zMin
-       WRITE(msgBuf,'(2A)') 'Warning in ReadSzRz : Receiver above or too ',&
-           'near the top bdry has been moved down'
-       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    END IF
+        IF ( ANY( Pos%Rz( 1 : Pos%NRz ) < zMin ) ) THEN
+           WHERE( Pos%Rz < zMin ) Pos%Rz = zMin
+           WRITE(msgBuf,'(2A)') 'Warning in ReadSzRz : Receiver above or too ',&
+               'near the top bdry has been moved down'
+           CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+        END IF
 
-    IF ( ANY( Pos%Rz( 1 : Pos%NRz ) > zMax ) ) THEN
-       WHERE( Pos%Rz > zMax ) Pos%Rz = zMax
-       WRITE(msgBuf,'(2A)') 'Warning in ReadSzRz : Receiver below or too ',&
-                           'near the bottom bdry has been moved up'
-       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    END IF
+        IF ( ANY( Pos%Rz( 1 : Pos%NRz ) > zMax ) ) THEN
+           WHERE( Pos%Rz > zMax ) Pos%Rz = zMax
+           WRITE(msgBuf,'(2A)') 'Warning in ReadSzRz : Receiver below or too ',&
+                               'near the bottom bdry has been moved up'
+           CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+        END IF
+    ENDIF
 #endif /* IHOP_WRITE_OUT */
 
   RETURN
@@ -337,18 +348,6 @@ CONTAINS
                                                     Units*( * )
     INTEGER :: ix
    
-#ifdef IHOP_WRITE_OUT
-    WRITE(msgBuf,'(A)') 
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(2A)')'__________________________________________________', &
-                        '_________'
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(A)') 
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(A,I10)') 'Number of ' // Description // ' = ', Nx
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-#endif /* IHOP_WRITE_OUT */
-
     IF ( Nx <= 0 ) THEN
 #ifdef IHOP_WRITE_OUT
         WRITE(msgBuf,'(2A)') 'SRPOS_MOD ReadVector: ', &
@@ -371,23 +370,39 @@ CONTAINS
     END IF
 
 #ifdef IHOP_WRITE_OUT
-    WRITE(msgBuf,'(A)') Description // ' (' // Units // ')'
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    ! In adjoint mode we do not write output besides on the first run
+    IF (IHOP_dumpfreq.GE.0) THEN
+        WRITE(msgBuf,'(A)') 
+        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+        WRITE(msgBuf,'(2A)')'______________________________________________', &
+                            '_____________'
+        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+        WRITE(msgBuf,'(A)') 
+        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+        WRITE(msgBuf,'(A,I10)') 'Number of ' // Description // ' = ', Nx
+        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+
+        WRITE(msgBuf,'(A)') Description // ' (' // Units // ')'
+        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    ENDIF
 #endif /* IHOP_WRITE_OUT */
 
     CALL SubTab( x, Nx )
     CALL Sort(   x, Nx )
 
 #ifdef IHOP_WRITE_OUT
-    WRITE(msgBuf,'(5G14.6)') ( x( ix ), ix = 1, MIN( Nx, Number_to_Echo ) )
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    IF ( Nx > Number_to_Echo ) THEN
-        WRITE(msgBuf,'(G14.6)') ' ... ', x( Nx )
+    ! In adjoint mode we do not write output besides on the first run
+    IF (IHOP_dumpfreq.GE.0) THEN
+        WRITE(msgBuf,'(5G14.6)') ( x( ix ), ix = 1, MIN( Nx, Number_to_Echo ) )
         CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    END IF
+        IF ( Nx > Number_to_Echo ) THEN
+            WRITE(msgBuf,'(G14.6)') ' ... ', x( Nx )
+            CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+        END IF
 
-    WRITE(msgBuf,'(A)') 
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+        WRITE(msgBuf,'(A)') 
+        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    ENDIF
 #endif /* IHOP_WRITE_OUT */
 
     ! Vectors in km should be converted to m for internal use

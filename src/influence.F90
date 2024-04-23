@@ -276,8 +276,10 @@ CONTAINS
 
                 IF ( n < RadiusMax ) THEN
 #ifdef IHOP_WRITE_OUT
-                    WRITE(msgBuf,'(A,F10.2)') "Influence: Eigenray w RadiusMax = ", RadiusMax
-                    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+                    WRITE(msgBuf,'(A,F10.2)') &
+                        "Influence: Eigenray w RadiusMax = ", RadiusMax
+                    IF ( IHOP_dumpfreq .GE. 0) &
+                     CALL PRINT_MESSAGE( msgbuf, PRTFile,SQUEEZE_RIGHT, myThid )
 #endif /* IHOP_WRITE_OUT */
                    ! interpolated delay
                    delay    = ray2D( iS-1 )%tau + s*dtauds              

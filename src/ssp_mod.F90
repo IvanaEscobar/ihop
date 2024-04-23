@@ -148,8 +148,10 @@ CONTAINS
     CASE DEFAULT
 #ifdef IHOP_WRITE_OUT
         WRITE(msgBuf,'(2A)') 'Profile option: ', SSP%Type
-        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-        WRITE(msgBuf,'(2A)') 'SSPMOD EvaluateSSP: ', 'Invalid SSP profile option'
+        ! In adjoint mode we do not write output besides on the first run
+        IF (IHOP_dumpfreq.GE.0) &
+            CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+        WRITE(msgBuf,'(A)') 'SSPMOD EvaluateSSP: Invalid SSP profile option'
         CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
         STOP 'ABNORMAL END: S/R EvaluateSSP'
@@ -478,6 +480,8 @@ SUBROUTINE Quad( x, c, cimag, gradc, crr, crz, czz, rho, freq, Task, myThid )
     ! Check that x is inside the box where the sound speed is defined
     IF ( x( 1 ) < SSP%Seg%r( 1 ) .OR. x( 1 ) > SSP%Seg%r( SSP%Nr ) ) THEN
 #ifdef IHOP_WRITE_OUT
+     ! In adjoint mode we do not write output besides on the first run
+     IF (IHOP_dumpfreq.GE.0) THEN
       WRITE(msgBuf,'(2A)') 'ray is outside the box where ocean ',&
         'soundspeed is defined'
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
@@ -486,6 +490,7 @@ SUBROUTINE Quad( x, c, cimag, gradc, crr, crz, czz, rho, freq, Task, myThid )
       WRITE(msgBuf,'(2A)') 'SSPMOD Quad: ', &
         'ray is outside the box where the soundspeed is defined'
       CALL PRINT_ERROR( msgBuf,myThid )
+     ENDIF
 #endif /* IHOP_WRITE_OUT */
       STOP 'ABNORMAL END: S/R Quad'
     END IF
@@ -570,7 +575,9 @@ END !SUBROUTINE Quad
     IF ( Task == 'INI' ) THEN
 #ifdef IHOP_WRITE_OUT
        WRITE(msgBuf,'(A)') 'Analytic SSP option'
-       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+       ! In adjoint mode we do not write output besides on the first run
+       IF (IHOP_dumpfreq.GE.0) &
+        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 #endif /* IHOP_WRITE_OUT */
        SSP%NPts = 2
        SSP%z(1) = 0.0
@@ -632,7 +639,9 @@ END !SUBROUTINE Quad
     IF ( IOSTAT /= 0 ) THEN   ! successful open?
 #ifdef IHOP_WRITE_OUT
         WRITE(msgBuf,'(A)') 'SSPFile = ', TRIM( IHOP_fileroot ) // '.ssp'
-        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+        ! In adjoint mode we do not write output besides on the first run
+        IF (IHOP_dumpfreq.GE.0) &
+            CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
         WRITE(msgBuf,'(A)') 'SSPMOD ReadSSP: Unable to open the SSP file'
         CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
@@ -641,30 +650,36 @@ END !SUBROUTINE Quad
 
     ! Write relevant diagnostics
 #ifdef IHOP_WRITE_OUT
-    WRITE(msgBuf,'(A)') "Sound Speed Field" 
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(2A)')'____________________________________________________',&
-                        '_______'
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(A)') 
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    ! In adjoint mode we do not write output besides on the first run
+    IF (IHOP_dumpfreq.GE.0) THEN
+        WRITE(msgBuf,'(A)') "Sound Speed Field" 
+        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+        WRITE(msgBuf,'(2A)')'_______________________________________________',&
+                            '____________'
+        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+        WRITE(msgBuf,'(A)') 
+        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    ENDIF
 #endif /* IHOP_WRITE_OUT */
 
     READ( SSPFile,  * ) SSP%Nr, SSP%Nz
 #ifdef IHOP_WRITE_OUT
-    IF (SSP%Nr .GT. 1) THEN
-        WRITE(msgBuf,'(A)') 'Using range-dependent sound speed'
-        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    END IF
-    IF (SSP%Nr .EQ. 1) THEN
-        WRITE(msgBuf,'(A)') 'Using range-independent sound speed'
-        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    END IF
+    ! In adjoint mode we do not write output besides on the first run
+    IF (IHOP_dumpfreq.GE.0) THEN
+        IF (SSP%Nr .GT. 1) THEN
+            WRITE(msgBuf,'(A)') 'Using range-dependent sound speed'
+            CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+        END IF
+        IF (SSP%Nr .EQ. 1) THEN
+            WRITE(msgBuf,'(A)') 'Using range-independent sound speed'
+            CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+        END IF
 
-    WRITE(msgBuf,'(A,I10)') 'Number of SSP ranges = ', SSP%Nr
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(A,I10)') 'Number of SSP depths = ', SSP%Nz
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+        WRITE(msgBuf,'(A,I10)') 'Number of SSP ranges = ', SSP%Nr
+        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+        WRITE(msgBuf,'(A,I10)') 'Number of SSP depths = ', SSP%Nz
+        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    ENDIF
 #endif /* IHOP_WRITE_OUT */
 
     ALLOCATE( SSP%cMat( SSP%Nz, SSP%Nr ), &
@@ -682,24 +697,30 @@ END !SUBROUTINE Quad
 
     READ( SSPFile,  * ) SSP%Seg%r( 1 : SSP%Nr )
 #ifdef IHOP_WRITE_OUT
-    WRITE(msgBuf,'(A)') 
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(A)') 'Profile ranges (km):'
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(F10.2)') SSP%Seg%r( 1 : SSP%Nr )
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    ! In adjoint mode we do not write output besides on the first run
+    IF (IHOP_dumpfreq.GE.0) THEN
+        WRITE(msgBuf,'(A)') 
+        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+        WRITE(msgBuf,'(A)') 'Profile ranges (km):'
+        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+        WRITE(msgBuf,'(F10.2)') SSP%Seg%r( 1 : SSP%Nr )
+        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    ENDIF
 #endif /* IHOP_WRITE_OUT */
     SSP%Seg%r = 1000.0 * SSP%Seg%r   ! convert km to m
 
     READ( SSPFile,  * ) SSP%z( 1 : SSP%Nz )
 !#ifdef IHOP_DEBUG
 #ifdef IHOP_WRITE_OUT
-    WRITE(msgBuf,'(A)') 
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(A)') 'Profile depths (m):'
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(F10.2)') SSP%z( 1 : SSP%Nz )
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    ! In adjoint mode we do not write output besides on the first run
+    IF (IHOP_dumpfreq.GE.0) THEN
+        WRITE(msgBuf,'(A)') 
+        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+        WRITE(msgBuf,'(A)') 'Profile depths (m):'
+        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+        WRITE(msgBuf,'(F10.2)') SSP%z( 1 : SSP%Nz )
+        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    ENDIF
 #endif /* IHOP_WRITE_OUT */
 !#endif
 
@@ -707,12 +728,15 @@ END !SUBROUTINE Quad
     ! IEsco23: change to allocatable memory since we should know Nz
 #ifdef IHOP_DEBUG
 #ifdef IHOP_WRITE_OUT
-    WRITE(msgBuf,'(A)') 
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(A)') 'Sound speed matrix:'
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(A)') ' Depth (m )     Soundspeed (m/s)'
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    ! In adjoint mode we do not write output besides on the first run
+    IF (IHOP_dumpfreq.GE.0) THEN
+        WRITE(msgBuf,'(A)') 
+        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+        WRITE(msgBuf,'(A)') 'Sound speed matrix:'
+        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+        WRITE(msgBuf,'(A)') ' Depth (m )     Soundspeed (m/s)'
+        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    ENDIF
 #endif /* IHOP_WRITE_OUT */
 #endif /* IHOP_DEBUG */
     DO iz2 = 1, SSP%Nz
@@ -720,27 +744,34 @@ END !SUBROUTINE Quad
 #ifdef IHOP_DEBUG
 #ifdef IHOP_WRITE_OUT
        WRITE(msgBuf,'(12F10.2)') SSP%z( iz2 ), SSP%cMat( iz2, : )
-       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+       ! In adjoint mode we do not write output besides on the first run
+       IF (IHOP_dumpfreq.GE.0) &
+            CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 #endif /* IHOP_WRITE_OUT */
 #endif /* IHOP_DEBUG */
     END DO
     CLOSE( SSPFile )
 
 #ifdef IHOP_WRITE_OUT
-    WRITE(msgBuf,'(A)') 
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(A)') 'Sound speed profile:'
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(A)')'      z         alphaR      betaR     rho        alphaI     betaI'
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(A)')'     (m)         (m/s)      (m/s)   (g/cm^3)      (m/s)     (m/s)'
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    
-    WRITE(msgBuf,'(2A)')'____________________________________________________',&
-                        '_______'
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(A)') 
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    ! In adjoint mode we do not write output besides on the first run
+    IF (IHOP_dumpfreq.GE.0) THEN
+        WRITE(msgBuf,'(A)') 
+        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+        WRITE(msgBuf,'(A)') 'Sound speed profile:'
+        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+        WRITE(msgBuf,'(2A)')'      z         alphaR      betaR     rho        ',
+                            'alphaI     betaI'
+        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+        WRITE(msgBuf,'(2A)')'     (m)         (m/s)      (m/s)   (g/cm^3)     ',
+                            ' (m/s)     (m/s)'
+        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+        
+        WRITE(msgBuf,'(2A)')'_______________________________________________',&
+                            '____________'
+        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+        WRITE(msgBuf,'(A)') 
+        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    ENDIF
 #endif /* IHOP_WRITE_OUT */
     SSP%NPts = 1
     DO iz = 1, MaxSSP 
@@ -748,7 +779,9 @@ END !SUBROUTINE Quad
 #ifdef IHOP_WRITE_OUT
        WRITE(msgBuf,'( F10.2, 3X, 2F10.2, 3X, F6.2, 3X, 2F10.4)') &
            SSP%z( iz ), alphaR, betaR, rhoR, alphaI, betaI
-       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+       ! In adjoint mode we do not write output besides on the first run
+       IF (IHOP_dumpfreq.GE.0) &
+        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 #endif /* IHOP_WRITE_OUT */
 
        SSP%c(   iz ) = CRCI( SSP%z( iz ), alphaR, alphaI, freq, freq, &
@@ -760,7 +793,9 @@ END !SUBROUTINE Quad
           IF ( SSP%z( iz ) .LE. SSP%z( iz - 1 ) ) THEN
 #ifdef IHOP_WRITE_OUT
                 WRITE(msgBuf,'(A,F10.2)') 'Bad depth in SSP: ', SSP%z( iz )
-                CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+                ! In adjoint mode we do not write output besides on the first run
+                IF (IHOP_dumpfreq.GE.0) &
+                    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
                 WRITE(msgBuf,'(2A)') 'SSPMOD ReadSSP: ', &
                             'The depths in the SSP must be monotone increasing'
                 CALL PRINT_ERROR( msgBuf,myThid )
@@ -778,7 +813,9 @@ END !SUBROUTINE Quad
           IF ( SSP%NPts == 1 ) THEN
 #ifdef IHOP_WRITE_OUT
                 WRITE(msgBuf,'(A,I10)') '#SSP points: ', SSP%NPts
-                CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+                ! In adjoint mode we do not write output besides on the first run
+                IF (IHOP_dumpfreq.GE.0) &
+                    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
                 WRITE(msgBuf,'(2A)')  'SSPMOD ReadSSP: ', &
                                     'The SSP must have at least 2 points'
                 CALL PRINT_ERROR( msgBuf,myThid )
@@ -795,7 +832,9 @@ END !SUBROUTINE Quad
     ! Fall through means too many points in the profile
 #ifdef IHOP_WRITE_OUT
     WRITE(msgBuf,'(A,I10)') 'Max. #SSP points: ', MaxSSP
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    ! In adjoint mode we do not write output besides on the first run
+    IF (IHOP_dumpfreq.GE.0) &
+        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
     WRITE(msgBuf,'(2A)') 'SSPMOD ReadSSP: ', &
                          'Number of SSP points exceeds limit'
     CALL PRINT_ERROR( msgBuf,myThid )
@@ -992,7 +1031,9 @@ SUBROUTINE ExtractSSP( Depth, freq, myThid )
       IF ( SSP%z( iz ) .LE. SSP%z( iz-1 ) ) THEN
 #  ifdef IHOP_WRITE_OUT
         WRITE(msgBuf,'(A)') 'Bad depth in SSP: ', SSP%z(iz)
-        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+        ! In adjoint mode we do not write output besides on the first run
+        IF (IHOP_dumpfreq.GE.0) &
+            CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
         WRITE( msgBuf,'(2A)' ) 'SSPMOD ExtractSSP: ', &
           'The depths in the SSP must be monotone increasing'
         CALL PRINT_ERROR( msgBuf,myThid )
@@ -1008,47 +1049,50 @@ SUBROUTINE ExtractSSP( Depth, freq, myThid )
 
   ! Write relevant diagnostics
 #ifdef IHOP_WRITE_OUT
-  WRITE(msgBuf,'(2A)')'________________________________________________', &
-    '___________'
-  CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-  WRITE(msgBuf,'(A)') 
-  CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-  WRITE(msgBuf,'(A)') "Sound Speed Field" 
-  CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-  WRITE(msgBuf,'(A)') 
-  CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-
-  IF (SSP%Nr.GT.1) THEN
-    WRITE(msgBuf,'(A)') 'Using range-dependent sound speed'
+  ! In adjoint mode we do not write output besides on the first run
+  IF (IHOP_dumpfreq.GE.0) THEN
+    WRITE(msgBuf,'(2A)')'________________________________________________', &
+      '___________'
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-  END IF
-  IF (SSP%Nr.EQ.1) THEN
-    WRITE(msgBuf,'(A)') 'Using range-independent sound speed'
+    WRITE(msgBuf,'(A)') 
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-  END IF
-
-  WRITE(msgBuf,'(A,I10)') 'Number of SSP ranges = ', SSP%Nr
-  CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-  WRITE(msgBuf,'(A,I10)') 'Number of SSP depths = ', SSP%Nz
-  CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-
-  WRITE(msgBuf,'(A)') 
-  CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-  WRITE(msgBuf,'(A)') 'Profile ranges (km):'
-  CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-  WRITE(fmtStr,'(A,I10,A)') '(T11,',SSP%Nr, 'F10.2)'
-  WRITE(msgBuf,fmtStr) SSP%Seg%r( 1:SSP%Nr )
-  CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-  WRITE(msgBuf,'(A)') 
-  CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-  WRITE(msgBuf,'(A)') 'Sound speed matrix:'
-  CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-  WRITE(msgBuf,'(A)') ' Depth (m)     Soundspeed (m/s)'
-  CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-  DO iz = 1, SSP%Nz
-    WRITE(msgBuf,'(12F10.2)'  ) SSP%z( iz ), SSP%cMat( iz, : )
+    WRITE(msgBuf,'(A)') "Sound Speed Field" 
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-  END DO
+    WRITE(msgBuf,'(A)') 
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+
+    IF (SSP%Nr.GT.1) THEN
+      WRITE(msgBuf,'(A)') 'Using range-dependent sound speed'
+      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    END IF
+    IF (SSP%Nr.EQ.1) THEN
+      WRITE(msgBuf,'(A)') 'Using range-independent sound speed'
+      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    END IF
+
+    WRITE(msgBuf,'(A,I10)') 'Number of SSP ranges = ', SSP%Nr
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(A,I10)') 'Number of SSP depths = ', SSP%Nz
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+
+    WRITE(msgBuf,'(A)') 
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(A)') 'Profile ranges (km):'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(fmtStr,'(A,I10,A)') '(T11,',SSP%Nr, 'F10.2)'
+    WRITE(msgBuf,fmtStr) SSP%Seg%r( 1:SSP%Nr )
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(A)') 
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(A)') 'Sound speed matrix:'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(A)') ' Depth (m)     Soundspeed (m/s)'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    DO iz = 1, SSP%Nz
+      WRITE(msgBuf,'(12F10.2)'  ) SSP%z( iz ), SSP%cMat( iz, : )
+      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    END DO
+  ENDIF
 #endif /* IHOP_WRITE_OUT */
   ! I/O on main thread only
   _END_MASTER(myThid)

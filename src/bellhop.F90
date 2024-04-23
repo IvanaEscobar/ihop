@@ -94,7 +94,8 @@ CONTAINS
         WRITE(myProcessStr, '(I10.10)') myIter
         IL=ILNBLNK( myProcessStr )
         WRITE(fNam,'(A,A,A,A)') TRIM(IHOP_fileroot),'.',myProcessStr(1:IL),'.prt'
-        OPEN(PRTFile, FILE = fNam, STATUS = 'UNKNOWN', IOSTAT = iostat )
+        IF ( IHOP_dumpfreq .GE. 0) &
+         OPEN(PRTFile, FILE = fNam, STATUS = 'UNKNOWN', IOSTAT = iostat )
 #ifdef ALLOW_USE_MPI
     ELSE ! using MPI
         CALL MPI_COMM_RANK( MPI_COMM_MODEL, mpiMyId, mpiRC )
@@ -118,7 +119,8 @@ CONTAINS
                     TRIM(IHOP_fileroot),'.',myProcessStr(1:IL),'.prt'
             ENDIF
 
-            OPEN(PRTFile, FILE=fNam, STATUS='UNKNOWN', IOSTAT=iostat )
+            IF ( IHOP_dumpfreq .GE. 0) &
+             OPEN(PRTFile, FILE=fNam, STATUS='UNKNOWN', IOSTAT=iostat )
             IF ( iostat /= 0 ) THEN
                 WRITE(*,*) 'ihop: IHOP_fileroot not recognized, ', &
                     TRIM(IHOP_fileroot)
@@ -160,7 +162,8 @@ CONTAINS
     Pos%theta( 1 ) = 0.
   
     ! open all output files
-    CALL OpenOutputFiles( IHOP_fileroot, myTime, myIter, myThid )
+    IF ( IHOP_dumpfreq .GE. 0) &
+     CALL OpenOutputFiles( IHOP_fileroot, myTime, myIter, myThid )
   
     ! Run Bellhop solver on a single processor
     if (numberOfProcs.gt.1) then
@@ -176,41 +179,45 @@ CONTAINS
     endif
   
 #ifdef IHOP_WRITE_OUT
-    ! print run time
-    if (numberOfProcs.gt.1) then
-        if(myProcId.ne.(numberOfProcs-1)) then
-            WRITE(msgBuf,'(A,I4,A)') 'NOTE: Proc ',myProcId, " didn't run ihop"
-            CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
+    IF ( IHOP_dumpfreq.GE.0 ) THEN
+        ! print run time
+        if (numberOfProcs.gt.1) then
+            if(myProcId.ne.(numberOfProcs-1)) then
+                WRITE(msgBuf,'(A,I4,A)') 'NOTE: Proc ',myProcId, " didn't run ihop"
+                CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
+            endif
         endif
-    endif
-    WRITE(msgBuf, '(A)' )
-    CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
-    WRITE(msgBuf, '(A,G15.3,A)' ) 'CPU Time = ', Tstop-Tstart, 's'
-    CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
+        WRITE(msgBuf, '(A)' )
+        CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
+        WRITE(msgBuf, '(A,G15.3,A)' ) 'CPU Time = ', Tstop-Tstart, 's'
+        CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
   
-    ! close all files
-    SELECT CASE ( Beam%RunType( 1:1 ) )
-    CASE ( 'C', 'S', 'I' )  ! TL calculation
-       CLOSE( SHDFile )
-    CASE ( 'A', 'a' )       ! arrivals calculation
-       CLOSE( ARRFile )
-    CASE ( 'R', 'E' )       ! ray and eigen ray trace
-       CLOSE( RAYFile )
-    CASE ( 'e' )
-       CLOSE( RAYFile ) 
-       CLOSE( ARRFile )
-       IF ( writeDelay ) CLOSE( DELFile )
-    END SELECT
+        ! close all files
+        IF ( IHOP_dumpfreq .GE. 0) THEN
+            SELECT CASE ( Beam%RunType( 1:1 ) )
+            CASE ( 'C', 'S', 'I' )  ! TL calculation
+               CLOSE( SHDFile )
+            CASE ( 'A', 'a' )       ! arrivals calculation
+               CLOSE( ARRFile )
+            CASE ( 'R', 'E' )       ! ray and eigen ray trace
+               CLOSE( RAYFile )
+            CASE ( 'e' )
+               CLOSE( RAYFile ) 
+               CLOSE( ARRFile )
+               IF ( writeDelay ) CLOSE( DELFile )
+            END SELECT
   
-    if (numberOfProcs.gt.1) then
-        if(myProcId.ne.(numberOfProcs-1)) then
-            CLOSE(PRTFile, STATUS='DELETE')
-        else
-            CLOSE(PRTFile)
-        endif
-    else
-        CLOSE(PRTFile)
-    endif
+            if (numberOfProcs.gt.1) then
+                if(myProcId.ne.(numberOfProcs-1)) then
+                    CLOSE(PRTFile, STATUS='DELETE')
+                else
+                    CLOSE(PRTFile)
+                endif
+            else
+                CLOSE(PRTFile)
+            endif
+        ENDIF
+    ENDIF
 #endif /* IHOP_WRITE_OUT */
   
   RETURN
@@ -306,12 +313,12 @@ CONTAINS
       CASE ( 'A', 'a', 'e' )
           ! allow space for at least MinNArr arrivals
           MaxNArr = MAX( ArrivalsStorage / ( NRz_per_range * Pos%NRr ), MinNArr )
-#ifdef IHOP_WRITE_OUT
-          WRITE(msgBuf,'(A)') 
-          CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
-          WRITE(msgBuf,'(A,I10)') 'Max. # of arrivals = ', MaxNArr
-          CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
-#endif /* IHOP_WRITE_OUT */
+!#ifdef IHOP_WRITE_OUT
+!          WRITE(msgBuf,'(A)') 
+!          CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
+!          WRITE(msgBuf,'(A,I10)') 'Max. # of arrivals = ', MaxNArr
+!          CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
+!#endif /* IHOP_WRITE_OUT */
   
           ALLOCATE ( Arr( NRz_per_range, Pos%NRr, MaxNArr ), &
                      NArr( NRz_per_range, Pos%NRr ), Stat = iAllocStat )
@@ -333,7 +340,9 @@ CONTAINS
   
 #ifdef IHOP_WRITE_OUT
       WRITE(msgBuf,'(A)') 
-      CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
+      ! In adjoint mode we do not write output besides on the first run
+      IF (IHOP_dumpfreq.GE.0) &
+        CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
 #endif /* IHOP_WRITE_OUT */
   
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -363,7 +372,9 @@ CONTAINS
           IF ( Angles%Nalpha < NalphaOpt ) THEN
              WRITE( msgBuf, '(A,/,A,I10.4)' ) 'WARNING: Too few beams',&
                  'Nalpha should be at least = ', NalphaOpt
-            CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
+             ! In adjoint mode we do not write output besides on the first run
+             IF (IHOP_dumpfreq.GE.0) &
+                CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
           ENDIF
 #endif /* IHOP_WRITE_OUT */
        ENDIF
@@ -398,6 +409,8 @@ CONTAINS
              !!IESCO22: end BEAM stuff !!
   
 #ifdef IHOP_WRITE_OUT
+            ! In adjoint mode we do not write output besides on the first run
+            IF (IHOP_dumpfreq.GE.0) THEN
              ! report progress in PRTFile (skipping some angles)
              IF ( MOD( ialpha - 1, max( Angles%Nalpha / 50, 1 ) ) == 0 ) THEN
                 WRITE(msgBuf,'(A,I7,F10.2)') 'Tracing ray ', &
@@ -405,6 +418,7 @@ CONTAINS
                 CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
                 FLUSH( PRTFile )
              END IF
+            ENDIF
 #endif /* IHOP_WRITE_OUT */
              
              ! Trace a ray, update ray2D structure
@@ -532,9 +546,11 @@ CONTAINS
     IF ( DistBegTop <= 0 .OR. DistBegBot <= 0 ) THEN
        Beam%Nsteps = 1
 #ifdef IHOP_WRITE_OUT
-        WRITE(msgBuf,'(A)') &
-           'WARNING: TraceRay2D: The source is outside the domain boundaries'
-        CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
+       WRITE(msgBuf,'(A)') &
+          'WARNING: TraceRay2D: The source is outside the domain boundaries'
+       ! In adjoint mode we do not write output besides on the first run
+       IF (IHOP_dumpfreq.GE.0) &
+            CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
 #endif /* IHOP_WRITE_OUT */
        RETURN       ! source must be within the domain
     END IF
@@ -645,56 +661,85 @@ CONTAINS
   
        ! Has the ray left the box, lost its energy, escaped the boundaries, or exceeded storage limit?
        ! IESCO22: Rewriting for debugging with gcov
+       WRITE(msgBuf,'(A)') ' '
        IF ( ray2D( is+1 )%x( 1 ) > Beam%Box%r ) THEN
-          Beam%Nsteps = is + 1
-#ifdef IHOP_WRITE_OUT
           WRITE(msgBuf,'(A)') 'TraceRay2D: ray left Box%r'
-          CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
-#endif /* IHOP_WRITE_OUT */
-          EXIT Stepping
        ELSE IF ( ray2D( is+1 )%x( 1 ) < 0 ) THEN
-          Beam%Nsteps = is + 1
-#ifdef IHOP_WRITE_OUT
           WRITE(msgBuf,'(A)') 'TraceRay2D: ray left Box r=0'
-          CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
-#endif /* IHOP_WRITE_OUT */
-          EXIT Stepping
        ELSE IF ( ray2D( is+1 )%x( 2 ) > Beam%Box%z ) THEN 
-          Beam%Nsteps = is + 1
-#ifdef IHOP_WRITE_OUT
           WRITE(msgBuf,'(A)') 'TraceRay2D: ray left Box%z'
-          CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
-#endif /* IHOP_WRITE_OUT */
-          EXIT Stepping
        ELSE IF ( ABS( ray2D( is+1 )%Amp ) < 0.005 ) THEN
-          Beam%Nsteps = is + 1
-#ifdef IHOP_WRITE_OUT
           WRITE(msgBuf,'(A)') 'TraceRay2D: ray lost energy'
-          CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
-#endif /* IHOP_WRITE_OUT */
-          EXIT Stepping
        ELSE IF ( DistBegTop < 0.0 .AND. DistEndTop < 0.0 ) THEN 
-          Beam%Nsteps = is + 1
-#ifdef IHOP_WRITE_OUT
           WRITE(msgBuf,'(A)') 'TraceRay2D: ray escaped top bound'
-          CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
-#endif /* IHOP_WRITE_OUT */
-          EXIT Stepping
        ELSE IF ( DistBegBot < 0.0 .AND. DistEndBot < 0.0 ) THEN
-          Beam%Nsteps = is + 1
-#ifdef IHOP_WRITE_OUT
           WRITE(msgBuf,'(A)') 'TraceRay2D: ray escaped bot bound'
-          CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
-#endif /* IHOP_WRITE_OUT */
-          EXIT Stepping
        ELSE IF ( is >= MaxN - 3 ) THEN
-#ifdef IHOP_WRITE_OUT
           WRITE(msgBuf,'(A)') 'WARNING: TraceRay2D: Check storage for ray trajectory'
-          CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
-#endif /* IHOP_WRITE_OUT */
-          Beam%Nsteps = is
-          EXIT Stepping
        END IF
+     
+#ifdef IHOP_WRITE_OUT
+       IF ( IHOP_dumpfreq .GE. 0) &
+        CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
+#endif /* IHOP_WRITE_OUT */
+       IF (INDEX(msgBuf, 'TraceRay2D') == 1) THEN
+           Beam%Nsteps = is+1
+           Exit Stepping
+       ELSE IF (INDEX(msgBuf, 'WARNING: TraceRay2D') == 1) THEN
+           Beam%Nsteps = is
+           Exit Stepping
+       END IF 
+
+!       IF ( ray2D( is+1 )%x( 1 ) > Beam%Box%r ) THEN
+!          Beam%Nsteps = is + 1
+!#ifdef IHOP_WRITE_OUT
+!          WRITE(msgBuf,'(A)') 'TraceRay2D: ray left Box%r'
+!          CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
+!#endif /* IHOP_WRITE_OUT */
+!          EXIT Stepping
+!       ELSE IF ( ray2D( is+1 )%x( 1 ) < 0 ) THEN
+!          Beam%Nsteps = is + 1
+!#ifdef IHOP_WRITE_OUT
+!          WRITE(msgBuf,'(A)') 'TraceRay2D: ray left Box r=0'
+!          CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
+!#endif /* IHOP_WRITE_OUT */
+!          EXIT Stepping
+!       ELSE IF ( ray2D( is+1 )%x( 2 ) > Beam%Box%z ) THEN 
+!          Beam%Nsteps = is + 1
+!#ifdef IHOP_WRITE_OUT
+!          WRITE(msgBuf,'(A)') 'TraceRay2D: ray left Box%z'
+!          CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
+!#endif /* IHOP_WRITE_OUT */
+!          EXIT Stepping
+!       ELSE IF ( ABS( ray2D( is+1 )%Amp ) < 0.005 ) THEN
+!          Beam%Nsteps = is + 1
+!#ifdef IHOP_WRITE_OUT
+!          WRITE(msgBuf,'(A)') 'TraceRay2D: ray lost energy'
+!          CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
+!#endif /* IHOP_WRITE_OUT */
+!          EXIT Stepping
+!       ELSE IF ( DistBegTop < 0.0 .AND. DistEndTop < 0.0 ) THEN 
+!          Beam%Nsteps = is + 1
+!#ifdef IHOP_WRITE_OUT
+!          WRITE(msgBuf,'(A)') 'TraceRay2D: ray escaped top bound'
+!          CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
+!#endif /* IHOP_WRITE_OUT */
+!          EXIT Stepping
+!       ELSE IF ( DistBegBot < 0.0 .AND. DistEndBot < 0.0 ) THEN
+!          Beam%Nsteps = is + 1
+!#ifdef IHOP_WRITE_OUT
+!          WRITE(msgBuf,'(A)') 'TraceRay2D: ray escaped bot bound'
+!          CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
+!#endif /* IHOP_WRITE_OUT */
+!          EXIT Stepping
+!       ELSE IF ( is >= MaxN - 3 ) THEN
+!#ifdef IHOP_WRITE_OUT
+!          WRITE(msgBuf,'(A)') 'WARNING: TraceRay2D: Check storage for ray trajectory'
+!          CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
+!#endif /* IHOP_WRITE_OUT */
+!          Beam%Nsteps = is
+!          EXIT Stepping
+!       END IF
   
        DistBegTop = DistEndTop
        DistBegBot = DistEndBot
@@ -913,7 +958,9 @@ CONTAINS
     CASE DEFAULT
 #ifdef IHOP_WRITE_OUT
        WRITE(msgBuf,'(2A)') 'HS%BC = ', HS%BC
-       CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
+       ! In adjoint mode we do not write output besides on the first run
+       IF (IHOP_dumpfreq.GE.0) &
+        CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
        WRITE(msgBuf,'(A)') 'BELLHOP Reflect2D: Unknown boundary condition type'
        CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */

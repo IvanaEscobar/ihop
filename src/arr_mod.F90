@@ -123,6 +123,9 @@ CONTAINS
     INTEGER             :: ir, iz, iArr
     REAL (KIND=_RL90)   :: factor
 
+    ! In adjoint mode we do not write output besides on the first run
+    IF (IHOP_dumpfreq.LT.0) RETURN
+
 #ifdef IHOP_WRITE_OUT
     WRITE( ARRFile, * ) MAXVAL( NArr( 1 : Nrz, 1 : Nr ) )
 #endif /* IHOP_WRITE_OUT */
@@ -174,6 +177,9 @@ CONTAINS
     CHARACTER (LEN=1), INTENT( IN ) :: SourceType   ! Beam%RunType(4:4)
     INTEGER                 :: ir, iz, iArr
     REAL     (KIND=_RL90)   :: factor
+
+    ! In adjoint mode we do not write output besides on the first run
+    IF (IHOP_dumpfreq.LT.0) RETURN
 
 #ifdef IHOP_WRITE_OUT
     WRITE( ARRFile ) MAXVAL( NArr( 1 : Nrz, 1 : Nr ) )

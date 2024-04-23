@@ -40,16 +40,21 @@ CONTAINS
 
     IF ( SBPFlag == '*' ) THEN
 #ifdef IHOP_WRITE_OUT
-       WRITE( PRTFile, * )
-       WRITE( PRTFile, * ) '______________________________'
-       WRITE( PRTFile, * ) 'Using source beam pattern file'
+       ! In adjoint mode we do not write output besides on the first run
+       IF (IHOP_dumpfreq.GE.0) THEN
+        WRITE( PRTFile, * )
+        WRITE( PRTFile, * ) '______________________________'
+        WRITE( PRTFile, * ) 'Using source beam pattern file'
+       ENDIF
 #endif /* IHOP_WRITE_OUT */
 
        OPEN( UNIT = SBPFile, FILE = TRIM( FileRoot ) // '.sbp', STATUS = 'OLD',&
             IOSTAT = IOStat, ACTION = 'READ' )
        IF ( IOstat /= 0 ) THEN
 #ifdef IHOP_WRITE_OUT
-            WRITE( PRTFile, * ) 'SBPFile = ', TRIM( FileRoot ) // '.sbp'
+            ! In adjoint mode we do not write output besides on the first run
+            IF (IHOP_dumpfreq.GE.0) &
+             WRITE( PRTFile, * ) 'SBPFile = ', TRIM( FileRoot ) // '.sbp'
             WRITE(msgBuf,'(2A)') 'BEAMPATTERN ReadPat: ', &
                                  'Unable to open source beampattern file'
             CALL PRINT_ERROR( msgBuf,myThid )
@@ -59,7 +64,9 @@ CONTAINS
 
        READ(  SBPFile, * ) NSBPPts
 #ifdef IHOP_WRITE_OUT
-       WRITE( PRTFile, * ) 'Number of source beam pattern points', NSBPPts
+       ! In adjoint mode we do not write output besides on the first run
+       IF (IHOP_dumpfreq.GE.0) &
+        WRITE( PRTFile, * ) 'Number of source beam pattern points', NSBPPts
 #endif /* IHOP_WRITE_OUT */
 
        IF (ALLOCATED(SrcBmPat)) DEALLOCATE(SrcBmPat)
@@ -74,14 +81,20 @@ CONTAINS
         END IF
 
 #ifdef IHOP_WRITE_OUT
+       ! In adjoint mode we do not write output besides on the first run
+       IF (IHOP_dumpfreq.GE.0) &
        WRITE( PRTFile, * )
+       ! In adjoint mode we do not write output besides on the first run
+       IF (IHOP_dumpfreq.GE.0) &
        WRITE( PRTFile, * ) ' Angle (degrees)  Power (dB)'
 #endif /* IHOP_WRITE_OUT */
 
        DO I = 1, NSBPPts
           READ(  SBPFile, * ) SrcBmPat( I, : )
 #ifdef IHOP_WRITE_OUT
-          WRITE( PRTFile, FMT = "( 2G11.3 )" ) SrcBmPat( I, : )
+          ! In adjoint mode we do not write output besides on the first run
+          IF (IHOP_dumpfreq.GE.0) &
+            WRITE( PRTFile, FMT = "( 2G11.3 )" ) SrcBmPat( I, : )
 #endif /* IHOP_WRITE_OUT */
        END DO
 
