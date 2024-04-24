@@ -759,11 +759,11 @@ END !SUBROUTINE Quad
         CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
         WRITE(msgBuf,'(A)') 'Sound speed profile:'
         CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-        WRITE(msgBuf,'(2A)')'      z         alphaR      betaR     rho        ',
-                            'alphaI     betaI'
+        WRITE(msgBuf,'(2A)')'      z         alphaR      betaR     rho      ',&
+                            '  alphaI     betaI'
         CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-        WRITE(msgBuf,'(2A)')'     (m)         (m/s)      (m/s)   (g/cm^3)     ',
-                            ' (m/s)     (m/s)'
+        WRITE(msgBuf,'(2A)')'     (m)         (m/s)      (m/s)   (g/cm^3)   ',&
+                            '   (m/s)     (m/s)'
         CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
         
         WRITE(msgBuf,'(2A)')'_______________________________________________',&
