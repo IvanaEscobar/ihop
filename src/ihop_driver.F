@@ -13,6 +13,12 @@ C !FORTRAN90 USE MODULES: ===============================================
       USE bellhop
 
       IMPLICIT NONE
+C !GLOBAL VARIABLES: ===============================================
+#ifdef ALLOW_IHOP
+# include "EEPARAMS.h"
+# include "IHOP_SIZE.h"
+# include "IHOP.h"
+#endif /* ALLOW_IHOP */
 
 C !INPUT PARAMETERS: ===================================================
 C  myTime   :: Current time in simulation
