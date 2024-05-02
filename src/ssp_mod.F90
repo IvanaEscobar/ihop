@@ -1010,7 +1010,9 @@ SUBROUTINE ExtractSSP( Depth, freq, myThid )
     ENDDO
   ENDDO
 
-  CALL GLOBAL_VEC_SUM_R8(SSP%Nz*SSP%Nr,SSP%Nz*SSP%Nr,tmpSSP,myThid)
+  IF ((nPx.GT.1) .OR. (nPy.GT.1)) THEN
+    CALL GLOBAL_VEC_SUM_R8(SSP%Nz*SSP%Nr,SSP%Nz*SSP%Nr,tmpSSP,myThid)
+  ENDIF
   SSP%cMAT = tmpSSP(:,:,1,1)
   IF(ALLOCATED(tmpSSP)) DEALLOCATE(tmpSSP)
   !==================================================

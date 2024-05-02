@@ -39,7 +39,7 @@ MODULE BELLHOP
   USE refCoef,      only:   readReflectionCoefficient,                         &
                             InterpolateReflectionCoefficient, ReflectionCoef,  &
                             RTop, RBot, NBotPts, NTopPts
-  USE influence,    only:   InfluenceGeoHatRayCen, InfluenceSGB,               &
+  USE influence,    only:   InfluenceGeoHatRayCen,&! InfluenceSGB,               &
                             InfluenceGeoGaussianCart, InfluenceGeoHatCart,     &
                             ScalePressure
   USE atten_mod,    only:   CRCI
@@ -433,8 +433,8 @@ CONTAINS
                 CASE ( 'g' )
                    CALL InfluenceGeoHatRayCen(    U, Angles%alpha( ialpha ), &
                                                   Angles%Dalpha, myThid )
-                CASE ( 'S' )
-                   CALL InfluenceSGB( U, Angles%alpha( ialpha ), Angles%Dalpha )
+!                CASE ( 'S' )
+!                   CALL InfluenceSGB( U, Angles%alpha( ialpha ), Angles%Dalpha )
                 CASE ( 'B' )
                    CALL InfluenceGeoGaussianCart( U, Angles%alpha( ialpha ), &
                                                   Angles%Dalpha, myThid )
