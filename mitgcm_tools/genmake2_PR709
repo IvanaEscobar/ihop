@@ -544,6 +544,7 @@ find_possible_optfile()  {
     #================================================================
     #  look for possible FORTRAN compilers
     echo "  look for possible FORTRAN compilers" >> $LOGFILE
+    tmp="$MITGCM_FC $FC efc gfortran g77 f77 pgf77 pgf95 ifc ifort f90 f95 mpif77 mpf77 mpxlf95 g95 mpiifort mpifort"
     tmp="$MITGCM_FC $FC efc gfortran g77 f77 pgf77 pgf95 ifc ifort f90 f95 mpif77 mpf77 mpxlf95 g95"
     p_FC=
     rm -f ./genmake_hello.f
@@ -667,7 +668,7 @@ EOF
 	    else
 	      FC_CHECK=4
 	      echo "" >> $LOGFILE
-	      echo " warning: MPI run command not found ==> skip run-test check" >> $LOGFILE
+	      echo " Warning: MPI run command not found ==> skip run-test check" >> $LOGFILE
 	     #echo -n " fail to generate executable"
 	    fi
 	  fi
@@ -1827,7 +1828,7 @@ if test "x${AD_OPTFILE}" != xNONE ; then
 	exit 1
     fi
 fi
-### if test $CAT_SRC_FOR_TAF = 0 ; then TAF_EXTRA="${TAF_EXTRA} -fixed" ; fi
+### if test $CAT_SRC_FOR_TAF = 0 ; then TAF_EXTRA="${TAF_EXTRA} -fixed -e" ; fi
 
 #====================================================================
 # Initialize INCLUDEDIRSMK from and optfile INCLUDEDIRS
@@ -3533,7 +3534,7 @@ ad_taf_output.$FS: \$(AD_FLOW_FILES) \$(AD_FILES) \$(AD_F90FILES)
 	@-rm -f \$(AD_FILES:.$FS=_ad.$FS) \$(AD_FILES:.$FS=_ad.o); echo ''
 	@-rm -f \$(AD_F90FILES:.$FS90=_ad.$FS90) \$(AD_F90FILES:.$FS90=_ad.o); echo ''
 	\$(MAKE) -f \$(MAKEFILE) remove_comments
-	\$(TAF) \$(AD_TAF_FLAGS) \$(TAF_EXTRA) -fixed \$(FLOWFILES) \$(AD_FILES) -free \$(AD_F90FILES)
+	\$(TAF) \$(AD_TAF_FLAGS) \$(TAF_EXTRA) -fixed -e \$(FLOWFILES) \$(AD_FILES) -free -N 150 \$(AD_F90FILES)
 	\$(MAKE) -f \$(MAKEFILE) adj_sed
 	cat \$(AD_FILES:.$FS=_ad.$FS) > ad_taf_output.$FS
 
