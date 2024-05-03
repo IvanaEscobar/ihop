@@ -2,17 +2,17 @@
 !     | SUBROUTINE GLOBAL_VEC_SUM_R* is linear                   |
 !     | SUBROUTINE GLOBAL_VEC_ADSUM_R* is linear                 |
 !     *==========================================================*
-!adj SUBROUTINE global_sum_r4 INPUT   = 1, 2, 3, 4
-!adj SUBROUTINE global_sum_r4 OUTPUT  =       3
-!adj SUBROUTINE global_sum_r4 ACTIVE  =       3
-!adj SUBROUTINE global_sum_r4 DEPEND  = 1, 2,    4
-!adj SUBROUTINE global_sum_r4 ADNAME  = global_vec_adsum_r4
-!adj SUBROUTINE global_sum_r4 FTLNAME = global_vec_sum_r4
+!adj SUBROUTINE global_vec_sum_r4 INPUT   = 1, 2, 3, 4
+!adj SUBROUTINE global_vec_sum_r4 OUTPUT  =       3
+!adj SUBROUTINE global_vec_sum_r4 ACTIVE  =       3
+!adj SUBROUTINE global_vec_sum_r4 DEPEND  = 1, 2,    4
+!adj SUBROUTINE global_vec_sum_r4 ADNAME  = global_vec_adsum_r4
+!adj SUBROUTINE global_vec_sum_r4 FTLNAME = global_vec_sum_r4
 
-!adj SUBROUTINE global_sum_r8 INPUT   = 1, 2, 3, 4
-!adj SUBROUTINE global_sum_r8 OUTPUT  =       3
-!adj SUBROUTINE global_sum_r8 ACTIVE  =       3
-!adj SUBROUTINE global_sum_r8 DEPEND  = 1, 2,    4
-!adj SUBROUTINE global_sum_r8 ADNAME  = global_vec_adsum_r8
-!adj SUBROUTINE global_sum_r8 FTLNAME = global_vec_sum_r8
+!adj SUBROUTINE global_vec_sum_r8 INPUT   = 1, 2, 3, 4
+!adj SUBROUTINE global_vec_sum_r8 OUTPUT  =       3
+!adj SUBROUTINE global_vec_sum_r8 ACTIVE  =       3
+!adj SUBROUTINE global_vec_sum_r8 DEPEND  = 1, 2,    4
+!adj SUBROUTINE global_vec_sum_r8 ADNAME  = global_vec_adsum_r8
+!adj SUBROUTINE global_vec_sum_r8 FTLNAME = global_vec_sum_r8
 
