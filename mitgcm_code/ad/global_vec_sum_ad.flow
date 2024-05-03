@@ -1,0 +1,18 @@
+C     *==========================================================*
+C     | SUBROUTINE GLOBAL_VEC_SUM_R* is linear                   |
+C     | SUBROUTINE GLOBAL_VEC_ADSUM_R* is linear                 |
+C     *==========================================================*
+cadj SUBROUTINE global_sum_r4 INPUT   = 1, 2, 3, 4
+cadj SUBROUTINE global_sum_r4 OUTPUT  =       3
+cadj SUBROUTINE global_sum_r4 ACTIVE  =       3
+cadj SUBROUTINE global_sum_r4 DEPEND  = 1, 2,    4
+cadj SUBROUTINE global_sum_r4 ADNAME  = global_vec_adsum_r4
+cadj SUBROUTINE global_sum_r4 FTLNAME = global_vec_sum_r4
+
+cadj SUBROUTINE global_sum_r8 INPUT   = 1, 2, 3, 4
+cadj SUBROUTINE global_sum_r8 OUTPUT  =       3
+cadj SUBROUTINE global_sum_r8 ACTIVE  =       3
+cadj SUBROUTINE global_sum_r8 DEPEND  = 1, 2,    4
+cadj SUBROUTINE global_sum_r8 ADNAME  = global_vec_adsum_r8
+cadj SUBROUTINE global_sum_r8 FTLNAME = global_vec_sum_r8
+
