@@ -199,7 +199,7 @@ CONTAINS
     COMPLEX (KIND=_RL90) :: dtauds
 
     q0           = ray2D( 1 )%c / Dalpha   ! Reference for J = q0 / q
-    SrcDeclAngle = rad2deg * alpha          ! take-off angle, degrees
+    SrcDeclAngle = rad2deg * alpha         ! take-off angle, degrees
     phase        = 0.0
     qOld         = ray2D( 1 )%q( 1 )       ! old KMAH index
     rA           = ray2D( 1 )%x( 1 )       ! range at start of ray, typically 0
