@@ -851,7 +851,7 @@ END !SUBROUTINE Quad
 SUBROUTINE ExtractSSP( Depth, freq, myThid )
   ! Extracts SSP from MITgcm grid points
 
-  use atten_mod, only: CRCI
+  USE atten_mod, only: CRCI
 
   ! == Routine Arguments ==
   ! myThid :: Thread number. Unused by IESCO
