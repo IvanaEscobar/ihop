@@ -43,12 +43,12 @@ CONTAINS
 
     ! I/O routine for acoustic fixed inputS
 
-    USE angle_mod,  only: ReadRayElevationAngles, ReadRayBearingAngles
-    USE srpos_mod,  only: Pos, ReadSxSy, ReadSzRz, ReadRcvrRanges,         &
+    USE angle_mod,  only: ReadRayElevationAngles
+    USE srpos_mod,  only: Pos, ReadSxSy, ReadSzRz, ReadRcvrRanges, ReadFreqVec
 #ifdef IHOP_THREED
-                              ReadRcvrBearings, &
+    USE angle_mod,  only: ReadRayBearingAngles
+    USE srpos_mod,  only: ReadRcvrBearings
 #endif /* IHOP_THREED */
-                              ReadFreqVec
 
   ! == Routine Arguments ==
   ! myTime  :: Current time in simulation
@@ -1023,11 +1023,12 @@ CONTAINS
        WRITE( RAYFile, * ) '''', Title( 1 : 50 ), ''''
        WRITE( RAYFile, * ) IHOP_freq
        WRITE( RAYFile, * ) Pos%NSx, Pos%NSy, Pos%NSz
-       WRITE( RAYFile, * ) Angles%Nalpha, Angles%Nbeta
+       WRITE( RAYFile, * ) Angles%Nalpha
        WRITE( RAYFile, * ) Bdry%Top%HS%Depth
        WRITE( RAYFile, * ) Bdry%Bot%HS%Depth
 
 #ifdef IHOP_THREED
+       WRITE( RAYFile, * ) Angles%Nalpha, Angles%Nbeta
        WRITE( RAYFile, * ) '''xyz'''
 #else /* IHOP_THREED */
        WRITE( RAYFile, * ) '''rz'''
@@ -1069,11 +1070,12 @@ CONTAINS
        WRITE( RAYFile, * ) '''', Title( 1 : 50 ), ''''
        WRITE( RAYFile, * ) IHOP_freq
        WRITE( RAYFile, * ) Pos%NSx, Pos%NSy, Pos%NSz
-       WRITE( RAYFile, * ) Angles%Nalpha, Angles%Nbeta
+       WRITE( RAYFile, * ) Angles%Nalpha
        WRITE( RAYFile, * ) Bdry%Top%HS%Depth
        WRITE( RAYFile, * ) Bdry%Bot%HS%Depth
 
 # ifdef IHOP_THREED
+       WRITE( RAYFile, * ) Angles%Nalpha, Angles%Nbeta
        WRITE( RAYFile, * ) '''xyz'''
 # else /* IHOP_THREED */
        WRITE( RAYFile, * ) '''rz'''
@@ -1085,11 +1087,12 @@ CONTAINS
         WRITE( DELFile, * ) '''', Title( 1 : 50 ), ''''
         WRITE( DELFile, * ) IHOP_freq
         WRITE( DELFile, * ) Pos%NSx, Pos%NSy, Pos%NSz
-        WRITE( DELFile, * ) Angles%Nalpha, Angles%Nbeta
+        WRITE( DELFile, * ) Angles%Nalpha
         WRITE( DELFile, * ) Bdry%Top%HS%Depth
         WRITE( DELFile, * ) Bdry%Bot%HS%Depth
 
 #ifdef IHOP_THREED
+        WRITE( DELFile, * ) Angles%Nalpha, Angles%Nbeta
         WRITE( DELFile, * ) '''xyz'''
 # else /* IHOP_THREED */
         WRITE( DELFile, * ) '''rz'''
@@ -1388,7 +1391,9 @@ CONTAINS
     
     ! From angle_mod
     IF (ALLOCATED(Angles%alpha))DEALLOCATE(Angles%alpha)
+#ifdef IHOP_THREED
     IF (ALLOCATED(Angles%beta)) DEALLOCATE(Angles%beta)
+#endif /* IHOP_THREED */
     ! From bdry_mod
     IF (ALLOCATED(Top))         DEALLOCATE(Top)
     IF (ALLOCATED(Bot))         DEALLOCATE(Bot)
@@ -1410,8 +1415,10 @@ CONTAINS
     ! From ssp_mod
     IF (ALLOCATED(SSP%cMat))    DEALLOCATE(SSP%cMat)
     IF (ALLOCATED(SSP%czMat))   DEALLOCATE(SSP%czMat)
+#ifdef IHOP_THREED
     IF (ALLOCATED(SSP%cMat3))   DEALLOCATE(SSP%cMat3)
     IF (ALLOCATED(SSP%czMat3))  DEALLOCATE(SSP%czMat3)
+#endif /* IHOP_THREED */
     IF (ALLOCATED(SSP%Seg%r))   DEALLOCATE(SSP%Seg%r)
     ! From ihop_mod
     DO iStep = 1,MaxN

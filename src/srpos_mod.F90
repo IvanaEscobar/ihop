@@ -28,11 +28,10 @@ MODULE srpos_mod
 !=======================================================================
 
     public Pos, Number_to_Echo, Nfreq, freqVec, ReadSxSy, ReadSzRz, &
-           ReadRcvrRanges, &
+           ReadRcvrRanges, ReadFreqVec 
 #ifdef IHOP_THREED
-           ReadRcvrBearings, &
+    public ReadRcvrBearings 
 #endif /* IHOP_THREED */
-           ReadFreqVec
 
 !=======================================================================
 

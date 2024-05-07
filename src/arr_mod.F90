@@ -22,13 +22,18 @@ MODULE arr_mod
 ! public interfaces
 !=======================================================================
 
-    public WriteArrivalsASCII, WriteArrivalsBinary, MaxNArr, NArr, NArr3D, &
-           Arr, Arr3D, AddArr
+    public WriteArrivalsASCII, WriteArrivalsBinary, MaxNArr, NArr, Arr, AddArr 
+#ifdef IHOP_THREED
+    public NArr3D, Arr3D
+#endif /* IHOP_THREED */
 
 !=======================================================================
 
   INTEGER               :: MaxNArr
-  INTEGER, ALLOCATABLE  :: NArr( :, : ), NArr3D( :, :, : )
+  INTEGER, ALLOCATABLE  :: NArr( :, : )
+#ifdef IHOP_THREED
+  INTEGER, ALLOCATABLE  :: NArr3D( :, :, : )
+#endif /* IHOP_THREED */
 
   TYPE Arrival
      INTEGER :: NTopBnc, NBotBnc
@@ -37,7 +42,10 @@ MODULE arr_mod
      COMPLEX :: delay
   END TYPE
 
-  TYPE(Arrival), ALLOCATABLE :: Arr( :, :, : ), Arr3D( :, :, :, : )
+  TYPE(Arrival), ALLOCATABLE :: Arr( :, :, : )
+#ifdef IHOP_THREED
+  TYPE(Arrival), ALLOCATABLE :: Arr3D( :, :, :, : )
+#endif /* IHOP_THREED */
 
 CONTAINS
   SUBROUTINE AddArr( afreq, iz, ir, Amp, Phase, delay, SrcDeclAngle, &

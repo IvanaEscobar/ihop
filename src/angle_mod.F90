@@ -25,19 +25,30 @@ MODULE angle_mod
 ! public interfaces
 !=======================================================================
 
-  public ReadRayElevationAngles, ReadRayBearingAngles, Angles, ialpha
+  public ReadRayElevationAngles, Angles, ialpha
+#ifdef IHOP_THREED
+  public ReadRayBearingAngles
+#endif /* IHOP_THREED */
 
 !=======================================================================
 
-  INTEGER          :: ialpha, ibeta
+  INTEGER          :: ialpha
+#ifdef IHOP_THREED
+  INTEGER          :: ibeta
+#endif /* IHOP_THREED */
+
   INTEGER, PRIVATE :: iAllocStat
   REAL (KIND=_RL90), PRIVATE, PARAMETER :: c0 = 1500.0
 
   TYPE AnglesStructure
-     INTEGER                        :: Nalpha = 0, Nbeta = 1, &
-                                       iSingle_alpha = 0, iSingle_beta = 0
-     REAL (KIND=_RL90)              :: Dalpha, Dbeta
-     REAL (KIND=_RL90), ALLOCATABLE :: alpha( : ), beta( : )
+     INTEGER                        :: Nalpha = 0, iSingle_alpha = 0
+     REAL (KIND=_RL90)              :: Dalpha
+     REAL (KIND=_RL90), ALLOCATABLE :: alpha( : )
+#ifdef IHOP_THREED
+     INTEGER                        :: Nbeta = 1, iSingle_beta = 0
+     REAL (KIND=_RL90)              :: Dbeta
+     REAL (KIND=_RL90), ALLOCATABLE :: beta( : )
+#endif /* IHOP_THREED */
   END TYPE AnglesStructure
 
   Type( AnglesStructure ) :: Angles
@@ -158,7 +169,7 @@ CONTAINS
   END !SUBROUTINE ReadRayElevationAngles
 
   !**********************************************************************!
-
+#ifdef IHOP_THREED
   SUBROUTINE ReadRayBearingAngles( freq, TopOpt, RunType, myThid )
 
   !     == Routine Arguments ==
@@ -301,6 +312,7 @@ CONTAINS
         Angles%beta( 1 ) ) / ( Angles%Nbeta - 1 )
 
   RETURN
-  END !SUBROUTINE ReadRayBearingAngles
+  END ! SUBROUTINE ReadRayBearingAngles
+#endif /* IHOP_THREED */
 
 END !MODULE angle_mod

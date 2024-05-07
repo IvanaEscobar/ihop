@@ -74,8 +74,10 @@ MODULE ssp_mod
     REAL    (KIND=_RL90)    :: z( MaxSSP ), rho( MaxSSP )
     COMPLEX (KIND=_RL90)    :: c( MaxSSP ), cz( MaxSSP ), n2( MaxSSP ), &
                                n2z( MaxSSP ), cSpline( 4, MaxSSP )
-    REAL    (KIND=_RL90), ALLOCATABLE   :: cMat( :, : ),     czMat( :, : ), &
-                                           cMat3( :, :, : ), czMat3( :, :, : )
+    REAL    (KIND=_RL90), ALLOCATABLE   :: cMat( :, : ),     czMat( :, : )
+#ifdef IHOP_THREED
+    REAL    (KIND=_RL90), ALLOCATABLE   :: cMat3( :, :, : ), czMat3( :, :, : )
+#endif /* IHOP_THREED */
     TYPE ( rxyz_vector ) :: Seg
     CHARACTER (LEN=1)    :: Type
     CHARACTER (LEN=2)    :: AttenUnit
