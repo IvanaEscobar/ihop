@@ -237,7 +237,7 @@ CONTAINS
   
   !     == Local Variables ==
     INTEGER              :: iAllocStat  
-    INTEGER, PARAMETER   :: ArrivalsStorage = 20000, MinNArr = 10
+    INTEGER, PARAMETER   :: ArrivalsStorage = 2000, MinNArr = 10
     INTEGER              :: IBPvec( 1 ), ibp, is, iBeamWindow2, Irz1, Irec, &
                             NalphaOpt, iSeg
     REAL    (KIND=_RL90) :: Amp0, DalphaOpt, xs( 2 ), RadMax, s, &
@@ -291,7 +291,7 @@ CONTAINS
        NRz_per_range = Pos%NRz   ! rectilinear grid
     END SELECT
   
-      IF (ALLOCATED(U)) DEALLOCATE(U)
+      IF ( ALLOCATED( U ) ) DEALLOCATE( U )
       SELECT CASE ( Beam%RunType( 1:1 ) )
       ! for a TL calculation, allocate space for the pressure matrix
       CASE ( 'C', 'S', 'I' )        ! TL calculation
@@ -312,7 +312,8 @@ CONTAINS
       SELECT CASE ( Beam%RunType( 1:1 ) )
       CASE ( 'A', 'a', 'e' )
           ! allow space for at least MinNArr arrivals
-          MaxNArr = MAX( ArrivalsStorage / ( NRz_per_range * Pos%NRr ), MinNArr )
+          MaxNArr = MAX( ArrivalsStorage / ( NRz_per_range * Pos%NRr ), & 
+                         MinNArr )
 !#ifdef IHOP_WRITE_OUT
 !          WRITE(msgBuf,'(A)') 
 !          CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
