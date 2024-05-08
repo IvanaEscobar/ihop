@@ -254,7 +254,7 @@ CONTAINS
 
         ! compute beam influence for this segment of the ray
         inRcvrRanges=.TRUE.
-        RcvrRanges: DO ! ir loop
+        RcvrRanges: DO WHILE (inRcvrRanges) ! ir loop
            ! is Rr( ir ) contained in [ rA, rB )? Then compute beam influence
            IF ( Pos%Rr( ir ) >= MIN( rA, rB ) &
                 .AND. Pos%Rr( ir ) < MAX( rA, rB ) &
@@ -323,7 +323,9 @@ CONTAINS
               irTT = ir - 1                     ! bump left
               IF ( Pos%Rr( irTT ) <= rB ) inRcvrRanges=.FALSE.
            END IF
+           PRINT *, "escobar: ir", ir
            ir = irTT
+           PRINT *, "escobar: ir=irtt", ir
         END DO RcvrRanges
 
         rA = rB
