@@ -50,11 +50,9 @@ MODULE ssp_mod
 ! LEGACY VARIABLES
 ! == Legacy Local Variables ==
   INTEGER, PARAMETER     :: MaxSSP = 201
-  INTEGER                :: iSegr = 1, iSegz = 1
-  INTEGER                :: iSegrOld, iSegzOld
+  INTEGER                :: iSegr = 1, iSegz = 1, iSegrOld, iSegzOld
 #ifdef IHOP_THREED
   INTEGER                :: iSegx = 1, iSegy = 1
-  INTEGER                :: iSegxOld, iSegyOld
 #endif /* IHOP_THREED */
   INTEGER                :: iostat, iallocstat
   INTEGER,           PRIVATE :: iz
@@ -192,35 +190,35 @@ CONTAINS
 
        ! compute gradient, n2z
        DO iz = 2, SSP%Npts
-          SSP%n2z( iz - 1 ) = ( SSP%n2(   iz ) - SSP%n2(   iz - 1 ) ) / &
-                              ( SSP%z(    iz ) - SSP%z(    iz - 1 ) )
+          SSP%n2z( iz-1 ) = ( SSP%n2(   iz ) - SSP%n2(   iz-1 ) ) / &
+                            ( SSP%z(    iz ) - SSP%z(    iz-1 ) )
        END DO
     ELSE                         ! return SSP info
 
-       IF ( x( 2 ) < SSP%z( iSegz ) .OR. x( 2 ) > SSP%z( iSegz + 1 ) ) THEN
+       iSegzOld = iSegz
+       IF ( x( 2 ) < SSP%z( iSegz ) .OR. x( 2 ) > SSP%z( iSegz+1 ) ) THEN
           DO iz = 2, SSP%NPts   ! Search for bracketting Depths
 !IEsco23 Test this: 
 !          DO iz = 2, SSP%Nz   ! Search for bracketting Depths
-             IF ( x( 2 ) < SSP%z( iz ) ) THEN
+             IF ( x( 2 ) < SSP%z( iz ) .AND. iSegz.EQ.iSegzOld) THEN
                 iSegz = iz - 1
-                EXIT
              END IF
           END DO
        END IF
 
-       W = ( x( 2 ) - SSP%z( iSegz ) ) / ( SSP%z( iSegz + 1 ) - SSP%z( iSegz ) )
+       W = ( x( 2 ) - SSP%z( iSegz ) ) / ( SSP%z( iSegz+1 ) - SSP%z( iSegz ) )
 
-       c     = REAL(  1.0D0 / SQRT( ( 1.0D0 - W ) * SSP%n2( iSegz ) &
-               + W * SSP%n2( iSegz + 1 ) ) )
-       cimag = AIMAG( 1.0D0 / SQRT( ( 1.0D0 - W ) * SSP%n2( iSegz ) &
-               + W * SSP%n2( iSegz + 1 ) ) )
+       c     = REAL(  1.0D0 / SQRT( ( 1.0D0-W ) * SSP%n2( iSegz ) &
+               + W * SSP%n2( iSegz+1 ) ) )
+       cimag = AIMAG( 1.0D0 / SQRT( ( 1.0D0-W ) * SSP%n2( iSegz ) &
+               + W * SSP%n2( iSegz+1 ) ) )
 
        gradc = [ 0.0D0, -0.5D0 * c * c * c * REAL( SSP%n2z( iSegz ) ) ]
        crr   = 0.0d0
        crz   = 0.0d0
        czz   = 3.0d0 * gradc( 2 ) * gradc( 2 ) / c
 
-       rho   = ( 1.0D0 - W ) * SSP%rho( iSegz ) + W * SSP%rho( iSegz + 1 )
+       rho   = ( 1.0D0-W ) * SSP%rho( iSegz ) + W * SSP%rho( iSegz+1 )
     END IF
 
   RETURN
@@ -240,7 +238,9 @@ CONTAINS
     REAL (KIND=_RL90), INTENT( IN  ) :: freq
     REAL (KIND=_RL90), INTENT( IN  ) :: x( 2 )  ! r-z SSP evaluation point
     CHARACTER (LEN=3), INTENT( IN  ) :: Task
-    REAL (KIND=_RL90), INTENT( OUT ) :: c, cimag, gradc( 2 ), crr, crz, czz, rho ! sound speed and its derivatives
+    ! sound speed and its derivatives
+    REAL (KIND=_RL90), INTENT( OUT ) :: c, cimag, gradc( 2 ), &
+                                        crr, crz, czz, rho
     
     IF ( Task == 'INI' ) THEN   ! read in SSP data
        ! *** Task 'INI' for initialization ***
@@ -249,26 +249,29 @@ CONTAINS
        CALL ReadSSP( Depth, freq, myThid )
     ELSE                        ! return SSP info
 
-       IF ( x( 2 ) < SSP%z( iSegz ) .OR. x( 2 ) > SSP%z( iSegz + 1 ) ) THEN
+       iSegzOld = iSegz
+       IF ( x( 2 ) < SSP%z( iSegz ) .OR. x( 2 ) > SSP%z( iSegz+1 ) ) THEN
           DO iz = 2, SSP%NPts   ! Search for bracketting Depths
 !IEsco23 Test this: 
 !          DO iz = 2, SSP%Nz   ! Search for bracketting Depths
-             IF ( x( 2 ) < SSP%z( iz ) ) THEN
+             IF ( x( 2 ) < SSP%z( iz ) .AND. iSegz.EQ.iSegzOld) THEN
                 iSegz = iz - 1
-                EXIT
              END IF
           END DO
        END IF
 
-       c     = REAL(  SSP%c( iSegz ) + ( x( 2 ) - SSP%z( iSegz ) ) * SSP%cz( iSegz ) )
-       cimag = AIMAG( SSP%c( iSegz ) + ( x( 2 ) - SSP%z( iSegz ) ) * SSP%cz( iSegz ) )
+       c     = REAL(  SSP%c( iSegz ) + ( x( 2 ) - SSP%z( iSegz ) ) &
+               * SSP%cz( iSegz ) )
+       cimag = AIMAG( SSP%c( iSegz ) + ( x( 2 ) - SSP%z( iSegz ) ) &
+               * SSP%cz( iSegz ) )
        gradc = [ 0.0D0, REAL( SSP%cz( iSegz ) ) ]
        crr   = 0.0d0
        crz   = 0.0d0
        czz   = 0.0d0
-
-       W     = ( x( 2 ) - SSP%z( iSegz ) ) / ( SSP%z( iSegz + 1 ) - SSP%z( iSegz ) )
-       rho   = ( 1.0D0 - W ) * SSP%rho( iSegz ) + W * SSP%rho( iSegz + 1 )
+  
+       W     = ( x( 2 ) - SSP%z( iSegz ) ) / &
+               ( SSP%z( iSegz+1 ) - SSP%z( iSegz ) )
+       rho   = ( 1.0D0-W ) * SSP%rho( iSegz ) + W * SSP%rho( iSegz+1 )
     END IF
 
   RETURN
@@ -311,13 +314,13 @@ CONTAINS
 
     ELSE    ! return SSP info, recall iSegz is initiated to 1
 
-       IF ( x( 2 ) < SSP%z( iSegz ) .OR. x( 2 ) > SSP%z( iSegz + 1 ) ) THEN
+       iSegzOld = iSegz
+       IF ( x( 2 ) < SSP%z( iSegz ) .OR. x( 2 ) > SSP%z( iSegz+1 ) ) THEN
           DO iz = 2, SSP%NPts   ! Search for bracketting Depths
 !IEsco23 Test this: 
 !          DO iz = 2, SSP%Nz   ! Search for bracketting Depths
-             IF ( x( 2 ) < SSP%z( iz ) ) THEN
+             IF ( x( 2 ) < SSP%z( iz ) .AND. iSegz.EQ.iSegzOld) THEN
                 iSegz = iz - 1
-                EXIT
              END IF
           END DO
        END IF
@@ -341,9 +344,9 @@ CONTAINS
                      6.0D0 * SSP%cCoef( 4, iSegz ) * xt )   ! dgradc(2)/dxt
 
        W     = ( x( 2 ) - SSP%z( iSegz ) ) / &
-               ( SSP%z( iSegz + 1 ) - SSP%z( iSegz ) )
+               ( SSP%z( iSegz+1 ) - SSP%z( iSegz ) )
        ! linear interp of density
-       rho   = ( 1.0D0 - W ) * SSP%rho( iSegz ) + W * SSP%rho( iSegz + 1 )  
+       rho   = ( 1.0D0-W ) * SSP%rho( iSegz ) + W * SSP%rho( iSegz+1 )  
 
     END IF
 
@@ -390,16 +393,15 @@ CONTAINS
 
        ! *** Section to return SSP info ***
 
-       IF ( x( 2 ) < SSP%z( iSegz ) .OR. x( 2 ) > SSP%z( iSegz + 1 ) ) THEN
+       iSegzOld = iSegz
+       IF ( x( 2 ) < SSP%z( iSegz ) .OR. x( 2 ) > SSP%z( iSegz+1 ) ) THEN
           DO iz = 2, SSP%NPts   ! Search for bracketting Depths
 !IEsco23 Test this: 
 !          DO iz = 2, SSP%Nz   ! Search for bracketting Depths
-             IF ( x( 2 ) < SSP%z( iz ) ) THEN
+             IF ( x( 2 ) < SSP%z( iz ) .AND. iSegz.EQ.iSegzOld) THEN
                 iSegz = iz - 1
-                EXIT
              END IF
           END DO
-
        END IF
 
        hSpline = x( 2 ) - SSP%z( iSegz )
@@ -418,8 +420,8 @@ CONTAINS
        crz   = 0.0d0
 
        ! linear interpolation for density
-       W   = ( x( 2 ) - SSP%z( iSegz ) ) / ( SSP%z( iSegz + 1 ) - SSP%z( iSegz ) )
-       rho = ( 1.0D0 - W ) * SSP%rho( iSegz ) + W * SSP%rho( iSegz + 1 )
+       W   = ( x( 2 ) - SSP%z( iSegz ) ) / ( SSP%z( iSegz+1 ) - SSP%z( iSegz ) )
+       rho = ( 1.0D0-W ) * SSP%rho( iSegz ) + W * SSP%rho( iSegz+1 )
     END IF
 
   RETURN
@@ -472,13 +474,13 @@ SUBROUTINE Quad( x, c, cimag, gradc, crr, crz, czz, rho, freq, Task, myThid )
 
     ! IESCO22: iSegz is the depth index containing x depth
     ! find depth-layer where x(2) in ( SSP%z( iSegz ), SSP%z( iSegz+1 ) )
-    IF ( x( 2 ) < SSP%z( iSegz ) .OR. x( 2 ) > SSP%z( iSegz + 1 ) ) THEN
-      DO iz = 2, SSP%Nz   ! Search for bracketting Depths
-        IF ( x( 2 ) < SSP%z( iz ) ) THEN
-          iSegz = iz - 1
-          EXIT
-        END IF
-      END DO
+    iSegzOld = iSegz
+    IF ( x( 2 ) < SSP%z( iSegz ) .OR. x( 2 ) > SSP%z( iSegz+1 ) ) THEN
+       DO iz = 2, SSP%Nz   ! Search for bracketting Depths
+          IF ( x( 2 ) < SSP%z( iz ) .AND. iSegz.EQ.iSegzOld) THEN
+             iSegz = iz - 1
+          END IF
+       END DO
     END IF
 
     ! Check that x is inside the box where the sound speed is defined
@@ -500,11 +502,11 @@ SUBROUTINE Quad( x, c, cimag, gradc, crr, crz, czz, rho, freq, Task, myThid )
     END IF
 
     ! find range-segment where x(1) in [ SSP%Seg%r( iSegr ), SSP%Seg%r( iSegr+1 ) )
-    IF ( x( 1 ) < SSP%Seg%r( iSegr ) .OR. x( 1 ) >= SSP%Seg%r( iSegr + 1 ) ) THEN
+    iSegrOld = iSegr
+    IF ( x( 1 ) < SSP%Seg%r( iSegr ) .OR. x( 1 ) >= SSP%Seg%r( iSegr+1 ) ) THEN
       DO irT = 2, SSP%Nr   ! Search for bracketting segment ranges
-        IF ( x( 1 ) < SSP%Seg%r( irT ) ) THEN
+        IF ( x( 1 ) < SSP%Seg%r( irT ) .AND. iSegr.EQ.iSegrOld ) THEN
           iSegr = irT - 1
-          EXIT
         END IF
       END DO
     END IF
@@ -533,27 +535,28 @@ SUBROUTINE Quad( x, c, cimag, gradc, crr, crz, czz, rho, freq, Task, myThid )
     ! s1 = proportional distance of x(1) in range
     delta_r = SSP%Seg%r( iSegr+1 ) - SSP%Seg%r( iSegr )
     s1 = ( x( 1 ) - SSP%Seg%r( iSegr ) ) / delta_r
-    s1 = MIN( s1, 1.0D0 )   ! piecewise constant extrapolation for ranges outside SSPFile box
+    s1 = MIN( s1, 1.0D0 )   ! piecewise constant extrap. for ranges outside SSP box
     s1 = MAX( s1, 0.0D0 )   ! "
 
     c = ( 1.0D0-s1 )*c1 + s1*c2 ! c @ x
 
     ! interpolate the attenuation !!!! SSP in ENVFile needs to match first column of SSPFile
     s2    = s2 / delta_z   ! normalize depth layer
-    cimag = AIMAG( ( 1.0D0-s2 )*SSP%c( Isegz ) + s2*SSP%c( Isegz+1 ) )   ! volume attenuation is taken from the single c(z) profile
+    ! volume attenuation is taken from the single c(z) profile
+    cimag = AIMAG( ( 1.0D0-s2 )*SSP%c( iSegz ) + s2*SSP%c( iSegz+1 ) )
 
     cz  = ( 1.0D0-s1 )*cz1 + s1*cz2 ! cz @ x
 
-    cr  = ( c2  - c1  ) / delta_r ! SSPFile grid cr
-    crz = ( cz2 - cz1 ) / delta_r ! SSPFile grid crz
+    cr  = ( c2  - c1  ) / delta_r ! SSP grid cr
+    crz = ( cz2 - cz1 ) / delta_r ! SSP grid crz
 
     gradc = [ cr, cz ]
     crr   = 0.0D0
     czz   = 0.0D0
 
     ! linear interpolation for density
-    W   = ( x( 2 ) - SSP%z( iSegz ) ) / ( SSP%z( iSegz + 1 ) - SSP%z( iSegz ) )
-    rho = ( 1.0D0 - W ) * SSP%rho( iSegz ) + W * SSP%rho( iSegz + 1 )
+    W   = ( x( 2 ) - SSP%z( iSegz ) ) / ( SSP%z( iSegz+1 ) - SSP%z( iSegz ) )
+    rho = ( 1.0D0-W ) * SSP%rho( iSegz ) + W * SSP%rho( iSegz+1 )
   END IF
 
   !IESCO22: for thesis, czz=crr=0, and rho=1 at all times
@@ -699,7 +702,7 @@ END !SUBROUTINE Quad
         STOP 'ABNORMAL END: S/R ReadSSP'
     END IF
 
-    READ( SSPFile,  * ) SSP%Seg%r( 1 : SSP%Nr )
+    READ( SSPFile,  * ) SSP%Seg%r( 1:SSP%Nr )
 #ifdef IHOP_WRITE_OUT
     ! In adjoint mode we do not write output besides on the first run
     IF (IHOP_dumpfreq.GE.0) THEN
@@ -713,7 +716,7 @@ END !SUBROUTINE Quad
 #endif /* IHOP_WRITE_OUT */
     SSP%Seg%r = 1000.0 * SSP%Seg%r   ! convert km to m
 
-    READ( SSPFile,  * ) SSP%z( 1 : SSP%Nz )
+    READ( SSPFile, * ) SSP%z( 1 : SSP%Nz )
 !#ifdef IHOP_DEBUG
 #ifdef IHOP_WRITE_OUT
     ! In adjoint mode we do not write output besides on the first run
