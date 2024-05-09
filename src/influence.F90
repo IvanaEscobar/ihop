@@ -218,16 +218,13 @@ CONTAINS
        rB     = ray2D( iS   )%x( 1 )
        x_ray  = ray2D( iS-1 )%x
 
-       ! compute normalized tangent (compute it because we need to measure the 
-       ! step length)
+       ! compute normalized tangent (we need to measure the step length)
        rayt = ray2D( iS )%x - x_ray 
        rlen = NORM2( rayt )
        ! if duplicate point in ray, skip to next step along the ray
-       IF ( rlen < 1.0D3 * SPACING( ray2D( iS )%x( 1 ) ) ) CYCLE Stepping  
-!       IF ( rlen < 1.0D3 * SPACING( ray2D( iS )%x( 1 ) ) ) iS = Beam%Nsteps
-!       IF ( rlen .GE. 1.0D3 * SPACING( ray2D( iS )%x( 1 ) ) ) THEN
-        rayt = rayt / rlen                    ! unit tangent to ray
-        rayn = [ -rayt( 2 ), rayt( 1 ) ]      ! unit normal  to ray
+       IF ( rlen .GE. 1.0D3 * SPACING( ray2D( iS )%x( 1 ) ) ) THEN 
+        rayt = rayt / rlen                    ! unit tangent of ray @ A
+        rayn = [ -rayt( 2 ), rayt( 1 ) ]      ! unit normal  of ray @ A
         RcvrDeclAngle = rad2deg * ATAN2( rayt( 2 ), rayt( 1 ) )
 
         q      = ray2D( iS-1 )%q( 1 )
@@ -241,7 +238,7 @@ CONTAINS
         
         ! Radius calc from beam radius projected onto vertical line
         RadiusMax = MAX( ABS( q ), ABS( ray2D( iS )%q( 1 ) ) ) &
-                    / q0 / ABS( rayt( 1 ) ) 
+                    / q0 / ABS( rayt( 1 ) ) ! IESCO24: shouldn't this be t(2) 
 
         ! depth limits of beam; IESCO22: a large range of about 1/2 box depth
         IF ( ABS( rayt( 1 ) ) > 0.5 ) THEN   ! shallow angle ray
@@ -254,27 +251,23 @@ CONTAINS
 
         ! compute beam influence for this segment of the ray
         inRcvrRanges=.TRUE.
-        RcvrRanges: DO WHILE (inRcvrRanges) ! ir loop
+        RcvrRanges: DO ir = 1, ihop_nrr
            ! is Rr( ir ) contained in [ rA, rB )? Then compute beam influence
            IF ( Pos%Rr( ir ) >= MIN( rA, rB ) &
                 .AND. Pos%Rr( ir ) < MAX( rA, rB ) &
                 .AND. inRcvrRanges ) THEN
 
-              x_rcvr( 1, 1 : NRz_per_range ) = Pos%Rr( ir )
+              x_rcvr( 1, 1:NRz_per_range ) = Pos%Rr( ir )
               IF ( Beam%RunType( 5 : 5 ) == 'I' ) THEN ! irregular grid
                  x_rcvr( 2, 1 ) = Pos%Rz( ir )
-              ELSE ! rectilinear grid
+              ELSE ! default: rectilinear grid
                  x_rcvr( 2, 1:NRz_per_range ) = Pos%Rz( 1:NRz_per_range )  
               END IF
 
               RcvrDepths: DO iz = 1, NRz_per_range
                  ! is x_rcvr( 2, iz ) contained in ( zmin, zmax )?
-                 IF (      x_rcvr( 2, iz ) < zmin &
-                      .OR. x_rcvr( 2, iz ) > zmax ) CYCLE RcvrDepths
-!                 IF (      x_rcvr( 2, iz ) < zmin &
-!                      .OR. x_rcvr( 2, iz ) > zmax ) iz = NRz_per_range 
-!                 IF (       x_rcvr( 2, iz ) .GE. zmin &
-!                      .AND. x_rcvr( 2, iz ) .LE. zmax ) THEN 
+                 IF (       x_rcvr( 2, iz ) .GE. zmin &
+                      .AND. x_rcvr( 2, iz ) .LE. zmax ) THEN
                     ! normalized proportional distance along ray
                     s = DOT_PRODUCT( x_rcvr( :, iz ) - x_ray, rayt ) / rlen 
                     ! normal distance to ray
@@ -299,6 +292,7 @@ CONTAINS
                        ! hat function: 1 on center, 0 on edge
                        W        = ( RadiusMax - n ) / RadiusMax   
                        Amp      = Amp * W
+                       
                        IF (      q <= 0.0d0 .AND. qOld > 0.0d0 &
                             .OR. q >= 0.0d0 .AND. qOld < 0.0d0 ) THEN
                         phaseInt = phase + PI / 2.   ! phase shifts at caustics
@@ -306,10 +300,9 @@ CONTAINS
                        ELSE
                         phaseInt = ray2D( iS-1 )%Phase + phase
                        END IF
-                       
                        CALL ApplyContribution( U( iz, ir ) )
                     END IF
-!                 END IF ! is x_rcvr( 2, iz ) contained in ( zmin, zmax )?
+                 END IF ! is x_rcvr( 2, iz ) contained in ( zmin, zmax )?
               END DO RcvrDepths
            END IF
 
@@ -323,13 +316,11 @@ CONTAINS
               irTT = ir - 1                     ! bump left
               IF ( Pos%Rr( irTT ) <= rB ) inRcvrRanges=.FALSE.
            END IF
-           PRINT *, "escobar: ir", ir
-           ir = irTT
-           PRINT *, "escobar: ir=irtt", ir
+           !ir = irTT
         END DO RcvrRanges
 
         rA = rB
-!       END IF ! if duplicate point in ray, skip to next step along the ray
+       END IF ! if duplicate point in ray, skip to next step along the ray
     END DO Stepping
 
   RETURN
