@@ -232,7 +232,7 @@ CONTAINS
         dtauds = ray2D( iS   )%tau    - ray2D( iS-1 )%tau
 
         !IESCO22: q only changes signs on direct paths, no top/bot bounces
-        IF( q <= 0.0d0 .AND. qOld > 0.0d0 .OR. q >= 0.0d0 .AND. qOld < 0.0d0 )&
+        IF( q <= 0.0 .AND. qOld > 0.0 .OR. q >= 0.0 .AND. qOld < 0.0 )&
             phase = phase + PI / 2.   ! phase shifts at caustics
         qOld = q
         
@@ -291,7 +291,7 @@ CONTAINS
                                   * ray2D( iS )%Amp
                        ! hat function: 1 on center, 0 on edge
                        W        = ( RadiusMax - n ) / RadiusMax   
-                       Amp      = Amp * W
+                       Amp      = Amp*W
                        
                        IF (      q <= 0.0d0 .AND. qOld > 0.0d0 &
                             .OR. q >= 0.0d0 .AND. qOld < 0.0d0 ) THEN
@@ -340,13 +340,14 @@ CONTAINS
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
   
   !     == Local Variables ==
-    INTEGER,           PARAMETER       :: BeamWindow = 4 
+    INTEGER,           PARAMETER       :: BeamWindow = 4
     REAL (KIND=_RL90), INTENT( IN    ) :: alpha, dalpha ! take-off angle, angular spacing
     COMPLEX,           INTENT( INOUT ) :: U( NRz_per_range, Pos%NRr )  ! complex pressure field
     INTEGER              :: irT( 1 ), irTT
     REAL (KIND=_RL90)    :: x_ray( 2 ), rayt( 2 ), rayn( 2 ), x_rcvr( 2 ), &
                             rLen, RadiusMax, zMin, zMax, sigma, lambda, A, dqds
     COMPLEX (KIND=_RL90) :: dtauds
+    LOGICAL              :: inRcvrRanges
 
     q0           = ray2D( 1 )%c / Dalpha   ! Reference for J = q0 / q
     SrcDeclAngle = rad2deg * alpha          ! take-off angle in degrees
@@ -372,7 +373,6 @@ CONTAINS
     END IF
 
     Stepping: DO iS = 2, Beam%Nsteps
-
        rB    = ray2D( iS     )%x( 1 )
        x_ray = ray2D( iS - 1 )%x
 
@@ -380,98 +380,112 @@ CONTAINS
        ! step length)
        rayt = ray2D( iS )%x - ray2D( iS - 1 )%x
        rlen = NORM2( rayt )
-
        ! if duplicate point in ray, skip to next step along the ray
-       IF ( rlen < 1.0D3 * SPACING( ray2D( iS )%x( 1 ) ) ) CYCLE Stepping  
-       rayt = rayt / rlen
-       rayn = [ -rayt( 2 ), rayt( 1 ) ]      ! unit normal to ray
-       RcvrDeclAngle = rad2deg * ATAN2( rayt( 2 ), rayt( 1 ) )
+       IF ( rlen .GE. 1.0D3 * SPACING( ray2D( iS )%x( 1 ) ) ) THEN
+        rayt = rayt / rlen
+        rayn = [ -rayt( 2 ), rayt( 1 ) ]      ! unit normal to ray
+        RcvrDeclAngle = rad2deg * ATAN2( rayt( 2 ), rayt( 1 ) )
 
-       dqds   = ray2D( iS )%q( 1 ) - ray2D( iS - 1 )%q( 1 )
-       dtauds = ray2D( iS )%tau    - ray2D( iS - 1 )%tau
+        q      = ray2D( iS-1 )%q( 1 )
+        dqds   = ray2D( iS )%q( 1 ) - q
+        dtauds = ray2D( iS )%tau    - ray2D( iS-1 )%tau
 
-       q  = ray2D( iS - 1 )%q( 1 )
-       IF ( q <= 0.0 .AND. qOld > 0.0 &
-            .OR. q >= 0.0 .AND. qOld < 0.0 ) &
-        phase = phase + PI / 2.   ! phase shifts at caustics
-       qold = q
+        !IESCO22: q only changes signs on direct paths, no top/bot bounces
+        IF ( q <= 0.0 .AND. qOld > 0.0 .OR. q >= 0.0 .AND. qOld < 0.0 ) &
+         phase = phase + PI / 2.   ! phase shifts at caustics
+        qOld = q
 
-       ! calculate beam width
-       lambda    = ray2D( iS - 1 )%c / IHOP_freq
-       sigma     = MAX( ABS( ray2D( iS-1 )%q( 1 ) ), ABS( ray2D( iS )%q( 1 ) ) )&
-           / q0 / ABS( rayt( 1 ) ) ! beam radius projected onto vertical line
-       sigma     = MAX( sigma, &
-                    MIN( 0.2 * IHOP_freq * REAL( ray2D( iS )%tau ), PI * lambda ) )
-       RadiusMax = BeamWindow * sigma
+        ! calculate beam width beam radius projected onto vertical line
+        lambda    = ray2D( iS-1 )%c / IHOP_freq
+        sigma     = MAX( ABS( q ), ABS( ray2D( iS )%q( 1 ) ) ) &
+                    / q0 / ABS( rayt( 1 ) ) ! IESCO24: shouldn't this be t(2) 
+        sigma     = MAX( sigma, &
+                         MIN( 0.2*IHOP_freq*REAL( ray2D( iS )%tau ), &
+                              PI*lambda ) )
+        ! default is 4 standard deviations of coverage of the Gaussian curve
+        RadiusMax = BeamWindow*sigma
 
-       ! depth limits of beam
-       IF ( ABS( rayt( 1 ) ) > 0.5 ) THEN   ! shallow angle ray
-          zmin   = min( ray2D( iS-1 )%x( 2 ), ray2D( iS )%x( 2 ) ) - RadiusMax
-          zmax   = max( ray2D( iS-1 )%x( 2 ), ray2D( iS )%x( 2 ) ) + RadiusMax
-       ELSE                                 ! steep angle ray
-          zmin = -HUGE( zmin )
-          zmax = +HUGE( zmax )
-       END IF
+        ! depth limits of beam; IESCO22: a large range of about 1/2 box depth
+        IF ( ABS( rayt( 1 ) ) > 0.5 ) THEN   ! shallow angle ray
+           zmin   = min( ray2D( iS-1 )%x( 2 ), ray2D( iS )%x( 2 ) ) - RadiusMax
+           zmax   = max( ray2D( iS-1 )%x( 2 ), ray2D( iS )%x( 2 ) ) + RadiusMax
+        ELSE                                 ! steep angle ray
+           zmin = -HUGE( zmin )
+           zmax = +HUGE( zmax )
+        END IF
 
-       ! compute beam influence for this segment of the ray
-       RcvrRanges: DO
-          ! is Rr( ir ) contained in [ rA, rB )? Then compute beam influence
-          IF ( Pos%Rr( ir ) >= MIN( rA, rB ) &
-               .AND. Pos%Rr( ir ) < MAX( rA, rB ) ) THEN
+        ! compute beam influence for this segment of the ray
+        inRcvrRanges=.TRUE.
+        RcvrRanges: DO ir = 1, ihop_nrr
+           ! is Rr( ir ) contained in [ rA, rB )? Then compute beam influence
+           IF ( Pos%Rr( ir ) >= MIN( rA, rB ) &
+                .AND. Pos%Rr( ir ) < MAX( rA, rB ) &
+                .AND. inRcvrRanges ) THEN
 
-             RcvrDepths: DO iz = 1, NRz_per_range
-                IF ( Beam%RunType( 5 : 5 ) == 'I' ) THEN
-                   x_rcvr = [ Pos%Rr( ir ), Pos%Rz( ir ) ]   ! irregular   grid
-                ELSE
-                   x_rcvr = [ Pos%Rr( ir ), Pos%Rz( iz ) ]   ! rectilinear grid
-                END IF
-                IF ( x_rcvr( 2 ) < zmin &
-                     .OR. x_rcvr( 2 ) > zmax ) CYCLE RcvrDepths
+              RcvrDepths: DO iz = 1, NRz_per_range
+                 IF ( Beam%RunType( 5 : 5 ) == 'I' ) THEN
+                    x_rcvr = [ Pos%Rr( ir ), Pos%Rz( ir ) ]   ! irregular   grid
+                 ELSE
+                    x_rcvr = [ Pos%Rr( ir ), Pos%Rz( iz ) ]   ! rectilinear grid
+                 END IF
+                 ! is x_rcvr( 2, iz ) contained in ( zmin, zmax )?
+                 IF (       x_rcvr( 2 ) .GE. zmin &
+                      .AND. x_rcvr( 2 ) .LE. zmax ) THEN
 
-                ! proportional distance along ray
-                s = DOT_PRODUCT( x_rcvr - x_ray, rayt ) / rlen  
-                ! normal distance to ray
-                n = ABS( DOT_PRODUCT( x_rcvr - x_ray, rayn ) )       
-                ! interpolated amplitude
-                q = ray2D( iS-1 )%q( 1 ) + s * dqds               
-                ! beam radius
-                sigma  = ABS( q / q0 )                                    
-                sigma  = MAX( sigma, &
-                    MIN( 0.2 * IHOP_freq * REAL( ray2D( iS )%tau ), PI * lambda ) ) 
+                    ! proportional distance along ray
+                    s = DOT_PRODUCT( x_rcvr - x_ray, rayt ) / rlen  
+                    ! normal distance to ray
+                    n = ABS( DOT_PRODUCT( x_rcvr - x_ray, rayn ) )       
+                    ! interpolated amplitude in [meters]
+                    q = q + s*dqds               
+                    ! beam radius; IESCO22 smaller then previous RadiusMax
+                    sigma = ABS( q / q0 )                                    
+                    sigma = MAX( sigma, &
+                                 MIN( 0.2*IHOP_freq*REAL( ray2D( iS )%tau ), &
+                                      PI*lambda ) )
 
-                IF ( n < BeamWindow * sigma ) THEN   ! Within beam window?
-                   A        = ABS( q0 / q )
-                   delay    = ray2D( iS-1 )%tau + s * dtauds ! interpolated delay
-                   Amp      = Ratio1 * SQRT( ray2D( iS )%c / ABS( q ) ) &
-                              * ray2D( iS )%Amp
-                   ! W : Gaussian decay
-                   W        = EXP( -0.5 * ( n / sigma ) ** 2 ) / ( sigma * A )   
-                   Amp      = Amp*W
-                   phaseInt = ray2D( iS )%Phase + phase
-                   IF ( q <= 0.0d0 .AND. qOld > 0.0d0 &
-                        .OR. q >= 0.0d0 .AND. qOld < 0.0d0 ) &
-                    phaseInt = phase + PI / 2.  ! phase shifts at caustics
+                    IF ( n < BeamWindow*sigma ) THEN   ! Within beam window?
+#ifdef IHOP_WRITE_OUT
+                        WRITE(msgBuf,'(A,F10.2)') &
+                            "Influence: Eigenray w RadiusMax = ", RadiusMax
+                        IF ( IHOP_dumpfreq .GE. 0) &
+                         CALL PRINT_MESSAGE( msgbuf, PRTFile, &
+                                             SQUEEZE_RIGHT, myThid )
+#endif /* IHOP_WRITE_OUT */
+                       ! interpolated delay
+                       A        = ABS( q0 / q )
+                       delay    = ray2D( iS-1 )%tau + s*dtauds 
+                       Amp      = Ratio1 * SQRT( ray2D( iS )%c / ABS( q ) ) &
+                                  * ray2D( iS )%Amp
+                       ! W : Gaussian decay
+                       W        = EXP( -0.5*( n / sigma )**2 ) / ( sigma*A )   
+                       Amp      = Amp*W
+                       phaseInt = ray2D( iS )%Phase + phase
+                       IF ( q <= 0.0d0 .AND. qOld > 0.0d0 &
+                            .OR. q >= 0.0d0 .AND. qOld < 0.0d0 ) &
+                        phaseInt = phase + PI / 2.  ! phase shifts at caustics
 
-                   CALL ApplyContribution( U( iz, ir ) )
-                END IF
-             END DO RcvrDepths
-          END IF
+                       CALL ApplyContribution( U( iz, ir ) )
+                    END IF
+                 END IF ! is x_rcvr( 2, iz ) contained in ( zmin, zmax )?
+              END DO RcvrDepths
+           END IF
 
-          ! receiver not bracketted; bump receiver index, ir, towards rB
-          IF ( rB > Pos%Rr( ir ) ) THEN
-             IF ( ir >= Pos%NRr        ) EXIT   ! go to next step on ray
-             irTT = ir + 1                      ! bump right
-             IF ( Pos%Rr( irTT ) >= rB ) EXIT   ! go to next step on ray
-          ELSE
-             IF ( ir <= 1              ) EXIT   ! go to next step on ray
-             irTT = ir - 1                      ! bump left
-             IF ( Pos%Rr( irTT ) <= rB ) EXIT   ! go to next step on ray
-          END IF
-          ir = irTT
+            ! bump receiver index, ir, towards rB
+            IF ( Pos%Rr( ir ) < rB ) THEN
+               IF ( ir >= Pos%NRr        ) inRcvrRanges=.FALSE. ! go to next step on ray
+               irTT = ir + 1                     ! bump right
+               IF ( Pos%Rr( irTT ) >= rB ) inRcvrRanges=.FALSE.
+            ELSE
+               IF ( ir <= 1              ) inRcvrRanges=.FALSE. ! go to next step on ray
+               irTT = ir - 1                     ! bump left
+               IF ( Pos%Rr( irTT ) <= rB ) inRcvrRanges=.FALSE.
+            END IF
+            !ir = irTT
+        END DO RcvrRanges
 
-       END DO RcvrRanges
-
-       rA = rB
+        rA = rB
+       END IF ! if duplicate point in ray, skip to next step along the ray
     END DO Stepping
 
   RETURN

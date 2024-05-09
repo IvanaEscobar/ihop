@@ -437,11 +437,11 @@ CONTAINS
 !                CASE ( 'S' )
 !                   CALL InfluenceSGB( U, Angles%alpha( ialpha ), Angles%Dalpha )
                 CASE ( 'B' )
-                   CALL InfluenceGeoGaussianCart( U, Angles%alpha( ialpha ), &
-                                                  Angles%Dalpha, myThid )
-               CASE DEFAULT !IEsco22: thesis is in default behavior
                    CALL InfluenceGeoHatCart(  U, Angles%alpha( ialpha ), &
                                               Angles%Dalpha, myThid )
+                CASE DEFAULT !IEsco22: thesis is in default behavior
+                   CALL InfluenceGeoGaussianCart( U, Angles%alpha( ialpha ), &
+                                                  Angles%Dalpha, myThid )
                 END SELECT
              END IF
   
