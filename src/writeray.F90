@@ -18,6 +18,13 @@ MODULE writeRay
 
   IMPLICIT NONE
 !   == Global variables ==
+#include "SIZE.h"
+#include "GRID.h"
+#include "EEPARAMS.h"
+#include "EESUPPORT.h"
+#include "PARAMS.h"
+#include "IHOP_SIZE.h"
+#include "IHOP.h"
 
   PRIVATE
 
@@ -40,6 +47,9 @@ CONTAINS
     INTEGER,           INTENT( IN ) :: Nsteps1
     REAL (KIND=_RL90), INTENT( IN ) :: alpha0   ! take-off angle of this ray
 
+    ! In adjoint mode we do not write output besides on the first run
+    IF (IHOP_dumpfreq.LT.0) RETURN
+    
     ! compression
 
     N2    = 1
@@ -78,6 +88,9 @@ CONTAINS
 
     INTEGER,           INTENT( IN ) :: Nsteps1
     REAL (KIND=_RL90), INTENT( IN ) :: alpha0   ! take-off angle of this ray
+
+    ! In adjoint mode we do not write output besides on the first run
+    IF (IHOP_dumpfreq.LT.0) RETURN
 
     ! compression
 

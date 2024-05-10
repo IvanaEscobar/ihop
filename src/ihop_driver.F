@@ -10,9 +10,20 @@ C !DESCRIPTION:
 C Calculate ray travel times, tau
 
 C !FORTRAN90 USE MODULES: ===============================================
-      USE bellhop
+      USE bellhop, only: ihop_init
 
       IMPLICIT NONE
+C !GLOBAL VARIABLES: ===============================================
+#ifdef ALLOW_IHOP
+!   == Global variables ==
+# include "SIZE.h"
+# include "GRID.h"
+# include "EEPARAMS.h"
+# include "EESUPPORT.h"
+# include "PARAMS.h"
+# include "IHOP_SIZE.h"
+# include "IHOP.h"
+#endif /* ALLOW_IHOP */
 
 C !INPUT PARAMETERS: ===================================================
 C  myTime   :: Current time in simulation

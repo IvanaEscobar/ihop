@@ -22,13 +22,18 @@ MODULE arr_mod
 ! public interfaces
 !=======================================================================
 
-    public WriteArrivalsASCII, WriteArrivalsBinary, MaxNArr, NArr, NArr3D, &
-           Arr, Arr3D, AddArr
+    public WriteArrivalsASCII, WriteArrivalsBinary, MaxNArr, NArr, Arr, AddArr 
+#ifdef IHOP_THREED
+    public NArr3D, Arr3D
+#endif /* IHOP_THREED */
 
 !=======================================================================
 
   INTEGER               :: MaxNArr
-  INTEGER, ALLOCATABLE  :: NArr( :, : ), NArr3D( :, :, : )
+  INTEGER, ALLOCATABLE  :: NArr( :, : )
+#ifdef IHOP_THREED
+  INTEGER, ALLOCATABLE  :: NArr3D( :, :, : )
+#endif /* IHOP_THREED */
 
   TYPE Arrival
      INTEGER :: NTopBnc, NBotBnc
@@ -37,7 +42,10 @@ MODULE arr_mod
      COMPLEX :: delay
   END TYPE
 
-  TYPE(Arrival), ALLOCATABLE :: Arr( :, :, : ), Arr3D( :, :, :, : )
+  TYPE(Arrival), ALLOCATABLE :: Arr( :, :, : )
+#ifdef IHOP_THREED
+  TYPE(Arrival), ALLOCATABLE :: Arr3D( :, :, :, : )
+#endif /* IHOP_THREED */
 
 CONTAINS
   SUBROUTINE AddArr( afreq, iz, ir, Amp, Phase, delay, SrcDeclAngle, &
@@ -123,6 +131,9 @@ CONTAINS
     INTEGER             :: ir, iz, iArr
     REAL (KIND=_RL90)   :: factor
 
+    ! In adjoint mode we do not write output besides on the first run
+    IF (IHOP_dumpfreq.LT.0) RETURN
+
 #ifdef IHOP_WRITE_OUT
     WRITE( ARRFile, * ) MAXVAL( NArr( 1 : Nrz, 1 : Nr ) )
 #endif /* IHOP_WRITE_OUT */
@@ -174,6 +185,9 @@ CONTAINS
     CHARACTER (LEN=1), INTENT( IN ) :: SourceType   ! Beam%RunType(4:4)
     INTEGER                 :: ir, iz, iArr
     REAL     (KIND=_RL90)   :: factor
+
+    ! In adjoint mode we do not write output besides on the first run
+    IF (IHOP_dumpfreq.LT.0) RETURN
 
 #ifdef IHOP_WRITE_OUT
     WRITE( ARRFile ) MAXVAL( NArr( 1 : Nrz, 1 : Nr ) )

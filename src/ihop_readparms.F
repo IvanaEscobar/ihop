@@ -36,6 +36,7 @@ C     iUnit      :: Work variable for IO unit number
       NAMELIST /IHOP_PARM01/
      &      IHOP_fileroot,
      &      IHOP_title,
+     &      IHOP_dumpFreq,
      &      IHOP_MNC
 
       NAMELIST /IHOP_PARM02/
@@ -96,6 +97,7 @@ C--   Default values for IHOP_PARM01
       IHOP_fileroot = ''
       IHOP_title    = 'ihop'
       IHOP_MNC      = .false.
+      IHOP_dumpFreq = dumpFreq
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 C     Open and read data.ihop file
