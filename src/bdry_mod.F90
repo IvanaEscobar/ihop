@@ -489,7 +489,7 @@ END !SUBROUTINE ReadBTY
     ! curvatures (%kappa)
     !
     ! The boundary is also extended with a constant depth to infinity to cover 
-    ! cases where the ray exits the domain defined by the user
+    ! cases where the ray leaves the domain defined by the user
 
     INTEGER                          :: NPts = 0
     REAL (KIND=_RL90), ALLOCATABLE   :: phi( : )

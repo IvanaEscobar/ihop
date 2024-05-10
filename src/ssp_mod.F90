@@ -877,6 +877,7 @@ SUBROUTINE ExtractSSP( Depth, freq, myThid )
   REAL (KIND=_RL90)             :: sumweights(IHOP_NPTS_RANGE, Nr), &
                                    dcdz, tolerance
   REAL (KIND=_RL90), ALLOCATABLE:: tmpSSP(:,:,:,:)
+  LOGICAL :: found_interpolation, skip_range
 
   SSP%Nz = Nr+2 ! add z=0 z=Depth layers 
   SSP%Nr = IHOP_NPTS_RANGE
@@ -894,10 +895,10 @@ SUBROUTINE ExtractSSP( Depth, freq, myThid )
       STOP 'ABNORMAL END: S/R ExtractSSP'
   END IF
 
-  ! Initiate SSP%cMat to ceros
+  ! Initiate to ceros
   SSP%cMat  = 0.0 _d 0
   tmpSSP    = 0.0 _d 0
-  njj       = 0
+  njj(:)    = 0
   dcdz      = 0.0 _d 0
   tolerance = 5 _d -5
 
@@ -922,39 +923,44 @@ SUBROUTINE ExtractSSP( Depth, freq, myThid )
     DO bi=myBxLo(myThid),myBxHi(myThid)
       DO j=1,sNy
         DO i=1,sNx
-          ranges: DO ii=1,IHOP_npts_range
-
+          DO ii=1,IHOP_npts_range
+            skip_range = .FALSE.
+      
             DO jj=1,IHOP_npts_idw
-              IF ( ABS(xC(i,j,bi,bj)-ihop_xc(ii,jj)).LE.tolerance .and. &
-                   ABS(yC(i,j,bi,bj)-ihop_yc(ii,jj)).LE.tolerance ) THEN 
+              IF (ABS(xC(i, j, bi, bj) - ihop_xc(ii, jj)) .LE. tolerance .AND. &
+                  ABS(yC(i, j, bi, bj) - ihop_yc(ii, jj)) .LE. tolerance) THEN
                 DO k=1,Nr
-                  ! no IDW interp on xc,yc centered ranges
-                  IF (nii(ii).eq.1 .and. k.gt.njj(ii)) CYCLE ranges
-                  
-                  IF ( hFacC(i,j,k,bi,bj).eq.0.0 ) THEN
-                    sumweights(ii,k) = sumweights(ii,k) - ihop_idw_weights(ii,jj)
-
-                    ! no iterpolation on xc,yc centered ranges
-                    IF (ihop_idw_weights(ii,jj).eq.0.) THEN
+                  ! No IDW interpolation on xc, yc centered ranges
+                  IF (nii(ii) .EQ. 1 .AND. k .GT. njj(ii)) THEN
+                    skip_range = .TRUE.
+                  END IF
+      
+                  IF (.NOT. skip_range) THEN
+                    IF (hFacC(i, j, k, bi, bj) .EQ. 0.0) THEN
+                      sumweights(ii, k) = sumweights(ii, k) - ihop_idw_weights(ii, jj)
+      
+                      ! No interpolation on xc, yc centered ranges
+                      IF (ihop_idw_weights(ii, jj) .EQ. 0.0) THEN
                         sumweights(ii, k:Nr) = 0.0
                         nii(ii) = 1
                         njj(ii) = k
-                    ENDIF
-
-                  ENDIF
-                  ! Set TINY and negative values to 0.0
-                  IF ( sumweights(ii,k).LT.1D-13 ) sumweights(ii,k) = 0.0
-                ENDDO
+                      END IF
+                    END IF
+      
+                    ! Set TINY and negative values to 0.0
+                    IF (sumweights(ii, k) .LT. 1D-13) sumweights(ii, k) = 0.0
+                  END IF
+                END DO
               END IF
-            ENDDO
-          ENDDO ranges
-        ENDDO
-      ENDDO
+            END DO
+          END DO
+        END DO
+      END DO
     ENDDO
   ENDDO
 
-  ! Reset counter
-  njj = 0
+  ! Initiate to ceros
+  njj(:) = 0
 
   ! interpolate SSP with adaptive IDW from gcm grid to ihop grid 
   DO bj=myByLo(myThid),myByHi(myThid)
@@ -962,61 +968,61 @@ SUBROUTINE ExtractSSP( Depth, freq, myThid )
       DO j=1,sNy
         DO i=1,sNx
           DO ii=1,IHOP_npts_range
-            interp: DO jj=1,IHOP_npts_idw
-            ! Interpolate from gcm grid cell centers
-            IF ( ABS(xC(i,j,bi,bj)-ihop_xc(ii,jj)).LE.tolerance .and. &
-                 ABS(yC(i,j,bi,bj)-ihop_yc(ii,jj)).LE.tolerance ) THEN 
-              njj(ii) = njj(ii) + 1
+            found_interpolation = .FALSE.
+            DO jj=1,IHOP_npts_idw
+              ! Interpolate from GCM grid cell centers
+              IF (ABS(xC(i, j, bi, bj) - ihop_xc(ii, jj)) .LE. tolerance .AND. &
+                  ABS(yC(i, j, bi, bj) - ihop_yc(ii, jj)) .LE. tolerance .AND. &
+                  .NOT. found_interpolation) THEN
+                njj(ii) = njj(ii) + 1
 
-              DO iz=1,SSP%Nz-1
-                IF (iz.eq.1) THEN
-                  ! Top vlevel zero depth
-                  tmpSSP(1,ii,bi,bj) = tmpSSP(1,ii,bi,bj) + &
-                    CHEN_MILLERO(i,j,0,bi,bj,myThid)* &
-                    ihop_idw_weights(ii,jj)/sumweights(ii,iz)
-                ELSE ! 2:(SSP%Nz-1)
-                  ! Middle depth layers, only when not already underground
-                  IF (sumweights(ii,iz-1).gt.0.0) THEN
-                    ! Exactly on a cell center, ignore interpolation
-                    IF (ihop_idw_weights(ii,jj).eq.0.0) THEN
-                      tmpSSP(iz,ii,bi,bj) = ihop_ssp(i,j,iz-1,bi,bj)
-                      njj(ii) = IHOP_npts_idw + 1
+                DO iz = 1, SSP%Nz - 1
+                  IF (iz .EQ. 1) THEN
+                    ! Top vlevel zero depth
+                    tmpSSP(1, ii, bi, bj) = tmpSSP(1, ii, bi, bj) + &
+                      CHEN_MILLERO(i, j, 0, bi, bj, myThid) * &
+                      ihop_idw_weights(ii, jj) / sumweights(ii, iz)
+                  ELSE ! 2:(SSP%Nz-1)
+                    ! Middle depth layers, only when not already underground
+                    IF (sumweights(ii, iz - 1) .GT. 0.0) THEN
+                      ! Exactly on a cell center, ignore interpolation
+                      IF (ihop_idw_weights(ii, jj) .EQ. 0.0) THEN
+                        tmpSSP(iz, ii, bi, bj) = ihop_ssp(i, j, iz - 1, bi, bj)
+                        njj(ii) = IHOP_npts_idw + 1
 
-                    ! Apply IDW interpolation
-                    ELSE IF (njj(ii).LE.IHOP_npts_idw) THEN
-                      tmpSSP(iz,ii,bi,bj) = tmpSSP(iz,ii,bi,bj) + &
-                        ihop_ssp(i,j,iz-1,bi,bj)* &
-                        ihop_idw_weights(ii,jj)/sumweights(ii,iz-1)
+                      ! Apply IDW interpolation
+                      ELSE IF (njj(ii) .LE. IHOP_npts_idw) THEN
+                        tmpSSP(iz, ii, bi, bj) = tmpSSP(iz, ii, bi, bj) + &
+                          ihop_ssp(i, j, iz - 1, bi, bj) * &
+                          ihop_idw_weights(ii, jj) / sumweights(ii, iz - 1)
+                      END IF
                     END IF
-                  END IF 
-                  
-                  ! Extrapolate through bathymetry; don't interpolate
-                  IF ( iz.eq.SSP%Nz-1 .or. sumweights(ii,iz-1).eq.0.0 ) THEN 
-                    k=iz
-                    
-                    IF ( njj(ii).ge.IHOP_npts_idw ) THEN 
-                      ! Determine if you are at the last vlevel
-                      IF ( iz.eq.SSP%Nz-1 .and. sumweights(ii,iz-1).ne.0.0 ) k = k+1
-                       
-                      ! Calc depth gradient
-                      dcdz =  ( tmpSSP(k-1,ii,bi,bj)-tmpSSP(k-2,ii,bi,bj) ) / &
-                              ( SSP%z(k-1)-SSP%z(k-2) )
-                      ! Extrapolate
-                      tmpSSP(k:SSP%Nz,ii,bi,bj) = &
-                          tmpSSP(k-1,ii,bi,bj) + dcdz*SSP%z(k:SSP%Nz)
-                      ! Move to the next range point, ii
-                      EXIT interp
-                    END IF 
-                  END IF
 
-                END IF
-              END DO  
-            
-            END IF
-            END DO interp
-          END DO 
-        ENDDO
-      ENDDO
+                    ! Extrapolate through bathymetry; don't interpolate
+                    IF (iz .EQ. SSP%Nz - 1 .OR. sumweights(ii, iz - 1) .EQ. 0.0) THEN
+                      k = iz
+
+                      IF (njj(ii) .GE. IHOP_npts_idw) THEN
+                        ! Determine if you are at the last vlevel
+                        IF (iz .EQ. SSP%Nz - 1 .AND. sumweights(ii, iz - 1) .NE. 0.0) k = k + 1
+
+                        ! Calc depth gradient
+                        dcdz = (tmpSSP(k - 1, ii, bi, bj) - tmpSSP(k - 2, ii, bi, bj)) / &
+                               (SSP%z(k - 1) - SSP%z(k - 2))
+                        ! Extrapolate
+                        tmpSSP(k:SSP%Nz, ii, bi, bj) = &
+                          tmpSSP(k - 1, ii, bi, bj) + dcdz * SSP%z(k:SSP%Nz)
+                        ! Move to the next range point, ii
+                        found_interpolation = .TRUE.
+                      END IF
+                    END IF
+                  END IF
+                END DO
+              END IF
+            END DO
+          END DO
+        END DO
+      END DO
     ENDDO
   ENDDO
 

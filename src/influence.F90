@@ -63,6 +63,7 @@ CONTAINS
     REAL (KIND=_RL90)    :: znV( Beam%Nsteps ), rnV( Beam%Nsteps ), &
                             RcvrDeclAngleV ( Beam%Nsteps )
     COMPLEX (KIND=_RL90) :: dtau( Beam%Nsteps-1 )
+    LOGICAL :: skip_step
 
     !!! need to add logic related to NRz_per_range
 
@@ -110,66 +111,74 @@ CONTAINS
        END IF
 
        Stepping: DO iS = 2, Beam%Nsteps
-          ! Compute ray-centered coordinates, (znV, rnV)
- 
-          ! If normal is parallel to TL-line, skip to next step on ray
-          IF ( ABS( znV( iS ) ) < 1D-10 ) CYCLE Stepping  
-          nB  = ( zR - ray2D( iS )%x( 2 ) ) / znV( iS )
-          rB  = ray2D( iS )%x( 1 ) + nB * rnV( iS )
-
-          ! Find index of receiver: assumes uniform spacing in Pos%Rr
-          irB = MAX( MIN( INT( ( rB - Pos%Rr( 1 ) ) / Pos%Delta_r )+1,  &
-                          Pos%NRr ),&
-                     1 )
-
-          ! detect and skip duplicate points (happens at boundary reflection)
-          IF ( ABS( ray2D( iS )%x( 1 ) - ray2D( iS-1 )%x( 1 ) )     &
-               < 1.0D3 * SPACING( ray2D( iS )%x( 1 ) )              &
-               .OR. irA == irB ) THEN
-             rA  = rB
-             nA  = nB
+         skip_step = .FALSE.
+       
+         ! Compute ray-centered coordinates, (znV, rnV)
+       
+         ! If normal is parallel to TL-line, skip to the next step on ray
+         IF (ABS(znV(iS)) < 1D-10) THEN
+           skip_step = .TRUE.
+         ELSE
+           nB = (zR - ray2D(iS)%x(2)) / znV(iS)
+           rB = ray2D(iS)%x(1) + nB * rnV(iS)
+       
+           ! Find index of receiver: assumes uniform spacing in Pos%Rr
+           irB = MAX(MIN(INT((rB - Pos%Rr(1)) / Pos%Delta_r) + 1, &
+                          Pos%NRr), &
+                     1)
+       
+           ! Detect and skip duplicate points (happens at boundary reflection)
+           IF (ABS(ray2D(iS)%x(1) - ray2D(iS - 1)%x(1)) < &
+               1.0D3 * SPACING(ray2D(iS)%x(1)) &
+               .OR. irA == irB) THEN
+             rA = rB
+             nA = nB
              irA = irB
-             CYCLE Stepping
-          END IF
-
-          !!! this should be pre-computed
-          q  = ray2D( iS-1 )%q( 1 )
-          ! if phase shifts at caustics
-          IF (     q <= 0.0d0 .AND. qOld > 0.0d0    &
-              .OR. q >= 0.0d0 .AND. qOld < 0.0d0 )  &
-              phase = phase + PI/2.  
-          qOld = q
-
-          RcvrDeclAngle = RcvrDeclAngleV( iS )
-
-          ! *** Compute contributions to bracketted receivers ***
-          II = 0
-          IF ( irB <= irA ) II = 1   ! going backwards in range
-    
-          ! Compute influence for each rcvr
-          RcvrRanges: DO ir = irA + 1 - II, irB + II, SIGN( 1, irB-irA )  
-             W = ( Pos%Rr( ir ) - rA ) / ( rB - rA ) ! relative range between rR
-             n = ABS( nA              + W*( nB - nA ) )
-             q = ray2D( iS-1 )%q( 1 ) + W*dq( iS-1 )  ! interpolated amplitude, IESCO22: isn't q a unit normal aka no units?
-             L = ABS( q ) / q0   ! beam radius
-
-             IF ( n < L ) THEN   ! in beamwindow: update delay, Amp, phase
-                delay    = ray2D( iS-1 )%tau + W*dtau( iS-1 ) 
-                Amp      = ray2D( iS )%Amp / SQRT( ABS( q ) ) 
-                W        = ( L - n ) / L ! hat function: 1 on center, 0 on edge
-                Amp      = Amp*W
-                phaseInt = ray2D( iS-1 )%Phase + phase
-                !!! this should be precomputed
-                IF (     q <= 0.0d0 .AND. qOld > 0.0d0      &
-                    .OR. q >= 0.0d0 .AND. qOld < 0.0d0 )    &
-                    phaseInt = phase + PI/2.   ! phase shifts at caustics
-
-                CALL ApplyContribution( U( iz, ir ) )
+             skip_step = .TRUE.
+           END IF
+         END IF
+       
+         IF (.NOT. skip_step) THEN
+           !!! this should be pre-computed
+           q = ray2D(iS - 1)%q(1)
+           ! if phase shifts at caustics
+           IF ((q <= 0.0D0 .AND. qOld > 0.0D0) .OR. &
+               (q >= 0.0D0 .AND. qOld < 0.0D0)) &
+               phase = phase + PI / 2.0D0
+           qOld = q
+       
+           RcvrDeclAngle = RcvrDeclAngleV(iS)
+       
+           ! *** Compute contributions to bracketted receivers ***
+           II = 0
+           IF (irB <= irA) II = 1   ! going backwards in range
+       
+           ! Compute influence for each receiver
+           DO ir = irA + 1 - II, irB + II, SIGN(1, irB - irA)
+             W = (Pos%Rr(ir) - rA) / (rB - rA)  ! relative range between rR
+             n = ABS(nA + W * (nB - nA))
+             q = ray2D(iS - 1)%q(1) + W * dq(iS - 1)  ! interpolated amplitude
+             L = ABS(q) / q0   ! beam radius
+       
+             IF (n < L) THEN  ! in beam window: update delay, Amp, phase
+               delay = ray2D(iS - 1)%tau + W * dtau(iS - 1)
+               Amp = ray2D(iS)%Amp / SQRT(ABS(q))
+               W = (L - n) / L  ! hat function: 1 on center, 0 on edge
+               Amp = Amp * W
+               phaseInt = ray2D(iS - 1)%Phase + phase
+               !!! this should be precomputed
+               IF ((q <= 0.0D0 .AND. qOld > 0.0D0) .OR. &
+                   (q >= 0.0D0 .AND. qOld < 0.0D0)) &
+                   phaseInt = phase + PI / 2.0D0  ! phase shifts at caustics
+       
+               CALL ApplyContribution(U(iz, ir))
              END IF
-          END DO RcvrRanges
-          rA  = rB
-          nA  = nB
-          irA = irB
+           END DO
+         END IF
+       
+         rA = rB
+         nA = nB
+         irA = irB
        END DO Stepping
     END DO RcvrDepths
 
@@ -308,11 +317,11 @@ CONTAINS
 
            ! bump receiver index, ir, towards rB
            IF ( Pos%Rr( ir ) < rB ) THEN
-              IF ( ir >= Pos%NRr        ) inRcvrRanges=.FALSE. ! go to next step on ray
+              IF ( ir >= Pos%NRr        ) inRcvrRanges=.FALSE. ! to next step on ray
               irTT = ir + 1                     ! bump right
               IF ( Pos%Rr( irTT ) >= rB ) inRcvrRanges=.FALSE.
            ELSE
-              IF ( ir <= 1              ) inRcvrRanges=.FALSE. ! go to next step on ray
+              IF ( ir <= 1              ) inRcvrRanges=.FALSE. ! to next step on ray
               irTT = ir - 1                     ! bump left
               IF ( Pos%Rr( irTT ) <= rB ) inRcvrRanges=.FALSE.
            END IF
@@ -473,11 +482,11 @@ CONTAINS
 
             ! bump receiver index, ir, towards rB
             IF ( Pos%Rr( ir ) < rB ) THEN
-               IF ( ir >= Pos%NRr        ) inRcvrRanges=.FALSE. ! go to next step on ray
+               IF ( ir >= Pos%NRr        ) inRcvrRanges=.FALSE. ! to next step on ray
                irTT = ir + 1                     ! bump right
                IF ( Pos%Rr( irTT ) >= rB ) inRcvrRanges=.FALSE.
             ELSE
-               IF ( ir <= 1              ) inRcvrRanges=.FALSE. ! go to next step on ray
+               IF ( ir <= 1              ) inRcvrRanges=.FALSE. ! to next step on ray
                irTT = ir - 1                     ! bump left
                IF ( Pos%Rr( irTT ) <= rB ) inRcvrRanges=.FALSE.
             END IF
