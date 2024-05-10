@@ -15,3 +15,7 @@
 
 !adj SUBROUTINE arr_mod::writearrivalsbinary INPUT   = 1, 2, 3, 4
 !adj SUBROUTINE arr_mod::writearrivalsbinary OUTPUT  =     
+
+!adj SUBROUTINE ssp_mod::readssp INPUT   = 1, 2, 3
+!adj SUBROUTINE ssp_mod::readssp OUTPUT  =     
+!adj SUBROUTINE ssp_mod::readssp MODULE atten_mod INPUT = CRCI

@@ -51,10 +51,10 @@ MODULE ssp_mod
 ! == Legacy Local Variables ==
   INTEGER, PARAMETER     :: MaxSSP = 201
   INTEGER                :: iSegr = 1, iSegz = 1
-  INTEGER                :: iSegrOld, iSegzOld
+  LOGICAL                :: foundr, foundz
 #ifdef IHOP_THREED
   INTEGER                :: iSegx = 1, iSegy = 1
-  INTEGER                :: iSegxOld, iSegyOld
+  LOGICAL                :: foundx, foundy
 #endif /* IHOP_THREED */
   INTEGER                :: iostat, iallocstat
   INTEGER,           PRIVATE :: iz
@@ -197,16 +197,17 @@ CONTAINS
        END DO
     ELSE                         ! return SSP info
 
-       IF ( x( 2 ) < SSP%z( iSegz ) .OR. x( 2 ) > SSP%z( iSegz + 1 ) ) THEN
-          DO iz = 2, SSP%NPts   ! Search for bracketting Depths
+        IF ( x( 2 ) < SSP%z( iSegz ) .OR. x( 2 ) > SSP%z( iSegz+1 ) ) THEN
+           foundz=.false.
 !IEsco23 Test this: 
 !          DO iz = 2, SSP%Nz   ! Search for bracketting Depths
-             IF ( x( 2 ) < SSP%z( iz ) ) THEN
-                iSegz = iz - 1
-                EXIT
-             END IF
-          END DO
-       END IF
+           DO iz = 2, SSP%NPts   ! Search for bracketting Depths
+              IF ( x( 2 ) < SSP%z( iz ) .and. .not. foundz ) THEN
+                 iSegz  = iz - 1
+                 foundz = .true.
+              END IF
+           END DO
+        END IF
 
        W = ( x( 2 ) - SSP%z( iSegz ) ) / ( SSP%z( iSegz + 1 ) - SSP%z( iSegz ) )
 
@@ -249,16 +250,17 @@ CONTAINS
        CALL ReadSSP( Depth, freq, myThid )
     ELSE                        ! return SSP info
 
-       IF ( x( 2 ) < SSP%z( iSegz ) .OR. x( 2 ) > SSP%z( iSegz + 1 ) ) THEN
-          DO iz = 2, SSP%NPts   ! Search for bracketting Depths
+        IF ( x( 2 ) < SSP%z( iSegz ) .OR. x( 2 ) > SSP%z( iSegz+1 ) ) THEN
+           foundz=.false.
 !IEsco23 Test this: 
 !          DO iz = 2, SSP%Nz   ! Search for bracketting Depths
-             IF ( x( 2 ) < SSP%z( iz ) ) THEN
-                iSegz = iz - 1
-                EXIT
-             END IF
-          END DO
-       END IF
+           DO iz = 2, SSP%NPts   ! Search for bracketting Depths
+              IF ( x( 2 ) < SSP%z( iz ) .and. .not. foundz ) THEN
+                 iSegz  = iz - 1
+                 foundz = .true.
+              END IF
+           END DO
+        END IF
 
        c     = REAL(  SSP%c( iSegz ) + ( x( 2 ) - SSP%z( iSegz ) ) * SSP%cz( iSegz ) )
        cimag = AIMAG( SSP%c( iSegz ) + ( x( 2 ) - SSP%z( iSegz ) ) * SSP%cz( iSegz ) )
@@ -311,16 +313,17 @@ CONTAINS
 
     ELSE    ! return SSP info, recall iSegz is initiated to 1
 
-       IF ( x( 2 ) < SSP%z( iSegz ) .OR. x( 2 ) > SSP%z( iSegz + 1 ) ) THEN
-          DO iz = 2, SSP%NPts   ! Search for bracketting Depths
+        IF ( x( 2 ) < SSP%z( iSegz ) .OR. x( 2 ) > SSP%z( iSegz+1 ) ) THEN
+           foundz=.false.
 !IEsco23 Test this: 
 !          DO iz = 2, SSP%Nz   ! Search for bracketting Depths
-             IF ( x( 2 ) < SSP%z( iz ) ) THEN
-                iSegz = iz - 1
-                EXIT
-             END IF
-          END DO
-       END IF
+           DO iz = 2, SSP%NPts   ! Search for bracketting Depths
+              IF ( x( 2 ) < SSP%z( iz ) .and. .not. foundz ) THEN
+                 iSegz  = iz - 1
+                 foundz = .true.
+              END IF
+           END DO
+        END IF
 
        xt = x( 2 ) - SSP%z( iSegz )
        c_cmplx = SSP%cCoef( 1, iSegz ) &
@@ -390,17 +393,17 @@ CONTAINS
 
        ! *** Section to return SSP info ***
 
-       IF ( x( 2 ) < SSP%z( iSegz ) .OR. x( 2 ) > SSP%z( iSegz + 1 ) ) THEN
-          DO iz = 2, SSP%NPts   ! Search for bracketting Depths
+        IF ( x( 2 ) < SSP%z( iSegz ) .OR. x( 2 ) > SSP%z( iSegz+1 ) ) THEN
+           foundz=.false.
 !IEsco23 Test this: 
 !          DO iz = 2, SSP%Nz   ! Search for bracketting Depths
-             IF ( x( 2 ) < SSP%z( iz ) ) THEN
-                iSegz = iz - 1
-                EXIT
-             END IF
-          END DO
-
-       END IF
+           DO iz = 2, SSP%NPts   ! Search for bracketting Depths
+              IF ( x( 2 ) < SSP%z( iz ) .and. .not. foundz ) THEN
+                 iSegz  = iz - 1
+                 foundz = .true.
+              END IF
+           END DO
+        END IF
 
        hSpline = x( 2 ) - SSP%z( iSegz )
 
@@ -443,6 +446,7 @@ SUBROUTINE Quad( x, c, cimag, gradc, crr, crz, czz, rho, freq, Task, myThid )
   REAL (KIND=_RL90), INTENT( OUT ) :: c, cimag, gradc( 2 ), crr, crz, czz, &
                                       rho ! sound speed and its derivatives
   INTEGER             :: irT, iz2
+  INTEGER             :: isegzold
   REAL (KIND=_RL90)   :: c1, c2, cz1, cz2, cr, cz, s1, s2, delta_r, delta_z
   
   IF ( Task == 'INI' ) THEN
@@ -472,13 +476,14 @@ SUBROUTINE Quad( x, c, cimag, gradc, crr, crz, czz, rho, freq, Task, myThid )
 
     ! IESCO22: iSegz is the depth index containing x depth
     ! find depth-layer where x(2) in ( SSP%z( iSegz ), SSP%z( iSegz+1 ) )
-    IF ( x( 2 ) < SSP%z( iSegz ) .OR. x( 2 ) > SSP%z( iSegz + 1 ) ) THEN
-      DO iz = 2, SSP%Nz   ! Search for bracketting Depths
-        IF ( x( 2 ) < SSP%z( iz ) ) THEN
-          iSegz = iz - 1
-          EXIT
-        END IF
-      END DO
+    IF ( x( 2 ) < SSP%z( iSegz ) .OR. x( 2 ) > SSP%z( iSegz+1 ) ) THEN
+       foundz=.false.
+       DO iz = 2, SSP%Nz   ! Search for bracketting Depths
+          IF ( x( 2 ) < SSP%z( iz ) .and. .not. foundz ) THEN
+             iSegz  = iz - 1
+             foundz = .true.
+          END IF
+       END DO
     END IF
 
     ! Check that x is inside the box where the sound speed is defined
@@ -500,11 +505,12 @@ SUBROUTINE Quad( x, c, cimag, gradc, crr, crz, czz, rho, freq, Task, myThid )
     END IF
 
     ! find range-segment where x(1) in [ SSP%Seg%r( iSegr ), SSP%Seg%r( iSegr+1 ) )
-    IF ( x( 1 ) < SSP%Seg%r( iSegr ) .OR. x( 1 ) >= SSP%Seg%r( iSegr + 1 ) ) THEN
+    IF ( x( 1 ) < SSP%Seg%r( iSegr ) .OR. x( 1 ) >= SSP%Seg%r( iSegr+1 ) ) THEN
+      foundr=.false.
       DO irT = 2, SSP%Nr   ! Search for bracketting segment ranges
-        IF ( x( 1 ) < SSP%Seg%r( irT ) ) THEN
+        IF ( x( 1 ) < SSP%Seg%r( irT ) .and. .not. foundr ) THEN
           iSegr = irT - 1
-          EXIT
+          foundr=.true.
         END IF
       END DO
     END IF
@@ -794,7 +800,7 @@ END !SUBROUTINE Quad
 
        ! verify depths are monotone increasing
        IF ( iz > 1 ) THEN
-          IF ( SSP%z( iz ) .LE. SSP%z( iz - 1 ) ) THEN
+          IF ( SSP%z( iz ) .LE. SSP%z( iz-1 ) ) THEN
 #ifdef IHOP_WRITE_OUT
                 WRITE(msgBuf,'(A,F10.2)') 'Bad depth in SSP: ', SSP%z( iz )
                 ! In adjoint mode we do not write output besides on the first run
@@ -809,8 +815,8 @@ END !SUBROUTINE Quad
        END IF
 
        ! compute gradient, cz
-       IF ( iz > 1 ) SSP%cz( iz - 1 )  = ( SSP%c( iz ) - SSP%c( iz - 1 ) ) / &
-                                         ( SSP%z( iz ) - SSP%z( iz - 1 ) )
+       IF ( iz > 1 ) SSP%cz( iz - 1 )  = ( SSP%c( iz ) - SSP%c( iz-1 ) ) / &
+                                         ( SSP%z( iz ) - SSP%z( iz-1 ) )
 
        ! Did we read the last point?
        IF ( ABS( SSP%z( iz ) - Depth ) < 100. * EPSILON( 1.0e0 ) ) THEN

@@ -213,7 +213,7 @@ CONTAINS
     INTEGER,              INTENT( IN    ) :: NPts       ! # pts in refl. coef.
     TYPE(ReflectionCoef), INTENT( IN    ) :: R( NPts )  ! Reflection coefficient table
     TYPE(ReflectionCoef), INTENT( INOUT ) :: RInt       ! interpolated value of refl. coef.
-    INTEGER             :: iLeft, iRight, iMid
+    INTEGER             :: iLeft, iRight, iMid, iLR
     REAL (KIND=_RL90)   :: alpha, Thetaintr
 
     iLeft  = 1
@@ -223,7 +223,7 @@ CONTAINS
 
     ! Three cases: ThetaInt left, in, or right of tabulated interval
 
-    IF     ( thetaIntr < R( iLeft  )%theta ) THEN
+    IF ( thetaIntr < R( iLeft )%theta ) THEN
        !iRight = 2
        RInt%R   = 0.0     ! R( iLeft  )%R
        RInt%phi = 0.0     ! R( iLeft  )%phi
@@ -246,13 +246,15 @@ CONTAINS
        ! Search for bracketting abscissas: Log2( NPts ) stabs required for a 
        ! bracket
 
-       DO WHILE ( iLeft /= iRight - 1 )
+       DO iLR = 1, NPts
+        IF ( iLeft /= iRight - 1 ) THEN
           iMid = ( iLeft + iRight ) / 2
           IF ( R( iMid )%theta > thetaIntr ) THEN
              iRight = iMid
           ELSE
              iLeft  = iMid
           ENDIF
+        ENDIF
        END DO
 
        ! Linear interpolation for reflection coef
