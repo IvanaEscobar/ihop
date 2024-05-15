@@ -247,7 +247,7 @@ CONTAINS
         
         ! Radius calc from beam radius projected onto vertical line
         RadiusMax = MAX( ABS( q ), ABS( ray2D( iS )%q( 1 ) ) ) &
-                    / q0 / ABS( rayt( 1 ) ) ! IESCO24: shouldn't this be t(2) 
+                    / q0 / ABS( rayt( 1 ) ) ! IESCO24: AKA rayn( 2 ) 
 
         ! depth limits of beam; IESCO22: a large range of about 1/2 box depth
         IF ( ABS( rayt( 1 ) ) > 0.5 ) THEN   ! shallow angle ray
