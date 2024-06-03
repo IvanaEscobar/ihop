@@ -33,12 +33,15 @@ C == Global variables ===
 # include "IHOP_SIZE.h"
 # include "IHOP.h"
 # include "netcdf.inc"
+# ifdef ALLOW_COST
+#  include "IHOP_COST.h"
+# endif
 #endif
 #ifdef ALLOW_CTRL
 ! c68s
 # include "optim.h"
 ! >=c68u
-# include "optimcycle.h"
+!# include "optimcycle.h"
 #endif
 #ifdef ALLOW_AUTODIFF
 # include "tamc.h"

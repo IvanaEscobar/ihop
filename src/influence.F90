@@ -407,11 +407,11 @@ CONTAINS
         ! calculate beam width beam radius projected onto vertical line
         lambda    = ray2D( iS-1 )%c / IHOP_freq
         sigma     = MAX( ABS( q ), ABS( ray2D( iS )%q( 1 ) ) ) &
-                    / q0 / ABS( rayt( 1 ) ) ! IESCO24: shouldn't this be t(2) 
+                    / q0 / ABS( rayt( 1 ) ) ! IESCO24: AKA rayn( 2 ) 
         sigma     = MAX( sigma, &
                          MIN( 0.2*IHOP_freq*REAL( ray2D( iS )%tau ), &
                               PI*lambda ) )
-        ! default is 4 standard deviations of coverage of the Gaussian curve
+        ! default is 2 standard deviations of coverage of the Gaussian curve
         RadiusMax = BeamWindow*sigma
 
         ! depth limits of beam; IESCO22: a large range of about 1/2 box depth

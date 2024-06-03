@@ -15,10 +15,13 @@ C     !USES:
 #include "SIZE.h"
 #include "EEPARAMS.h"
 #include "PARAMS.h"
+#ifdef ALLOW_MNC
+# include "MNC_PARAMS.h"
+#endif
 #include "IHOP_SIZE.h"
 #include "IHOP.h"
-#ifdef ALLOW_MNC
-#include "MNC_PARAMS.h"
+#ifdef ALLOW_COST
+# include "IHOP_COST.h"
 #endif
 
 C     !INPUT PARAMETERS:
@@ -30,8 +33,14 @@ C     !LOCAL VARIABLES:
 C     msgBuf     :: Informational/error message buffer
 C     iUnit      :: Work variable for IO unit number
       CHARACTER*(MAX_LEN_MBUF) msgBuf
-      INTEGER iUnit
-      INTEGER i, j
+      INTEGER iUnit, IL
+      INTEGER i, j 
+      LOGICAL exst
+      CHARACTER*(128) fname
+
+C    !FUNCTIONS:
+      INTEGER  ILBLNK
+      EXTERNAL ILBLNK
 
       NAMELIST /IHOP_PARM01/
      &      IHOP_fileroot,
@@ -78,6 +87,13 @@ C     iUnit      :: Work variable for IO unit number
      &      ihop_idw_weights,
      &      ihop_ranges
 
+#ifdef ALLOW_COST
+      NAMELIST /IHOP_COST_NML/
+    &       ihopObsDir,
+    &       ihopObsFile,
+    &       mult_ihop
+#endif /* ALLOW_COST */
+
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 
       IF ( .NOT.useIHOP ) THEN
@@ -92,14 +108,6 @@ C     print a (weak) warning if data.ihop is found
 
       _BEGIN_MASTER(myThid)
 
-C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
-C--   Default values for IHOP_PARM01
-      IHOP_fileroot = ''
-      IHOP_title    = 'ihop'
-      IHOP_MNC      = .false.
-      IHOP_dumpFreq = dumpFreq
-
-C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 C     Open and read data.ihop file
       WRITE(msgBuf,'(A)') 'IHOP_READPARMS: opening data.ihop'
       CALL PRINT_MESSAGE( msgBuf, standardMessageUnit,
@@ -109,7 +117,15 @@ C     Open and read data.ihop file
      O                     iUnit,
      I                     myThid )
 
-C     Read parameters from open data file
+C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
+C--   Default values for IHOP_PARM01
+      IHOP_fileroot = ''
+      IHOP_title    = 'ihop'
+      IHOP_MNC      = .false.
+      IHOP_dumpFreq = dumpFreq
+
+C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
+C     Read parameters from open data file: IHOP_PARM01
       READ(UNIT=iUnit,NML=IHOP_PARM01)
       WRITE(msgBuf,'(A)')
      &    'IHOP_READPARMS: finished reading IHOP_PARM01 in data.ihop'
@@ -130,9 +146,7 @@ C     Check paramters of IHOP_PARM01
      &                     SQUEEZE_RIGHT, myThid )
       ENDIF
 
-      _END_MASTER(myThid)
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
-      _BEGIN_MASTER(myThid)
 C--   Default values for IHOP_PARM02
       IHOP_topopt   = '      '
       IHOP_botopt   = '  '
@@ -161,7 +175,7 @@ C--   Default values for IHOP_PARM02
       IHOP_bcsoundshear     = 0. _d 0
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
-C     Read parameters from open data file
+C     Read parameters from open data file: IHOP_PARM02
       READ(UNIT=iUnit,NML=IHOP_PARM02)
       WRITE(msgBuf,'(A)')
      &    'IHOP_READPARMS: finished reading IHOP_PARM02 in data.ihop'
@@ -254,7 +268,7 @@ C     ihop_init_fixed.f
       ENDDO
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
-C     Read parameters from open data file
+C     Read parameters from open data file: IHOP_PARM03
       READ(UNIT=iUnit,NML=IHOP_PARM03)
       WRITE(msgBuf,'(A)')
      &    'IHOP_READPARMS: finished reading IHOP_PARM03 in data.ihop'
@@ -269,8 +283,36 @@ C     Check paramters of IHOP_PARM03
        STOP 'ABNORMAL END: S/R IHOP_READPARMS'
       ENDIF
 
+#ifdef ALLOW_COST
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
+C--   Default values for IHOP_COST_NML 
+      ihopObsDir  = ' '
+      ihopObsFile = ' '
+      mult_ihop   = 1. _d 0
 
+C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
+C     Read parameters from open data file: IHOP_COST_NML
+      READ(UNIT=iUnit,NML=IHOP_COST_NML)
+      WRITE(msgBuf,'(A)')
+     &    'IHOP_READPARMS: finished reading IHOP_COST_NML in data.ihop'
+      CALL PRINT_MESSAGE( msgBuf, standardMessageUnit,
+     &                    SQUEEZE_RIGHT, myThid )
+
+C     Check paramters of IHOP_COST_NML
+      IF ( ihopObsFile.NE.' ' ) THEN
+       IL = ILNBLNK( ihopObsFile )
+       fname = ihopObsFile(1:IL)//'.nc'
+       INQUIRE( FILE=fname, EXIST=exst )
+       IF ( .NOT.exst ) THEN
+        WRITE(msgBuf, '(2A)') 'S/R IHOP_READPARMS: "ihopObsFile " ',
+     &   'Provide observations file name for ihop package'  
+        CALL PRINT_ERROR( msgBuf, myThid )
+        STOP 'ABNORMAL END: S/R IHOP_READPARMS'
+       ENDIF
+      ENDIF
+#endif /* ALLOW_COST */
+
+C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 C     Close the open data file
 #ifdef SINGLE_DISK_IO
       CLOSE(iUnit)
