@@ -411,6 +411,9 @@ CONTAINS
         sigma     = MAX( sigma, &
                          MIN( 0.2*IHOP_freq*REAL( ray2D( iS )%tau ), &
                               PI*lambda ) )
+        ! Note on min: "Weinberg and Keenan suggest limiting a beam to a 
+        !               point, by imposing a minimum beam width of pilambda."
+        !               - Jensen, Comp OA 2011
         ! default is 2 standard deviations of coverage of the Gaussian curve
         RadiusMax = BeamWindow*sigma
 
