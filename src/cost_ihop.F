@@ -104,7 +104,8 @@ C ==================================================================
 
         _BEGIN_MASTER( myThid )
 
-      DO num_file=1,NFILESMAX_OBS
+#ifdef ALLOW_COST
+      DO num_file=1,NFILESMAX_IHOP
 
 C File maintenance
        DO bj=1,nSy
@@ -117,13 +118,13 @@ c need to close the file so that the data is not lost when run finishes
 c then re-open it to compute cost function
            iG=bi+(myXGlobalLo-1)/sNx ! Kludge until unstructered tiles
            jG=bj+(myYGlobalLo-1)/sNy ! Kludge until unstructered tiles
-           IL  = ILNBLNK( ihopfiles(num_file) )
+           IL  = ILNBLNK( ihopobsfiles(num_file) )
            write(ihopfile(1:80),'(1a)')
-     &     ihopfiles(num_file)(1:IL)
+     &     ihopobsfiles(num_file)(1:IL)
            IL  = ILNBLNK( ihopfile )
-           JL  = ILNBLNK( ihopDir )
+           JL  = ILNBLNK( ihopObsDir )
            write(fnameequinc(1:80),'(3a,i3.3,a,i3.3,a)')
-     &     ihopDir(1:JL),ihopfile(1:IL),'.',iG,'.',jG,'.equi.nc'
+     &     ihopObsDir(1:JL),ihopfile(1:IL),'.',iG,'.',jG,'.equi.nc'
 c
            err = NF_OPEN(fnameequinc,NF_NOWRITE,
      &     fidfwd_obs(num_file,bi,bj))
@@ -133,7 +134,7 @@ c
        ENDDO
 
 c Loop over variables
-       DO num_var=1,NVARMAX_OBS
+       DO num_var=1,NOBSMAX_IHOP
 
 c Loop over samples
          DO ii=1,NSAMPLESMAX
@@ -153,7 +154,7 @@ C Open tiled files and read to buffer
              CALL active_read_ihop(num_file,
      &           sample_modvaltmp,num_var,
      &           sample_num,.false.,optimcycle,bi,bj,myThid,
-     &           ihop_dummy(num_file,num_var,bi,bj))
+     &           ihop_dummy(num_file,bi,bj))
 
 C Save model equi (of samples) and masks in buffer
 C Combine all threads here
@@ -182,7 +183,7 @@ C Combine all processes
          IF ( myProcId .eq. 0 ) THEN
 
 C Loop over obs
-         DO obs_num=1,NOBSMAX_OBS
+         DO obs_num=1,NOBSMAX_IHOP
           IF (obs_num.LE.ObsNo(num_file)) THEN
 
            obs_modval=0.
@@ -225,25 +226,25 @@ c Write to global netcdf file
               CALL active_write_obsequi(num_file,
      &         obs_modval,num_var,
      &         obs_num,optimcycle,myThid,
-     &         ihop_globaldummy(num_file,num_var))
+     &         ihop_globaldummy(num_file))
 
           ENDIF !if (obs_num.LE.ObsNo(num_file)) then
          ENDDO !do obs_num=..
 
 cc         IF ( myProcId .eq. 0 ) THEN
            err = NF_CLOSE(fidglobal(num_file))
-           IL  = ILNBLNK( ihopfiles(num_file) )
+           IL  = ILNBLNK( ihopobsfiles(num_file) )
            write(ihopfile(1:80),'(1a)')
-     &      ihopfiles(num_file)(1:IL)
+     &      ihopobsfiles(num_file)(1:IL)
            IL  = ILNBLNK( ihopfile )
-           JL  = ILNBLNK( ihopDir )
+           JL  = ILNBLNK( ihopObsDir )
            write(fnameequinc(1:80),'(3a)')
-     &      ihopDir(1:JL),ihopfile(1:IL),'.equi.nc'
+     &      ihopObsDir(1:JL),ihopfile(1:IL),'.equi.nc'
            err = NF_OPEN(fnameequinc,NF_NOWRITE,fidglobal(num_file))
 cc         ENDIF
          
 C Loop over obs
-         DO obs_num=1,NOBSMAX_OBS
+         DO obs_num=1,NOBSMAX_IHOP
           IF (obs_num.LE.ObsNo(num_file)) THEN
 
            obs_modval=0.
@@ -264,7 +265,7 @@ cc           IF ( myProcId .eq. 0 ) THEN
               CALL active_read_obsequi(num_file,
      &         obs_modval,num_var,
      &         obs_num,.false.,optimcycle,myThid,
-     &         ihop_globaldummy(num_file,num_var))
+     &         ihop_globaldummy(num_file))
 cc           ENDIF
 
            IF (obs_weight.GT.0.
@@ -285,13 +286,15 @@ cc           ENDIF
          ENDIF !if myprocid = 0
 
        ENDDO !do num_var...
-      ENDDO !do num_file=1,NFILESMAX_OBS
+      ENDDO !do num_file=1,NFILESMAX_IHOP
   
+#endif /* ALLOW_COST */
         _END_MASTER( myThid )
 
+#ifdef ALLOW_COST
 c Print cost function values
-      DO num_file=1,NFILESMAX_OBS
-       DO num_var=1,NVARMAX_OBS
+      DO num_file=1,NFILESMAX_IHOP
+       DO num_var=1,NOBSMAX_IHOP
 c
           objf_ihop_glo =
      &             objf_ihop(num_file,num_var)
@@ -307,6 +310,7 @@ c
 c
        ENDDO
       ENDDO
+#endif /* ALLOW_COST */
 
       write(msgbuf,'(a)') '== cost_ihop: end   =='
       CALL print_message( msgbuf,

@@ -20,6 +20,7 @@ C     == global variables ==
 #include "EEPARAMS.h"
 #include "SIZE.h"
 #include "PARAMS.h"
+#include "IHOP_SIZE.h"
 #ifdef ALLOW_COST
 # include "IHOP_COST.h"
 #endif
@@ -40,28 +41,28 @@ C     == end of interface ==
 
       _BEGIN_MASTER( myThid )
 
-      IF ( useCAL ) THEN
-C--   Ihop cost function start and stop times in model seconds.
-        call cal_FullDate  ( costIhopStart1 , costIhopStart2,
-     &                       tempDate1     , myThid )
-        call cal_TimePassed( modelStartDate, tempDate1    ,
-     &                       tempDate2     , myThid )
-        call cal_ToSeconds ( tempDate2 , costIhopStart , myThid )
-        costIhopStart = costIhopStart + startTime
-
-        if ( costIhopEnd1.EQ.0 ) then
-C-      use "modelEndDate" as default value for costIhopEnd
-          costIhopEnd1 = modelEndDate(1)
-          costIhopEnd2 = modelEndDate(2)
-        endif
-        call cal_FullDate  ( costIhopEnd1   , costIhopEnd2  ,
-     &                       tempDate1     , myThid )
-        call cal_TimePassed( modelStartDate, tempDate1    ,
-     &                       tempDate2     , myThid )
-        call cal_ToSeconds ( tempDate2 , costIhopEnd , myThid )
-        costIhopEnd = costIhopEnd + startTime
-C--
-      ENDIF
+C      IF ( useCAL ) THEN
+CC--   Ihop cost function start and stop times in model seconds.
+C        call cal_FullDate  ( costIhopStart1 , costIhopStart2,
+C     &                       tempDate1     , myThid )
+C        call cal_TimePassed( modelStartDate, tempDate1    ,
+C     &                       tempDate2     , myThid )
+C        call cal_ToSeconds ( tempDate2 , costIhopStart , myThid )
+C        costIhopStart = costIhopStart + startTime
+C
+C        if ( costIhopEnd1.EQ.0 ) then
+CC-      use "modelEndDate" as default value for costIhopEnd
+C          costIhopEnd1 = modelEndDate(1)
+C          costIhopEnd2 = modelEndDate(2)
+C        endif
+C        call cal_FullDate  ( costIhopEnd1   , costIhopEnd2  ,
+C     &                       tempDate1     , myThid )
+C        call cal_TimePassed( modelStartDate, tempDate1    ,
+C     &                       tempDate2     , myThid )
+C        call cal_ToSeconds ( tempDate2 , costIhopEnd , myThid )
+C        costIhopEnd = costIhopEnd + startTime
+CC--
+C      ENDIF
       _END_MASTER( myThid )
 
       _BARRIER

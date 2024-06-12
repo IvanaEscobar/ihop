@@ -31,7 +31,10 @@ C     == global variables ==
 #endif
 #ifdef ALLOW_CTRL
 # include "ctrl.h"
+! c68s
 # include "optim.h"
+! >=c68u
+!# include "optimcycle.h"
 #endif
 
 C     !INPUT/OUTPUT PARAMETERS:
@@ -62,7 +65,7 @@ C--   Sum up all contributions.
        DO bi = myBxLo(myThid), myBxHi(myThid)
 
           tile_fc(bi,bj) = tile_fc(bi,bj)
-     &          + mult_ihop * objf_ihop(bi,bj)
+     &          + mult_ihop(bi,bj) * objf_ihop(bi,bj)
 
        ENDDO
       ENDDO
@@ -80,7 +83,9 @@ C--   Do global summation for each part of the cost function
 C--   Each process has calculated the global part for itself.
       IF ( MASTER_CPU_THREAD(myThid) ) THEN
 
+#ifdef ALLOW_CTRL
         WRITE(cfname,'(A,i4.4)') 'costfunction_ihop', optimcycle
+#endif
         OPEN(unit=ifc,file=cfname)
 
         WRITE(ifc,*) 'fc =', fc

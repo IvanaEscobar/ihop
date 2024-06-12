@@ -33,7 +33,7 @@ C     !LOCAL VARIABLES:
 C     msgBuf     :: Informational/error message buffer
 C     iUnit      :: Work variable for IO unit number
       CHARACTER*(MAX_LEN_MBUF) msgBuf
-      INTEGER iUnit, IL
+      INTEGER iUnit, IL, num_file
       INTEGER i, j 
       LOGICAL exst
       CHARACTER*(128) fname
@@ -41,6 +41,8 @@ C     iUnit      :: Work variable for IO unit number
 C    !FUNCTIONS:
       INTEGER  ILBLNK
       EXTERNAL ILBLNK
+      INTEGER  ILNBLNK
+      EXTERNAL ILNBLNK
 
       NAMELIST /IHOP_PARM01/
      &      IHOP_fileroot,
@@ -87,12 +89,11 @@ C    !FUNCTIONS:
      &      ihop_idw_weights,
      &      ihop_ranges
 
-#ifdef ALLOW_COST
       NAMELIST /IHOP_COST_NML/
-    &       ihopObsDir,
-    &       ihopObsFile,
-    &       mult_ihop
-#endif /* ALLOW_COST */
+     &      ihopdoncoutput,
+     &      ihopObsDir,
+     &      ihopObsFiles,
+     &      mult_ihop
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 
@@ -286,9 +287,12 @@ C     Check paramters of IHOP_PARM03
 #ifdef ALLOW_COST
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 C--   Default values for IHOP_COST_NML 
-      ihopObsDir  = ' '
-      ihopObsFile = ' '
-      mult_ihop   = 1. _d 0
+      ihopdoncoutput = .false.
+      ihopObsDir     = ' '
+      DO num_file=1,NFILESMAX_IHOP
+       ihopObsFiles(num_file)      =    ' '
+      ENDDO
+      mult_ihop      = 1. _d 0
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 C     Read parameters from open data file: IHOP_COST_NML
@@ -299,17 +303,19 @@ C     Read parameters from open data file: IHOP_COST_NML
      &                    SQUEEZE_RIGHT, myThid )
 
 C     Check paramters of IHOP_COST_NML
-      IF ( ihopObsFile.NE.' ' ) THEN
-       IL = ILNBLNK( ihopObsFile )
-       fname = ihopObsFile(1:IL)//'.nc'
-       INQUIRE( FILE=fname, EXIST=exst )
-       IF ( .NOT.exst ) THEN
-        WRITE(msgBuf, '(2A)') 'S/R IHOP_READPARMS: "ihopObsFile " ',
-     &   'Provide observations file name for ihop package'  
-        CALL PRINT_ERROR( msgBuf, myThid )
-        STOP 'ABNORMAL END: S/R IHOP_READPARMS'
+      DO num_file=1,NFILESMAX_IHOP
+       IF ( ihopObsFiles(num_file).NE.' ' ) THEN
+        IL = ILNBLNK( ihopObsFiles(num_file) )
+        fname = ihopObsFiles(num_file)(1:IL)//'.nc'
+        INQUIRE( FILE=fname, EXIST=exst )
+        IF ( .NOT.exst ) THEN
+         WRITE(msgBuf, '(2A)') 'S/R IHOP_READPARMS: "ihopObsFiles " ',
+     &    'Provide observations file name for ihop package'  
+         CALL PRINT_ERROR( msgBuf, myThid )
+         STOP 'ABNORMAL END: S/R IHOP_READPARMS'
+        ENDIF
        ENDIF
-      ENDIF
+      ENDDO
 #endif /* ALLOW_COST */
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
