@@ -1,0 +1,40 @@
+C----------------------------------------
+C subroutine active_read_ihop_tile
+C----------------------------------------
+cadj SUBROUTINE active_read_ihop_tile FTLNAME = g_active_read_ihop_tile
+cadj SUBROUTINE active_read_ihop_tile ADNAME  = adactive_read_ihop_tile
+cadj SUBROUTINE active_read_ihop_tile INPUT   = 1, 3,4,5,6,7,8,9
+cadj SUBROUTINE active_read_ihop_tile OUTPUT  =   2
+cadj SUBROUTINE active_read_ihop_tile ACTIVE  =   2
+cadj SUBROUTINE active_read_ihop_tile DEPEND  = 1, 3,4,5,6,7,8
+
+C----------------------------------------
+C subroutine active_write_ihop_tile
+C----------------------------------------
+cadj SUBROUTINE active_write_ihop_tile FTLNAME = g_active_write_ihop_tile
+cadj SUBROUTINE active_write_ihop_tile ADNAME  = adactive_write_ihop_tile
+cadj SUBROUTINE active_write_ihop_tile INPUT   = 1,2,3,4,5,6,7,8
+cadj SUBROUTINE active_write_ihop_tile OUTPUT  =               8
+cadj SUBROUTINE active_write_ihop_tile ACTIVE  =   2,          8
+cadj SUBROUTINE active_write_ihop_tile DEPEND  = 1,  3,4,5,6,7
+
+C----------------------------------------
+C subroutine active_read_ihop_glob
+C----------------------------------------
+cadj SUBROUTINE active_read_ihop_glob FTLNAME = g_active_read_ihop_glob
+cadj SUBROUTINE active_read_ihop_glob ADNAME  = adactive_read_ihop_glob
+cadj SUBROUTINE active_read_ihop_glob INPUT   = 1, 3,4,5,6,7
+cadj SUBROUTINE active_read_ihop_glob OUTPUT  =   2
+cadj SUBROUTINE active_read_ihop_glob ACTIVE  =   2
+cadj SUBROUTINE active_read_ihop_glob DEPEND  = 1, 3,4,5,6
+
+C----------------------------------------
+C subroutine active_write_ihop_glob
+C----------------------------------------
+cadj SUBROUTINE active_write_ihop_glob FTLNAME = g_active_write_ihop_glob
+cadj SUBROUTINE active_write_ihop_glob ADNAME  = adactive_write_ihop_glob
+cadj SUBROUTINE active_write_ihop_glob INPUT   = 1,2,3,4,5,6
+cadj SUBROUTINE active_write_ihop_glob OUTPUT  =           6
+cadj SUBROUTINE active_write_ihop_glob ACTIVE  =   2,      6
+cadj SUBROUTINE active_write_ihop_glob DEPEND  = 1,  3,4,5
+

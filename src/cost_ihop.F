@@ -151,8 +151,8 @@ C Open tiled files and read to buffer
 
              sample_modvaltmp=0.
 
-             CALL active_read_ihop(num_file,
-     &           sample_modvaltmp,num_var,
+             CALL active_read_ihop_tile(num_file,
+     &           sample_modvaltmp,
      &           sample_num,.false.,optimcycle,bi,bj,myThid,
      &           ihop_dummy(num_file,bi,bj))
 
@@ -223,8 +223,8 @@ C Spatial averaging
            ENDIF
 
 c Write to global netcdf file
-              CALL active_write_obsequi(num_file,
-     &         obs_modval,num_var,
+              CALL active_write_ihop_glob(num_file,
+     &         obs_modval,
      &         obs_num,optimcycle,myThid,
      &         ihop_globaldummy(num_file))
 
@@ -249,27 +249,28 @@ C Loop over obs
 
            obs_modval=0.
            obs_data=0.
-           obs_weight=0.
+           obs_uncert=0.
 
-C Read observation and uncertainty (weight)
-           CALL ihop_read_obs(num_file,num_var,
+C Read observation and uncertainty
+           CALL ihop_read_obs(num_file,1,
      &           obs_ind_glob(num_file,obs_num),
      &           obs_data,myThid)
 
-           CALL ihop_read_obs(num_file,-num_var,
+           CALL ihop_read_obs(num_file,-1,
      &           obs_ind_glob(num_file,obs_num),
-     &           obs_weight,myThid)
+     &           obs_uncert,myThid)
 
 C Read model equivalent from global file
 cc           IF ( myProcId .eq. 0 ) THEN
-              CALL active_read_obsequi(num_file,
-     &         obs_modval,num_var,
+              CALL active_read_ihop_glob(num_file,
+     &         obs_modval,
      &         obs_num,.false.,optimcycle,myThid,
      &         ihop_globaldummy(num_file))
 cc           ENDIF
 
-           IF (obs_weight.GT.0.
+           IF (obs_uncert.GT.0.
      &            ) THEN
+                 obs_weight=1/(obs_uncert*obs_uncert)
                  objf_ihop(num_file,num_var)=
      &             objf_ihop(num_file,num_var)
      &             +obs_weight*obs_modmask

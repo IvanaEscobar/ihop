@@ -3,7 +3,7 @@
 !     | o ihop cost terms.                                       |
 !     *==========================================================*
 
-!    OBSFIT logical parameters
+!    ihop logical parameters
       LOGICAL ihopDoNcOutput
 
       COMMON /ihop_cost_l/ ihopDoNcOutput
@@ -19,13 +19,28 @@
       INTEGER ObsNo(NFILESMAX_IHOP)
       INTEGER sampleNo(NFILESMAX_IHOP,nsx,nsy)
       INTEGER fidfwd_obs(NFILESMAX_IHOP,nsx,nsy)
+      INTEGER fidadj_obs(NFILESMAX_IHOP,nsx,nsy)
+      INTEGER fiddata_obs(NFILESMAX_IHOP)
       INTEGER fidglobal(NFILESMAX_IHOP)
+      INTEGER fidadglobal(NFILESMAX_IHOP)
       INTEGER obs_sample1_ind(NFILESMAX_IHOP,NOBSMAX_IHOP)
       COMMON /ihop_cost_i/                                                                                                          &
      &                  cost_ihop_flag, obs_ind_glob, ihopOperation, obs_np,                                                        &
-     &                  fidfwd_obs, fidglobal, sampleNo,
+     &                  fidfwd_obs, fidadj_obs, fidglobal, fidadglobal, 
+     &                  fiddata_obs, sampleNo,                                                                                                   &
      &                  sample_ind_glob, ObsNo, obs_sample1_ind
       
+!    IHOP buffers
+      _RL ihop_data_buff(1000)
+      _RL ihop_uncert_buff(1000)
+      INTEGER ihop_minind_buff
+      INTEGER ihop_maxind_buff
+      INTEGER ihop_curfile_buff
+      
+      COMMON /IHOP_BUFF_R/ ihop_data_buff, ihop_uncert_buff
+      COMMON /IHOP_BUFF_I/                                                                                                            &
+     & ihop_minind_buff, ihop_maxind_buff, ihop_curfile_buff
+     
 !    IHOP cost real parameters
 !     objf_ihop     :: ihop travel times
 !     num_ihop      :: number of observations 
@@ -49,8 +64,14 @@
 
       CHARACTER*(MAX_LEN_FNAM) ihopObsDir
       CHARACTER*(MAX_LEN_FNAM) ihopObsFiles(NFILESMAX_IHOP)
+      CHARACTER*(8)  ihop_nameval
+      CHARACTER*(12) ihop_namemask
+      CHARACTER*(14) ihop_nameuncert
+      CHARACTER*(8)  ihop_nameequi
       COMMON /IHOP_COST_C/                                                                                                          &
-     &                ihopObsDir, ihopObsFiles
+     &                ihopObsDir, ihopObsFiles,                                                                                     &
+     &                ihop_nameval, ihop_namemask,                                                                                  &
+     &                ihop_nameuncert, ihop_nameequi
 
       _RL ihop_dummy(NFILESMAX_IHOP,nsx,nsy)
       _RL ihop_globaldummy(NFILESMAX_IHOP)
