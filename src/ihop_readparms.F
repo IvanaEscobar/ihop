@@ -291,8 +291,8 @@ C--   Default values for IHOP_COST_NML
       ihopObsDir     = ' '
       DO num_file=1,NFILESMAX_IHOP
        ihopObsFiles(num_file)      =    ' '
+       mult_ihop(num_file)         = 1. _d 0
       ENDDO
-      mult_ihop      = 1. _d 0
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 C     Read parameters from open data file: IHOP_COST_NML

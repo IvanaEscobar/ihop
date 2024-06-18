@@ -18,8 +18,8 @@
  IHOP_rd=300.0,
 # rr + ihop_step < ihop_ranges(end)
  IHOP_rr=2542.0,
-
- IHOP_runopt='eG', # e: eigenrays; G: Hat spreading
+# e: eigenrays; G: Hat spreading
+ IHOP_runopt='eG',
  IHOP_nalpha=2,
  IHOP_alpha=-20.0, 20.0,
  &
@@ -27,5 +27,11 @@
  &IHOP_PARM03
  IHOP_interpfile = 'bc-gyre_ihop-grid.nc',
 #ihop_iter = 1,2,3,4,5,6,7,8,
- ihop_iter = 1,
+ ihop_iter = 6,7,8,
+
+ &
+
+ &IHOP_COST_NML
+ IHOPObsDir      = 'IHOP_obs',
+ IHOPObsFiles(1) = 'bcg_tau_simpleObs',
  &

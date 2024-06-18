@@ -320,10 +320,10 @@ CONTAINS
               IF ( ir >= Pos%NRr        ) inRcvrRanges=.FALSE. ! to next step on ray
               irTT = ir + 1                     ! bump right
               IF ( Pos%Rr( irTT ) >= rB ) inRcvrRanges=.FALSE.
-           ELSE
-              IF ( ir <= 1              ) inRcvrRanges=.FALSE. ! to next step on ray
-              irTT = ir - 1                     ! bump left
-              IF ( Pos%Rr( irTT ) <= rB ) inRcvrRanges=.FALSE.
+           !ELSE
+           !   IF ( ir <= 1              ) inRcvrRanges=.FALSE. ! to next step on ray
+           !   irTT = ir - 1                     ! bump left
+           !   IF ( Pos%Rr( irTT ) <= rB ) inRcvrRanges=.FALSE.
            END IF
            !ir = irTT
         END DO RcvrRanges

@@ -49,7 +49,7 @@
       _RL  sample_modmask(nsx,nsy)
       _RL  objf_ihop (nSx,nSy)
       _RL  num_ihop  (nSx,nSy)
-      _RL  mult_ihop (nSx,nSy)
+      _RL  mult_ihop (NFILESMAX_IHOP)
       _RL obs_modmask
       _RL obs_delT(NFILESMAX_IHOP,NOBSMAX_IHOP)
       COMMON /IHOP_COST_R/                                                                                                          &

@@ -65,7 +65,7 @@ C--   Sum up all contributions.
        DO bi = myBxLo(myThid), myBxHi(myThid)
 
           tile_fc(bi,bj) = tile_fc(bi,bj)
-     &          + mult_ihop(bi,bj) * objf_ihop(bi,bj)
+     &          + mult_ihop(1) * objf_ihop(bi,bj)
 
        ENDDO
       ENDDO
