@@ -56,7 +56,7 @@ C Only do I/O if in the main thread
 C Read NetCDF input: setting the acoustic domain
       IL  = ILNBLNK( IHOP_interpfile )
       IF (IL.NE.0) THEN
-          WRITE(ihop_file(1:80), '(1A)') IHOP_interpfile(1:IL)
+          WRITE(ihop_file,'(2a)') ihop_interpfile(1:IL),'.nc'
       ELSE
           ihop_file = IHOP_interpfile
       END IF
