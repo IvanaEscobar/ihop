@@ -68,6 +68,9 @@ C       |   |- ECCO_COST_INIT_FIXED
 C       |
 C       |-- PROFILES_INIT_FIXED
 C       |
+C       |-- IHOP_INIT_FIXED
+C       |   |- IHOP_COST_INIT_FIXED
+C       |
 C       |-- FLT_INIT_FIXED
 C       |
 C       |-- LONGSTEP_INIT_FIXED
@@ -75,8 +78,6 @@ C       |
 C       |-- PTRACERS_INIT_FIXED
 C       |
 C       |-- GCHEM_INIT_FIXED
-C       |
-C       |-- IHOP_INIT_FIXED
 C       |
 C       |-- RBCS_INIT_FIXED
 C       |
@@ -382,6 +383,22 @@ C     This needs to preceed CTRL_INIT call in order to provide the weight files
       ENDIF
 #endif
 
+#ifdef ALLOW_IHOP
+      IF (useIHOP) THEN
+# ifdef ALLOW_DEBUG
+        IF (debugMode) CALL DEBUG_CALL('IHOP_INIT_FIXED',myThid)
+# endif
+        CALL IHOP_INIT_FIXED(myThid)
+# ifdef ALLOW_COST
+#  ifdef ALLOW_DEBUG
+        IF (debugMode) CALL DEBUG_CALL('IHOP_COST_INIT_FIXED',myThid)
+#  endif
+        CALL IHOP_COST_INIT_FIXED(myThid)
+# endif
+      ENDIF
+#endif
+
+
 C--   Old place where CTRL_INIT & CTRL_ADMTLM used to be called
 
 #ifdef ALLOW_FLT
@@ -418,15 +435,6 @@ C--   Initialise fixed array for Float pkg
         IF (debugMode) CALL DEBUG_CALL('GCHEM_INIT_FIXED',myThid)
 # endif
         CALL GCHEM_INIT_FIXED(myThid)
-      ENDIF
-#endif
-
-#ifdef ALLOW_IHOP
-      IF (useIHOP) THEN
-# ifdef ALLOW_DEBUG
-        IF (debugMode) CALL DEBUG_CALL('IHOP_INIT_FIXED',myThid)
-# endif
-        CALL IHOP_INIT_FIXED(myThid)
       ENDIF
 #endif
 

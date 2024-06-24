@@ -12,23 +12,27 @@
 !     cost_ihop_flag  :: cost ihop flag (see ihop_cost_test.F)
 
       INTEGER cost_ihop_flag
-      INTEGER obs_ind_glob(NFILESMAX_IHOP,NOBSMAX_IHOP)
-      INTEGER ihopOperation(NFILESMAX_IHOP)
-      INTEGER sample_ind_glob(NFILESMAX_IHOP,NSAMPLESMAX,nsx,nsy)
-      INTEGER obs_np(NFILESMAX_IHOP,NOBSMAX_IHOP)
+      INTEGER ihopObs_ind_glob(NFILESMAX_IHOP,NOBSMAX_IHOP)
+      INTEGER ihopObs_ind_glob_tiled(NFILESMAX_IHOP,NSAMPLESMAX,nsx,nsy)
       INTEGER ObsNo(NFILESMAX_IHOP)
-      INTEGER sampleNo(NFILESMAX_IHOP,nsx,nsy)
+      INTEGER ObsNo_tiled(NFILESMAX_IHOP,nsx,nsy)
+      INTEGER ihopOperation(NFILESMAX_IHOP)
+      INTEGER ihopObs_np(NFILESMAX_IHOP,NOBSMAX_IHOP)
       INTEGER fidfwd_obs(NFILESMAX_IHOP,nsx,nsy)
       INTEGER fidadj_obs(NFILESMAX_IHOP,nsx,nsy)
       INTEGER fiddata_obs(NFILESMAX_IHOP)
       INTEGER fidglobal(NFILESMAX_IHOP)
       INTEGER fidadglobal(NFILESMAX_IHOP)
-      INTEGER obs_sample1_ind(NFILESMAX_IHOP,NOBSMAX_IHOP)
+      INTEGER ihopObs_sample1_ind(NFILESMAX_IHOP,NOBSMAX_IHOP)
+      INTEGER ihopObs_i_tiled(NFILESMAX_IHOP,NSAMPLESMAX,nsx,nsy)
+      INTEGER ihopObs_j_tiled(NFILESMAX_IHOP,NSAMPLESMAX,nsx,nsy)
+      INTEGER ihopObs_k_tiled(NFILESMAX_IHOP,NSAMPLESMAX,nsx,nsy)
       COMMON /ihop_cost_i/                                                                                                          &
-     &                  cost_ihop_flag, obs_ind_glob, ihopOperation, obs_np,                                                        &
+     &                  cost_ihop_flag, ihopObs_ind_glob, ihopOperation, ihopObs_np,                                                &
      &                  fidfwd_obs, fidadj_obs, fidglobal, fidadglobal, 
-     &                  fiddata_obs, sampleNo,                                                                                                   &
-     &                  sample_ind_glob, ObsNo, obs_sample1_ind
+     &                  fiddata_obs, ObsNo_tiled,                                                                                   &
+     &                  ihopObs_i_tiled, ihopObs_j_tiled, ihopObs_k_tiled,                                                          &
+     &                  ihopObs_ind_glob_tiled, ObsNo, ihopObs_sample1_ind
       
 !    IHOP buffers
       _RL ihop_data_buff(1000)
@@ -38,7 +42,7 @@
       INTEGER ihop_curfile_buff
       
       COMMON /IHOP_BUFF_R/ ihop_data_buff, ihop_uncert_buff
-      COMMON /IHOP_BUFF_I/                                                                                                            &
+      COMMON /IHOP_BUFF_I/                                                                                                          &
      & ihop_minind_buff, ihop_maxind_buff, ihop_curfile_buff
      
 !    IHOP cost real parameters
@@ -46,17 +50,22 @@
 !     num_ihop      :: number of observations 
 !     mult_ihop     :: multiplier applied to all cost terms
 
-      _RL  sample_modmask(nsx,nsy)
       _RL  objf_ihop (nSx,nSy)
       _RL  num_ihop  (nSx,nSy)
       _RL  mult_ihop (NFILESMAX_IHOP)
-      _RL obs_modmask
-      _RL obs_delT(NFILESMAX_IHOP,NOBSMAX_IHOP)
+      _RL  ihopObs_lon(NFILESMAX_IHOP,NSAMPLESMAX,nsx,nsy)
+      _RL  ihopObs_lat(NFILESMAX_IHOP,NSAMPLESMAX,nsx,nsy)
+      _RL  ihopObs_depth(NFILESMAX_IHOP,NSAMPLESMAX,nsx,nsy)
+      _RL  ihopObs_uncert(NFILESMAX_IHOP,NSAMPLESMAX,nsx,nsy)
+      _RL  sample_modmask(nsx,nsy)
+      _RL  ihopObs_modmask 
       COMMON /IHOP_COST_R/                                                                                                          &
      &                sample_modmask,                                                                                               &
+     &                ihopObs_lat, ihopObs_lon, ihopObs_depth,                                                                      &
+     &                ihopObs_uncert,                                                                                               &
      &                objf_ihop,                                                                                                    &
      &                num_ihop,                                                                                                     &
-     &                mult_ihop, obs_modmask, obs_delT
+     &                mult_ihop, ihopObs_modmask
 
 !    IHOP cost filenames
 !     ihopObsDir    :: directory where ihop observations are found

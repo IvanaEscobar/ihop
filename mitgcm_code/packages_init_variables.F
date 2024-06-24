@@ -70,7 +70,7 @@ C       |-- LONGSTEP_INIT_VARIA
 C       |
 C       |-- GCHEM_INIT_VARI
 C       |
-C       |-- IHOP_INIT_VARI
+C       |-- IHOP_INIT_VARIA
 C       |
 C       |-- RBCS_INIT_VARIA
 C       |
@@ -544,6 +544,14 @@ CADJ STORE salt   = tapelev_init, key = 1
 CADJ STORE diffkr = tapelev_init, key = 1
 # endif
 #endif /* ALLOW_AUTODIFF_TAMC */
+
+#ifdef ALLOW_IHOP
+# ifdef ALLOW_COST
+      IF (useIHOP) THEN
+        CALL IHOP_COST_INIT_VARIA( myThid )
+      ENDIF
+# endif /* ALLOW_COST */
+#endif /* ALLOW_IHOP */
 
 C--   Initialise pkg/smooth
 #ifdef ALLOW_SMOOTH
