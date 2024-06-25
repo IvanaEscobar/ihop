@@ -93,7 +93,7 @@ CONTAINS
     IF ( .NOT.usingMPI ) THEN
         WRITE(myProcessStr, '(I10.10)') myIter
         IL=ILNBLNK( myProcessStr )
-        WRITE(fNam,'(A,A,A,A)') TRIM(IHOP_fileroot),'.',myProcessStr(1:IL),'.prt'
+        WRITE(fNam,'(4A)') TRIM(IHOP_fileroot),'.',myProcessStr(1:IL),'.prt'
         IF ( IHOP_dumpfreq .GE. 0) &
          OPEN(PRTFile, FILE = fNam, STATUS = 'UNKNOWN', IOSTAT = iostat )
 #ifdef ALLOW_USE_MPI

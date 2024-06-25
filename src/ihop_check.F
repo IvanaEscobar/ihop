@@ -37,7 +37,7 @@ CEOP
      &                     SQUEEZE_RIGHT , 1)
 
 C- print out some key parameters :
-       CALL WRITE_0D_C( IHOP_fileroot, 0, INDEX_NONE,
+       CALL WRITE_0D_C( TRIM(IHOP_fileroot), 0, INDEX_NONE,
      &  'IHOP_fileroot=',
      &  ' /* Name of file root */')
 

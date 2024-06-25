@@ -644,11 +644,11 @@ END !SUBROUTINE Quad
     ! I/O on main thread only
     _BEGIN_MASTER(myThid)
     ! OPEN SSPFile to read
-    OPEN ( FILE = TRIM( IHOP_fileroot ) // '.ssp', UNIT = SSPFile, &
+    OPEN ( FILE = TRIM(IHOP_fileroot) // '.ssp', UNIT = SSPFile, &
         FORM = 'FORMATTED', STATUS = 'OLD', IOSTAT = iostat )
     IF ( IOSTAT /= 0 ) THEN   ! successful open?
 #ifdef IHOP_WRITE_OUT
-        WRITE(msgBuf,'(A)') 'SSPFile = ', TRIM( IHOP_fileroot ) // '.ssp'
+        WRITE(msgBuf,'(A)') 'SSPFile = ', TRIM(IHOP_fileroot) // '.ssp'
         ! In adjoint mode we do not write output besides on the first run
         IF (IHOP_dumpfreq.GE.0) &
             CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
