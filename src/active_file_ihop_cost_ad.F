@@ -1,6 +1,6 @@
 #include "IHOP_OPTIONS.h"
 
-C--  File active_file_obsfit_ad.F:
+C--  File active_file_ihop_cost_ad.F:
 C--   Contents
 C--   o adactive_read_ihop_tile
 C--   o adactive_write_ihop_tile
