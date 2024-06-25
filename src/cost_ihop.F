@@ -111,7 +111,7 @@ C File maintenance
        DO bj=1,nSy
         DO bi=1,nSx
 
-         IF ( (sampleNo(num_file,bi,bj).GT.0).AND.
+         IF ( (ObsNo_tiled(num_file,bi,bj).GT.0).AND.
      &         (ihopDoNcOutput) ) THEN
 c need to close the file so that the data is not lost when run finishes
            err = NF_CLOSE(fidfwd_obs(num_file,bi,bj))
@@ -147,7 +147,7 @@ c Loop over samples
 
 C Open tiled files and read to buffer
            DO sample_num=1,NSAMPLESMAX
-            IF (sample_num.LE.sampleNo(num_file,bi,bj)) THEN
+            IF (sample_num.LE.ObsNo_tiled(num_file,bi,bj)) THEN
 
              sample_modvaltmp=0.
 
@@ -158,13 +158,13 @@ C Open tiled files and read to buffer
 
 C Save model equi (of samples) and masks in buffer
 C Combine all threads here
-             irec = sample_ind_glob(num_file,sample_num,bi,bj)
+             irec = ihopObs_ind_glob_tiled(num_file,sample_num,bi,bj)
              samples_buff(irec) = samples_buff(irec)
      &                                 +sample_modvaltmp
              samples_mask_buff(irec) = samples_mask_buff(irec)
      &                                 +sample_modmask(bi,bj)
 
-            ENDIF !if (sample_num.LE.sampleNo(num_file,bi,bj)) then
+            ENDIF !if (sample_num.LE.ObsNo_tiled(num_file,bi,bj)) then
            ENDDO !do sample_num=..
                 
           ENDDO !bj
@@ -192,9 +192,9 @@ C Loop over obs
 
 C Calculate model equi of each obs by averaging NP samples               
            DO sample_num=1,NSAMP_PER_OBS_MAX
-            IF (sample_num.LE.obs_np(num_file,obs_num)) THEN
+            IF (sample_num.LE.ihopObs_np(num_file,obs_num)) THEN
 
-              irec = obs_sample1_ind(num_file,obs_num)
+              irec = ihopObs_sample1_ind(num_file,obs_num)
      &                + sample_num-1
                
               obs_modval = obs_modval + samples_modval_glob(irec)
@@ -208,18 +208,19 @@ C Calculate model equi of each obs by averaging NP samples
             ENDIF
            ENDDO
            
-C Time averaging
-           IF (ihopOperation(num_file).eq.1) THEN
-            obs_modval = obs_modval/obs_delT(num_file, obs_num)
-           ENDIF
+!IE: ignoring any time averaging for now
+!C Time averaging
+!           IF (ihopOperation(num_file).eq.1) THEN
+!            obs_modval = obs_modval/ihopObs_delT(num_file, obs_num)
+!           ENDIF
  
 C Spatial averaging
            IF (num_valid_samples.gt.0) THEN
              obs_modval = obs_modval/sample_mask_sum
-             obs_modmask = 1
+             ihopObs_modmask = 1
            ELSE
              obs_modval = -9999.
-             obs_modmask = 0
+             ihopObs_modmask = 0
            ENDIF
 
 c Write to global netcdf file
@@ -253,11 +254,11 @@ C Loop over obs
 
 C Read observation and uncertainty
            CALL ihop_read_obs(num_file,1,
-     &           obs_ind_glob(num_file,obs_num),
+     &           ihopObs_ind_glob(num_file,obs_num),
      &           obs_data,myThid)
 
            CALL ihop_read_obs(num_file,-1,
-     &           obs_ind_glob(num_file,obs_num),
+     &           ihopObs_ind_glob(num_file,obs_num),
      &           obs_uncert,myThid)
 
 C Read model equivalent from global file
@@ -273,12 +274,12 @@ cc           ENDIF
                  obs_weight=1/(obs_uncert*obs_uncert)
                  objf_ihop(num_file,num_var)=
      &             objf_ihop(num_file,num_var)
-     &             +obs_weight*obs_modmask
+     &             +obs_weight*ihopObs_modmask
      &             *(obs_modval-obs_data)
      &             *(obs_modval-obs_data)
                  num_ihop(num_file,num_var)=
      &               num_ihop(num_file,num_var)
-     &               +obs_modmask
+     &               +ihopObs_modmask
            ENDIF
 
           ENDIF !if (obs_num.LE.ObsNo(num_file)) then

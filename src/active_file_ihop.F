@@ -59,7 +59,7 @@ CEOP
       CALL active_read_ihop_tile_rl( fidfwd_obs(active_num_file,bi,bj),
      &     active_num_file,
      &     active_var, lAdInit,
-     &     irec, sample_ind_glob(active_num_file,irec,bi,bj),
+     &     irec, ihopObs_ind_glob_tiled(active_num_file,irec,bi,bj),
      &     FORWARD_SIMULATION, myOptimIter, bi, bj, myThid)
 
 #endif
@@ -117,7 +117,7 @@ CEOP
       CALL active_write_ihop_tile_rl( fidfwd_obs(active_num_file,bi,bj),
      &     active_num_file,
      &     active_var, 
-     &     irec, sample_ind_glob(active_num_file,irec,bi,bj),
+     &     irec, ihopObs_ind_glob_tiled(active_num_file,irec,bi,bj),
      &     FORWARD_SIMULATION, myOptimIter, bi, bj, myThid)
 
 #endif
@@ -179,7 +179,7 @@ CEOP
      &     fidglobal(active_num_file),
      &     active_num_file,
      &     active_var, lAdInit,
-     &     irec, obs_ind_glob(active_num_file,irec),
+     &     irec, ihopObs_ind_glob(active_num_file,irec),
      &     FORWARD_SIMULATION, myOptimIter, myThid)
 
 #endif
@@ -236,7 +236,7 @@ CEOP
      &     fidglobal(active_num_file),
      &     active_num_file,
      &     active_var, 
-     &     irec, obs_ind_glob(active_num_file,irec),
+     &     irec, ihopObs_ind_glob(active_num_file,irec),
      &     FORWARD_SIMULATION, myOptimIter, myThid)
 
 #endif

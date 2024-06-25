@@ -72,7 +72,8 @@ C     == global variables ==
       INTEGER :: tmpdate(4), tmpdiff(4)
       INTEGER :: num_file, hh, obsno_hh, ihopObs_np_max
       INTEGER :: np_cur
-      INTEGER :: bi,bj, k, i, j, l, m
+      INTEGER :: bi, bj, k, i, j, l, m
+      INTEGER :: iG, jG
       CHARACTER*(MAX_LEN_FNAM) ihopObsfile, fnamedatanc
       CHARACTER*(MAX_LEN_FNAM) fnameequinc, adfnameequinc
       CHARACTER*(MAX_LEN_FNAM) fnameequincglo, adfnameequincglo
@@ -511,7 +512,7 @@ C      ENDIF
      &       (tmp_lon.GT.lon_cur).AND.
      &       (yC(1,1,bi,bj).LE.lat_cur).AND.
      &       (yC(1,sNy+1,bi,bj).GT.lat_cur) ) THEN
-! Else do nothing 
+! do nothing 
             ELSEIF ((xC(sNx+1,1,bi,bj).LT.xC(1,1,bi,bj)).AND.
      &       (xC(1,1,bi,bj).LE.lon_cur+360. _d 0).AND.
      &       (tmp_lon.GT.lon_cur+360. _d 0).AND.
@@ -596,7 +597,7 @@ C      ENDIF
 
               ENDDO !j
              ENDDO !i
-            ENDIF !ihopObsInTile.EQ.1
+            ENDIF !ihopObsInTile.EQ.1 2nd time
 
             IF ( ((ihopObs_i.EQ.-10).OR.(ihopObs_j.EQ.-10)) .OR.
      &           ((ihopObs_k1.EQ.-10).OR.(ihopObs_k2.EQ.-10)) ) THEN
@@ -619,9 +620,83 @@ C      ENDIF
              ihopObs_j_tiled(num_file,m,bi,bj) = ihopObs_j
              ihopObs_k_tiled(num_file,m,bi,bj) = ihopObs_k1
 
-            ENDIF !(ihopObsInTile.EQ.1)
+            ENDIF !ihopObsInTile.EQ.1 3rd time
+
+           ENDIF !ihopObsInTile.EQ.1 1st time
+! ==============================================================================
+! Check that maximum size was not reached:
+           IF (m.GE.NSAMPLESMAX) then
+            WRITE(msgBuf,'(3A)')
+     &       'IHOP_COST_INIT_FIXED: file ', ihopObsFile(1:IL),
+     &       '.nc was not read properly: increase NSAMPLESMAX.'
+            CALL PRINT_ERROR( msgBuf, myThid)
+           ENDIF
 
           ENDDO !m
+
+! Number of valid samples in the file
+          ObsNo_tiled(num_file,bi,bj) = m
+       
+          WRITE(msgbuf,'(A,I4,A,I4)')
+     &       '  current tile is bi,bj                      =',
+     &       bi,',',bj
+          CALL print_message(
+     &       msgbuf, standardmessageunit, SQUEEZE_RIGHT, myThid)
+
+          WRITE(msgbuf,'(A,I9)')
+     &       '  # of ihop obs within tile and time period  =',
+     &       ObsNo_tiled(num_file,bi,bj)
+          CALL print_message(
+     &       msgbuf, standardmessageunit, SQUEEZE_RIGHT, myThid)
+
+!===========================================================
+! Create files for model counterparts to samples
+!===========================================================
+
+          IF (ObsNo_tiled(num_file,bi,bj).GT.0) THEN
+           iG=bi+(myXGlobalLo-1)/sNx ! Kludge until unstructered tiles
+           jG=bj+(myYGlobalLo-1)/sNy ! Kludge until unstructered tiles
+
+           JL  = ILNBLNK( ihopObsDir )
+
+!IE:           IF (ihopObsDoNcOutput) THEN
+! Write to nc file
+
+           WRITE(fnameequinc,'(3A,I3.3,A,I3.3,A)')
+     &      ihopObsDir(1:JL),ihopObsFile(1:IL),'.',iG,'.',jG,'.equi.nc'
+           WRITE(adfnameequinc,'(4A,I3.3,A,I3.3,A)')
+     &      ihopObsDir(1:JL),'ad',
+     &      ihopObsFile(1:IL),'.',iG,'.',jG,'.equi.nc'
+
+           inquire( file=fnameequinc, exist=exst )
+           IF (.NOT.exst) THEN
+      
+            CALL ihop_cost_init_equifiles(num_file,
+     &       fiddata_obs(num_file),fnameequinc,
+     &       fidfwd_obs(num_file,bi,bj),ObsNo_tiled(num_file,bi,bj),
+     &       bi,bj,myThid)
+     
+           ELSE
+      
+            err = NF_OPEN(fnameequinc,NF_WRITE,
+     &        fidfwd_obs(num_file,bi,bj))
+           ENDIF
+#ifdef ALLOW_ADJOINT_RUN
+           inquire( file=adfnameequinc, exist=exst )
+           IF (.NOT.exst) THEN
+            CALL ihop_cost_init_equifiles(num_file,
+     &       fiddata_obs(num_file),
+     &       adfnameequinc, fidadj_obs(num_file,bi,bj),
+     &       ObsNo_tiled(num_file,bi,bj),
+     &       bi,bj,myThid)
+           ELSE
+            err = NF_OPEN(adfnameequinc,NF_WRITE,
+     &       fidadj_obs(num_file,bi,bj))
+           ENDIF
+#endif
+
+          ENDIF
+
          ENDDO !bj
         ENDDO !bi
 !===========================================================
@@ -649,6 +724,27 @@ C      ENDIF
       
       _END_MASTER( myThid )
       _BARRIER
+
+!===========================================================
+      WRITE(msgbuf,'(A)') ' '
+      CALL print_message( msgbuf, standardmessageunit,
+     &                    SQUEEZE_RIGHT, myThid)
+      WRITE(msgbuf,'(A)')
+     &'// ======================================================='
+      CALL print_message( msgbuf, standardmessageunit,
+     &                    SQUEEZE_RIGHT, myThid)
+      WRITE(msgbuf,'(A)')
+     &'// ihop cost read obs data file >>> END <<<'
+      CALL print_message( msgbuf, standardmessageunit,
+     &                    SQUEEZE_RIGHT, myThid)
+      WRITE(msgbuf,'(A)')
+     &'// ======================================================='
+      CALL print_message( msgbuf, standardmessageunit,
+     &                    SQUEEZE_RIGHT, myThid)
+      WRITE(msgbuf,'(A)') ' '
+      CALL print_message( msgbuf, standardmessageunit,
+     &                    SQUEEZE_RIGHT, myThid)
+      
 #endif /* ALLOW_COST && ALLOW_IHOP*/
 
       RETURN

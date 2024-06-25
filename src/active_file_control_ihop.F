@@ -271,7 +271,7 @@ c     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
       err = NF_PUT_VARA_DOUBLE(fid, varid2, vec_start, vec_count,
      & sample_modmask(bi,bj))
 
-      err = NF_INQ_VARID(fid,'sample_ind_glob', varid3 )
+      err = NF_INQ_VARID(fid,'ihopObs_ind_glob_tiled', varid3 )
       err = NF_PUT_VAR1_INT(fid, varid3, vec_start,
      & irecglob)
 
@@ -461,7 +461,7 @@ c     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
 
       err = NF_INQ_VARID(fid, ihop_namemask, varid2)
       err = NF_GET_VARA_DOUBLE(fid, varid2, vec_start, vec_count,
-     & obs_modmask)
+     & ihopObs_modmask)
 
         _END_MASTER( myThid )
 
@@ -590,7 +590,7 @@ c     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
 
       err = NF_INQ_VARID(fid, ihop_namemask, varid2)
       err = NF_PUT_VARA_DOUBLE(fid, varid2, vec_start, vec_count,
-     & obs_modmask)
+     & ihopObs_modmask)
 
         _END_MASTER( myThid )
 
