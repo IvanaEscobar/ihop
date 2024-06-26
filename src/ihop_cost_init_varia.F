@@ -32,11 +32,11 @@ C     == end of interface ==
 C--   Initialize the tiled cost function contributions.
       DO bj = myByLo(myThid), myByHi(myThid)
         DO bi = myBxLo(myThid), myBxHi(myThid)
-          objf_ihop(bi,bj)        = 0. _d 0
-          num_ihop(bi,bj)         = 0. _d 0
-          DO num_file=1,NFILESMAX_IHOP
+         DO num_file=1,NFILESMAX_IHOP
+          objf_ihop(num_file,bi,bj)  =0. _d 0
            ihop_dummy(num_file,bi,bj)=0. _d 0
-          ENDDO
+         ENDDO
+         num_ihop(bi,bj) = 0. _d 0
         ENDDO
       ENDDO
 

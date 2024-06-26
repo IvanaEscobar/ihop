@@ -287,7 +287,7 @@ C     Check paramters of IHOP_PARM03
 #ifdef ALLOW_COST
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 C--   Default values for IHOP_COST_NML 
-      ihopdoncoutput = .false.
+      ihopdoncoutput = .true.
       ihopObsDir     = ' '
       DO num_file=1,NFILESMAX_IHOP
        ihopObsFiles(num_file)      =    ' '

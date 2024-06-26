@@ -95,10 +95,10 @@ C ==================================================================
       optimcycle = 0
 #endif
 
-      write(msgbuf,'(a)') ' '
+      write(msgbuf,'(A)') ' '
       CALL print_message( msgbuf,
      &  standardmessageunit,SQUEEZE_RIGHT, myThid)
-      write(msgbuf,'(a)') '== cost_ihop: begin =='
+      write(msgbuf,'(A)') '== cost_ihop: begin =='
       CALL print_message( msgbuf,
      &  standardmessageunit,SQUEEZE_RIGHT, myThid)
 
@@ -119,11 +119,10 @@ c then re-open it to compute cost function
            iG=bi+(myXGlobalLo-1)/sNx ! Kludge until unstructered tiles
            jG=bj+(myYGlobalLo-1)/sNy ! Kludge until unstructered tiles
            IL  = ILNBLNK( ihopobsfiles(num_file) )
-           write(ihopfile(1:80),'(1a)')
-     &     ihopobsfiles(num_file)(1:IL)
+           write(ihopfile(1:80),'(1A)') ihopobsfiles(num_file)(1:IL)
            IL  = ILNBLNK( ihopfile )
            JL  = ILNBLNK( ihopObsDir )
-           write(fnameequinc(1:80),'(3a,i3.3,a,i3.3,a)')
+           write(fnameequinc(1:80),'(3A,I3.3,A,I3.3,A)')
      &     ihopObsDir(1:JL),ihopfile(1:IL),'.',iG,'.',jG,'.equi.nc'
 c
            err = NF_OPEN(fnameequinc,NF_NOWRITE,
@@ -253,11 +252,11 @@ C Loop over obs
            obs_uncert=0.
 
 C Read observation and uncertainty
-           CALL ihop_read_obs(num_file,1,
+           CALL ihop_cost_read_obs(num_file,1,
      &           ihopObs_ind_glob(num_file,obs_num),
      &           obs_data,myThid)
 
-           CALL ihop_read_obs(num_file,-1,
+           CALL ihop_cost_read_obs(num_file,-1,
      &           ihopObs_ind_glob(num_file,obs_num),
      &           obs_uncert,myThid)
 
@@ -272,8 +271,8 @@ cc           ENDIF
            IF (obs_uncert.GT.0.
      &            ) THEN
                  obs_weight=1/(obs_uncert*obs_uncert)
-                 objf_ihop(num_file,num_var)=
-     &             objf_ihop(num_file,num_var)
+                 objf_ihop(num_file,bi,bj)=
+     &             objf_ihop(num_file,bi,bj)
      &             +obs_weight*ihopObs_modmask
      &             *(obs_modval-obs_data)
      &             *(obs_modval-obs_data)
@@ -299,11 +298,11 @@ c Print cost function values
        DO num_var=1,NOBSMAX_IHOP
 c
           objf_ihop_glo =
-     &             objf_ihop(num_file,num_var)
+     &             objf_ihop(num_file,bi,bj)
           num_ihop_glo =
      &             num_ihop(num_file,num_var)
 c
-      write(msgbuf,'(a,I2,a,I2,a,2D12.5)')
+      write(msgbuf,'(A,I2,A,I2,A,2D12.5)')
      &  ' cost_ihop(',num_file,',',num_var,')= ',
      &  objf_ihop_glo,num_ihop_glo
 
@@ -314,10 +313,10 @@ c
       ENDDO
 #endif /* ALLOW_COST */
 
-      write(msgbuf,'(a)') '== cost_ihop: end   =='
+      write(msgbuf,'(A)') '== cost_ihop: end   =='
       CALL print_message( msgbuf,
      &  standardmessageunit,SQUEEZE_RIGHT, myThid)
-      write(msgbuf,'(a)') ' '
+      write(msgbuf,'(A)') ' '
       CALL print_message( msgbuf,
      &  standardmessageunit,SQUEEZE_RIGHT, myThid)
 

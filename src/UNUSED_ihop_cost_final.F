@@ -47,6 +47,7 @@ C     ! FUNCTIONS:
 
 C     !LOCAL VARIABLES:
       INTEGER bi, bj
+      INTEGER num_file
       INTEGER ifc
       _RL f_ihop
       _RL no_ihop
@@ -63,10 +64,11 @@ C--   open a local file to write fc
 C--   Sum up all contributions.
       DO bj = myByLo(myThid), myByHi(myThid)
        DO bi = myBxLo(myThid), myBxHi(myThid)
+        DO num_file=1,NFILESMAX_IHOP
 
           tile_fc(bi,bj) = tile_fc(bi,bj)
-     &          + mult_ihop(1) * objf_ihop(bi,bj)
-
+     &          + mult_ihop(1) * objf_ihop(num_file,bi,bj)
+        ENDDO
        ENDDO
       ENDDO
 

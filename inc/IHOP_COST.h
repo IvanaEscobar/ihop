@@ -50,7 +50,7 @@
 !     num_ihop      :: number of observations 
 !     mult_ihop     :: multiplier applied to all cost terms
 
-      _RL  objf_ihop (nSx,nSy)
+      _RL  objf_ihop (NFILESMAX_IHOP,nSx,nSy)
       _RL  num_ihop  (nSx,nSy)
       _RL  mult_ihop (NFILESMAX_IHOP)
       _RL  ihopObs_lon(NFILESMAX_IHOP,NSAMPLESMAX,nsx,nsy)
