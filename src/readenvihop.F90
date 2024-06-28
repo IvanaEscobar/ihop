@@ -75,7 +75,7 @@ CONTAINS
     Bdry%Top%HS%Depth = 0 !initiate to dummy value
     CALL ReadTopOpt( Bdry%Top%HS%Opt, Bdry%Top%HS%BC, AttenUnit, myThid )
 
-    CALL TopBot( IHOP_freq, AttenUnit, Bdry%Top%HS, myThid )
+    CALL TopBot( AttenUnit, Bdry%Top%HS, myThid )
 
     ! *** Ocean SSP ***
     IF ( IHOP_depth.NE.0 ) THEN
@@ -104,7 +104,7 @@ CONTAINS
     _END_MASTER(myThid)
 #endif /* IHOP_WRITE_OUT */
 
-    CALL EvaluateSSP( x, c, cimag, gradc, crr, crz, czz, rho, IHOP_freq, 'INI', myThid )
+    CALL EvaluateSSP( x, c, cimag, gradc, crr, crz, czz, rho, 'INI', myThid )
 
     Bdry%Top%HS%Depth = SSP%z( 1 )   ! first SSP point is top depth
 
@@ -144,7 +144,7 @@ CONTAINS
     _END_MASTER(myThid)
 
     Bdry%Bot%HS%BC = Bdry%Bot%HS%Opt( 1 : 1 )
-    CALL TopBot( IHOP_freq, AttenUnit, Bdry%Bot%HS, myThid )
+    CALL TopBot( AttenUnit, Bdry%Bot%HS, myThid )
 
     ! *** source and receiver locations ***
     CALL ReadSxSy( myThid ) ! Read source/receiver x-y coordinates
@@ -813,7 +813,7 @@ CONTAINS
 
   !**********************************************************************!
 
-  SUBROUTINE TopBot( freq, AttenUnit, HS, myThid )
+  SUBROUTINE TopBot( AttenUnit, HS, myThid )
 
     ! Handles top and bottom boundary conditions
 
@@ -824,7 +824,6 @@ CONTAINS
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
   
   !     == Local Variables ==
-    REAL (KIND=_RL90), INTENT( IN    ) :: freq  ! frequency
     CHARACTER (LEN=2), INTENT( IN    ) :: AttenUnit
     TYPE ( HSInfo ),   INTENT( INOUT ) :: HS
     REAL (KIND=_RL90) :: Mz, vr, alpha2_f     ! values related to grain size
@@ -910,13 +909,13 @@ CONTAINS
 #endif /* IHOP_WRITE_OUT */
        ! dummy parameters for a layer with a general power law for attenuation
        ! these are not in play because the AttenUnit for this is not allowed yet
-       !freq0         = freq
+       !freq0         = IHOP_freq
        betaPowerLaw  = 1.0
        ft            = 1000.0
 
-       HS%cp  = CRCI( zTemp, alphaR, alphaI, freq, freq, AttenUnit, &
+       HS%cp  = CRCI( zTemp, alphaR, alphaI, IHOP_freq, IHOP_freq, AttenUnit, &
                       betaPowerLaw, ft, myThid )
-       HS%cs  = CRCI( zTemp, betaR,  betaI,  freq, freq, AttenUnit, &
+       HS%cs  = CRCI( zTemp, betaR,  betaI,  IHOP_freq, IHOP_freq, AttenUnit, &
                       betaPowerLaw, ft, myThid )
 
        HS%rho = rhoR
@@ -968,7 +967,7 @@ CONTAINS
        ! loss parameter Sect. IV., Eq. (4) of handbook
        alphaI = alpha2_f * ( vr / 1000 ) * 1500.0 * log( 10.0 ) / ( 40.0 * PI )
 
-       HS%cp  = CRCI( zTemp, alphaR, alphaI, freq, freq, 'L ', &
+       HS%cp  = CRCI( zTemp, alphaR, alphaI, IHOP_freq, IHOP_freq, 'L ', &
                       betaPowerLaw, ft, myThid )
        HS%cs  = 0.0
        HS%rho = rhoR

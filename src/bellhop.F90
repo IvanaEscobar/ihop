@@ -360,7 +360,7 @@ CONTAINS
           NArr = 0
        END SELECT
   
-       CALL EvaluateSSP(  xs, c, cimag, gradc, crr, crz, czz, rho, IHOP_freq, &
+       CALL EvaluateSSP(  xs, c, cimag, gradc, crr, crz, czz, rho, &
                           'TAB', myThid  )
   
        !!IESCO22: BEAM stuff !!
@@ -504,7 +504,7 @@ CONTAINS
   
     ! Initial conditions (IC)
     iSmallStepCtr = 0
-    CALL EvaluateSSP( xs, c, cimag, gradc, crr, crz, czz, rho, IHOP_freq, &
+    CALL EvaluateSSP( xs, c, cimag, gradc, crr, crz, czz, rho, &
                       'TAB', myThid )
     ray2D( 1 )%c         = c              ! sound speed at source [m/s]
     ray2D( 1 )%x         = xs             ! range and depth of source
@@ -783,7 +783,7 @@ CONTAINS
     ! Based on formulas given by Muller, Geoph. J. R.A.S., 79 (1984).
   
     ! Get c
-    CALL EvaluateSSP( ray2D( is )%x, c, cimag, gradc, crr, crz, czz, rho, IHOP_freq,& 
+    CALL EvaluateSSP( ray2D( is )%x, c, cimag, gradc, crr, crz, czz, rho, & 
                       'TAB', myThid  )
   
     ! unmodified unit ray tangent and normal

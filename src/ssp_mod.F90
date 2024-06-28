@@ -112,7 +112,7 @@ MODULE ssp_mod
 !EOP
 
 CONTAINS
-  SUBROUTINE EvaluateSSP( x, c, cimag, gradc, crr, crz, czz, rho, freq, Task, &
+  SUBROUTINE EvaluateSSP( x, c, cimag, gradc, crr, crz, czz, rho, Task, &
       myThid )
 
     ! Call the particular profile routine indicated by the SSP%Type and 
@@ -127,7 +127,6 @@ CONTAINS
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
   
   !     == Local Variables ==
-    REAL (KIND=_RL90), INTENT( IN  ) :: freq
     REAL (KIND=_RL90), INTENT( IN  ) :: x( 2 )  ! r-z SSP evaluation point
     CHARACTER( LEN=3), INTENT( IN  ) :: Task
     REAL (KIND=_RL90), INTENT( OUT ) :: c, cimag, gradc( 2 ), crr, crz, czz, rho
@@ -138,15 +137,15 @@ CONTAINS
 
     SELECT CASE ( SSP%Type )
     !CASE ( 'N' )  !  N2-linear profile option
-    !   CALL n2Linear( x, c, cimag, gradc, crr, crz, czz, rho, freq, Task, myThid )
+    !   CALL n2Linear( x, c, cimag, gradc, crr, crz, czz, rho, Task, myThid )
     !CASE ( 'C' )  !  C-linear profile option
-    !   CALL cLinear(  x, c, cimag, gradc, crr, crz, czz, rho, freq, Task, myThid )
+    !   CALL cLinear(  x, c, cimag, gradc, crr, crz, czz, rho, Task, myThid )
     !CASE ( 'P' )  !  monotone PCHIP ACS profile option
-    !   CALL cPCHIP(   x, c, cimag, gradc, crr, crz, czz, rho, freq, Task, myThid )
+    !   CALL cPCHIP(   x, c, cimag, gradc, crr, crz, czz, rho, Task, myThid )
     !CASE ( 'S' )  !  Cubic spline profile option
-    !   CALL cCubic(   x, c, cimag, gradc, crr, crz, czz, rho, freq, Task, myThid )
+    !   CALL cCubic(   x, c, cimag, gradc, crr, crz, czz, rho, Task, myThid )
     CASE ( 'Q' )
-       CALL Quad(     x, c, cimag, gradc, crr, crz, czz, rho, freq, Task, myThid )
+       CALL Quad(     x, c, cimag, gradc, crr, crz, czz, rho, Task, myThid )
     !CASE ( 'A' )  !  Analytic profile option
     !   CALL Analytic( x, c, cimag, gradc, crr, crz, czz, rho, Task, myThid )
     CASE DEFAULT
@@ -166,7 +165,7 @@ CONTAINS
   
 !**********************************************************************!
 
-  SUBROUTINE n2Linear( x, c, cimag, gradc, crr, crz, czz, rho, freq, Task, myThid )
+  SUBROUTINE n2Linear( x, c, cimag, gradc, crr, crz, czz, rho, Task, myThid )
 
     ! N2-linear interpolation of SSP data
 
@@ -175,7 +174,6 @@ CONTAINS
     INTEGER, INTENT( IN )   :: myThid
   
   !     == Local Variables ==
-    REAL (KIND=_RL90), INTENT( IN  ) :: freq
     REAL (KIND=_RL90), INTENT( IN  ) :: x( 2 )  ! r-z SSP evaluation point
     CHARACTER (LEN=3), INTENT( IN  ) :: Task
     REAL (KIND=_RL90), INTENT( OUT ) :: c, cimag, gradc( 2 ), crr, crz, czz, &
@@ -185,7 +183,7 @@ CONTAINS
        ! *** Task 'INI' for initialization ***
 
        Depth = x( 2 )
-       CALL ReadSSP( Depth, freq, myThid )
+       CALL ReadSSP( Depth, myThid )
               
        SSP%n2(  1 : SSP%NPts ) = 1.0 / SSP%c( 1 : SSP%NPts )**2
        !IEsco23 Test this: SSP%n2(  1 : SSP%Nz ) = 1.0 / SSP%c( 1 : SSP%Nz )**2
@@ -229,7 +227,7 @@ CONTAINS
 
   !**********************************************************************!
 
-  SUBROUTINE cLinear( x, c, cimag, gradc, crr, crz, czz, rho, freq, Task, myThid  )
+  SUBROUTINE cLinear( x, c, cimag, gradc, crr, crz, czz, rho, Task, myThid  )
 
     ! c-linear interpolation of SSP data
 
@@ -238,7 +236,6 @@ CONTAINS
     INTEGER, INTENT( IN )   :: myThid
   
   !     == Local Variables ==
-    REAL (KIND=_RL90), INTENT( IN  ) :: freq
     REAL (KIND=_RL90), INTENT( IN  ) :: x( 2 )  ! r-z SSP evaluation point
     CHARACTER (LEN=3), INTENT( IN  ) :: Task
     REAL (KIND=_RL90), INTENT( OUT ) :: c, cimag, gradc( 2 ), crr, crz, czz, rho ! sound speed and its derivatives
@@ -247,7 +244,7 @@ CONTAINS
        ! *** Task 'INI' for initialization ***
 
        Depth     = x( 2 )
-       CALL ReadSSP( Depth, freq, myThid )
+       CALL ReadSSP( Depth, myThid )
     ELSE                        ! return SSP info
 
         IF ( x( 2 ) < SSP%z( iSegz ) .OR. x( 2 ) > SSP%z( iSegz+1 ) ) THEN
@@ -278,7 +275,7 @@ CONTAINS
 
   !**********************************************************************!
 
-  SUBROUTINE cPCHIP( x, c, cimag, gradc, crr, crz, czz, rho, freq, Task, myThid )
+  SUBROUTINE cPCHIP( x, c, cimag, gradc, crr, crz, czz, rho, Task, myThid )
 
     ! This implements the monotone piecewise cubic Hermite interpolating
     ! polynomial (PCHIP) algorithm for the interpolation of the sound speed c.
@@ -290,7 +287,6 @@ CONTAINS
     INTEGER, INTENT( IN )   :: myThid
   
   !     == Local Variables ==
-    REAL (KIND=_RL90), INTENT( IN  ) :: freq
     REAL (KIND=_RL90), INTENT( IN  ) :: x( 2 )  ! r-z SSP evaluation point
     CHARACTER (LEN=3), INTENT( IN  ) :: Task
     REAL (KIND=_RL90), INTENT( OUT ) :: c, cimag, gradc( 2 ), crr, crz, czz, &
@@ -302,7 +298,7 @@ CONTAINS
        ! *** Task 'INI' for initialization ***
 
        Depth = x( 2 )
-       CALL ReadSSP( Depth, freq, myThid )
+       CALL ReadSSP( Depth, myThid )
 
        !                                                               2      3
        ! compute coefficients of std cubic polynomial: c0 + c1*x + c2*x + c3*x
@@ -355,7 +351,7 @@ CONTAINS
 
   !**********************************************************************!
 
-  SUBROUTINE cCubic( x, c, cimag, gradc, crr, crz, czz, rho, freq, Task, myThid  )
+  SUBROUTINE cCubic( x, c, cimag, gradc, crr, crz, czz, rho, Task, myThid  )
 
     ! Cubic spline interpolation
 
@@ -364,7 +360,6 @@ CONTAINS
     INTEGER, INTENT( IN )   :: myThid
   
   !     == Local Variables ==
-    REAL (KIND=_RL90), INTENT( IN )  :: freq
     REAL (KIND=_RL90), INTENT( IN  ) :: x( 2 )  ! r-z SSP evaluation point
     CHARACTER (LEN=3), INTENT( IN  ) :: Task
     REAL (KIND=_RL90), INTENT( OUT ) :: c, cimag, gradc( 2 ), crr, crz, czz, &
@@ -377,7 +372,7 @@ CONTAINS
        ! *** Task 'INI' for initialization ***
        
        Depth     = x( 2 )
-       CALL ReadSSP( Depth, freq, myThid )
+       CALL ReadSSP( Depth, myThid )
 
        SSP%cSpline( 1, 1 : SSP%NPts ) = SSP%c( 1 : SSP%NPts )
 !IEsco23 Test this: 
@@ -430,7 +425,7 @@ CONTAINS
 
 !**********************************************************************!
 
-SUBROUTINE Quad( x, c, cimag, gradc, crr, crz, czz, rho, freq, Task, myThid )
+SUBROUTINE Quad( x, c, cimag, gradc, crr, crz, czz, rho, Task, myThid )
   ! Bilinear quadrilatteral interpolation of SSP data in 2D, SSP%Type = 'Q'
 
   !     == Routine Arguments ==
@@ -440,7 +435,6 @@ SUBROUTINE Quad( x, c, cimag, gradc, crr, crz, czz, rho, freq, Task, myThid )
   CHARACTER*(MAX_LEN_MBUF):: msgBuf
 
   !     == Local Variables ==
-  REAL (KIND=_RL90), INTENT( IN  ) :: freq
   REAL (KIND=_RL90), INTENT( IN  ) :: x( 2 )  ! r-z SSP evaluation point
   CHARACTER (LEN=3), INTENT( IN  ) :: Task
   REAL (KIND=_RL90), INTENT( OUT ) :: c, cimag, gradc( 2 ), crr, crz, czz, &
@@ -455,9 +449,9 @@ SUBROUTINE Quad( x, c, cimag, gradc, crr, crz, czz, rho, freq, Task, myThid )
     Depth = x( 2 )
     ! Defensive check if SSPFile exists
     IF (useSSPFile .EQV. .TRUE.) THEN ! eqv for logical operands
-      CALL ReadSSP( Depth, freq, myThid )
+      CALL ReadSSP( Depth, myThid )
     ELSE
-      CALL ExtractSSP(Depth, freq, myThid )
+      CALL ExtractSSP(Depth, myThid )
     END IF
 
     ! calculate cz
@@ -625,7 +619,7 @@ END !SUBROUTINE Quad
 
 !**********************************************************************!
 
-  SUBROUTINE ReadSSP( Depth, freq, myThid )
+  SUBROUTINE ReadSSP( Depth, myThid )
     ! reads SSP in m/s from .ssp file and convert to AttenUnit (ie. Nepers/m)
     ! Populates SSPStructure: SSP
 
@@ -638,7 +632,7 @@ END !SUBROUTINE Quad
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
   
   !     == Local Variables ==
-    REAL (KIND=_RL90), INTENT(IN) :: Depth, freq
+    REAL (KIND=_RL90), INTENT(IN) :: Depth
     INTEGER :: iz2
 
     ! I/O on main thread only
@@ -794,7 +788,7 @@ END !SUBROUTINE Quad
         CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 #endif /* IHOP_WRITE_OUT */
 
-       SSP%c(   iz ) = CRCI( SSP%z( iz ), alphaR, alphaI, freq, freq, &
+       SSP%c(   iz ) = CRCI( SSP%z( iz ), alphaR, alphaI, IHOP_freq, IHOP_freq, &
                              SSP%AttenUnit, betaPowerLaw, fT, myThid )
        SSP%rho( iz ) = rhoR !IEsco22: set to a default value of 1
 
@@ -858,7 +852,7 @@ END !SUBROUTINE Quad
 
 !**********************************************************************!
 
-SUBROUTINE ExtractSSP( Depth, freq, myThid )
+SUBROUTINE ExtractSSP( Depth, myThid )
   ! Extracts SSP from MITgcm grid points
 
   USE atten_mod, only: CRCI
@@ -873,7 +867,7 @@ SUBROUTINE ExtractSSP( Depth, freq, myThid )
   ! == Local Variables ==
   INTEGER                       :: ii, jj, k
   INTEGER                       :: njj(IHOP_NPTS_RANGE), nii(IHOP_NPTS_RANGE)
-  REAL (KIND=_RL90), INTENT(IN) :: Depth, freq
+  REAL (KIND=_RL90), INTENT(IN) :: Depth
   REAL (KIND=_RL90)             :: sumweights(IHOP_NPTS_RANGE, Nr), &
                                    dcdz, tolerance
   REAL (KIND=_RL90), ALLOCATABLE:: tmpSSP(:,:,:,:)
@@ -1041,7 +1035,7 @@ SUBROUTINE ExtractSSP( Depth, freq, myThid )
   DO iz = 1,SSP%Nz
     alphaR = SSP%cMat( iz, 1 )
 
-    SSP%c(   iz ) = CRCI( SSP%z( iz ), alphaR, alphaI, freq, freq, &
+    SSP%c(   iz ) = CRCI( SSP%z( iz ), alphaR, alphaI, IHOP_freq, IHOP_freq, &
                           SSP%AttenUnit, betaPowerLaw, fT, myThid )
     SSP%rho( iz ) = rhoR
 
