@@ -39,7 +39,7 @@ MODULE BELLHOP
   USE refCoef,      only:   readReflectionCoefficient,                         &
                             InterpolateReflectionCoefficient, ReflectionCoef,  &
                             RTop, RBot, NBotPts, NTopPts
-  USE influence,    only:   InfluenceGeoHatRayCen,&! InfluenceSGB,               &
+  USE influence,    only:   InfluenceGeoHatRayCen,&! InfluenceSGB,             &
                             InfluenceGeoGaussianCart, InfluenceGeoHatCart,     &
                             ScalePressure
   USE atten_mod,    only:   CRCI
@@ -322,8 +322,8 @@ CONTAINS
 !          CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
 !#endif /* IHOP_WRITE_OUT */
   
-          ALLOCATE ( Arr( NRz_per_range, Pos%NRr, MaxNArr ), &
-                     NArr( NRz_per_range, Pos%NRr ), Stat = iAllocStat )
+          ALLOCATE ( Arr( MaxNArr, Pos%NRr, NRz_per_range ), &
+                     NArr( Pos%NRr, NRz_per_range ), Stat = iAllocStat )
           IF ( iAllocStat /= 0 ) THEN
 #ifdef IHOP_WRITE_OUT
               WRITE(msgBuf,'(2A)') 'BELLHOP BellhopCore: ', & 
@@ -334,11 +334,11 @@ CONTAINS
           END IF
       CASE DEFAULT
           MaxNArr = 1
-          ALLOCATE ( Arr( NRz_per_range, Pos%NRr, 1 ), &
-                     NArr( NRz_per_range, Pos%NRr ), Stat = iAllocStat )
+          ALLOCATE ( Arr( 1, NRz_per_range, Pos%NRr ), &
+                     NArr( Pos%NRr, NRz_per_range ), Stat = iAllocStat )
       END SELECT
   
-      NArr( 1:NRz_per_range, 1:Pos%NRr ) = 0 ! IEsco22 unnecessary? NArr = 0 below
+      NArr( 1:Pos%NRr, 1:NRz_per_range ) = 0 ! IEsco22 unnecessary? NArr = 0 below
   
 #ifdef IHOP_WRITE_OUT
       WRITE(msgBuf,'(A)') 
