@@ -117,6 +117,9 @@ c They provide the fields to be stored.
 #  ifdef ALLOW_IHOP
 #   include "IHOP_SIZE.h"
 #   include "IHOP.h"
+#   ifdef ALLOW_COST
+#    include "IHOP_COST.h"
+#   endif
 #  endif
 #  ifdef ALLOW_CFC
 #   include "CFC.h"
@@ -741,6 +744,15 @@ c--   Accumulate in-situ time averages of temperature, salinity, SSH.
         CALL TIMER_STOP ('PROFILES_INLOOP    [THE_MAIN_LOOP]', myThid)
 c--   Compute all profiles cost function contributions.
         CALL COST_PROFILES( myIter, myTime, myThid )
+      ENDIF
+#endif
+
+#ifdef ALLOW_IHOP
+      IF (useIHOP) THEN
+c--   Compute all obsfit cost function contributions.
+        CALL TIMER_START('COST_IHOP   [THE_MAIN_LOOP]', myThid)
+        CALL COST_IHOP( myIter, myTime, myThid )
+        CALL TIMER_STOP ('COST_IHOP   [THE_MAIN_LOOP]', myThid)
       ENDIF
 #endif
 

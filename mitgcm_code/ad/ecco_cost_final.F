@@ -45,7 +45,7 @@ c     == global variables ==
 #endif
 #ifdef ALLOW_IHOP
 # include "IHOP_SIZE.h"
-# include "IHOP.h"
+# include "IHOP_COST.h"
 #endif
 
 c     == routine arguments ==
@@ -70,6 +70,10 @@ c     == local variables ==
       integer NVARMAX
       parameter (NVARMAX=1)
 #endif
+#ifndef ALLOW_IHOP
+      integer NFILESMAX_IHOP
+      parameter (NFILESMAX_IHOP=1)
+#endif
 
 #ifndef ALLOW_COST
 c This quick fix allows to compile and run fwd but, as far as
@@ -85,6 +89,9 @@ c the adjoint, pkg/autodiff most likely require cost though.
 #ifdef ALLOW_PROFILES
       _RL f_profiles(NFILESPROFMAX,NVARMAX)
       _RL f_profiles_mean(NVARMAX)
+#endif
+#ifdef ALLOW_IHOP
+      _RL f_ihop(NFILESMAX_IHOP)
 #endif
 #ifdef ALLOW_GENTIM2D_CONTROL
       _RL f_gentim2d(maxCtrlTim2D)
@@ -103,6 +110,10 @@ c the adjoint, pkg/autodiff most likely require cost though.
       integer num_file
       _RL no_profiles(NFILESPROFMAX,NVARMAX)
       _RL no_profiles_mean(NVARMAX)
+#endif
+#ifdef ALLOW_IHOP
+      integer num_file_ihop
+      _RL no_ihop(NFILESMAX_IHOP)
 #endif
 #ifdef ALLOW_GENTIM2D_CONTROL
       _RL no_gentim2d(maxCtrlTim2D)
@@ -142,6 +153,13 @@ c     == end of interface ==
        f_profiles_mean(num_var)= 0. _d 0
       enddo
 #endif
+#ifdef ALLOW_IHOP
+      do num_file_ihop=1,NFILESMAX_IHOP
+cav this is already global sum
+       f_ihop(num_file_obs)= 
+     &         objf_ihop(num_file_obs)
+      enddo
+#endif
 #ifdef ALLOW_GENCOST_CONTRIBUTION
        do num_var=1,NGENCOST
         f_gencost(num_var)= 0. _d 0
@@ -178,6 +196,13 @@ c     == end of interface ==
       enddo
       do num_var=1,NVARMAX
        no_profiles_mean(num_var)= 0. _d 0
+      enddo
+#endif
+#ifdef ALLOW_IHOP
+      do num_file_ihop=1,NFILESMAX_IHOP
+cav this is already global sum
+       no_ihop(num_file_ihop)= 
+     &          num_ihop(num_file_ihop)
       enddo
 #endif
 #ifdef ALLOW_GENCOST_CONTRIBUTION
@@ -232,6 +257,11 @@ c--   Sum up all contributions.
 #ifdef ALLOW_IHOP
 c # loop over available misfits and add to the tile level obj
 c # fxn. this is the same loop you would do in cost_final.F
+      do num_file=1,NFILESPROFMAX
+       tile_fc(bi,bj) = tile_fc(bi,bj)
+     &         + mult_ihop(num_file)
+     &         *objf_ihop(num_file,bi,bj)
+      enddo
 #endif
 #ifdef ALLOW_GENCOST_CONTRIBUTION
        do num_var=1,NGENCOST
@@ -500,7 +530,18 @@ c # Global sum over all tiles to synchornize no_ihop across all MPI procs
       endif
 #endif
 #ifdef ALLOW_IHOP
-c # print f_ihop to standard output 
+! print f_ihop to standard output 
+      if (useIHOP) then
+      do num_file_ihop=1,NFILESMAX_ihop
+       if ( no_ihop(num_file_ihop).GT.zeroRL ) then
+        write(msgBuf,'(A,D22.15,i2.0)')
+     &    ' --> f_ihop =',f_ihop(num_file_ihop),
+     &     num_file_ihop
+        call print_message( msgBuf, standardmessageunit,
+     &                      SQUEEZE_RIGHT , mythid)
+       endif
+      enddo
+      endif
 #endif
 #ifdef ALLOW_GENCOST_CONTRIBUTION
        do num_var=1,NGENCOST
@@ -615,6 +656,19 @@ C     only master thread of master CPU open and write to file
 #endif
 #ifdef ALLOW_IHOP
 c # if no_ihop has a non zero value, print f_ihop and no_ihop
+      if (useIHOP) then
+      do num_file_ihop=1,NFILESMAX_ihop
+       if ( no_ihop(num_file_ihop).GT.zeroRL ) then
+        IL  = ILNBLNK( ihopObsfiles(num_file_ihop) )
+        IL  = max(IL,30)
+        write(ifc,'(4A,2D22.15)')
+     &   ihopObsfiles(num_file_ihop)(1:IL),' ',
+     &   ihop_nameval, ' = ',
+     &   f_ihop(num_file_ihop),
+     &   no_ihop(num_file_ihop)
+       endif
+      enddo
+      endif
 #endif
 #ifdef ALLOW_GENCOST_CONTRIBUTION
        do num_var=1,NGENCOST

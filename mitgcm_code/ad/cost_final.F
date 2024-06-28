@@ -40,7 +40,7 @@ c     == global variables ==
 
 #ifdef ALLOW_IHOP
 # include "IHOP_SIZE.h"
-# include "ihop.h"
+# include "IHOP_COST.h"
 #endif
 
 c     == routine arguments ==
@@ -50,7 +50,7 @@ c     == routine arguments ==
 c     == local variables ==
       INTEGER bi,bj
       _RL glob_fc, loc_fc
-#ifdef ALLOW_PROFILES
+#if ((defined ALLOW_PROFILES) || (defined ALLOW_IHOP))
       INTEGER num_file,num_var
 #endif
       CHARACTER*(MAX_LEN_MBUF) msgBuf
@@ -180,10 +180,10 @@ c--   Sum up all contributions.
 
 #ifdef ALLOW_IHOP
          IF (.NOT.useECCO) THEN
-            tile_fc(bi,bj) = tile_fc(bi,bj)
-     &            + mult_ihop
-     &            *objf_ihop(bi,bj)
-           ENDDO
+          DO num_file=1,NFILESMAX_IHOP
+           tile_fc(bi,bj) = tile_fc(bi,bj)
+     &           + mult_ihop(num_file)
+     &           *objf_ihop(num_file,bi,bj)
           ENDDO
          ENDIF
 #endif
