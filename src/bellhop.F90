@@ -183,7 +183,8 @@ CONTAINS
         ! print run time
         if (numberOfProcs.gt.1) then
             if(myProcId.ne.(numberOfProcs-1)) then
-                WRITE(msgBuf,'(A,I4,A)') 'NOTE: Proc ',myProcId, " didn't run ihop"
+                WRITE(msgBuf,'(A,I4,A)') 'NOTE: Proc ',myProcId, &
+                    " didn't run ihop"
                 CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
             endif
         endif
@@ -226,7 +227,7 @@ CONTAINS
   ! **********************************************************************!
   SUBROUTINE BellhopCore( myThid )
   
-    USE arr_mod,   only: WriteArrivalsASCII, WriteArrivalsBinary, MaxNArr, Arr, &
+    USE arr_mod,   only: WriteArrivalsASCII,WriteArrivalsBinary,MaxNArr,Arr, &
                         NArr
   
   !     == Routine Arguments ==

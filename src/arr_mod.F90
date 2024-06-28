@@ -37,8 +37,10 @@ MODULE arr_mod
 
   TYPE Arrival
      INTEGER :: NTopBnc, NBotBnc
-     REAL    :: SrcDeclAngle, SrcAzimAngle, RcvrDeclAngle, RcvrAzimAngle, &
-                A, Phase
+     REAL    :: SrcDeclAngle, RcvrDeclAngle, A, Phase
+#ifdef IHOP_THREED
+     REAL    :: SrcAzimAngle, RcvrAzimAngle
+#endif /* IHOP_THREED */
      COMPLEX :: delay
   END TYPE
 
@@ -120,12 +122,12 @@ CONTAINS
 
   ! **********************************************************************!
 
-  SUBROUTINE WriteArrivalsASCII( r, Nrz, Nr, SourceType )
+  SUBROUTINE WriteArrivalsASCII( r, Nrz, Nrr, SourceType )
 
     ! Writes the arrival data (Amplitude, delay for each eigenray)
     ! ASCII output file
 
-    INTEGER,           INTENT( IN ) :: Nrz, Nr      ! NRz per range, NRr
+    INTEGER,           INTENT( IN ) :: Nrz, Nrr     ! NRz per range, NRr
     REAL (KIND=_RL90), INTENT( IN ) :: r( Nr )      ! Rr
     CHARACTER (LEN=1), INTENT( IN ) :: SourceType   ! Beam%RunType(4:4)
     INTEGER             :: ir, iz, iArr
@@ -135,11 +137,11 @@ CONTAINS
     IF (IHOP_dumpfreq.LT.0) RETURN
 
 #ifdef IHOP_WRITE_OUT
-    WRITE( ARRFile, * ) MAXVAL( NArr( 1 : Nrz, 1 : Nr ) )
+    WRITE( ARRFile, * ) MAXVAL( NArr( 1 : Nrz, 1 : Nrr ) )
 #endif /* IHOP_WRITE_OUT */
 
     DO iz = 1, Nrz
-       DO ir = 1, Nr
+       DO ir = 1, Nrr
           IF ( SourceType == 'X' ) THEN   ! line source
              factor =  4.0 * SQRT( PI )
           ELSE                            ! point source: default
@@ -158,7 +160,7 @@ CONTAINS
              ! However, you'll need to make sure you keep adequate precision
              WRITE( ARRFile, * ) &
              SNGL( factor ) * Arr( iz, ir, iArr )%A,             &
-             SNGL( rad2deg ) * Arr( iz, ir, iArr )%Phase,         &
+             SNGL( rad2deg ) * Arr( iz, ir, iArr )%Phase,        &
                         REAL( Arr( iz, ir, iArr )%delay ),       &
                        AIMAG( Arr( iz, ir, iArr )%delay ),       &
                               Arr( iz, ir, iArr )%SrcDeclAngle,  &
@@ -175,12 +177,12 @@ CONTAINS
 
   ! **********************************************************************!
 
-  SUBROUTINE WriteArrivalsBinary( r, Nrz, Nr, SourceType )
+  SUBROUTINE WriteArrivalsBinary( r, Nrz, Nrr, SourceType )
 
     ! Writes the arrival data (amplitude, delay for each eigenray)
     ! Binary output file
 
-    INTEGER,           INTENT( IN ) :: Nrz, Nr      ! NRz per range, NRr
+    INTEGER,           INTENT( IN ) :: Nrz, Nrr     ! NRz per range, NRrr
     REAL (KIND=_RL90), INTENT( IN ) :: r( Nr )      ! Rr
     CHARACTER (LEN=1), INTENT( IN ) :: SourceType   ! Beam%RunType(4:4)
     INTEGER                 :: ir, iz, iArr
@@ -190,11 +192,11 @@ CONTAINS
     IF (IHOP_dumpfreq.LT.0) RETURN
 
 #ifdef IHOP_WRITE_OUT
-    WRITE( ARRFile ) MAXVAL( NArr( 1 : Nrz, 1 : Nr ) )
+    WRITE( ARRFile ) MAXVAL( NArr( 1 : Nrz, 1 : Nrr ) )
 #endif /* IHOP_WRITE_OUT */
 
     DO iz = 1, Nrz
-       DO ir = 1, Nr
+       DO ir = 1, Nrr
           IF ( SourceType == 'X' ) THEN   ! line source
              factor = 4.0 * SQRT( PI )
           ELSE                            ! point source

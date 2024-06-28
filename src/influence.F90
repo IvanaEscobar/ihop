@@ -14,8 +14,7 @@ MODULE influence
                           SrcDeclAngle, NRz_per_range, afreq
   USE srPos_mod,    only: Pos
 ! sspMod used to construct image beams in the Cerveny style beam routines
-  USE ssp_mod,      only: Bdry 
-  USE arr_mod,      only: WriteArrivalsASCII, WriteArrivalsBinary, AddArr
+  USE arr_mod,      only: AddArr
   USE writeRay,     only: WriteRay2D, WriteDel2D
 
 ! ! USES
