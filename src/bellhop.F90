@@ -266,22 +266,22 @@ CONTAINS
     IF ( atiType( 2:2 ) == 'L' ) THEN
        DO iSeg = 1, NatiPts
           Top( iSeg )%HS%cp = CRCI( 1D20, Top( iSeg )%HS%alphaR, &
-                                    Top( iSeg )%HS%alphaI, IHOP_freq, IHOP_freq, &
-                                    'W ', betaPowerLaw, ft, myThid ) ! compressional wave speed
+                                    Top( iSeg )%HS%alphaI, 'W ', betaPowerLaw, &
+                                    ft, myThid ) ! compressional wave speed
           Top( iSeg )%HS%cs = CRCI( 1D20, Top( iSeg )%HS%betaR,  &
-                                    Top( iSeg )%HS%betaI,  IHOP_freq, IHOP_freq, &
-                                    'W ', betaPowerLaw, ft, myThid )   ! shear wave speed
+                                    Top( iSeg )%HS%betaI, 'W ', betaPowerLaw, &
+                                    ft, myThid )   ! shear wave speed
        END DO
     END IF
      
     IF ( btyType( 2:2 ) == 'L' ) THEN
        DO iSeg = 1, NbtyPts
           Bot( iSeg )%HS%cp = CRCI( 1D20, Bot( iSeg )%HS%alphaR, &
-                                    Bot( iSeg )%HS%alphaI, IHOP_freq, IHOP_freq, &
-                                    'W ', betaPowerLaw, ft, myThid ) ! compressional wave speed
+                                    Bot( iSeg )%HS%alphaI, 'W ', betaPowerLaw, &
+                                    ft, myThid ) ! compressional wave speed
           Bot( iSeg )%HS%cs = CRCI( 1D20, Bot( iSeg )%HS%betaR,  &
-                                    Bot( iSeg )%HS%betaI,  IHOP_freq, IHOP_freq, &
-                                    'W ', betaPowerLaw, ft, myThid )   ! shear wave speed
+                                    Bot( iSeg )%HS%betaI, 'W ', betaPowerLaw, &
+                                    ft, myThid )   ! shear wave speed
        END DO
     END IF
   

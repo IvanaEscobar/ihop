@@ -788,7 +788,7 @@ END !SUBROUTINE Quad
         CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 #endif /* IHOP_WRITE_OUT */
 
-       SSP%c(   iz ) = CRCI( SSP%z( iz ), alphaR, alphaI, IHOP_freq, IHOP_freq, &
+       SSP%c(   iz ) = CRCI( SSP%z( iz ), alphaR, alphaI, &
                              SSP%AttenUnit, betaPowerLaw, fT, myThid )
        SSP%rho( iz ) = rhoR !IEsco22: set to a default value of 1
 
@@ -1035,7 +1035,7 @@ SUBROUTINE ExtractSSP( Depth, myThid )
   DO iz = 1,SSP%Nz
     alphaR = SSP%cMat( iz, 1 )
 
-    SSP%c(   iz ) = CRCI( SSP%z( iz ), alphaR, alphaI, IHOP_freq, IHOP_freq, &
+    SSP%c(   iz ) = CRCI( SSP%z( iz ), alphaR, alphaI, &
                           SSP%AttenUnit, betaPowerLaw, fT, myThid )
     SSP%rho( iz ) = rhoR
 

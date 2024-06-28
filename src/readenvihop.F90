@@ -913,9 +913,9 @@ CONTAINS
        betaPowerLaw  = 1.0
        ft            = 1000.0
 
-       HS%cp  = CRCI( zTemp, alphaR, alphaI, IHOP_freq, IHOP_freq, AttenUnit, &
+       HS%cp  = CRCI( zTemp, alphaR, alphaI, AttenUnit, &
                       betaPowerLaw, ft, myThid )
-       HS%cs  = CRCI( zTemp, betaR,  betaI,  IHOP_freq, IHOP_freq, AttenUnit, &
+       HS%cs  = CRCI( zTemp, betaR,  betaI, AttenUnit, &
                       betaPowerLaw, ft, myThid )
 
        HS%rho = rhoR
@@ -965,10 +965,9 @@ CONTAINS
        ! the term vr / 1000 converts vr to units of m per ms 
        alphaR = vr * 1500.0
        ! loss parameter Sect. IV., Eq. (4) of handbook
-       alphaI = alpha2_f * ( vr / 1000 ) * 1500.0 * log( 10.0 ) / ( 40.0 * PI )
+       alphaI = alpha2_f * ( vr / 1000 ) * 1500.0 * log( 10.0 ) / ( 40.0*PI )
 
-       HS%cp  = CRCI( zTemp, alphaR, alphaI, IHOP_freq, IHOP_freq, 'L ', &
-                      betaPowerLaw, ft, myThid )
+       HS%cp  = CRCI( zTemp, alphaR, alphaI, 'L ', betaPowerLaw, ft, myThid )
        HS%cs  = 0.0
        HS%rho = rhoR
 #ifdef IHOP_WRITE_OUT
