@@ -13,7 +13,7 @@
 
       INTEGER cost_ihop_flag
       INTEGER ihopObs_ind_glob(NFILESMAX_IHOP,NOBSMAX_IHOP)
-      INTEGER ihopObs_ind_glob_tiled(NFILESMAX_IHOP,NSAMPLESMAX,nsx,nsy)
+      INTEGER ihopObs_ind_glob_tiled(NFILESMAX_IHOP,NOBSMAX_IHOP,nsx,nsy)
       INTEGER ObsNo(NFILESMAX_IHOP)
       INTEGER ObsNo_tiled(NFILESMAX_IHOP,nsx,nsy)
       INTEGER ihopOperation(NFILESMAX_IHOP)
@@ -24,9 +24,9 @@
       INTEGER fidglobal(NFILESMAX_IHOP)
       INTEGER fidadglobal(NFILESMAX_IHOP)
       INTEGER ihopObs_sample1_ind(NFILESMAX_IHOP,NOBSMAX_IHOP)
-      INTEGER ihopObs_i_tiled(NFILESMAX_IHOP,NSAMPLESMAX,nsx,nsy)
-      INTEGER ihopObs_j_tiled(NFILESMAX_IHOP,NSAMPLESMAX,nsx,nsy)
-      INTEGER ihopObs_k_tiled(NFILESMAX_IHOP,NSAMPLESMAX,nsx,nsy)
+      INTEGER ihopObs_i_tiled(NFILESMAX_IHOP,NOBSMAX_IHOP,nsx,nsy)
+      INTEGER ihopObs_j_tiled(NFILESMAX_IHOP,NOBSMAX_IHOP,nsx,nsy)
+      INTEGER ihopObs_k_tiled(NFILESMAX_IHOP,NOBSMAX_IHOP,nsx,nsy)
       COMMON /ihop_cost_i/                                                                                                          &
      &                  cost_ihop_flag, ihopObs_ind_glob, ihopOperation, ihopObs_np,                                                &
      &                  fidfwd_obs, fidadj_obs, fidglobal, fidadglobal, 
@@ -53,10 +53,10 @@
       _RL  objf_ihop (NFILESMAX_IHOP,nSx,nSy)
       _RL  num_ihop  (nSx,nSy)
       _RL  mult_ihop (NFILESMAX_IHOP)
-      _RL  ihopObs_lon(NFILESMAX_IHOP,NSAMPLESMAX,nsx,nsy)
-      _RL  ihopObs_lat(NFILESMAX_IHOP,NSAMPLESMAX,nsx,nsy)
-      _RL  ihopObs_depth(NFILESMAX_IHOP,NSAMPLESMAX,nsx,nsy)
-      _RL  ihopObs_uncert(NFILESMAX_IHOP,NSAMPLESMAX,nsx,nsy)
+      _RL  ihopObs_lon(NFILESMAX_IHOP,NOBSMAX_IHOP,nsx,nsy)
+      _RL  ihopObs_lat(NFILESMAX_IHOP,NOBSMAX_IHOP,nsx,nsy)
+      _RL  ihopObs_depth(NFILESMAX_IHOP,NOBSMAX_IHOP,nsx,nsy)
+      _RL  ihopObs_uncert(NFILESMAX_IHOP,NOBSMAX_IHOP,nsx,nsy)
       _RL  sample_modmask(nsx,nsy)
       _RL  ihopObs_modmask 
       COMMON /IHOP_COST_R/                                                                                                          &

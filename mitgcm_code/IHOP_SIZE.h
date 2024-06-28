@@ -67,21 +67,13 @@
 !     ================================
 ! NFILESMAX_ihop      :: maximum number of input files
 ! NOBSMAX_ihop        :: maximum number of observations per file per tile
-! NSAMPLESMAX        :: maximum number of samples per file per tile
-! NUM_INTERP_PTS_OBS :: number of points used in interpolation for 
-!                       model sampling
 
 #ifdef ALLOW_COST
       INTEGER NFILESMAX_IHOP
       PARAMETER ( NFILESMAX_IHOP=1 )
 
       INTEGER NOBSMAX_IHOP
-      PARAMETER ( NOBSMAX_IHOP=100 )
+      PARAMETER ( NOBSMAX_IHOP=10 )
 
-      INTEGER NSAMPLESMAX
-      PARAMETER ( NSAMPLESMAX=100 )
-
-      INTEGER NSAMP_PER_OBS_MAX
-      PARAMETER ( NSAMP_PER_OBS_MAX=1 )
 #endif
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|

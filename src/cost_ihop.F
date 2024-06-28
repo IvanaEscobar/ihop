@@ -75,10 +75,10 @@ CEOP
 !      logical exst
 !      _RL  objf_ihop_glo
 !      _RL  num_ihop_glo
-!      _RL  samples_buff(NSAMPLESMAX)
-!      _RL  samples_mask_buff(NSAMPLESMAX)
-!      _RL  samples_modval_glob(NSAMPLESMAX)
-!      _RL  samples_mask_glob(NSAMPLESMAX)
+!      _RL  samples_buff(NOBSMAX_IHOP)
+!      _RL  samples_mask_buff(NOBSMAX_IHOP)
+!      _RL  samples_modval_glob(NOBSMAX_IHOP)
+!      _RL  samples_mask_glob(NOBSMAX_IHOP)
 !      _RL  tmpgs
 !      INTEGER tmpgsi
 !      INTEGER ObsNo2,fid,dimid
@@ -136,7 +136,7 @@ CEOP
 !       DO num_var=1,NOBSMAX_IHOP
 !
 !c Loop over samples
-!         DO ii=1,NSAMPLESMAX
+!         DO ii=1,NOBSMAX_IHOP
 !           samples_buff(ii) = 0.
 !           samples_mask_buff(ii) = 0.
 !         ENDDO
@@ -145,7 +145,7 @@ CEOP
 !          DO bi=1,nSx
 !
 !C Open tiled files and read to buffer
-!           DO sample_num=1,NSAMPLESMAX
+!           DO sample_num=1,NOBSMAX_IHOP
 !            IF (sample_num.LE.ObsNo_tiled(num_file,bi,bj)) THEN
 !
 !             sample_modvaltmp=0.
@@ -170,7 +170,7 @@ CEOP
 !         ENDDO !bi
 !
 !C Combine all processes
-!         DO ii=1,NSAMPLESMAX
+!         DO ii=1,NOBSMAX_IHOP
 !          tmpgs = samples_buff(ii)
 !          _GLOBAL_SUM_RL (tmpgs, myThid) 
 !          samples_modval_glob(ii) = tmpgs

@@ -43,13 +43,12 @@ C     == global variables ==
       integer tempDate2(4)
       _RL :: yymmddMin,yymmddMax
       _RL :: hhmmssMin,hhmmssMax
-      _RL :: tmpyymmdd(NSAMPLESMAX), tmphhmmss(NSAMPLESMAX), diffsecs
-      _RL :: tmpnp(NSAMPLESMAX)
-      _RL :: tmp_sample_time(NSAMPLESMAX)
-      _RL :: tmp_lon, tmp_lon2(NSAMPLESMAX), tmp_lat2(NSAMPLESMAX)
+      _RL :: tmpyymmdd(NOBSMAX_IHOP), tmphhmmss(NOBSMAX_IHOP), diffsecs
+      _RL :: tmp_ihopObs_time(NOBSMAX_IHOP)
+      _RL :: tmp_lon, tmp_lon2(NOBSMAX_IHOP), tmp_lat2(NOBSMAX_IHOP)
       _RL :: lon_cur, lat_cur
-      _RL :: tmp_depth2(NSAMPLESMAX), depth_cur
-      _RL :: tmp_uncert2(NSAMPLESMAX)
+      _RL :: tmp_depth2(NOBSMAX_IHOP), depth_cur
+      _RL :: tmp_uncert2(NOBSMAX_IHOP)
       _RL :: ihopObs_i
       _RL :: ihopObs_j
       _RL :: ihopObs_k1
@@ -64,14 +63,13 @@ C     == global variables ==
       _RL :: lat_fac, lon_fac, depth_fac
       INTEGER :: iUnit
       INTEGER :: JL, IL, err, ncid, dimid1, dimid2
-      INTEGER :: varid0, varid1a, varid1b, varid2, varid3
+      INTEGER :: varid1a, varid1b, varid2, varid3
       INTEGER :: varid4a, varid4b, varid4c
       INTEGER :: varid5a, varid5b, varidEquiv(2)
-      INTEGER :: loopThroughSamples, weighIhopObs, obsisinruntime 
+      INTEGER :: weighIhopObs, obsisinruntime 
       INTEGER :: ihopObsInTile
       INTEGER :: tmpdate(4), tmpdiff(4)
-      INTEGER :: num_file, hh, obsno_hh, ihopObs_np_max
-      INTEGER :: np_cur
+      INTEGER :: num_file, hh, obsno_hh
       INTEGER :: bi, bj, k, i, j, l, m
       INTEGER :: iG, jG
       CHARACTER*(MAX_LEN_FNAM) ihopObsfile, fnamedatanc
@@ -149,7 +147,6 @@ C      ENDIF
       DO num_file=1,NFILESMAX_IHOP
 
        ObsNo_hh=0
-       ihopObs_np_max=0
 
        ihopObsFile=' '
        IL  = ILNBLNK( ihopObsFiles(num_file) )
@@ -186,19 +183,6 @@ C      ENDIF
         CALL print_message(
      &     msgbuf, standardmessageunit, SQUEEZE_RIGHT, myThid)
 
-! Read number of observations per iOBS (if missing, assume it's 1):
-        loopThroughSamples=1
-        err = NF_INQ_VARID(ncid,'ihop_np', varid0 )
-        IF (err.NE.NF_NOERR) THEN
-         loopThroughSamples=0
-
-         WRITE(msgbuf,'(2A)')
-     &     '      ihop obs file does not have np defined;',
-     &     '      assume np=1 for each iOBS '
-         CALL print_message(
-     &      msgbuf, standardmessageunit, SQUEEZE_RIGHT, myThid)
-        ENDIF
-
 ! Read meta info for observations:
         err = NF_INQ_VARID(ncid,'ihop_YYYYMMDD', varid1a )
         err = err + NF_INQ_VARID(ncid,'ihop_HHMMSS', varid1b )
@@ -213,7 +197,7 @@ C      ENDIF
         ENDIF
 ! Assume all ihop observations are instantaneous
 
-! Weight for each sample (if missing, assume all samples weigh equally):
+! Weight for each ihop obs (if missing, assume equal weights):
         weighIhopObs=1
         err = NF_INQ_VARID(ncid,'ihop_uncert', varid3 )
         IF (err.NE.NF_NOERR) THEN
@@ -350,27 +334,15 @@ C      ENDIF
         err = NF_GET_VARA_DOUBLE(ncid,varid1b,1,
      &   ObsNo(num_file), tmphhmmss)
 
-! read number of samples per obs
-        IF (loopThroughSamples.EQ.1) THEN      
-         err = NF_GET_VARA_DOUBLE(ncid,varid0,1,
-     &    ObsNo(num_file), tmpnp)
-        ENDIF
-        
         IF (err.NE.NF_NOERR) THEN
          WRITE(msgBuf,'(3A)')
      &   'IHOP_COST_INIT_FIXED: file ', ihopObsFile(1:IL),
-     &   '.nc was not read properly: check yyyymmdd, hhmmss, np.'
+     &   '.nc was not read properly: check yyyymmdd, hhmmss.'
          CALL PRINT_ERROR( msgBuf, myThid)
         ENDIF
 
 ! loop through number of observations, in obsfit this is a 'chunk'
         DO m=1,ObsNo(num_file)
-! Set np_cur
-         IF (loopThroughSamples.EQ.1) THEN      
-          np_cur = tmpnp(m)
-         ELSE
-          np_cur = 1
-         ENDIF
 
 !AV if obs starts before model run, will be ignored even if it ends after 
 !AV model starts - ok for now      
@@ -400,29 +372,21 @@ C      ENDIF
           diffsecs=-deltaTclock
          ENDIF
 
-! instantaneous observations
-!        delT_cur = 0. _d 0
-!        obsfitOperation(num_file)=0
-
 !IE get rid of this loop is it stays unused. looks like it's necessary
 !for chunking only
          IF (obsIsInRunTime.EQ.1) THEN
-! if yes then store obs index position and number of samples:
+! if yes then store obs index position:
           ihopObs_ind_glob(num_file,1)=1
 
-! number of samples in each valid observation            
-          ihopObs_np(num_file,1)=np_cur
-          IF (np_cur.GT.ihopObs_np_max) ihopObs_np_max = np_cur
 ! position of first observation
           ihopObs_sample1_ind(num_file,1)=1
          ENDIF !if (obsIsInRunTime.EQ.1) then
 !IE END get rid of this loop is it stays unused. looks like it's necessary
 
 ! regardless of whether obs is in run time or not, 
-! keep track of sample index position
-! and assign time to samples
-         tmp_sample_time(1)=diffsecs
-!         tmp_sample_delT(1)=delT_cur
+! keep track of ihop obs index position
+! and assign time to ihop obs
+         tmp_ihopObs_time(1)=diffsecs
 
 ! check that maximum size was not reached:
          IF (ObsNo(num_file).GT.NOBSMAX_IHOP) THEN
@@ -432,13 +396,6 @@ C      ENDIF
           CALL PRINT_ERROR( msgBuf, myThid)
          ENDIF
 
-! check that maximum NP was not reached:
-         IF (ihopObs_np_max.GT.NSAMP_PER_OBS_MAX) THEN
-          WRITE(msgBuf,'(3A)')
-     &     'IHOP_COST_INIT_FIXED: file ', ihopObsFile(1:IL),
-     &     '.nc was not read properly: increase NSAMP_PER_OBS_MAX.'
-          CALL PRINT_ERROR( msgBuf, myThid)
-         ENDIF
 
         ENDDO !m
 
@@ -459,7 +416,7 @@ C      ENDIF
          DO bi=1,nSx
           ObsNo_tiled(num_file,bi,bj)=ObsNo(num_file)
 
-          DO k=1,NSAMPLESMAX
+          DO k=1,NOBSMAX_IHOP
            ihopObs_lon(num_file,k,bi,bj)=      -999. _d 0
            ihopObs_lat(num_file,k,bi,bj)=      -999. _d 0
            ihopObs_depth(num_file,k,bi,bj)=    -999. _d 0
@@ -491,8 +448,8 @@ C      ENDIF
           DO m=1,ObsNo_tiled(num_file,bi,bj)
            ihopObsInTile=1
       
-           IF ((tmp_sample_time(m).LT.0. _d 0) .OR.
-     &        (tmp_sample_time(m).GT. modelend-modelstart)) THEN
+           IF ((tmp_ihopObs_time(m).LT.0. _d 0) .OR.
+     &        (tmp_ihopObs_time(m).GT. modelend-modelstart)) THEN
             ihopObsInTile=0
            ENDIF
 
@@ -625,16 +582,16 @@ C      ENDIF
            ENDIF !ihopObsInTile.EQ.1 1st time
 ! ==============================================================================
 ! Check that maximum size was not reached:
-           IF (m.GE.NSAMPLESMAX) then
+           IF (m.GE.NOBSMAX_IHOP) then
             WRITE(msgBuf,'(3A)')
      &       'IHOP_COST_INIT_FIXED: file ', ihopObsFile(1:IL),
-     &       '.nc was not read properly: increase NSAMPLESMAX.'
+     &       '.nc was not read properly: increase NOBSMAX_IHOP.'
             CALL PRINT_ERROR( msgBuf, myThid)
            ENDIF
 
           ENDDO !m
 
-! Number of valid samples in the file
+! Number of valid ihop obs in the file
           ObsNo_tiled(num_file,bi,bj) = m
        
           WRITE(msgbuf,'(A,I4,A,I4)')
@@ -650,7 +607,7 @@ C      ENDIF
      &       msgbuf, standardmessageunit, SQUEEZE_RIGHT, myThid)
 
 !===========================================================
-! Create files for model counterparts to samples
+! Create files for model counterparts to ihop obs
 !===========================================================
 
           IF (ObsNo_tiled(num_file,bi,bj).GT.0) THEN
@@ -707,9 +664,6 @@ C      ENDIF
           ObsNo(num_file)=0
           ObsNo_tiled(num_file,bi,bj)=0
           DO k=1,NOBSMAX_IHOP
-           ihopObs_np(num_file,k)=-999. _d 0
-          ENDDO
-          DO k=1,NSAMPLESMAX
            ihopObs_lon(num_file,k,bi,bj)=      -999. _d 0
            ihopObs_lat(num_file,k,bi,bj)=      -999. _d 0
            ihopObs_depth(num_file,k,bi,bj)=    -999. _d 0

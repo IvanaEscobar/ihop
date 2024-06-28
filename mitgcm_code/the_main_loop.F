@@ -690,6 +690,22 @@ C--   Reset the model iteration counter and the model time.
         CALL TIMER_STOP ('PROFILES_INLOOP    [MAIN_DO_LOOP]', myThid)
       ENDIF
 #endif
+#ifdef ALLOW_IHOP
+      IF (useIHOP) THEN
+#ifdef ALLOW_DEBUG
+        IF (debugMode) CALL DEBUG_CALL('ihop_cost_inloop',myThid)
+#endif
+c--     Accumulate in-situ time averages of theta, salt, and SSH.
+#ifdef ALLOW_AUTODIFF
+C--   Reset the model iteration counter and the model time.
+        myIter = nIter0 + (iloop-1)
+        myTime = startTime + deltaTClock*(iloop-1)
+#endif
+        CALL TIMER_START('IHOP_COST_INLOOP    [MAIN_DO_LOOP]', myThid)
+        CALL IHOP_COST_INLOOP( myTime, myIter, myThid )
+        CALL TIMER_STOP ('IHOP_COST_INLOOP    [MAIN_DO_LOOP]', myThid)
+      ENDIF
+#endif
 
       CALL TIMER_START('MAIN_DO_LOOP        [THE_MAIN_LOOP]', myThid)
       CALL MAIN_DO_LOOP( iloop, myTime, myIter, myThid )
