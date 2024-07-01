@@ -76,9 +76,6 @@ c     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
       err = NF_GET_VARA_DOUBLE(fid, varid1, vec_start, vec_count,
      & active_var)
 
-      err = NF_INQ_VARID(fid, ihop_namemask, varid2)
-      err = NF_GET_VARA_DOUBLE(fid, varid2, vec_start, vec_count,
-     & ihopObs_modmask_tiled(bi,bj))
 
       else
 
@@ -93,7 +90,6 @@ c     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
 #ifdef _BYTESWAPIO
             call MDS_BYTESWAPR8(2,vec_tmp)
 #endif
-      ihopObs_modmask_tiled(bi,bj)=vec_tmp(1)
 
       endif
 
@@ -267,9 +263,6 @@ c     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
       err = NF_PUT_VARA_DOUBLE(fid, varid1, vec_start, vec_count,
      & active_var)
 
-      err = NF_INQ_VARID(fid, ihop_namemask, varid2)
-      err = NF_PUT_VARA_DOUBLE(fid, varid2, vec_start, vec_count,
-     & ihopObs_modmask_tiled(bi,bj))
 
       err = NF_INQ_VARID(fid,'ihopObs_ind_glob_tiled', varid3 )
       err = NF_PUT_VAR1_INT(fid, varid3, vec_start,
@@ -284,7 +277,6 @@ c     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
 #endif
       write(fid,rec=(irec-1)*2+1 )
      & vec_tmp
-      vec_tmp(1)=ihopObs_modmask_tiled(bi,bj)
       vec_tmp(2)=irecglob
 #ifdef _BYTESWAPIO
             call MDS_BYTESWAPR8(2,vec_tmp)
@@ -459,10 +451,6 @@ c     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
       err = NF_GET_VARA_DOUBLE(fid, varid1, vec_start, vec_count,
      & active_var)
 
-      err = NF_INQ_VARID(fid, ihop_namemask, varid2)
-      err = NF_GET_VARA_DOUBLE(fid, varid2, vec_start, vec_count,
-     & ihopObs_modmask)
-
         _END_MASTER( myThid )
 
       endif
@@ -587,10 +575,6 @@ c     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
       err = NF_INQ_VARID(fid, ihop_nameequi, varid1)
       err = NF_PUT_VARA_DOUBLE(fid, varid1, vec_start, vec_count,
      & active_var)
-
-      err = NF_INQ_VARID(fid, ihop_namemask, varid2)
-      err = NF_PUT_VARA_DOUBLE(fid, varid2, vec_start, vec_count,
-     & ihopObs_modmask)
 
         _END_MASTER( myThid )
 

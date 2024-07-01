@@ -160,8 +160,6 @@ CEOP
 !             irec = ihopObs_ind_glob_tiled(num_file,sample_num,bi,bj)
 !             samples_buff(irec) = samples_buff(irec)
 !     &                                 +sample_modvaltmp
-!             samples_mask_buff(irec) = samples_mask_buff(irec)
-!     &                                 +ihopObs_modmask_tiled(bi,bj)
 !
 !            ENDIF !if (sample_num.LE.ObsNo_tiled(num_file,bi,bj)) then
 !           ENDDO !do sample_num=..
@@ -216,10 +214,8 @@ CEOP
 !C Spatial averaging
 !           IF (num_valid_samples.gt.0) THEN
 !             obs_modval = obs_modval/sample_mask_sum
-!             ihopObs_modmask = 1
 !           ELSE
 !             obs_modval = -9999.
-!             ihopObs_modmask = 0
 !           ENDIF
 !
 !c Write to global netcdf file
@@ -273,12 +269,9 @@ CEOP
 !                 obs_weight=1/(obs_uncert*obs_uncert)
 !                 objf_ihop(num_file,bi,bj)=
 !     &             objf_ihop(num_file,bi,bj)
-!     &             +obs_weight*ihopObs_modmask
+!     &             +obs_weight
 !     &             *(obs_modval-obs_data)
 !     &             *(obs_modval-obs_data)
-!                 num_ihop(num_file,num_var)=
-!     &               num_ihop(num_file,num_var)
-!     &               +ihopObs_modmask
 !           ENDIF
 !
 !          ENDIF !if (obs_num.LE.ObsNo(num_file)) then

@@ -82,44 +82,19 @@ C !LOCAL VARIABLES:
            IF ((ihopObs_time(num_file,m,bi,bj).GE.myTime)
      &      .AND.(ihopObs_time(num_file,m,bi,bj).LT. 
      &      (myTime+deltaTclock))) THEN
-!
-!            DO k=1,NUM_INTERP_PTS_OBS
-!             sample_i(k)= sample_interp_i(num_file,m,k,bi,bj)
-!             sample_j(k)= sample_interp_j(num_file,m,k,bi,bj)
-!             sample_k(k)= sample_interp_k(num_file,m,k,bi,bj)
-!             sample_w(k)= sample_interp_w(num_file,m,k,bi,bj)
-!            ENDDO
 
-CADJ STORE ihop_modval  = comlev1_bibj, key=itdkey, kind=isbyte
-CADJ STORE saved_modval  = comlev1_bibj, key=itdkey, kind=isbyte
-CADJ STORE ihopObs_modmask_tiled  = comlev1_bibj, key=itdkey, kind=isbyte
+!ADJ STORE ihop_modval  = comlev1_bibj, key=itdkey, kind=isbyte
 
             ihop_modval=0
             saved_modval=0
 
-            print *, 'escobar: ', m
             CALL ihop_cost_modval(ihop_modval, num_file,
      &          1, 1, myTime, myThid)
-
-!            CALL obsfit_interp(ihop_modval,
-!     &         sample_i,sample_j,sample_k,sample_w,
-!     &         sample_type(num_file,m,bi,bj),
-!     &         num_file,myTime,bi,bj,myThid)
-!
-            ihop_modval=ihop_modval*3
-!     &                   obsfit_facmod(num_file)
-!
-!            IF (obsfitOperation(num_file).gt.0) THEN
-!               ihop_modval = saved_modval+ihop_modval*deltaTclock
-!            ENDIF
-!
-!            ihopObs_modmask_tiled(bi,bj)=ihopObs_modmask_tiled(bi,bj)*
-!     &                   sample_weight(num_file,m,bi,bj)
-!
+            
 !            CALL active_write_obs_tile(num_file,
 !     &         ihop_modval,
 !     &         m,optimcycle,bi,bj,myThid,
-!     &         obsfit_dummy(num_file,bi,bj))
+!     &         ihop_dummy(num_file,bi,bj))
 !
            ENDIF !if ((sample_time...
           ENDIF !if (ObsNo_tiled(num_file,bi,bj).NE.0) then

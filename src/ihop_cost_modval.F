@@ -94,7 +94,7 @@ C !LOCAL VARIABLES:
      &        * exp(cmplx(0,1)*rad2deg*Arr(ii,ri,rj)%Phase)
        arrval(ii) = ABS( arrival_amplitude(ii) )
 
-       PRINT *, 'escobar: ',arrival_amplitude(ii),arrval(ii)
+!       PRINT *, 'escobar: ',arrival_amplitude(ii),arrval(ii)
       ENDDO !ii
 ! Find index of maximum amplitude for each ri,rj arrival, a hand-writted
 ! maxloc
@@ -110,7 +110,7 @@ C !LOCAL VARIABLES:
 
 ! save predicted travel time according to max index
       modval = real( Arr( maxindex,ri,rj )%delay )
-      PRINT *, 'escobar: ',maxindex, modval 
+!      PRINT *, 'escobar: ',maxindex, modval 
 
 #endif
 
