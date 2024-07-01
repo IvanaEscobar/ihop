@@ -39,8 +39,6 @@ C     == global variables ==
 !     !EXTERNAL VARIABLES:
       CHARACTER*(MAX_LEN_MBUF) :: msgBuf
 !     !LOCAL VARIABLES:
-      integer tempDate1(4)
-      integer tempDate2(4)
       _RL :: yymmddMin,yymmddMax
       _RL :: hhmmssMin,hhmmssMax
       _RL :: tmpyymmdd(NOBSMAX_IHOP), tmphhmmss(NOBSMAX_IHOP), diffsecs
@@ -66,8 +64,8 @@ C     == global variables ==
       INTEGER :: varid1a, varid1b, varid2, varid3
       INTEGER :: varid4a, varid4b, varid4c
       INTEGER :: varid5a, varid5b, varidEquiv(2)
-      INTEGER :: weighIhopObs, obsisinruntime 
-      INTEGER :: ihopObsInTile
+      INTEGER :: weighIhopObs, obsIsInRunTime 
+      INTEGER :: ObsNo_valid, ihopObsInTile
       INTEGER :: tmpdate(4), tmpdiff(4)
       INTEGER :: num_file, hh, obsno_hh
       INTEGER :: bi, bj, k, i, j, l, m
@@ -82,37 +80,6 @@ C ==================== External Functions ==========================
       EXTERNAL ILNBLNK
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 C     == end of interface ==
-
-#ifdef ALLOW_CAL
-
-      _BEGIN_MASTER( myThid )
-
-C      IF ( useCAL ) THEN
-CC--   Ihop cost function start and stop times in model seconds.
-C        call cal_FullDate  ( costIhopStart1 , costIhopStart2,
-C     &                       tempDate1     , myThid )
-C        call cal_TimePassed( modelStartDate, tempDate1    ,
-C     &                       tempDate2     , myThid )
-C        call cal_ToSeconds ( tempDate2 , costIhopStart , myThid )
-C        costIhopStart = costIhopStart + startTime
-C
-C        if ( costIhopEnd1.EQ.0 ) then
-CC-      use "modelEndDate" as default value for costIhopEnd
-C          costIhopEnd1 = modelEndDate(1)
-C          costIhopEnd2 = modelEndDate(2)
-C        endif
-C        call cal_FullDate  ( costIhopEnd1   , costIhopEnd2  ,
-C     &                       tempDate1     , myThid )
-C        call cal_TimePassed( modelStartDate, tempDate1    ,
-C     &                       tempDate2     , myThid )
-C        call cal_ToSeconds ( tempDate2 , costIhopEnd , myThid )
-C        costIhopEnd = costIhopEnd + startTime
-CC--
-C      ENDIF
-      _END_MASTER( myThid )
-      _BARRIER
-
-#endif /* ALLOW_CAL */
 
       WRITE(msgbuf,'(a)') ' '
       CALL print_message( msgbuf, standardmessageunit,
@@ -151,12 +118,12 @@ C      ENDIF
        ihopObsFile=' '
        IL  = ILNBLNK( ihopObsFiles(num_file) )
        IF (IL.NE.0) THEN
-        WRITE(ihopObsFile,'(1a)')
+        WRITE(ihopObsFile,'(A)')
      &     ihopObsFiles(num_file)(1:IL)
-        WRITE(msgbuf,'(a)') ' '
+        WRITE(msgbuf,'(A)') ' '
         CALL print_message( msgbuf, standardmessageunit,
      &                    SQUEEZE_RIGHT, myThid)
-        WRITE(msgbuf,'(a,i3,a,a)')
+        WRITE(msgbuf,'(A,I3,2A)')
      &     'ihop file #',num_file,' is ', ihopObsFile(1:IL)
         CALL print_message(
      &     msgbuf, standardmessageunit, SQUEEZE_RIGHT, myThid)
@@ -225,7 +192,7 @@ C      ENDIF
 
 ! Read the ihop observations' values:
         err =       NF_INQ_VARID(ncid,'ihop_tau', varid5a )
-        err = err + NF_INQ_VARID(ncid,'ihop_ang', varid5b )
+!        err = err + NF_INQ_VARID(ncid,'ihop_ang', varid5b )
         IF (err.NE.NF_NOERR) THEN
          IL  = ILNBLNK( ihopObsFile )
          WRITE(msgBuf,'(3A)')
@@ -241,7 +208,7 @@ C      ENDIF
 ! Variables names for model equivalent files
         ihop_nameequi = 'mod_val'
         ihop_namemask = 'mod_mask'
-        ihop_nameval = 'obs_val'
+        ihop_nameval  = 'obs_val'
         ihop_nameuncert = 'obs_uncert'
 
 ! Create new netcdf global file for ihop model equivalent 
@@ -328,6 +295,12 @@ C      ENDIF
 ! NOTE: not applying reading in chunks
 !       see pkg/profiles or pkg/obsfit for how to chunk.
 
+! default values
+        DO k=1,NOBSMAX_IHOP
+         ihopObs_ind_glob(num_file,k) = 0
+        ENDDO
+        ObsNo_valid = 0
+
 ! read time
         err = NF_GET_VARA_DOUBLE(ncid,varid1a,1,
      &   ObsNo(num_file), tmpyymmdd)
@@ -372,16 +345,12 @@ C      ENDIF
           diffsecs=-deltaTclock
          ENDIF
 
-!IE get rid of this loop is it stays unused. looks like it's necessary
-!for chunking only
          IF (obsIsInRunTime.EQ.1) THEN
 ! if yes then store obs index position:
-          ihopObs_ind_glob(num_file,1)=1
+          ObsNo_valid = ObsNo_valid+1
+          ihopObs_ind_glob(num_file,ObsNo_valid) = m
 
-! position of first observation
-          ihopObs_sample1_ind(num_file,1)=1
          ENDIF !if (obsIsInRunTime.EQ.1) then
-!IE END get rid of this loop is it stays unused. looks like it's necessary
 
 ! regardless of whether obs is in run time or not, 
 ! keep track of ihop obs index position
@@ -396,9 +365,12 @@ C      ENDIF
           CALL PRINT_ERROR( msgBuf, myThid)
          ENDIF
 
-
         ENDDO !m
 
+! calibrate number of VALID obs datum
+        ObsNo(num_file) = ObsNo_valid
+
+! output ihop cost init info
         WRITE(msgbuf,'(A,I9)')
      &     '  # of ihop obs with erroneous HHMMSS values =',
      &     ObsNo_hh
@@ -411,7 +383,8 @@ C      ENDIF
         CALL print_message(
      &     msgbuf, standardmessageunit, SQUEEZE_RIGHT, myThid)
 
-! Initiate tiled default values for ihopObs before reading in from netcdf
+! ==============================================================================
+! Initiate tiled defaults for ihopObs before reading in from netcdf
         DO bj=1,nSy
          DO bi=1,nSx
           ObsNo_tiled(num_file,bi,bj)=ObsNo(num_file)
@@ -423,8 +396,9 @@ C      ENDIF
            ihopObs_uncert(num_file,k,bi,bj)=      1. _d 0
            ihopObs_ind_glob_tiled(num_file,k,bi,bj)=    0
           ENDDO !k
+          ObsNo_valid = 0
 
-! Read in info using respective varid and save to tmp
+! Read ALL info using respective varid and save to tmp, NO CHUNKS!
           IF (weighIhopObs.EQ.1) THEN  
            err = NF_GET_VARA_DOUBLE(ncid,varid3,1,
      &      ObsNo_tiled(num_file,bi,bj), tmp_uncert2)
@@ -443,8 +417,8 @@ C      ENDIF
            CALL PRINT_ERROR( msgBuf, myThid)
           ENDIF
 
-! 'Reshape' observed datum to tiled info
-! loop through number of observations, in obsfit this is a 'chunk'
+! Find obs datum in MITgcm spatial grid
+! loop through observations, NOTE: in obsfit this is a 'chunk'
           DO m=1,ObsNo_tiled(num_file,bi,bj)
            ihopObsInTile=1
       
@@ -482,7 +456,7 @@ C      ENDIF
              ihopObsInTile=0
             ENDIF
  
-! Find i,j,k to the south-west-down of obs datum
+! Determine i,j,k to the south-west-down of obs datum
 ! set default values
             ihopObs_i=-10
             ihopObs_j=-10
@@ -561,9 +535,10 @@ C      ENDIF
              ihopObsInTile=0
             ENDIF
 
-! 'Reshape' obs datum position to tiled structure
+! 'Reshape' observed datum to tiled structures
             IF (ihopObsInTile.EQ.1) THEN
-             ihopObs_ind_glob_tiled(num_file,m,bi,bj) = m
+             ObsNo_valid = ObsNo_valid+1
+             ihopObs_ind_glob_tiled(num_file,ObsNo_valid,bi,bj) = m
 
              IF (weighIhopObs.EQ.1) THEN  
               ihopObs_uncert(num_file,m,bi,bj)=tmp_uncert2(m)
@@ -572,7 +547,6 @@ C      ENDIF
              ihopObs_lat(num_file,m,bi,bj)=lat_cur
              ihopObs_depth(num_file,m,bi,bj)=depth_cur
 
-! 'Reshape' obs datum i,j,k to tiled structure
              ihopObs_i_tiled(num_file,m,bi,bj) = ihopObs_i
              ihopObs_j_tiled(num_file,m,bi,bj) = ihopObs_j
              ihopObs_k_tiled(num_file,m,bi,bj) = ihopObs_k1
@@ -580,6 +554,7 @@ C      ENDIF
             ENDIF !ihopObsInTile.EQ.1 3rd time
 
            ENDIF !ihopObsInTile.EQ.1 1st time
+
 ! ==============================================================================
 ! Check that maximum size was not reached:
            IF (m.GE.NOBSMAX_IHOP) then
@@ -592,7 +567,7 @@ C      ENDIF
           ENDDO !m
 
 ! Number of valid ihop obs in the file
-          ObsNo_tiled(num_file,bi,bj) = m
+          ObsNo_tiled(num_file,bi,bj) = ObsNo_valid
        
           WRITE(msgbuf,'(A,I4,A,I4)')
      &       '  current tile is bi,bj                      =',

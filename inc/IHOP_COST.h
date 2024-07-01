@@ -9,30 +9,29 @@
       COMMON /ihop_cost_l/ ihopDoNcOutput
 
 !    IHOP cost integer parameters 
-!     cost_ihop_flag  :: cost ihop flag (see ihop_cost_test.F)
+!     ObsNo* :: No. of observations in a single ihop obs file, iOBS
+!     ihopObs_ind_glob* :: MITgcm global index of each obs datum
 
-      INTEGER cost_ihop_flag
-      INTEGER ihopObs_ind_glob(NFILESMAX_IHOP,NOBSMAX_IHOP)
-      INTEGER ihopObs_ind_glob_tiled(NFILESMAX_IHOP,NOBSMAX_IHOP,nsx,nsy)
       INTEGER ObsNo(NFILESMAX_IHOP)
       INTEGER ObsNo_tiled(NFILESMAX_IHOP,nsx,nsy)
-      INTEGER ihopOperation(NFILESMAX_IHOP)
-      INTEGER ihopObs_np(NFILESMAX_IHOP,NOBSMAX_IHOP)
+      INTEGER ihopObs_ind_glob(NFILESMAX_IHOP,NOBSMAX_IHOP)
+      INTEGER ihopObs_ind_glob_tiled(NFILESMAX_IHOP,NOBSMAX_IHOP,nsx,nsy)
       INTEGER fidfwd_obs(NFILESMAX_IHOP,nsx,nsy)
       INTEGER fidadj_obs(NFILESMAX_IHOP,nsx,nsy)
       INTEGER fiddata_obs(NFILESMAX_IHOP)
       INTEGER fidglobal(NFILESMAX_IHOP)
       INTEGER fidadglobal(NFILESMAX_IHOP)
-      INTEGER ihopObs_sample1_ind(NFILESMAX_IHOP,NOBSMAX_IHOP)
       INTEGER ihopObs_i_tiled(NFILESMAX_IHOP,NOBSMAX_IHOP,nsx,nsy)
       INTEGER ihopObs_j_tiled(NFILESMAX_IHOP,NOBSMAX_IHOP,nsx,nsy)
       INTEGER ihopObs_k_tiled(NFILESMAX_IHOP,NOBSMAX_IHOP,nsx,nsy)
+      INTEGER ihopObs_sample1_ind(NFILESMAX_IHOP,NOBSMAX_IHOP)
       COMMON /ihop_cost_i/                                                                                                          &
-     &                  cost_ihop_flag, ihopObs_ind_glob, ihopOperation, ihopObs_np,                                                &
+     &                  ObsNo, ObsNo_tiled,                                                                                         &
+     &                  ihopObs_ind_glob, ihopObs_ind_glob_tiled,                                                                   &
      &                  fidfwd_obs, fidadj_obs, fidglobal, fidadglobal, 
-     &                  fiddata_obs, ObsNo_tiled,                                                                                   &
+     &                  fiddata_obs,                                                                                                &
      &                  ihopObs_i_tiled, ihopObs_j_tiled, ihopObs_k_tiled,                                                          &
-     &                  ihopObs_ind_glob_tiled, ObsNo, ihopObs_sample1_ind
+     &                  ihopObs_sample1_ind
       
 !    IHOP buffers
       _RL ihop_data_buff(1000)
