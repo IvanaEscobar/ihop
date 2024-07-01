@@ -702,7 +702,7 @@ C--   Reset the model iteration counter and the model time.
         myTime = startTime + deltaTClock*(iloop-1)
 #endif
         CALL TIMER_START('IHOP_COST_INLOOP    [MAIN_DO_LOOP]', myThid)
-        CALL IHOP_COST_INLOOP( myTime, myIter, myThid )
+        CALL IHOP_COST_INLOOP( myTime, myThid )
         CALL TIMER_STOP ('IHOP_COST_INLOOP    [MAIN_DO_LOOP]', myThid)
       ENDIF
 #endif
@@ -762,9 +762,12 @@ c--   Compute all profiles cost function contributions.
         CALL COST_PROFILES( myIter, myTime, myThid )
       ENDIF
 #endif
-
 #ifdef ALLOW_IHOP
       IF (useIHOP) THEN
+c--   Accumulate travel times
+        CALL TIMER_START('IHOP_COST_INLOOP    [THE_MAIN_LOOP]', myThid)
+        CALL IHOP_COST_INLOOP( endtime, myThid )
+        CALL TIMER_STOP ('IHOP_COST_INLOOP    [THE_MAIN_LOOP]', myThid)
 c--   Compute all obsfit cost function contributions.
         CALL TIMER_START('COST_IHOP   [THE_MAIN_LOOP]', myThid)
         CALL COST_IHOP( myIter, myTime, myThid )
