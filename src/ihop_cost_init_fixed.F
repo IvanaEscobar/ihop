@@ -355,7 +355,7 @@ C     == end of interface ==
 ! regardless of whether obs is in run time or not, 
 ! keep track of ihop obs index position
 ! and assign time to ihop obs
-         tmp_ihopObs_time(1)=diffsecs
+         tmp_ihopObs_time(m)=diffsecs
 
 ! check that maximum size was not reached:
          IF (ObsNo(num_file).GT.NOBSMAX_IHOP) THEN
@@ -387,16 +387,17 @@ C     == end of interface ==
 ! Initiate tiled defaults for ihopObs before reading in from netcdf
         DO bj=1,nSy
          DO bi=1,nSx
+          ObsNo_valid = 0
           ObsNo_tiled(num_file,bi,bj)=ObsNo(num_file)
 
           DO k=1,NOBSMAX_IHOP
+           ihopObs_time(num_file,k,bi,bj) =    -999. _d 0
            ihopObs_lon(num_file,k,bi,bj)=      -999. _d 0
            ihopObs_lat(num_file,k,bi,bj)=      -999. _d 0
            ihopObs_depth(num_file,k,bi,bj)=    -999. _d 0
            ihopObs_uncert(num_file,k,bi,bj)=      1. _d 0
            ihopObs_ind_glob_tiled(num_file,k,bi,bj)=    0
           ENDDO !k
-          ObsNo_valid = 0
 
 ! Read ALL info using respective varid and save to tmp, NO CHUNKS!
           IF (weighIhopObs.EQ.1) THEN  
@@ -414,7 +415,7 @@ C     == end of interface ==
            WRITE(msgBuf,'(3A)')
      &      'IHOP_COST_INIT_FIXED: file ', ihopObsFile(1:IL),
      &      '.nc was not read properly: check x,y,z,uncert.'
-           CALL PRINT_ERROR( msgBuf, myThid)
+           CALL PRINT_ERROR(msgBuf, myThid)
           ENDIF
 
 ! Find obs datum in MITgcm spatial grid
@@ -422,16 +423,17 @@ C     == end of interface ==
           DO m=1,ObsNo_tiled(num_file,bi,bj)
            ihopObsInTile=1
       
+! in a valid time?
            IF ((tmp_ihopObs_time(m).LT.0. _d 0) .OR.
      &        (tmp_ihopObs_time(m).GT. modelend-modelstart)) THEN
             ihopObsInTile=0
            ENDIF
 
+! Determine whether obs datum is in current tile domain
            lon_cur=tmp_lon2(m)
            lat_cur=tmp_lat2(m)
            depth_cur=tmp_depth2(m)
 
-! Determine whether obs datum is in current tile domain
            IF (ihopObsInTile.EQ.1) THEN
             IF (xC(sNx+1,1,bi,bj).LT.xC(1,1,bi,bj)) THEN
              tmp_lon=xC(sNx+1,1,bi,bj)+360. _d 0
@@ -443,7 +445,7 @@ C     == end of interface ==
      &       (tmp_lon.GT.lon_cur).AND.
      &       (yC(1,1,bi,bj).LE.lat_cur).AND.
      &       (yC(1,sNy+1,bi,bj).GT.lat_cur) ) THEN
-! do nothing 
+!  do nothing 
             ELSEIF ((xC(sNx+1,1,bi,bj).LT.xC(1,1,bi,bj)).AND.
      &       (xC(1,1,bi,bj).LE.lon_cur+360. _d 0).AND.
      &       (tmp_lon.GT.lon_cur+360. _d 0).AND.
@@ -452,7 +454,7 @@ C     == end of interface ==
      &       ) THEN
              lon_cur=lon_cur+360. _d 0         
             ELSE
-! Not in this tile
+!  not in this tile
              ihopObsInTile=0
             ENDIF
  
@@ -540,16 +542,18 @@ C     == end of interface ==
              ObsNo_valid = ObsNo_valid+1
              ihopObs_ind_glob_tiled(num_file,ObsNo_valid,bi,bj) = m
 
+             ihopObs_time(num_file,ObsNo_valid,bi,bj) =
+     &                                          tmp_ihopObs_time(m)
              IF (weighIhopObs.EQ.1) THEN  
-              ihopObs_uncert(num_file,m,bi,bj)=tmp_uncert2(m)
+              ihopObs_uncert(num_file,ObsNo_valid,bi,bj)=tmp_uncert2(m)
              ENDIF
-             ihopObs_lon(num_file,m,bi,bj)=lon_cur
-             ihopObs_lat(num_file,m,bi,bj)=lat_cur
-             ihopObs_depth(num_file,m,bi,bj)=depth_cur
+             ihopObs_lon(num_file,ObsNo_valid,bi,bj)=lon_cur
+             ihopObs_lat(num_file,ObsNo_valid,bi,bj)=lat_cur
+             ihopObs_depth(num_file,ObsNo_valid,bi,bj)=depth_cur
 
-             ihopObs_i_tiled(num_file,m,bi,bj) = ihopObs_i
-             ihopObs_j_tiled(num_file,m,bi,bj) = ihopObs_j
-             ihopObs_k_tiled(num_file,m,bi,bj) = ihopObs_k1
+             ihopObs_i_tiled(num_file,ObsNo_valid,bi,bj) = ihopObs_i
+             ihopObs_j_tiled(num_file,ObsNo_valid,bi,bj) = ihopObs_j
+             ihopObs_k_tiled(num_file,ObsNo_valid,bi,bj) = ihopObs_k1
 
             ENDIF !ihopObsInTile.EQ.1 3rd time
 

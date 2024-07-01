@@ -48,23 +48,25 @@
 !     objf_ihop     :: ihop travel times
 !     num_ihop      :: number of observations 
 !     mult_ihop     :: multiplier applied to all cost terms
+!     ihopObs_time  :: obs. start time
 
       _RL  objf_ihop (NFILESMAX_IHOP,nSx,nSy)
       _RL  num_ihop  (nSx,nSy)
       _RL  mult_ihop (NFILESMAX_IHOP)
+      _RL  ihopObs_time(NFILESMAX_IHOP,NOBSMAX_IHOP,nsx,nsy)
       _RL  ihopObs_lon(NFILESMAX_IHOP,NOBSMAX_IHOP,nsx,nsy)
       _RL  ihopObs_lat(NFILESMAX_IHOP,NOBSMAX_IHOP,nsx,nsy)
       _RL  ihopObs_depth(NFILESMAX_IHOP,NOBSMAX_IHOP,nsx,nsy)
       _RL  ihopObs_uncert(NFILESMAX_IHOP,NOBSMAX_IHOP,nsx,nsy)
-      _RL  sample_modmask(nsx,nsy)
       _RL  ihopObs_modmask 
+      _RL  ihopObs_modmask_tiled(nsx,nsy)
       COMMON /IHOP_COST_R/                                                                                                          &
-     &                sample_modmask,                                                                                               &
-     &                ihopObs_lat, ihopObs_lon, ihopObs_depth,                                                                      &
-     &                ihopObs_uncert,                                                                                               &
      &                objf_ihop,                                                                                                    &
      &                num_ihop,                                                                                                     &
-     &                mult_ihop, ihopObs_modmask
+     &                mult_ihop,                                                                                                    &
+     &                ihopObs_time, ihopObs_lat, ihopObs_lon, ihopObs_depth,                                                        &
+     &                ihopObs_uncert,                                                                                               &
+     &                ihopObs_modmask, ihopObs_modmask_tiled
 
 !    IHOP cost filenames
 !     ihopObsDir    :: directory where ihop observations are found

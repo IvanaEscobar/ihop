@@ -161,7 +161,7 @@ CEOP
 !             samples_buff(irec) = samples_buff(irec)
 !     &                                 +sample_modvaltmp
 !             samples_mask_buff(irec) = samples_mask_buff(irec)
-!     &                                 +sample_modmask(bi,bj)
+!     &                                 +ihopObs_modmask_tiled(bi,bj)
 !
 !            ENDIF !if (sample_num.LE.ObsNo_tiled(num_file,bi,bj)) then
 !           ENDDO !do sample_num=..
