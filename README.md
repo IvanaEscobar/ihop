@@ -13,6 +13,11 @@ diagnostics.
 
 ADD useIHOP to PARAMS.h in the code modifications to use this package
 
+Package is dependent on the following packages:
+- *cal* for storing times of sound transmissions
+- *cost* for aggregation of acoustic cost function contributions
+
+
 ## Tips
 For input, you will be asked to generate range points along a 2D plane between 
 a source and receiver. The number of range points can vary from 2 to N. The 
@@ -24,4 +29,4 @@ maximum ocean depth defined in your `.bty` file. It's recommended to place an
 # TO-DO
 - PYTHON: add simple input file generation
 - FORTRAN77: add simple verification problem
-- PYTHON: add simple data file generation 
+- PYTHON: add synthetic observation data file generation 
