@@ -6,9 +6,9 @@ C--   o active_read_ihop_tile_rl
 C--   o active_write_ihop_tile_rl
 
 CBOP 0
-C     !ROUTINE: ACTIVE_READ_ihop_TILE_RL
+C     !ROUTINE: ACTIVE_READ_IHOP_TILE_RL
 C     !INTERFACE:
-      SUBROUTINE ACTIVE_READ_ihop_TILE_RL(
+      SUBROUTINE ACTIVE_READ_IHOP_TILE_RL(
      I                                  fid,
      I                                  active_num_file,
      O                                  active_var,
@@ -23,7 +23,7 @@ C     !INTERFACE:
 
 C     !DESCRIPTION: 
 C     ==================================================================
-C     | SUBROUTINE ACTIVE_READ_ihop_TILE_RL
+C     | SUBROUTINE ACTIVE_READ_IHOP_TILE_RL
 C     | Read an active record from an IHOP .equi. tiled file
 C     | (can be netcdf or binary)  
 C     ==================================================================
@@ -196,9 +196,9 @@ c     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
 C     =================================================================
 
 CBOP 0
-C     !ROUTINE: ACTIVE_WRITE_ihop_TILE_RL
+C     !ROUTINE: ACTIVE_WRITE_IHOP_TILE_RL
 C     !INTERFACE:
-      SUBROUTINE ACTIVE_WRITE_ihop_TILE_RL(
+      SUBROUTINE ACTIVE_WRITE_IHOP_TILE_RL(
      I                                 fid,
      I                                 active_num_file,
      I                                 active_var,
@@ -212,7 +212,7 @@ C     !INTERFACE:
 
 C     !DESCRIPTION: 
 C     ==========================================================
-C     | SUBROUTINE ACTIVE_WRITE_ihop_TILE_RL
+C     | SUBROUTINE ACTIVE_WRITE_IHOP_TILE_RL
 C     | Write an active record to an ihop .equi. tiled file
 C     | (can be netcdf or binary)  
 C     ==========================================================
@@ -254,11 +254,10 @@ c     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
 
         _BEGIN_MASTER( myThid )
 
-      if (ihopDoNcOutput) then
-
       vec_start=irec
       vec_count=1
 
+      PRINT *, 'escobar, ihop_nameequi ', ihop_nameequi
       err = NF_INQ_VARID(fid, ihop_nameequi, varid1)
       err = NF_PUT_VARA_DOUBLE(fid, varid1, vec_start, vec_count,
      & active_var)
@@ -267,24 +266,6 @@ c     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
       err = NF_INQ_VARID(fid,'ihopObs_ind_glob_tiled', varid3 )
       err = NF_PUT_VAR1_INT(fid, varid3, vec_start,
      & irecglob)
-
-      else
-
-      vec_tmp(1)=active_var
-      vec_tmp(2)=irecglob
-#ifdef _BYTESWAPIO
-            call MDS_BYTESWAPR8(2,vec_tmp)
-#endif
-      write(fid,rec=(irec-1)*2+1 )
-     & vec_tmp
-      vec_tmp(2)=irecglob
-#ifdef _BYTESWAPIO
-            call MDS_BYTESWAPR8(2,vec_tmp)
-#endif
-      write(fid,rec=(irec-1)*2+2 )
-     & vec_tmp
-
-      endif
 
         _END_MASTER( myThid )
 
@@ -297,8 +278,6 @@ c     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
       if (theSimulationMode .eq. REVERSE_SIMULATION) then
 
         _BEGIN_MASTER( myThid )
-
-      if (ihopDoNcOutput) then
 
       vec_start=irec
       vec_count=1
@@ -317,28 +296,6 @@ c     Add active_var to data.
       err = NF_PUT_VARA_DOUBLE(fid, varid1, vec_start, vec_count,
      & active_data_t)
 
-      else
-
-      read(fid,rec=(irec-1)*2+1 )
-     & vec_tmp
-#ifdef _BYTESWAPIO
-            call MDS_BYTESWAPR8(2,vec_tmp)
-#endif
-      active_data_t=vec_tmp(1)
-
-c     Add active_var from appropriate location to data.
-      active_var = active_var + active_data_t
-      active_data_t = 0. _d 0
-
-c     Store the result on disk.
-      vec_tmp(1)=active_data_t
-#ifdef _BYTESWAPIO
-            call MDS_BYTESWAPR8(2,vec_tmp)
-#endif
-      write(fid,rec=(irec-1)*2+1 )
-     & vec_tmp
-
-      endif
 
         _END_MASTER( myThid )
 
@@ -386,9 +343,9 @@ C     ==================================================================
 
 
 CBOP 0
-C     !ROUTINE: ACTIVE_READ_ihop_GLOB_RL
+C     !ROUTINE: ACTIVE_READ_IHOP_GLOB_RL
 C     !INTERFACE:
-      SUBROUTINE ACTIVE_READ_ihop_GLOB_RL(
+      SUBROUTINE ACTIVE_READ_IHOP_GLOB_RL(
      I                                  fid,
      I                                  active_num_file,
      O                                  active_var,
@@ -401,7 +358,7 @@ C     !INTERFACE:
 
 C     !DESCRIPTION: 
 C     ==================================================================
-C     | SUBROUTINE ACTIVE_READ_ihop_GLOB_RL
+C     | SUBROUTINE ACTIVE_READ_IHOP_GLOB_RL
 C     | Read an active record from an IHOP .equi. global file
 C     ==================================================================
 
@@ -514,9 +471,9 @@ c     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
 C     =================================================================
 
 CBOP 0
-C     !ROUTINE: ACTIVE_WRITE_ihop_GLOB_RL
+C     !ROUTINE: ACTIVE_WRITE_IHOP_GLOB_RL
 C     !INTERFACE:
-      SUBROUTINE ACTIVE_WRITE_ihop_GLOB_RL(
+      SUBROUTINE ACTIVE_WRITE_IHOP_GLOB_RL(
      I                                 fid,
      I                                 active_num_file,
      I                                 active_var,
@@ -528,7 +485,7 @@ C     !INTERFACE:
 
 C     !DESCRIPTION: 
 C     ==========================================================
-C     | SUBROUTINE ACTIVE_WRITE_ihop_GLOB_RL
+C     | SUBROUTINE ACTIVE_WRITE_IHOP_GLOB_RL
 C     | Write an active record to an ihop .equi. global file
 C     ==========================================================
 

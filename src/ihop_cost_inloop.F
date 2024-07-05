@@ -47,9 +47,9 @@ CEOP
 
 #ifdef ALLOW_IHOP
 C !LOCAL VARIABLES: 
-      INTEGER m,k,bi,bj,num_file
+      INTEGER m,k,bi,bj,num_file,varid1,err
       INTEGER maxindex(Nrr, Nrd)
-      _RL     ihop_modval, saved_modval
+      _RL     ihop_modval
 #ifndef ALLOW_CTRL
       INTEGER optimcycle
 #endif
@@ -86,17 +86,21 @@ C !LOCAL VARIABLES:
 !ADJ STORE ihop_modval  = comlev1_bibj, key=itdkey, kind=isbyte
 
             ihop_modval=0
-            saved_modval=0
 
             CALL ihop_cost_modval(ihop_modval, num_file,
      &          1, 1, myTime, myThid)
             
-!            CALL active_write_obs_tile(num_file,
-!     &         ihop_modval,
-!     &         m,optimcycle,bi,bj,myThid,
-!     &         ihop_dummy(num_file,bi,bj))
-!
-           ENDIF !if ((sample_time...
+            err = NF_INQ_VARID(fidfwd_obs(num_file,bi,bj),ihop_nameequi, 
+     &              varid1)
+            err = NF_PUT_VARA_DOUBLE(fidfwd_obs(num_file,bi,bj), varid1,
+     &              m, 1, ihop_modval)
+            PRINT *, 'escobar, ihop_nameequi ', ihop_nameequi
+            PRINT *, 'escobar, err', err
+!            CALL active_write_ihop_tile( num_file,
+!     &         ihop_modval, m, optimcycle,bi,bj,myThid,
+!     &         ihop_dummy(num_file,bi,bj) )
+
+           ENDIF !if ((ihopObs_time...
           ENDIF !if (ObsNo_tiled(num_file,bi,bj).NE.0) then
          ENDDO !do m...
         ENDDO !do num_file=1,NFILESMAX_OBS

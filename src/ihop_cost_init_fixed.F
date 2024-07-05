@@ -596,7 +596,7 @@ C     == end of interface ==
            JL  = ILNBLNK( ihopObsDir )
 
 !IE:           IF (ihopObsDoNcOutput) THEN
-! Write to nc file
+! ALWAYS Write to nc file
 
            WRITE(fnameequinc,'(3A,I3.3,A,I3.3,A)')
      &      ihopObsDir(1:JL),ihopObsFile(1:IL),'.',iG,'.',jG,'.equi.nc'
@@ -617,6 +617,7 @@ C     == end of interface ==
             err = NF_OPEN(fnameequinc,NF_WRITE,
      &        fidfwd_obs(num_file,bi,bj))
            ENDIF
+
 #ifdef ALLOW_ADJOINT_RUN
            inquire( file=adfnameequinc, exist=exst )
            IF (.NOT.exst) THEN

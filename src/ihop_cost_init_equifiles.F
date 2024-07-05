@@ -46,7 +46,8 @@ C !LOCAL VARIABLES:
 C Create a netcdf file
       err = NF_CREATE(file2,NF_CLOBBER,fid2)
       err = NF_DEF_DIM(fid2,'iOBS',length,dimid)
-      err = NF_DEF_VAR(fid2,'ihopObs_ind_glob',NF_INT,1,dimid,varid(1))
+      err = NF_DEF_VAR(fid2,'ihopObs_ind_glob_tiled',NF_INT,1,
+     &                  dimid,varid(1))
       err = NF_PUT_ATT_INT(fid2,varid(1),'_FillValue',NF_INT,1,-9999)
       err = NF_INQ_VARID(fid1,ihop_nameval,varid0)
 

@@ -32,6 +32,6 @@
  &
 
  &IHOP_COST_NML
- IHOPObsDir      = 'IHOP_obs/',
+#IHOPObsDir      = 'IHOP_obs/',
  IHOPObsFiles(1) = 'bcg_tau_obs_3',
  &

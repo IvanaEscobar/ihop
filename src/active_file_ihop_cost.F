@@ -8,9 +8,9 @@ C--   o active_read_ihop_glob_rl
 C--   o active_write_ihop_glob_rl
 
 CBOP
-C     !ROUTINE: ACTIVE_READ_ihop_TILE
+C     !ROUTINE: ACTIVE_READ_IHOP_TILE
 C     !INTERFACE:
-      SUBROUTINE ACTIVE_READ_ihop_TILE(
+      SUBROUTINE ACTIVE_READ_IHOP_TILE(
      I                               active_num_file,
      O                               active_var,
      I                               irec,
@@ -23,7 +23,7 @@ C     !INTERFACE:
 
 C     !DESCRIPTION: 
 C     ==================================================================
-C     | SUBROUTINE ACTIVE_READ_ihop_TILE
+C     | SUBROUTINE ACTIVE_READ_IHOP_TILE
 C     | Read an active record from an obsfit .equi. tiled file
 C     | (can be netcdf or binary)  
 C     ==================================================================
@@ -70,9 +70,9 @@ CEOP
 C     ==================================================================
 
 CBOP
-C     !ROUTINE: ACTIVE_WRITE_ihop_TILE
+C     !ROUTINE: ACTIVE_WRITE_IHOP_TILE
 C     !INTERFACE:
-      SUBROUTINE ACTIVE_WRITE_ihop_TILE(
+      SUBROUTINE ACTIVE_WRITE_IHOP_TILE(
      I                           active_num_file,
      I                           active_var,
      I                           irec,
@@ -84,7 +84,7 @@ C     !INTERFACE:
 
 C     !DESCRIPTION: 
 C     ==================================================================
-C     | SUBROUTINE ACTIVE_WRITE_ihop_TILE
+C     | SUBROUTINE ACTIVE_WRITE_IHOP_TILE
 C     | Write to a file the model-equivalent value to an  
 c     | observation sample during the model run
 C     ==================================================================
@@ -129,9 +129,9 @@ C     ==================================================================
 
 
 CBOP
-C     !ROUTINE: ACTIVE_READ_ihop_GLOB
+C     !ROUTINE: ACTIVE_READ_IHOP_GLOB
 C     !INTERFACE:
-      SUBROUTINE ACTIVE_READ_ihop_GLOB(
+      SUBROUTINE ACTIVE_READ_IHOP_GLOB(
      I                               active_num_file,
      O                               active_var,
      I                               irec,
@@ -142,7 +142,7 @@ C     !INTERFACE:
 
 C     !DESCRIPTION: 
 C     ==================================================================
-C     | SUBROUTINE ACTIVE_READ_ihop_GLOB
+C     | SUBROUTINE ACTIVE_READ_IHOP_GLOB
 C     | Read an active record from an obsfit .equi. tiled file
 C     | (can be netcdf or binary)  
 C     ==================================================================
@@ -190,9 +190,9 @@ CEOP
 C     ==================================================================
 
 CBOP
-C     !ROUTINE: ACTIVE_WRITE_ihop_GLOB
+C     !ROUTINE: ACTIVE_WRITE_IHOP_GLOB
 C     !INTERFACE:
-      SUBROUTINE ACTIVE_WRITE_ihop_GLOB(
+      SUBROUTINE ACTIVE_WRITE_IHOP_GLOB(
      I                           active_num_file,
      I                           active_var,
      I                           irec,
@@ -202,7 +202,7 @@ C     !INTERFACE:
 
 C     !DESCRIPTION: 
 C     ==================================================================
-C     | SUBROUTINE ACTIVE_WRITE_ihop_GLOB
+C     | SUBROUTINE ACTIVE_WRITE_IHOP_GLOB
 C     | Write to a file the model-equivalent value to an  
 c     | observation sample during the model run
 C     ==================================================================
