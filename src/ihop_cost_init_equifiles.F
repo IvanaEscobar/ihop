@@ -65,17 +65,13 @@ C Create a netcdf file
      &  '_FillValue',NF_DOUBLE,1,-9999. _d 0)
 
       ENDIF
-
-      PRINT *, 'escobar: EQUIFILES err 1', err
-
+! Transition NetCDF file to data mode
       err=NF_ENDDEF(fid2)
+
+! Clear buffer and write data to file
       err=NF_CLOSE(fid2)
+      err=NF_OPEN(file2,NF_WRITE,fid2)
 
-      PRINT *, 'escobar: EQUIFILES err 2', err
-
-      err = NF_OPEN(file2,NF_WRITE,fid2)
-
-      PRINT *, 'escobar: EQUIFILES err 3', err
 #endif
 
       END
