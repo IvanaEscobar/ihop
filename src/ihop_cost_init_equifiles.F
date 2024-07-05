@@ -49,6 +49,8 @@ C Create a netcdf file
       err = NF_DEF_VAR(fid2,'ihopObs_ind_glob_tiled',NF_INT,1,
      &                  dimid,varid(1))
       err = NF_PUT_ATT_INT(fid2,varid(1),'_FillValue',NF_INT,1,-9999)
+
+! Check if 'ihop_val' exists in the observations data file
       err = NF_INQ_VARID(fid1,ihop_nameval,varid0)
 
       IF (err.EQ.NF_NOERR) THEN
@@ -64,10 +66,16 @@ C Create a netcdf file
 
       ENDIF
 
+      PRINT *, 'escobar: EQUIFILES err 1', err
+
       err=NF_ENDDEF(fid2)
       err=NF_CLOSE(fid2)
 
+      PRINT *, 'escobar: EQUIFILES err 2', err
+
       err = NF_OPEN(file2,NF_WRITE,fid2)
+
+      PRINT *, 'escobar: EQUIFILES err 3', err
 #endif
 
       END

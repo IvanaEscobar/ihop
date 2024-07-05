@@ -55,82 +55,82 @@ C myThid    :: my Thread Id number
       INTEGER myIter, myThid
 CEOP
 
-!#ifdef ALLOW_IHOP
-!C !LOCAL VARIABLES:
-!C bi,bj     :: Tile indices
-!      integer K,num_file,num_var,sample_num
-!      integer bi,bj,iG,jG
-!      _RL sample_modval, sample_modvaltmp
-!      _RL obs_modval
-!      _RL obs_data, obs_uncert, obs_weight
-!#ifndef ALLOW_CTRL
-!      integer optimcycle
-!#endif
-!      character*(max_len_mbuf) msgbuf
-!      character*(max_len_fnam) ihopfile, fnameequinc
-!      integer IL, JL, err
-!      integer irec, ii, varid1
-!      integer samples_cnt, obs_num, num_valid_samples
-!      _RL sample_mask_sum
-!      logical exst
-!      _RL  objf_ihop_glo
-!      _RL  num_ihop_glo
-!      _RL  samples_buff(NOBSMAX_IHOP)
-!      _RL  samples_mask_buff(NOBSMAX_IHOP)
-!      _RL  samples_modval_glob(NOBSMAX_IHOP)
-!      _RL  samples_mask_glob(NOBSMAX_IHOP)
-!      _RL  tmpgs
-!      INTEGER tmpgsi
-!      INTEGER ObsNo2,fid,dimid
-!      INTEGER nmodmean, nobsmean
-!      _RL offset, mod_mean, obs_mean
-! 
-!C !FUNCTIONS
-!      INTEGER  ILNBLNK
-!      EXTERNAL ILNBLNK
-!
-!C ==================================================================
-!
-!#ifndef ALLOW_CTRL
-!      optimcycle = 0
-!#endif
-!
-!      write(msgbuf,'(A)') ' '
-!      CALL print_message( msgbuf,
-!     &  standardmessageunit,SQUEEZE_RIGHT, myThid)
-!      write(msgbuf,'(A)') '== cost_ihop: begin =='
-!      CALL print_message( msgbuf,
-!     &  standardmessageunit,SQUEEZE_RIGHT, myThid)
-!
-!        _BEGIN_MASTER( myThid )
-!
-!#ifdef ALLOW_COST
-!      DO num_file=1,NFILESMAX_IHOP
-!
-!C File maintenance
-!       DO bj=1,nSy
-!        DO bi=1,nSx
-!
-!         IF ( (ObsNo_tiled(num_file,bi,bj).GT.0).AND.
-!     &         (ihopDoNcOutput) ) THEN
-!c need to close the file so that the data is not lost when run finishes
-!           err = NF_CLOSE(fidfwd_obs(num_file,bi,bj))
-!c then re-open it to compute cost function
-!           iG=bi+(myXGlobalLo-1)/sNx ! Kludge until unstructered tiles
-!           jG=bj+(myYGlobalLo-1)/sNy ! Kludge until unstructered tiles
-!           IL  = ILNBLNK( ihopobsfiles(num_file) )
-!           write(ihopfile(1:80),'(1A)') ihopobsfiles(num_file)(1:IL)
-!           IL  = ILNBLNK( ihopfile )
-!           JL  = ILNBLNK( ihopObsDir )
-!           write(fnameequinc(1:80),'(3A,I3.3,A,I3.3,A)')
-!     &     ihopObsDir(1:JL),ihopfile(1:IL),'.',iG,'.',jG,'.equi.nc'
-!c
-!           err = NF_OPEN(fnameequinc,NF_NOWRITE,
-!     &     fidfwd_obs(num_file,bi,bj))
-!         ENDIF
-!
-!        ENDDO
-!       ENDDO
+#ifdef ALLOW_IHOP
+C !LOCAL VARIABLES:
+C bi,bj     :: Tile indices
+      integer K,num_file,num_var,sample_num
+      integer bi,bj,iG,jG
+      _RL sample_modval, sample_modvaltmp
+      _RL obs_modval
+      _RL obs_data, obs_uncert, obs_weight
+#ifndef ALLOW_CTRL
+      integer optimcycle
+#endif
+      character*(max_len_mbuf) msgbuf
+      character*(max_len_fnam) ihopfile, fnameequinc
+      integer IL, JL, err
+      integer irec, ii, varid1
+      integer samples_cnt, obs_num, num_valid_samples
+      _RL sample_mask_sum
+      logical exst
+      _RL  objf_ihop_glo
+      _RL  num_ihop_glo
+      _RL  samples_buff(NOBSMAX_IHOP)
+      _RL  samples_mask_buff(NOBSMAX_IHOP)
+      _RL  samples_modval_glob(NOBSMAX_IHOP)
+      _RL  samples_mask_glob(NOBSMAX_IHOP)
+      _RL  tmpgs
+      INTEGER tmpgsi
+      INTEGER ObsNo2,fid,dimid
+      INTEGER nmodmean, nobsmean
+      _RL offset, mod_mean, obs_mean
+ 
+C !FUNCTIONS
+      INTEGER  ILNBLNK
+      EXTERNAL ILNBLNK
+
+C ==================================================================
+
+#ifndef ALLOW_CTRL
+      optimcycle = 0
+#endif
+
+      write(msgbuf,'(A)') ' '
+      CALL print_message( msgbuf,
+     &  standardmessageunit,SQUEEZE_RIGHT, myThid)
+      write(msgbuf,'(A)') '== cost_ihop: begin =='
+      CALL print_message( msgbuf,
+     &  standardmessageunit,SQUEEZE_RIGHT, myThid)
+
+        _BEGIN_MASTER( myThid )
+
+#ifdef ALLOW_COST
+      DO num_file=1,NFILESMAX_IHOP
+
+C File maintenance
+       DO bj=1,nSy
+        DO bi=1,nSx
+
+         IF ( (ObsNo_tiled(num_file,bi,bj).GT.0).AND.
+     &         (ihopDoNcOutput) ) THEN
+c need to close the file so that the data is not lost when run finishes
+           err = NF_CLOSE(fidfwd_obs(num_file,bi,bj))
+c then re-open it to compute cost function
+           iG=bi+(myXGlobalLo-1)/sNx ! Kludge until unstructered tiles
+           jG=bj+(myYGlobalLo-1)/sNy ! Kludge until unstructered tiles
+           IL  = ILNBLNK( ihopobsfiles(num_file) )
+           write(ihopfile(1:80),'(1A)') ihopobsfiles(num_file)(1:IL)
+           IL  = ILNBLNK( ihopfile )
+           JL  = ILNBLNK( ihopObsDir )
+           write(fnameequinc(1:80),'(3A,I3.3,A,I3.3,A)')
+     &     ihopObsDir(1:JL),ihopfile(1:IL),'.',iG,'.',jG,'.equi.nc'
+c
+           err = NF_OPEN(fnameequinc,NF_NOWRITE,
+     &     fidfwd_obs(num_file,bi,bj))
+         ENDIF
+
+        ENDDO
+       ENDDO
 !
 !c Loop over variables
 !       DO num_var=1,NOBSMAX_IHOP
@@ -280,10 +280,10 @@ CEOP
 !         ENDIF !if myprocid = 0
 !
 !       ENDDO !do num_var...
-!      ENDDO !do num_file=1,NFILESMAX_IHOP
-!  
-!#endif /* ALLOW_COST */
-!        _END_MASTER( myThid )
+      ENDDO !do num_file=1,NFILESMAX_IHOP
+  
+#endif /* ALLOW_COST */
+        _END_MASTER( myThid )
 !
 !#ifdef ALLOW_COST
 !c Print cost function values
@@ -305,17 +305,17 @@ CEOP
 !       ENDDO
 !      ENDDO
 !#endif /* ALLOW_COST */
-!
-!      write(msgbuf,'(A)') '== cost_ihop: end   =='
-!      CALL print_message( msgbuf,
-!     &  standardmessageunit,SQUEEZE_RIGHT, myThid)
-!      write(msgbuf,'(A)') ' '
-!      CALL print_message( msgbuf,
-!     &  standardmessageunit,SQUEEZE_RIGHT, myThid)
-!
-!#endif
-!
-!C     ==================================================================
-!
+
+      write(msgbuf,'(A)') '== cost_ihop: end   =='
+      CALL print_message( msgbuf,
+     &  standardmessageunit,SQUEEZE_RIGHT, myThid)
+      write(msgbuf,'(A)') ' '
+      CALL print_message( msgbuf,
+     &  standardmessageunit,SQUEEZE_RIGHT, myThid)
+
+#endif
+
+C     ==================================================================
+
       RETURN
       END

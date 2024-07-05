@@ -13,11 +13,6 @@ C !INTERFACE: ==========================================================
       SUBROUTINE IHOP_COST_MODVAL(
      O                         modval, 
      I                         num_file, ri, rj, myTime, myThid )
-!            CALL obsfit_interp(ihop_modval,
-!     &         sample_i,sample_j,sample_k,sample_w,
-!     &         sample_type(num_file,m,bi,bj),
-!     &         num_file,myTime,bi,bj,myThid)
-!
 
 C !DESCRIPTION:
 C Computes ihop predicted datum 
@@ -94,8 +89,8 @@ C !LOCAL VARIABLES:
      &        * exp(cmplx(0,1)*rad2deg*Arr(ii,ri,rj)%Phase)
        arrval(ii) = ABS( arrival_amplitude(ii) )
 
-!       PRINT *, 'escobar: ',arrival_amplitude(ii),arrval(ii)
       ENDDO !ii
+
 ! Find index of maximum amplitude for each ri,rj arrival, a hand-writted
 ! maxloc
       maxarrval = arrval(1)
@@ -110,7 +105,6 @@ C !LOCAL VARIABLES:
 
 ! save predicted travel time according to max index
       modval = real( Arr( maxindex,ri,rj )%delay )
-!      PRINT *, 'escobar: ',maxindex, modval 
 
 #endif
 

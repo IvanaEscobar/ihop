@@ -257,15 +257,31 @@ c     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
       vec_start=irec
       vec_count=1
 
-      PRINT *, 'escobar, ihop_nameequi ', ihop_nameequi
       err = NF_INQ_VARID(fid, ihop_nameequi, varid1)
+      if (err .ne. NF_NOERR) then
+          PRINT *, 'esco Error in NF_INQ_VARID for ihop_nameequi: ', err
+      else
+          PRINT *, 'esco Successfully retrieved varid1: ', varid1
+      endif
       err = NF_PUT_VARA_DOUBLE(fid, varid1, vec_start, vec_count,
      & active_var)
+      if (err .ne. NF_NOERR) then
+          PRINT *, 'esco Error in NF_PUT_VARA_DOUBLE: ', err
+      endif
 
 
       err = NF_INQ_VARID(fid,'ihopObs_ind_glob_tiled', varid3 )
+      if (err .ne. NF_NOERR) then
+          PRINT *, 'esco Error in NF_INQ_VARID for ',
+     &      'ihopObs_ind_glob_tiled: ', err
+      else
+          PRINT *, 'esco Successfully retrieved varid3: ', varid3
+      endif
       err = NF_PUT_VAR1_INT(fid, varid3, vec_start,
      & irecglob)
+      if (err .ne. NF_NOERR) then
+          PRINT *, 'esco Error in NF_PUT_VAR1_INT: ', err
+      endif
 
         _END_MASTER( myThid )
 

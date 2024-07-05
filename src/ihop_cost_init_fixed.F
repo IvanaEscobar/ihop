@@ -191,25 +191,25 @@ C     == end of interface ==
         ENDIF
 
 ! Read the ihop observations' values:
-        err =       NF_INQ_VARID(ncid,'ihop_tau', varid5a )
-!        err = err + NF_INQ_VARID(ncid,'ihop_ang', varid5b )
+        err =       NF_INQ_VARID(ncid,'ihop_val', varid5a )
+
         IF (err.NE.NF_NOERR) THEN
          IL  = ILNBLNK( ihopObsFile )
          WRITE(msgBuf,'(3A)')
      &    'IHOP_COST_INIT_FIXED: file ', ihopObsFile(1:IL),
-     &    '.nc is not in the pkg/ihop cost format, check tau,ang'
+     &    '.nc is not in the pkg/ihop cost format, check ihop_val'
          CALL PRINT_ERROR( msgBuf, myThid)
         ENDIF
 
 !===========================================================
-!       SET IHOP EQUIV NETCDF VARIABLES
+!       SET IHOP GLOBAL EQUIV NETCDF VARIABLES
 !===========================================================
 
 ! Variables names for model equivalent files
         ihop_nameequi = 'mod_val'
         ihop_namemask = 'mod_mask'
-        ihop_nameval  = 'obs_val'
-        ihop_nameuncert = 'obs_uncert'
+        ihop_nameval  = 'ihop_val'
+        ihop_nameuncert = 'ihop_uncert'
 
 ! Create new netcdf global file for ihop model equivalent 
         IF ( myProcId .eq. 0 ) THEN
@@ -606,14 +606,12 @@ C     == end of interface ==
 
            inquire( file=fnameequinc, exist=exst )
            IF (.NOT.exst) THEN
-      
             CALL ihop_cost_init_equifiles(num_file,
      &       fiddata_obs(num_file),fnameequinc,
-     &       fidfwd_obs(num_file,bi,bj),ObsNo_tiled(num_file,bi,bj),
+     &       fidfwd_obs(num_file,bi,bj),
+     &       ObsNo_tiled(num_file,bi,bj),
      &       bi,bj,myThid)
-     
            ELSE
-      
             err = NF_OPEN(fnameequinc,NF_WRITE,
      &        fidfwd_obs(num_file,bi,bj))
            ENDIF

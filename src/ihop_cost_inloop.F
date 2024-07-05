@@ -90,15 +90,13 @@ C !LOCAL VARIABLES:
             CALL ihop_cost_modval(ihop_modval, num_file,
      &          1, 1, myTime, myThid)
             
-            err = NF_INQ_VARID(fidfwd_obs(num_file,bi,bj),ihop_nameequi, 
-     &              varid1)
-            err = NF_PUT_VARA_DOUBLE(fidfwd_obs(num_file,bi,bj), varid1,
-     &              m, 1, ihop_modval)
-            PRINT *, 'escobar, ihop_nameequi ', ihop_nameequi
-            PRINT *, 'escobar, err', err
-!            CALL active_write_ihop_tile( num_file,
-!     &         ihop_modval, m, optimcycle,bi,bj,myThid,
-!     &         ihop_dummy(num_file,bi,bj) )
+!            err = NF_INQ_VARID(fidfwd_obs(num_file,bi,bj),ihop_nameequi, 
+!     &              varid1)
+!            err = NF_PUT_VARA_DOUBLE(fidfwd_obs(num_file,bi,bj), varid1,
+!     &              m, 1, ihop_modval)
+            CALL active_write_ihop_tile( num_file,
+     &         ihop_modval, m, optimcycle,bi,bj,myThid,
+     &         ihop_dummy(num_file,bi,bj) )
 
            ENDIF !if ((ihopObs_time...
           ENDIF !if (ObsNo_tiled(num_file,bi,bj).NE.0) then

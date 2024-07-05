@@ -75,9 +75,9 @@
       CHARACTER*(MAX_LEN_FNAM) ihopObsDir
       CHARACTER*(MAX_LEN_FNAM) ihopObsFiles(NFILESMAX_IHOP)
       CHARACTER*(8)  ihop_nameval
-      CHARACTER*(12) ihop_namemask
-      CHARACTER*(14) ihop_nameuncert
-      CHARACTER*(8)  ihop_nameequi
+      CHARACTER*(8) ihop_namemask
+      CHARACTER*(11) ihop_nameuncert
+      CHARACTER*(7)  ihop_nameequi
       COMMON /IHOP_COST_C/                                                                                                          &
      &                ihopObsDir, ihopObsFiles,                                                                                     &
      &                ihop_nameval, ihop_namemask,                                                                                  &

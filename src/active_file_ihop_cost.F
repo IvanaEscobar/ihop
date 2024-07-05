@@ -24,7 +24,7 @@ C     !INTERFACE:
 C     !DESCRIPTION: 
 C     ==================================================================
 C     | SUBROUTINE ACTIVE_READ_IHOP_TILE
-C     | Read an active record from an obsfit .equi. tiled file
+C     | Read an active record from an ihop cost .equi. tiled file
 C     | (can be netcdf or binary)  
 C     ==================================================================
 
@@ -143,7 +143,7 @@ C     !INTERFACE:
 C     !DESCRIPTION: 
 C     ==================================================================
 C     | SUBROUTINE ACTIVE_READ_IHOP_GLOB
-C     | Read an active record from an obsfit .equi. tiled file
+C     | Read an active record from an ihop cost .equi. tiled file
 C     | (can be netcdf or binary)  
 C     ==================================================================
 
