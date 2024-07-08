@@ -28,11 +28,11 @@ MODULE BELLHOP
   USE ihop_mod,     only:   rad2deg, i, MaxN, Title, Beam, ray2D, istep,       &
                             NRz_per_range, afreq, SrcDeclAngle,                &
                             PRTFile, SHDFile, ARRFile, RAYFile, DELFile   
-  USE readEnviHop,  only:   readEnvironment, openOutputFiles, resetMemory
+  USE initenvihop,  only:   initEnv, openOutputFiles, resetMemory
   USE angle_mod,    only:   Angles, ialpha
   USE srPos_mod,    only:   Pos
-  USE ssp_mod,      only:   EvaluateSSP, HSInfo, Bdry, SSP, betaPowerLaw, fT
-  USE bdry_mod,     only:   readATI, readBTY, GetTopSeg, GetBotSeg, Bot, Top,  &
+  USE ssp_mod,      only:   EvaluateSSP, HSInfo, Bdry, SSP, fT
+  USE bdry_mod,     only:   initATI, initBTY, GetTopSeg, GetBotSeg, Bot, Top,  &
                             atiType, btyType, NatiPts, NbtyPts, iSmallStepCtr, &
                             IsegTop, IsegBot, rTopSeg, rBotSeg,                &
                             ComputeBdryTangentNormal
@@ -42,7 +42,6 @@ MODULE BELLHOP
   USE influence,    only:   InfluenceGeoHatRayCen,&! InfluenceSGB,             &
                             InfluenceGeoGaussianCart, InfluenceGeoHatCart,     &
                             ScalePressure
-  USE atten_mod,    only:   CRCI
   USE beamPattern 
   USE writeRay,     only:   WriteRay2D, WriteDel2D
   USE arr_mod,      only:   WriteArrivalsASCII,WriteArrivalsBinary,MaxNArr,    &
@@ -130,7 +129,7 @@ CONTAINS
             IF ( iostat /= 0 ) THEN
                 WRITE(*,*) 'ihop: IHOP_fileroot not recognized, ', &
                     TRIM(IHOP_fileroot)
-                WRITE(msgBuf,'(A)') 'BELLHOP IHOP_INIT: Unable to recognize file'
+                WRITE(msgBuf,'(A)') 'IHOP_INIT: Unable to recognize file'
                 CALL PRINT_ERROR( msgBuf, myThid )
                 STOP 'ABNORMAL END: S/R IHOP_INIT'
             END IF
@@ -145,11 +144,11 @@ CONTAINS
     ! Reset memory
     CALL resetMemory() 
     ! save data.ihop, gcm SSP: REQUIRED
-    CALL readEnvironment( myTime, myIter, myThid )
+    CALL initEnv( myTime, myIter, myThid )
     ! AlTImetry: OPTIONAL, default is no ATIFile
-    CALL readATI( Bdry%Top%HS%Opt( 5:5 ), Bdry%Top%HS%Depth, myThid )
+    CALL initATI( Bdry%Top%HS%Opt( 5:5 ), Bdry%Top%HS%Depth, myThid )
     ! BaThYmetry: OPTIONAL, default is BTYFile
-    CALL readBTY( Bdry%Bot%HS%Opt( 2:2 ), Bdry%Bot%HS%Depth, myThid )
+    CALL initBTY( Bdry%Bot%HS%Opt( 2:2 ), Bdry%Bot%HS%Depth, myThid )
     ! (top and bottom): OPTIONAL
     CALL readReflectionCoefficient( IHOP_fileroot, Bdry%Bot%HS%Opt( 1:1 ), &
                                     Bdry%Top%HS%Opt( 2:2 ), PRTFile ) 
@@ -171,31 +170,6 @@ CONTAINS
 
 
 
-    ! convert range-dependent geoacoustic parameters from user to program units
-    ! W is dB/wavelength
-    IF ( atiType( 2:2 ) == 'L' ) THEN
-       DO iSeg = 1, NatiPts
-          Top( iSeg )%HS%cp = CRCI( 1D20, Top( iSeg )%HS%alphaR, &
-                                    Top( iSeg )%HS%alphaI, 'W ', betaPowerLaw, &
-                                    ft, myThid ) ! compressional wave speed
-          Top( iSeg )%HS%cs = CRCI( 1D20, Top( iSeg )%HS%betaR,  &
-                                    Top( iSeg )%HS%betaI, 'W ', betaPowerLaw, &
-                                    ft, myThid )   ! shear wave speed
-       END DO
-    END IF
-     
-    IF ( btyType( 2:2 ) == 'L' ) THEN
-       DO iSeg = 1, NbtyPts
-          Bot( iSeg )%HS%cp = CRCI( 1D20, Bot( iSeg )%HS%alphaR, &
-                                    Bot( iSeg )%HS%alphaI, 'W ', betaPowerLaw, &
-                                    ft, myThid ) ! compressional wave speed
-          Bot( iSeg )%HS%cs = CRCI( 1D20, Bot( iSeg )%HS%betaR,  &
-                                    Bot( iSeg )%HS%betaI, 'W ', betaPowerLaw, &
-                                    ft, myThid )   ! shear wave speed
-       END DO
-    END IF
-
-  
     SELECT CASE ( Beam%RunType( 5:5 ) )
     CASE ( 'I' )
        NRz_per_range = 1         ! irregular grid
@@ -219,7 +193,6 @@ CONTAINS
           U = 0.0
      CASE ( 'A', 'a', 'R', 'E', 'e' )   ! Arrivals calculation
           ALLOCATE ( U( 1,1 ), Stat = iAllocStat )   ! open a dummy variable
-          NArr = 0
      CASE DEFAULT
           ALLOCATE ( U( 1,1 ), Stat = iAllocStat )   ! open a dummy variable
      END SELECT
