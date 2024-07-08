@@ -58,32 +58,30 @@ CEOP
 #ifdef ALLOW_IHOP
 C !LOCAL VARIABLES:
 C bi,bj     :: Tile indices
-      integer K,num_file,num_var,sample_num
+      integer K,num_file,num_var,m
       integer bi,bj,iG,jG
-      _RL sample_modval, sample_modvaltmp
-      _RL obs_modval
-      _RL obs_data, obs_uncert, obs_weight
+      _RL ihop_modval, ihop_modvaltmp
+      _RL ihop_data, ihop_uncert, ihop_weight
 #ifndef ALLOW_CTRL
       integer optimcycle
 #endif
       character*(max_len_mbuf) msgbuf
-      character*(max_len_fnam) ihopfile, fnameequinc
+      character*(max_len_fnam) ihopObsFile, fnameequinc
       integer IL, JL, err
       integer irec, ii, varid1
       integer samples_cnt, obs_num, num_valid_samples
-      _RL sample_mask_sum
       logical exst
       _RL  objf_ihop_glo
       _RL  num_ihop_glo
-      _RL  samples_buff(NOBSMAX_IHOP)
+      _RL  ihopObs_buff(NOBSMAX_IHOP)
       _RL  samples_mask_buff(NOBSMAX_IHOP)
-      _RL  samples_modval_glob(NOBSMAX_IHOP)
+      _RL  ihopObs_modval_glob(NOBSMAX_IHOP)
       _RL  samples_mask_glob(NOBSMAX_IHOP)
       _RL  tmpgs
       INTEGER tmpgsi
       INTEGER ObsNo2,fid,dimid
       INTEGER nmodmean, nobsmean
-      _RL offset, mod_mean, obs_mean
+      _RL offset, mod_mean, ihop_mean
  
 C !FUNCTIONS
       INTEGER  ILNBLNK
@@ -105,206 +103,169 @@ C ==================================================================
         _BEGIN_MASTER( myThid )
 
 #ifdef ALLOW_COST
+      JL  = ILNBLNK( ihopObsDir )
+      
       DO num_file=1,NFILESMAX_IHOP
+! Init default buffer values
+       DO m=1,NOBSMAX_IHOP
+        ihopObs_buff(m) = 0.0
+       ENDDO
 
-C File maintenance
+
        DO bj=1,nSy
         DO bi=1,nSx
 
+C File maintenance
          IF ( (ObsNo_tiled(num_file,bi,bj).GT.0).AND.
      &         (ihopDoNcOutput) ) THEN
 c need to close the file so that the data is not lost when run finishes
            err = NF_CLOSE(fidfwd_obs(num_file,bi,bj))
 c then re-open it to compute cost function
+           IL  = ILNBLNK( ihopObsFiles(num_file) )
+           write(ihopObsFile,'(A)') ihopObsFiles(num_file)(1:IL)
+           IL  = ILNBLNK( ihopObsFile )
+
+! Open tiled files
            iG=bi+(myXGlobalLo-1)/sNx ! Kludge until unstructered tiles
            jG=bj+(myYGlobalLo-1)/sNy ! Kludge until unstructered tiles
-           IL  = ILNBLNK( ihopobsfiles(num_file) )
-           write(ihopfile(1:80),'(1A)') ihopobsfiles(num_file)(1:IL)
-           IL  = ILNBLNK( ihopfile )
-           JL  = ILNBLNK( ihopObsDir )
-           write(fnameequinc(1:80),'(3A,I3.3,A,I3.3,A)')
-     &     ihopObsDir(1:JL),ihopfile(1:IL),'.',iG,'.',jG,'.equi.nc'
+           write(fnameequinc,'(3A,I3.3,A,I3.3,A)')
+     &      ihopObsDir(1:JL),ihopObsFile(1:IL),'.',iG,'.',jG,'.equi.nc'
 c
            err = NF_OPEN(fnameequinc,NF_NOWRITE,
      &     fidfwd_obs(num_file,bi,bj))
          ENDIF
 
-        ENDDO
-       ENDDO
-!
-!c Loop over variables
-!       DO num_var=1,NOBSMAX_IHOP
-!
-!c Loop over samples
-!         DO ii=1,NOBSMAX_IHOP
-!           samples_buff(ii) = 0.
-!           samples_mask_buff(ii) = 0.
-!         ENDDO
-!
-!         DO bj=1,nSy
-!          DO bi=1,nSx
-!
-!C Open tiled files and read to buffer
-!           DO sample_num=1,NOBSMAX_IHOP
-!            IF (sample_num.LE.ObsNo_tiled(num_file,bi,bj)) THEN
-!
-!             sample_modvaltmp=0.
-!
-!             CALL active_read_ihop_tile(num_file,
-!     &           sample_modvaltmp,
-!     &           sample_num,.false.,optimcycle,bi,bj,myThid,
-!     &           ihop_dummy(num_file,bi,bj))
-!
-!C Save model equi (of samples) and masks in buffer
-!C Combine all threads here
-!             irec = ihopObs_ind_glob_tiled(num_file,sample_num,bi,bj)
-!             samples_buff(irec) = samples_buff(irec)
-!     &                                 +sample_modvaltmp
-!
-!            ENDIF !if (sample_num.LE.ObsNo_tiled(num_file,bi,bj)) then
-!           ENDDO !do sample_num=..
-!                
-!          ENDDO !bj
-!         ENDDO !bi
-!
-!C Combine all processes
-!         DO ii=1,NOBSMAX_IHOP
-!          tmpgs = samples_buff(ii)
-!          _GLOBAL_SUM_RL (tmpgs, myThid) 
-!          samples_modval_glob(ii) = tmpgs
-!          tmpgs = samples_mask_buff(ii)
-!          _GLOBAL_SUM_RL (tmpgs, myThid)
-!          samples_mask_glob(ii) = tmpgs
-!         ENDDO     
-!
-!         IF ( myProcId .eq. 0 ) THEN
-!
-!C Loop over obs
-!         DO obs_num=1,NOBSMAX_IHOP
-!          IF (obs_num.LE.ObsNo(num_file)) THEN
-!
-!           obs_modval=0.
-!           sample_mask_sum=0
-!           num_valid_samples=0
-!
+        ENDDO !bi
+       ENDDO !bj
+ 
+       DO bj=1,nSy
+        DO bi=1,nSx
+
+C Open tiled files and read to buffer
+         DO m=1,NOBSMAX_IHOP
+          IF (m.LE.ObsNo_tiled(num_file,bi,bj)) THEN
+
+           ihop_modvaltmp=0.
+
+           CALL active_read_ihop_tile(num_file,
+     &         ihop_modvaltmp,
+     &         m,.false.,optimcycle,bi,bj,myThid,
+     &         ihop_dummy(num_file,bi,bj))
+
+C Save model equi (of samples) and masks in buffer
+C Combine all threads here
+           irec = ihopObs_ind_glob_tiled(num_file,m,bi,bj)
+           ihopObs_buff(irec) = ihopObs_buff(irec)
+     &                               +ihop_modvaltmp
+
+          ENDIF !if (m.LE.ObsNo_tiled(num_file,bi,bj)) then
+         ENDDO !do m=..
+              
+        ENDDO !bj
+       ENDDO !bi
+
+C Combine MPI processes
+       DO ii=1,NOBSMAX_IHOP
+        tmpgs = ihopObs_buff(ii)
+        _GLOBAL_SUM_RL (tmpgs, myThid) 
+        ihopObs_modval_glob(ii) = tmpgs
+       ENDDO     
+
+       IF ( myProcId .eq. 0 ) THEN
+C Loop over global obs
+        DO m=1,NOBSMAX_IHOP
+         IF (m.LE.ObsNo(num_file)) THEN
+
+          ihop_modval=0.
+
 !C Calculate model equi of each obs by averaging NP samples               
-!           DO sample_num=1,NSAMP_PER_OBS_MAX
-!            IF (sample_num.LE.ihopObs_np(num_file,obs_num)) THEN
-!
-!              irec = ihopObs_sample1_ind(num_file,obs_num)
-!     &                + sample_num-1
-!               
-!              obs_modval = obs_modval + samples_modval_glob(irec)
-!     &               *samples_mask_glob(irec)
-!              sample_mask_sum = sample_mask_sum
-!     &               +samples_mask_glob(irec)
-!              IF (samples_mask_glob(irec) .GT. 0. _d 0) THEN
-!               num_valid_samples = num_valid_samples+1
-!              ENDIF
-!
-!            ENDIF
-!           ENDDO
-!           
-!!IE: ignoring any time averaging for now
-!!C Time averaging
-!!           IF (ihopOperation(num_file).eq.1) THEN
-!!            obs_modval = obs_modval/ihopObs_delT(num_file, obs_num)
-!!           ENDIF
-! 
-!C Spatial averaging
-!           IF (num_valid_samples.gt.0) THEN
-!             obs_modval = obs_modval/sample_mask_sum
-!           ELSE
-!             obs_modval = -9999.
+!          DO m=1,NOBSMAX_IHOP
+!           IF (m.LE.ihopObs_np(num_file,m)) THEN
+!             ihop_modval = ihop_modval + ihopObs_modval_glob(m)
 !           ENDIF
-!
-!c Write to global netcdf file
-!              CALL active_write_ihop_glob(num_file,
-!     &         obs_modval,
-!     &         obs_num,optimcycle,myThid,
-!     &         ihop_globaldummy(num_file))
-!
-!          ENDIF !if (obs_num.LE.ObsNo(num_file)) then
-!         ENDDO !do obs_num=..
-!
-!cc         IF ( myProcId .eq. 0 ) THEN
-!           err = NF_CLOSE(fidglobal(num_file))
-!           IL  = ILNBLNK( ihopobsfiles(num_file) )
-!           write(ihopfile(1:80),'(1a)')
-!     &      ihopobsfiles(num_file)(1:IL)
-!           IL  = ILNBLNK( ihopfile )
-!           JL  = ILNBLNK( ihopObsDir )
-!           write(fnameequinc(1:80),'(3a)')
-!     &      ihopObsDir(1:JL),ihopfile(1:IL),'.equi.nc'
-!           err = NF_OPEN(fnameequinc,NF_NOWRITE,fidglobal(num_file))
-!cc         ENDIF
-!         
-!C Loop over obs
-!         DO obs_num=1,NOBSMAX_IHOP
-!          IF (obs_num.LE.ObsNo(num_file)) THEN
-!
-!           obs_modval=0.
-!           obs_data=0.
-!           obs_uncert=0.
-!
-!C Read observation and uncertainty
-!           CALL ihop_cost_read_obs(num_file,1,
-!     &           ihopObs_ind_glob(num_file,obs_num),
-!     &           obs_data,myThid)
-!
-!           CALL ihop_cost_read_obs(num_file,-1,
-!     &           ihopObs_ind_glob(num_file,obs_num),
-!     &           obs_uncert,myThid)
-!
-!C Read model equivalent from global file
-!cc           IF ( myProcId .eq. 0 ) THEN
-!              CALL active_read_ihop_glob(num_file,
-!     &         obs_modval,
-!     &         obs_num,.false.,optimcycle,myThid,
-!     &         ihop_globaldummy(num_file))
-!cc           ENDIF
-!
-!           IF (obs_uncert.GT.0.
-!     &            ) THEN
-!                 obs_weight=1/(obs_uncert*obs_uncert)
-!                 objf_ihop(num_file,bi,bj)=
-!     &             objf_ihop(num_file,bi,bj)
-!     &             +obs_weight
-!     &             *(obs_modval-obs_data)
-!     &             *(obs_modval-obs_data)
-!           ENDIF
-!
-!          ENDIF !if (obs_num.LE.ObsNo(num_file)) then
-!         ENDDO !do obs_num...
-!
-!         ENDIF !if myprocid = 0
-!
-!       ENDDO !do num_var...
+!          ENDDO
+           
+c Write to global netcdf file
+             CALL active_write_ihop_glob(num_file,
+     &        ihop_modval,
+     &        m,optimcycle,myThid,
+     &        ihop_globaldummy(num_file))
+
+         ENDIF !if (m.LE.ObsNo(num_file)) then
+        ENDDO !do m=..
+C END Loop over global obs
+
+cc       IF ( myProcId .eq. 0 ) THEN
+        err = NF_CLOSE(fidglobal(num_file))
+        IL  = ILNBLNK( ihopObsFiles(num_file) )
+        write(ihopObsFile,'(A)') ihopObsFiles(num_file)(1:IL)
+        IL  = ILNBLNK( ihopObsFile )
+        write(fnameequinc,'(3A)')
+     &   ihopObsDir(1:JL),ihopObsFile(1:IL),'.equi.nc'
+        err = NF_OPEN(fnameequinc,NF_NOWRITE,fidglobal(num_file))
+cc       ENDIF
+         
+C Loop over global obs
+        DO m=1,NOBSMAX_IHOP
+         IF (m.LE.ObsNo(num_file)) THEN
+
+          ihop_modval=0.
+          ihop_data=0.
+          ihop_uncert=0.
+
+C Read observation and uncertainty
+          CALL ihop_cost_read_obs(num_file,1,
+     &          ihopObs_ind_glob(num_file,m),
+     &          ihop_data,myThid)
+
+          CALL ihop_cost_read_obs(num_file,-1,
+     &          ihopObs_ind_glob(num_file,m),
+     &          ihop_uncert,myThid)
+
+C Read model equivalent from global file
+cc        IF ( myProcId .eq. 0 ) THEN
+          CALL active_read_ihop_glob(num_file,
+     &     ihop_modval,
+     &     m,.false.,optimcycle,myThid,
+     &     ihop_globaldummy(num_file))
+cc        ENDIF
+
+          IF (ihop_uncert.GT.0.) THEN
+           ihop_weight=1/(ihop_uncert*ihop_uncert)
+           objf_ihop(num_file)=
+     &       objf_ihop(num_file)
+     &       +ihop_weight
+     &       *(ihop_modval-ihop_data)
+     &       *(ihop_modval-ihop_data)
+          ENDIF
+
+         ENDIF !if (m.LE.ObsNo(num_file)) then
+        ENDDO !do m...
+
+        ENDIF !if myprocid = 0
       ENDDO !do num_file=1,NFILESMAX_IHOP
   
 #endif /* ALLOW_COST */
         _END_MASTER( myThid )
-!
-!#ifdef ALLOW_COST
-!c Print cost function values
-!      DO num_file=1,NFILESMAX_IHOP
-!       DO num_var=1,NOBSMAX_IHOP
-!c
-!          objf_ihop_glo =
-!     &             objf_ihop(num_file,bi,bj)
-!          num_ihop_glo =
-!     &             num_ihop(num_file,num_var)
-!c
-!      write(msgbuf,'(A,I2,A,I2,A,2D12.5)')
-!     &  ' cost_ihop(',num_file,',',num_var,')= ',
-!     &  objf_ihop_glo,num_ihop_glo
-!
-!      IF ( num_ihop_glo .GT. 0. ) CALL print_message( msgbuf,
-!     &  standardmessageunit,SQUEEZE_RIGHT, myThid)
-!c
-!       ENDDO
-!      ENDDO
-!#endif /* ALLOW_COST */
+
+#ifdef ALLOW_COST
+c Print cost function values
+      DO num_file=1,NFILESMAX_IHOP
+c
+          objf_ihop_glo =
+     &             objf_ihop(num_file)
+          num_ihop_glo =
+     &             num_ihop(num_file)
+c
+      write(msgbuf,'(A,I2,A,2D12.5)')
+     &  ' cost_ihop(',num_file,')= ',
+     &  objf_ihop_glo,num_ihop_glo
+
+      IF ( num_ihop_glo .GT. 0. ) CALL print_message( msgbuf,
+     &  standardmessageunit,SQUEEZE_RIGHT, myThid)
+c
+      ENDDO
+#endif /* ALLOW_COST */
 
       write(msgbuf,'(A)') '== cost_ihop: end   =='
       CALL print_message( msgbuf,

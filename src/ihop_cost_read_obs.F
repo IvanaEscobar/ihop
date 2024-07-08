@@ -1,12 +1,12 @@
 #include "IHOP_OPTIONS.h"
-C--  File ihop_read_obs.F: Routines to read IHOP input files
+C--  File ihop_cost_read_obs.F: Routines to read IHOP input files
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
-C !ROUTINE: IHOP_READ_OBS
+C !ROUTINE: IHOP_COST_READ_OBS
 
 C !INTERFACE:
-      SUBROUTINE IHOP_READ_OBS(
+      SUBROUTINE IHOP_COST_READ_OBS(
      I                      fNb, 
      I                      vNb, 
      I                      irec,

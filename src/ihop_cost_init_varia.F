@@ -31,13 +31,18 @@ C     == end of interface ==
 
 C--   Initialize the tiled cost function contributions.
       DO bj = myByLo(myThid), myByHi(myThid)
-        DO bi = myBxLo(myThid), myBxHi(myThid)
-         DO num_file=1,NFILESMAX_IHOP
-          objf_ihop(num_file,bi,bj)  =0. _d 0
-           ihop_dummy(num_file,bi,bj)=0. _d 0
-         ENDDO
-         num_ihop(bi,bj) = 0. _d 0
+       DO bi = myBxLo(myThid), myBxHi(myThid)
+        DO num_file=1,NFILESMAX_IHOP
+         ihop_dummy(num_file,bi,bj)=0. _d 0
         ENDDO
+       ENDDO
+      ENDDO
+
+C Initialize global variables for cost fxn
+      DO num_file=1,NFILESMAX_IHOP
+       num_ihop(num_file)  =0. _d 0
+       objf_ihop(num_file) =0. _d 0
+       ihop_globaldummy(num_file) =0. _d 0
       ENDDO
 
 C Initialize global variables for ihop_read_obs.F
@@ -46,7 +51,6 @@ C Initialize global variables for ihop_read_obs.F
        ihop_data_buff(l)=0. _d 0
        ihop_uncert_buff(l)=0. _d 0
       ENDDO
-
 
       _BARRIER
 #endif /* ALLOW_COST */

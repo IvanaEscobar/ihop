@@ -183,7 +183,7 @@ c--   Sum up all contributions.
           DO num_file=1,NFILESMAX_IHOP
            tile_fc(bi,bj) = tile_fc(bi,bj)
      &           + mult_ihop(num_file)
-     &           *objf_ihop(num_file,bi,bj)
+     &           *objf_ihop(num_file)
           ENDDO
          ENDIF
 #endif

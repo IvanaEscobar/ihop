@@ -50,8 +50,8 @@
 !     mult_ihop     :: multiplier applied to all cost terms
 !     ihopObs_time  :: obs. start time
 
-      _RL  objf_ihop (NFILESMAX_IHOP,nSx,nSy)
-      _RL  num_ihop  (nSx,nSy)
+      _RL  objf_ihop (NFILESMAX_IHOP)
+      _RL  num_ihop  (NFILESMAX_IHOP)
       _RL  mult_ihop (NFILESMAX_IHOP)
       _RL  ihopObs_time(NFILESMAX_IHOP,NOBSMAX_IHOP,nsx,nsy)
       _RL  ihopObs_lon(NFILESMAX_IHOP,NOBSMAX_IHOP,nsx,nsy)

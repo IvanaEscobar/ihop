@@ -63,7 +63,7 @@ C     == global variables ==
       INTEGER :: JL, IL, err, ncid, dimid1, dimid2
       INTEGER :: varid1a, varid1b, varid2, varid3
       INTEGER :: varid4a, varid4b, varid4c
-      INTEGER :: varid5a, varid5b, varidEquiv(2)
+      integeR :: varid5a, varid5b, varidEquiv(2)
       INTEGER :: weighIhopObs, obsIsInRunTime 
       INTEGER :: ObsNo_valid, ihopObsInTile
       INTEGER :: tmpdate(4), tmpdiff(4)
@@ -118,8 +118,7 @@ C     == end of interface ==
        ihopObsFile=' '
        IL  = ILNBLNK( ihopObsFiles(num_file) )
        IF (IL.NE.0) THEN
-        WRITE(ihopObsFile,'(A)')
-     &     ihopObsFiles(num_file)(1:IL)
+        WRITE(ihopObsFile,'(A)') ihopObsFiles(num_file)(1:IL)
         WRITE(msgbuf,'(A)') ' '
         CALL print_message( msgbuf, standardmessageunit,
      &                    SQUEEZE_RIGHT, myThid)
@@ -211,7 +210,7 @@ C     == end of interface ==
         ihop_nameval  = 'ihop_val'
         ihop_nameuncert = 'ihop_uncert'
 
-! Create new netcdf global file for ihop model equivalent 
+! Create netcdf global file for ihop model equivalent 
         IF ( myProcId .eq. 0 ) THEN
          JL  = ILNBLNK( ihopObsDir )
 
