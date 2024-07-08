@@ -178,18 +178,14 @@ C Loop over global obs
 
           ihop_modval=0.
 
-!C Calculate model equi of each obs by averaging NP samples               
-!          DO m=1,NOBSMAX_IHOP
-!           IF (m.LE.ihopObs_np(num_file,m)) THEN
-!             ihop_modval = ihop_modval + ihopObs_modval_glob(m)
-!           ENDIF
-!          ENDDO
+C Extract model equi: Keep in case you want NP avg in future dev
+          ihop_modval = ihop_modval + ihopObs_modval_glob(m)
            
 c Write to global netcdf file
-             CALL active_write_ihop_glob(num_file,
-     &        ihop_modval,
-     &        m,optimcycle,myThid,
-     &        ihop_globaldummy(num_file))
+          CALL active_write_ihop_glob(num_file,
+     &     ihop_modval,
+     &     m,optimcycle,myThid,
+     &     ihop_globaldummy(num_file))
 
          ENDIF !if (m.LE.ObsNo(num_file)) then
         ENDDO !do m=..
@@ -237,6 +233,8 @@ cc        ENDIF
      &       +ihop_weight
      &       *(ihop_modval-ihop_data)
      &       *(ihop_modval-ihop_data)
+
+           num_ihop(num_file) = num_ihop(num_file) + 1
           ENDIF
 
          ENDIF !if (m.LE.ObsNo(num_file)) then
@@ -258,8 +256,8 @@ c
      &             num_ihop(num_file)
 c
       write(msgbuf,'(A,I2,A,2D12.5)')
-     &  ' cost_ihop(',num_file,')= ',
-     &  objf_ihop_glo,num_ihop_glo
+     &  ' cost_ihop(', num_file, ' )= ',
+     &  objf_ihop_glo, num_ihop_glo
 
       IF ( num_ihop_glo .GT. 0. ) CALL print_message( msgbuf,
      &  standardmessageunit,SQUEEZE_RIGHT, myThid)
