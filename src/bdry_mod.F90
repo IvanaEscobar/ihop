@@ -71,7 +71,7 @@ MODULE bdry_mod
    TYPE(BdryPt), ALLOCATABLE :: Top( : ), Bot( : )
 
 CONTAINS
-  SUBROUTINE ReadATI( FileRoot, TopATI, DepthT, myThid ) 
+  SUBROUTINE ReadATI( TopATI, DepthT, myThid ) 
     ! Reads in the top altimetry
 
   !     == Routine Arguments ==
@@ -84,7 +84,6 @@ CONTAINS
     CHARACTER (LEN= 1), INTENT( IN ) :: TopATI
     REAL (KIND=_RL90),  INTENT( IN ) :: DepthT
     REAL (KIND=_RL90),  ALLOCATABLE  :: phi( : )
-    CHARACTER (LEN=80), INTENT( IN ) :: FileRoot
 
     SELECT CASE ( TopATI )
     CASE ( '~', '*' )
@@ -98,11 +97,11 @@ CONTAINS
        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 #endif /* IHOP_WRITE_OUT */
 
-       OPEN( UNIT = ATIFile,   FILE = TRIM( FileRoot ) // '.ati', &
+       OPEN( UNIT = ATIFile,   FILE = TRIM( IHOP_fileroot ) // '.ati', &
              STATUS = 'OLD', IOSTAT = IOStat, ACTION = 'READ' )
         IF ( IOsTAT /= 0 ) THEN
 #ifdef IHOP_WRITE_OUT
-            WRITE(msgBuf,'(A)') 'ATIFile = ', TRIM( FileRoot ) // '.ati'
+            WRITE(msgBuf,'(A)') 'ATIFile = ', TRIM( IHOP_fileroot ) // '.ati'
             CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
             WRITE(msgBuf,'(2A)') 'BDRYMOD ReadATI', &
                 'Unable to open altimetry file'
@@ -234,7 +233,7 @@ CONTAINS
 
   ! **********************************************************************!
 
-SUBROUTINE ReadBTY( FileRoot, BotBTY, DepthB, myThid )
+SUBROUTINE ReadBTY( BotBTY, DepthB, myThid )
    ! Reads in the bottom bathymetry
 
    !     == Routine Arguments ==
@@ -246,7 +245,6 @@ SUBROUTINE ReadBTY( FileRoot, BotBTY, DepthB, myThid )
    !     == Local Variables ==
       CHARACTER (LEN= 1), INTENT( IN ) :: BotBTY
       REAL (KIND=_RL90),  INTENT( IN ) :: DepthB
-      CHARACTER (LEN=80), INTENT( IN ) :: FileRoot
       INTEGER :: i,j,bi,bj
       LOGICAL :: firstnonzero
       REAL (KIND=_RL90) :: gcmbathy(sNx,sNy), gcmmin, gcmmax
@@ -266,11 +264,11 @@ SUBROUTINE ReadBTY( FileRoot, BotBTY, DepthB, myThid )
         ENDIF
 # endif /* IHOP_WRITE_OUT */
 
-         OPEN( UNIT = BTYFile, FILE = TRIM( FileRoot ) // '.bty', &
+         OPEN( UNIT = BTYFile, FILE = TRIM( IHOP_fileroot ) // '.bty', &
                STATUS = 'OLD', IOSTAT = IOStat, ACTION = 'READ' )
          IF ( IOSTAT /= 0 ) THEN
 # ifdef IHOP_WRITE_OUT
-            WRITE(msgBuf,'(A)') 'BTYFile = ', TRIM( FileRoot ) // '.bty'
+            WRITE(msgBuf,'(A)') 'BTYFile = ', TRIM( IHOP_fileroot ) // '.bty'
             ! In adjoint mode we do not write output besides on the first run
             IF (IHOP_dumpfreq.GE.0) &
                 CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )

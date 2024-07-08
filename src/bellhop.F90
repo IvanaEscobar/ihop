@@ -45,6 +45,9 @@ MODULE BELLHOP
   USE atten_mod,    only:   CRCI
   USE beamPattern 
   USE writeRay,     only:   WriteRay2D, WriteDel2D
+  USE arr_mod,      only:   WriteArrivalsASCII,WriteArrivalsBinary,MaxNArr,    &
+                            Arr, NArr, U
+  
 
 !   !USES:
   IMPLICIT NONE
@@ -77,15 +80,18 @@ CONTAINS
   
   !     == Local Variables ==
     LOGICAL, PARAMETER  :: Inline = .FALSE.
-    INTEGER             :: iostat, iAllocStat  
+    INTEGER             :: iostat, iAllocStat, ierr
     INTEGER             :: jj 
     REAL                :: Tstart, Tstop
-  ! added locally previously read in from unknown mod ... IEsco2022
+  ! added locally previously read in from unknown mod ... IEsco22
     CHARACTER ( LEN=2 ) :: AttenUnit
   ! For MPI writing: copying eeboot_minimal.F
     CHARACTER*(MAX_LEN_FNAM)    :: fNam
     CHARACTER*(6)               :: fmtStr
     INTEGER                     :: mpiRC, IL
+  ! ===========================================================================
+    INTEGER              :: iSeg
+    INTEGER, PARAMETER   :: ArrivalsStorage = 2000, MinNArr = 10
   ! ===========================================================================
  
     ! Open the print file: template from eeboot_minimal.F
@@ -124,7 +130,7 @@ CONTAINS
             IF ( iostat /= 0 ) THEN
                 WRITE(*,*) 'ihop: IHOP_fileroot not recognized, ', &
                     TRIM(IHOP_fileroot)
-                WRITE(msgBuf,'(A)') 'BELLHOP IHOP_INIT: Unable to recognize env file'
+                WRITE(msgBuf,'(A)') 'BELLHOP IHOP_INIT: Unable to recognize file'
                 CALL PRINT_ERROR( msgBuf, myThid )
                 STOP 'ABNORMAL END: S/R IHOP_INIT'
             END IF
@@ -141,9 +147,9 @@ CONTAINS
     ! save data.ihop, gcm SSP: REQUIRED
     CALL readEnvironment( myTime, myIter, myThid )
     ! AlTImetry: OPTIONAL, default is no ATIFile
-    CALL readATI( IHOP_fileroot, Bdry%Top%HS%Opt( 5:5 ), Bdry%Top%HS%Depth, myThid )
+    CALL readATI( Bdry%Top%HS%Opt( 5:5 ), Bdry%Top%HS%Depth, myThid )
     ! BaThYmetry: OPTIONAL, default is BTYFile
-    CALL readBTY( IHOP_fileroot, Bdry%Bot%HS%Opt( 2:2 ), Bdry%Bot%HS%Depth, myThid )
+    CALL readBTY( Bdry%Bot%HS%Opt( 2:2 ), Bdry%Bot%HS%Depth, myThid )
     ! (top and bottom): OPTIONAL
     CALL readReflectionCoefficient( IHOP_fileroot, Bdry%Bot%HS%Opt( 1:1 ), &
                                     Bdry%Top%HS%Opt( 2:2 ), PRTFile ) 
@@ -161,8 +167,110 @@ CONTAINS
     ENDIF
     Pos%theta( 1 ) = 0.
   
+
+
+
+
+    ! convert range-dependent geoacoustic parameters from user to program units
+    ! W is dB/wavelength
+    IF ( atiType( 2:2 ) == 'L' ) THEN
+       DO iSeg = 1, NatiPts
+          Top( iSeg )%HS%cp = CRCI( 1D20, Top( iSeg )%HS%alphaR, &
+                                    Top( iSeg )%HS%alphaI, 'W ', betaPowerLaw, &
+                                    ft, myThid ) ! compressional wave speed
+          Top( iSeg )%HS%cs = CRCI( 1D20, Top( iSeg )%HS%betaR,  &
+                                    Top( iSeg )%HS%betaI, 'W ', betaPowerLaw, &
+                                    ft, myThid )   ! shear wave speed
+       END DO
+    END IF
+     
+    IF ( btyType( 2:2 ) == 'L' ) THEN
+       DO iSeg = 1, NbtyPts
+          Bot( iSeg )%HS%cp = CRCI( 1D20, Bot( iSeg )%HS%alphaR, &
+                                    Bot( iSeg )%HS%alphaI, 'W ', betaPowerLaw, &
+                                    ft, myThid ) ! compressional wave speed
+          Bot( iSeg )%HS%cs = CRCI( 1D20, Bot( iSeg )%HS%betaR,  &
+                                    Bot( iSeg )%HS%betaI, 'W ', betaPowerLaw, &
+                                    ft, myThid )   ! shear wave speed
+       END DO
+    END IF
+
+  
+    SELECT CASE ( Beam%RunType( 5:5 ) )
+    CASE ( 'I' )
+       NRz_per_range = 1         ! irregular grid
+    CASE DEFAULT
+       NRz_per_range = Pos%NRz   ! rectilinear grid
+    END SELECT
+  
+    IF ( ALLOCATED( U ) ) DEALLOCATE( U )
+     SELECT CASE ( Beam%RunType( 1:1 ) )
+     ! for a TL calculation, allocate space for the pressure matrix
+     CASE ( 'C', 'S', 'I' )        ! TL calculation
+          ALLOCATE ( U( NRz_per_range, Pos%NRr ), Stat = iAllocStat )
+          IF ( iAllocStat/=0 ) THEN
+#ifdef IHOP_WRITE_OUT
+              WRITE(msgBuf,'(2A)') 'BELLHOP BellhopCore: ', & 
+                             'Insufficient memory for TL matrix: reduce Nr*NRz'
+              CALL PRINT_ERROR( msgBuf,myThid )
+#endif /* IHOP_WRITE_OUT */
+              STOP 'ABNORMAL END: S/R BellhopCore'
+          END IF
+          U = 0.0
+     CASE ( 'A', 'a', 'R', 'E', 'e' )   ! Arrivals calculation
+          ALLOCATE ( U( 1,1 ), Stat = iAllocStat )   ! open a dummy variable
+          NArr = 0
+     CASE DEFAULT
+          ALLOCATE ( U( 1,1 ), Stat = iAllocStat )   ! open a dummy variable
+     END SELECT
+  
+     ! for an arrivals run, allocate space for arrivals matrices
+     SELECT CASE ( Beam%RunType( 1:1 ) )
+     CASE ( 'A', 'a', 'e' )
+          ! allow space for at least MinNArr arrivals
+          MaxNArr = MAX( ArrivalsStorage / ( NRz_per_range * Pos%NRr ), & 
+                         MinNArr )
+          ALLOCATE ( Arr( MaxNArr, Pos%NRr, NRz_per_range ), &
+                     NArr( Pos%NRr, NRz_per_range ), Stat = iAllocStat )
+          IF ( iAllocStat /= 0 ) THEN
+#ifdef IHOP_WRITE_OUT
+              WRITE(msgBuf,'(2A)') 'BELLHOP BellhopCore: ', & 
+               'Not enough allocation for Arr; reduce ArrivalsStorage'
+              CALL PRINT_ERROR( msgBuf,myThid )
+#endif /* IHOP_WRITE_OUT */
+              STOP 'ABNORMAL END: S/R BellhopCore'
+          END IF
+     CASE DEFAULT
+          MaxNArr = 1
+          ALLOCATE ( Arr( 1, NRz_per_range, Pos%NRr ), &
+                     NArr( Pos%NRr, NRz_per_range ), Stat = iAllocStat )
+     END SELECT
+  
+     NArr( 1:Pos%NRr, 1:NRz_per_range ) = 0 ! IEsco22 unnecessary? NArr = 0 below
+  
+#ifdef IHOP_WRITE_OUT
+     WRITE(msgBuf,'(A)') 
+     ! In adjoint mode we do not write output besides on the first run
+     IF (IHOP_dumpfreq.GE.0) &
+       CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
+#endif /* IHOP_WRITE_OUT */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     ! open all output files
-    IF ( IHOP_dumpfreq .GE. 0) &
+    IF ( IHOP_dumpfreq .GE. 0 ) &
      CALL OpenOutputFiles( IHOP_fileroot, myTime, myIter, myThid )
   
     ! Run Bellhop solver on a single processor
@@ -171,6 +279,12 @@ CONTAINS
             CALL CPU_TIME( Tstart )
             CALL BellhopCore(myThid)
             CALL CPU_TIME( Tstop )
+!#ifdef ALLOW_COST
+!            ! Broadcast info to all MPI procs for COST function accumulation
+!            print *, "escobar: broacasting from pid ", myProcId
+!            CALL MPI_BCAST(i, 1, MPI_COMPLEX, myProcId, MPI_COMM_MODEL, ierr)
+!
+!#endif /* ALLOW_COST */
         endif
     else
         CALL CPU_TIME( Tstart )
@@ -227,9 +341,6 @@ CONTAINS
   ! **********************************************************************!
   SUBROUTINE BellhopCore( myThid )
   
-    USE arr_mod,   only: WriteArrivalsASCII,WriteArrivalsBinary,MaxNArr,Arr, &
-                        NArr
-  
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO
   !     msgBuf :: Used to build messages for printing.
@@ -237,17 +348,14 @@ CONTAINS
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
   
   !     == Local Variables ==
-    INTEGER              :: iAllocStat  
-    INTEGER, PARAMETER   :: ArrivalsStorage = 2000, MinNArr = 10
     INTEGER              :: IBPvec( 1 ), ibp, is, iBeamWindow2, Irz1, Irec, &
-                            NalphaOpt, iSeg
+                            NalphaOpt
     REAL    (KIND=_RL90) :: Amp0, DalphaOpt, xs( 2 ), RadMax, s, &
                             c, cimag, gradc( 2 ), crr, crz, czz, rho
-    COMPLEX, ALLOCATABLE :: U( :, : )
   
     afreq = 2.0 * PI * IHOP_freq
   
-    Angles%alpha  = deg2rad * Angles%alpha   ! convert to radians
+    Angles%alpha  = Angles%alpha * deg2rad  ! convert to radians
     Angles%Dalpha = 0.0
     IF ( Angles%Nalpha > 1 ) THEN
          Angles%Dalpha = ( Angles%alpha( Angles%Nalpha ) - Angles%alpha( 1 ) ) &
@@ -261,92 +369,6 @@ CONTAINS
         STOP 'ABNORMAL END: S/R BellhopCore'
     END IF
   
-    ! convert range-dependent geoacoustic parameters from user to program units
-    ! W is dB/wavelength
-    IF ( atiType( 2:2 ) == 'L' ) THEN
-       DO iSeg = 1, NatiPts
-          Top( iSeg )%HS%cp = CRCI( 1D20, Top( iSeg )%HS%alphaR, &
-                                    Top( iSeg )%HS%alphaI, 'W ', betaPowerLaw, &
-                                    ft, myThid ) ! compressional wave speed
-          Top( iSeg )%HS%cs = CRCI( 1D20, Top( iSeg )%HS%betaR,  &
-                                    Top( iSeg )%HS%betaI, 'W ', betaPowerLaw, &
-                                    ft, myThid )   ! shear wave speed
-       END DO
-    END IF
-     
-    IF ( btyType( 2:2 ) == 'L' ) THEN
-       DO iSeg = 1, NbtyPts
-          Bot( iSeg )%HS%cp = CRCI( 1D20, Bot( iSeg )%HS%alphaR, &
-                                    Bot( iSeg )%HS%alphaI, 'W ', betaPowerLaw, &
-                                    ft, myThid ) ! compressional wave speed
-          Bot( iSeg )%HS%cs = CRCI( 1D20, Bot( iSeg )%HS%betaR,  &
-                                    Bot( iSeg )%HS%betaI, 'W ', betaPowerLaw, &
-                                    ft, myThid )   ! shear wave speed
-       END DO
-    END IF
-  
-    SELECT CASE ( Beam%RunType( 5:5 ) )
-    CASE ( 'I' )
-       NRz_per_range = 1         ! irregular grid
-    CASE DEFAULT
-       NRz_per_range = Pos%NRz   ! rectilinear grid
-    END SELECT
-  
-      IF ( ALLOCATED( U ) ) DEALLOCATE( U )
-      SELECT CASE ( Beam%RunType( 1:1 ) )
-      ! for a TL calculation, allocate space for the pressure matrix
-      CASE ( 'C', 'S', 'I' )        ! TL calculation
-          ALLOCATE ( U( NRz_per_range, Pos%NRr ), Stat = iAllocStat )
-          IF ( iAllocStat /= 0 ) THEN
-#ifdef IHOP_WRITE_OUT
-              WRITE(msgBuf,'(2A)') 'BELLHOP BellhopCore: ', & 
-                             'Insufficient memory for TL matrix: reduce Nr*NRz'
-              CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
-              STOP 'ABNORMAL END: S/R BellhopCore'
-          END IF
-      CASE ( 'A', 'a', 'R', 'E', 'e' )   ! Arrivals calculation
-          ALLOCATE ( U( 1, 1 ), Stat = iAllocStat )   ! open a dummy variable
-      END SELECT
-  
-      ! for an arrivals run, allocate space for arrivals matrices
-      SELECT CASE ( Beam%RunType( 1:1 ) )
-      CASE ( 'A', 'a', 'e' )
-          ! allow space for at least MinNArr arrivals
-          MaxNArr = MAX( ArrivalsStorage / ( NRz_per_range * Pos%NRr ), & 
-                         MinNArr )
-!#ifdef IHOP_WRITE_OUT
-!          WRITE(msgBuf,'(A)') 
-!          CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
-!          WRITE(msgBuf,'(A,I10)') 'Max. # of arrivals = ', MaxNArr
-!          CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
-!#endif /* IHOP_WRITE_OUT */
-  
-          ALLOCATE ( Arr( MaxNArr, Pos%NRr, NRz_per_range ), &
-                     NArr( Pos%NRr, NRz_per_range ), Stat = iAllocStat )
-          IF ( iAllocStat /= 0 ) THEN
-#ifdef IHOP_WRITE_OUT
-              WRITE(msgBuf,'(2A)') 'BELLHOP BellhopCore: ', & 
-               'Not enough allocation for Arr; reduce ArrivalsStorage'
-              CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
-              STOP 'ABNORMAL END: S/R BellhopCore'
-          END IF
-      CASE DEFAULT
-          MaxNArr = 1
-          ALLOCATE ( Arr( 1, NRz_per_range, Pos%NRr ), &
-                     NArr( Pos%NRr, NRz_per_range ), Stat = iAllocStat )
-      END SELECT
-  
-      NArr( 1:Pos%NRr, 1:NRz_per_range ) = 0 ! IEsco22 unnecessary? NArr = 0 below
-  
-#ifdef IHOP_WRITE_OUT
-      WRITE(msgBuf,'(A)') 
-      ! In adjoint mode we do not write output besides on the first run
-      IF (IHOP_dumpfreq.GE.0) &
-        CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
-#endif /* IHOP_WRITE_OUT */
-  
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !         begin solve         !
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -354,9 +376,9 @@ CONTAINS
        xs = [ zeroRL, Pos%Sz( is ) ]   ! source coordinate, assuming source @ r=0
   
        SELECT CASE ( Beam%RunType( 1:1 ) )
-       CASE ( 'C', 'S', 'I' ) ! TL calculation, zero out pressure matrix
+       CASE ( 'C','S','I' ) ! TL calculation, zero out pressure matrix
           U = 0.0
-       CASE ( 'A', 'a', 'e' )   ! Arrivals calculation, zero out arrival matrix
+       CASE ( 'A','a','e' )   ! Arrivals calculation, zero out arrival matrix
           NArr = 0
        END SELECT
   
@@ -435,8 +457,6 @@ CONTAINS
                 CASE ( 'g' )
                    CALL InfluenceGeoHatRayCen(    U, Angles%alpha( ialpha ), &
                                                   Angles%Dalpha, myThid )
-!                CASE ( 'S' )
-!                   CALL InfluenceSGB( U, Angles%alpha( ialpha ), Angles%Dalpha )
                 CASE ( 'B' )
                    CALL InfluenceGeoGaussianCart( U, Angles%alpha( ialpha ), &
                                                   Angles%Dalpha, myThid )
@@ -461,7 +481,7 @@ CONTAINS
           IRec = 10 + NRz_per_range * ( is - 1 )
           RcvrDepth: DO Irz1 = 1, NRz_per_range
              IRec = IRec + 1
-             WRITE( SHDFile, REC = IRec ) U( Irz1, 1 : Pos%NRr )
+             WRITE( SHDFile, REC = IRec ) U( Irz1, 1:Pos%NRr )
           END DO RcvrDepth
        CASE ( 'A', 'e' )             ! arrivals calculation, ascii
           CALL WriteArrivalsASCII(  Pos%Rr, NRz_per_range, Pos%NRr, &
