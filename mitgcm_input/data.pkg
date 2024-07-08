@@ -3,4 +3,5 @@
  useMNC=.false.,
  useIHOP=.true.,
  useDiagnostics=.TRUE.,
+ useCal=.true.,
  &

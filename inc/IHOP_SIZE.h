@@ -60,4 +60,20 @@
 !      PARAMETER( IHOP_NPTS_RANGE = 6 )
 !      INTEGER IHOP_IDW_NPTS
 !      PARAMETER( IHOP_IDW_NPTS = 4 )
+
+
+
+!     Cost function sizes 
+!     ================================
+! NFILESMAX_ihop      :: maximum number of input files
+! NOBSMAX_ihop        :: maximum number of observations per file per tile
+
+#ifdef ALLOW_COST
+      INTEGER NFILESMAX_IHOP
+      PARAMETER ( NFILESMAX_IHOP=2 )
+
+      INTEGER NOBSMAX_IHOP
+      PARAMETER ( NOBSMAX_IHOP=1000 )
+
+#endif
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|

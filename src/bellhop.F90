@@ -39,7 +39,7 @@ MODULE BELLHOP
   USE refCoef,      only:   readReflectionCoefficient,                         &
                             InterpolateReflectionCoefficient, ReflectionCoef,  &
                             RTop, RBot, NBotPts, NTopPts
-  USE influence,    only:   InfluenceGeoHatRayCen,&! InfluenceSGB,               &
+  USE influence,    only:   InfluenceGeoHatRayCen,&! InfluenceSGB,             &
                             InfluenceGeoGaussianCart, InfluenceGeoHatCart,     &
                             ScalePressure
   USE atten_mod,    only:   CRCI
@@ -93,7 +93,7 @@ CONTAINS
     IF ( .NOT.usingMPI ) THEN
         WRITE(myProcessStr, '(I10.10)') myIter
         IL=ILNBLNK( myProcessStr )
-        WRITE(fNam,'(A,A,A,A)') TRIM(IHOP_fileroot),'.',myProcessStr(1:IL),'.prt'
+        WRITE(fNam,'(4A)') TRIM(IHOP_fileroot),'.',myProcessStr(1:IL),'.prt'
         IF ( IHOP_dumpfreq .GE. 0) &
          OPEN(PRTFile, FILE = fNam, STATUS = 'UNKNOWN', IOSTAT = iostat )
 #ifdef ALLOW_USE_MPI
@@ -183,7 +183,8 @@ CONTAINS
         ! print run time
         if (numberOfProcs.gt.1) then
             if(myProcId.ne.(numberOfProcs-1)) then
-                WRITE(msgBuf,'(A,I4,A)') 'NOTE: Proc ',myProcId, " didn't run ihop"
+                WRITE(msgBuf,'(A,I4,A)') 'NOTE: Proc ',myProcId, &
+                    " didn't run ihop"
                 CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
             endif
         endif
@@ -226,7 +227,7 @@ CONTAINS
   ! **********************************************************************!
   SUBROUTINE BellhopCore( myThid )
   
-    USE arr_mod,   only: WriteArrivalsASCII, WriteArrivalsBinary, MaxNArr, Arr, &
+    USE arr_mod,   only: WriteArrivalsASCII,WriteArrivalsBinary,MaxNArr,Arr, &
                         NArr
   
   !     == Routine Arguments ==
@@ -265,22 +266,22 @@ CONTAINS
     IF ( atiType( 2:2 ) == 'L' ) THEN
        DO iSeg = 1, NatiPts
           Top( iSeg )%HS%cp = CRCI( 1D20, Top( iSeg )%HS%alphaR, &
-                                    Top( iSeg )%HS%alphaI, IHOP_freq, IHOP_freq, &
-                                    'W ', betaPowerLaw, ft, myThid ) ! compressional wave speed
+                                    Top( iSeg )%HS%alphaI, 'W ', betaPowerLaw, &
+                                    ft, myThid ) ! compressional wave speed
           Top( iSeg )%HS%cs = CRCI( 1D20, Top( iSeg )%HS%betaR,  &
-                                    Top( iSeg )%HS%betaI,  IHOP_freq, IHOP_freq, &
-                                    'W ', betaPowerLaw, ft, myThid )   ! shear wave speed
+                                    Top( iSeg )%HS%betaI, 'W ', betaPowerLaw, &
+                                    ft, myThid )   ! shear wave speed
        END DO
     END IF
      
     IF ( btyType( 2:2 ) == 'L' ) THEN
        DO iSeg = 1, NbtyPts
           Bot( iSeg )%HS%cp = CRCI( 1D20, Bot( iSeg )%HS%alphaR, &
-                                    Bot( iSeg )%HS%alphaI, IHOP_freq, IHOP_freq, &
-                                    'W ', betaPowerLaw, ft, myThid ) ! compressional wave speed
+                                    Bot( iSeg )%HS%alphaI, 'W ', betaPowerLaw, &
+                                    ft, myThid ) ! compressional wave speed
           Bot( iSeg )%HS%cs = CRCI( 1D20, Bot( iSeg )%HS%betaR,  &
-                                    Bot( iSeg )%HS%betaI,  IHOP_freq, IHOP_freq, &
-                                    'W ', betaPowerLaw, ft, myThid )   ! shear wave speed
+                                    Bot( iSeg )%HS%betaI, 'W ', betaPowerLaw, &
+                                    ft, myThid )   ! shear wave speed
        END DO
     END IF
   
@@ -321,8 +322,8 @@ CONTAINS
 !          CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
 !#endif /* IHOP_WRITE_OUT */
   
-          ALLOCATE ( Arr( NRz_per_range, Pos%NRr, MaxNArr ), &
-                     NArr( NRz_per_range, Pos%NRr ), Stat = iAllocStat )
+          ALLOCATE ( Arr( MaxNArr, Pos%NRr, NRz_per_range ), &
+                     NArr( Pos%NRr, NRz_per_range ), Stat = iAllocStat )
           IF ( iAllocStat /= 0 ) THEN
 #ifdef IHOP_WRITE_OUT
               WRITE(msgBuf,'(2A)') 'BELLHOP BellhopCore: ', & 
@@ -333,11 +334,11 @@ CONTAINS
           END IF
       CASE DEFAULT
           MaxNArr = 1
-          ALLOCATE ( Arr( NRz_per_range, Pos%NRr, 1 ), &
-                     NArr( NRz_per_range, Pos%NRr ), Stat = iAllocStat )
+          ALLOCATE ( Arr( 1, NRz_per_range, Pos%NRr ), &
+                     NArr( Pos%NRr, NRz_per_range ), Stat = iAllocStat )
       END SELECT
   
-      NArr( 1:NRz_per_range, 1:Pos%NRr ) = 0 ! IEsco22 unnecessary? NArr = 0 below
+      NArr( 1:Pos%NRr, 1:NRz_per_range ) = 0 ! IEsco22 unnecessary? NArr = 0 below
   
 #ifdef IHOP_WRITE_OUT
       WRITE(msgBuf,'(A)') 
@@ -359,7 +360,7 @@ CONTAINS
           NArr = 0
        END SELECT
   
-       CALL EvaluateSSP(  xs, c, cimag, gradc, crr, crz, czz, rho, IHOP_freq, &
+       CALL EvaluateSSP(  xs, c, cimag, gradc, crr, crz, czz, rho, &
                           'TAB', myThid  )
   
        !!IESCO22: BEAM stuff !!
@@ -437,11 +438,14 @@ CONTAINS
 !                CASE ( 'S' )
 !                   CALL InfluenceSGB( U, Angles%alpha( ialpha ), Angles%Dalpha )
                 CASE ( 'B' )
+                   CALL InfluenceGeoGaussianCart( U, Angles%alpha( ialpha ), &
+                                                  Angles%Dalpha, myThid )
+                CASE ( 'G','^' )
                    CALL InfluenceGeoHatCart(  U, Angles%alpha( ialpha ), &
                                               Angles%Dalpha, myThid )
                 CASE DEFAULT !IEsco22: thesis is in default behavior
-                   CALL InfluenceGeoGaussianCart( U, Angles%alpha( ialpha ), &
-                                                  Angles%Dalpha, myThid )
+                   CALL InfluenceGeoHatCart(  U, Angles%alpha( ialpha ), &
+                                              Angles%Dalpha, myThid )
                 END SELECT
              END IF
   
@@ -500,7 +504,7 @@ CONTAINS
   
     ! Initial conditions (IC)
     iSmallStepCtr = 0
-    CALL EvaluateSSP( xs, c, cimag, gradc, crr, crz, czz, rho, IHOP_freq, &
+    CALL EvaluateSSP( xs, c, cimag, gradc, crr, crz, czz, rho, &
                       'TAB', myThid )
     ray2D( 1 )%c         = c              ! sound speed at source [m/s]
     ray2D( 1 )%x         = xs             ! range and depth of source
@@ -779,7 +783,7 @@ CONTAINS
     ! Based on formulas given by Muller, Geoph. J. R.A.S., 79 (1984).
   
     ! Get c
-    CALL EvaluateSSP( ray2D( is )%x, c, cimag, gradc, crr, crz, czz, rho, IHOP_freq,& 
+    CALL EvaluateSSP( ray2D( is )%x, c, cimag, gradc, crr, crz, czz, rho, & 
                       'TAB', myThid  )
   
     ! unmodified unit ray tangent and normal

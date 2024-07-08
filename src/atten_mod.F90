@@ -7,8 +7,9 @@ MODULE atten_mod
   ! </CONTACT>
 
   ! Attenuation module
-  ! Routines to convert a sound speed and attenuation in user units to a complex sound speed
-  ! Includes a formula for volume attenuation
+  !  Routines to convert a sound speed and attenuation in user units to a 
+  !  complex sound speed
+  !  Includes a formula for volume attenuation
 
   USE ihop_mod, only: PRTFile
 ! ! USES
@@ -41,7 +42,7 @@ MODULE atten_mod
   TYPE( bioStructure ) :: bio( MaxBioLayers )
 
 CONTAINS
-  FUNCTION CRCI( z, c, alpha, freq, freq0, AttenUnit, beta, fT, myThid )
+  FUNCTION CRCI( z, c, alpha, AttenUnit, beta, fT, myThid )
 
     ! Converts real wave speed and attenuation to a single
     !  complex wave speed (with positive imaginary part)
@@ -69,12 +70,12 @@ CONTAINS
     ! alpha imaginary part of sound speed
 
     INTEGER, INTENT( IN ) :: myThid
-    REAL (KIND=_RL90), INTENT( IN ) :: freq, freq0, alpha, c, z, beta, fT
+    REAL (KIND=_RL90), INTENT( IN ) :: alpha, c, z, beta, fT
     CHARACTER (LEN=2), INTENT( IN ) :: AttenUnit
     REAL    (KIND=_RL90)            :: f2, afreq, alphaT, Thorp, a, FG
     COMPLEX (KIND=_RL90)            :: CRCI
 
-    afreq = 2.0 * PI * freq
+    afreq = 2.0 * PI * IHOP_freq
 
     !  Convert to Nepers/m 
     alphaT = 0.0
@@ -85,18 +86,19 @@ CONTAINS
        alphaT = alpha / 8.6858896D0
     CASE ( 'm' )   ! dB/m with power law
        alphaT = alpha / 8.6858896D0
-       IF ( freq < fT ) THEN   ! frequency raised to the power beta
-          alphaT = alphaT * ( freq / freq0 ) ** beta
+       IF ( IHOP_freq < fT ) THEN   ! frequency raised to the power beta
+          alphaT = alphaT * ( IHOP_freq / IHOP_freq ) ** beta
        ELSE                    ! linear in frequency
-          alphaT = alphaT * ( freq / freq0 ) * ( fT / freq0 ) ** ( beta - 1 )
+          alphaT = alphaT * ( IHOP_freq / IHOP_freq ) * &
+                    ( fT / IHOP_freq ) ** ( beta - 1 )
        END IF
     CASE ( 'F' )   ! dB/(m kHz)
-       alphaT = alpha * freq / 8685.8896D0
+       alphaT = alpha * IHOP_freq / 8685.8896D0
     CASE ( 'W' )   ! dB/wavelength
-       IF ( c /= 0.0         ) alphaT = alpha * freq / ( 8.6858896D0 * c )
+       IF ( c /= 0.0         ) alphaT = alpha * IHOP_freq / ( 8.6858896D0 * c )
        !        The following lines give f^1.25 frequency dependence
-       !        FAC = SQRT( SQRT( freq / 50.0 ) )
-       !        IF ( c /= 0.0 ) alphaT = FAC * alpha * freq / ( 8.6858896D0*c )
+       !        FAC = SQRT( SQRT( IHOP_freq / 50.0 ) )
+       !        IF ( c /= 0.0 ) alphaT=FAC*alpha*IHOP_freq / ( 8.6858896D0*c )
     CASE ( 'Q' )   ! Quality factor
        IF ( c * alpha /= 0.0 ) alphaT = afreq / ( 2.0 * c * alpha )
     CASE ( 'L' )   ! loss parameter
@@ -106,27 +108,28 @@ CONTAINS
     ! added volume attenuation
     SELECT CASE ( AttenUnit( 2 : 2 ) )
     CASE ( 'T' )
-       f2 = ( freq / 1000.0 ) ** 2
+       f2 = ( IHOP_freq / 1000.0 ) ** 2
 
        ! Original formula from Thorp 1967
-       ! Thorp = 40.0 * f2 / ( 4100.0 + f2 ) + 0.1 * f2 / ( 1.0 + f2 )! dB/kyard
+       ! Thorp = 40.0 * f2 / ( 4100.0+f2 ) + 0.1 * f2 / ( 1.0+f2 )! dB/kyard
        ! Thorp = Thorp / 914.4D0              ! dB / m
        ! Thorp = Thorp / 8.6858896D0          ! Nepers / m
 
        ! Updated formula from JKPS Eq. 1.34
-       Thorp = 3.3d-3 + 0.11 * f2 / ( 1.0 + f2 ) + 44.0 * f2 / ( 4100.0 + f2 ) &
+       Thorp = 3.3d-3 + 0.11 * f2 / ( 1.0+f2 ) + 44.0 * f2 / ( 4100.0+f2 ) &
                + 3d-4 * f2       ! dB/km
        Thorp = Thorp / 8685.8896 ! Nepers / m
 
        alphaT = alphaT + Thorp
     CASE ( 'F' )   ! Francois-Garrison
-       FG     = Franc_Garr( freq / 1000 )   ! dB/km
+       FG     = Franc_Garr( IHOP_freq / 1000 )   ! dB/km
        FG     = FG / 8685.8896              ! Nepers / m
        alphaT = alphaT + FG
     CASE ( 'B' )   ! biological attenuation per Orest Diachok
        DO iBio = 1, NBioLayers
           IF ( z >= bio( iBio )%Z1 .AND. z <= bio( iBio )%Z2 ) THEN
-             a = bio( iBio )%a0 / ( ( 1.0 - bio( iBio )%f0**2 / freq**2  )**2 &
+             a = bio( iBio )%a0 / ( ( 1.0-bio( iBio )%f0**2 &
+                 / IHOP_freq**2  )**2 &
                  + 1.0 / bio( iBio )%Q**2 ) ! dB/km
              a = a / 8685.8896              ! Nepers / m
              alphaT = alphaT + a
@@ -143,11 +146,12 @@ CONTAINS
        ! In adjoint mode we do not write output besides on the first run
        IF (IHOP_dumpfreq.LT.0) THEN
         WRITE( PRTFile, * ) 'Complex sound speed: ', CRCI
-        WRITE( PRTFile, * ) 'Usually this means you have an attenuation that is way too high'
+        WRITE( PRTFile, '(2A)' ) 'Usually this means you have an attenuation',&
+        'that is way too high'
        ENDIF
 
-       WRITE(errorMessageUnit,'(2A)') 'ATTENMOD CRCI: The complex sound speed has an ', &
-       'imaginary part > real part'
+       WRITE(errorMessageUnit,'(2A)') 'ATTENMOD CRCI: complex sound speed',&
+           'has an imaginary part > real part'
 #endif /* IHOP_WRITE_OUT */
        STOP 'ABNORMAL END: S/R CRCI'
     END IF

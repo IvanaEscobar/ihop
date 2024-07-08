@@ -14,8 +14,7 @@ MODULE influence
                           SrcDeclAngle, NRz_per_range, afreq
   USE srPos_mod,    only: Pos
 ! sspMod used to construct image beams in the Cerveny style beam routines
-  USE ssp_mod,      only: Bdry 
-  USE arr_mod,      only: WriteArrivalsASCII, WriteArrivalsBinary, AddArr
+  USE arr_mod,      only: AddArr
   USE writeRay,     only: WriteRay2D, WriteDel2D
 
 ! ! USES
@@ -247,7 +246,7 @@ CONTAINS
         
         ! Radius calc from beam radius projected onto vertical line
         RadiusMax = MAX( ABS( q ), ABS( ray2D( iS )%q( 1 ) ) ) &
-                    / q0 / ABS( rayt( 1 ) ) ! IESCO24: shouldn't this be t(2) 
+                    / q0 / ABS( rayt( 1 ) ) ! IESCO24: AKA rayn( 2 ) 
 
         ! depth limits of beam; IESCO22: a large range of about 1/2 box depth
         IF ( ABS( rayt( 1 ) ) > 0.5 ) THEN   ! shallow angle ray
@@ -320,10 +319,10 @@ CONTAINS
               IF ( ir >= Pos%NRr        ) inRcvrRanges=.FALSE. ! to next step on ray
               irTT = ir + 1                     ! bump right
               IF ( Pos%Rr( irTT ) >= rB ) inRcvrRanges=.FALSE.
-           ELSE
-              IF ( ir <= 1              ) inRcvrRanges=.FALSE. ! to next step on ray
-              irTT = ir - 1                     ! bump left
-              IF ( Pos%Rr( irTT ) <= rB ) inRcvrRanges=.FALSE.
+           !ELSE
+           !   IF ( ir <= 1              ) inRcvrRanges=.FALSE. ! to next step on ray
+           !   irTT = ir - 1                     ! bump left
+           !   IF ( Pos%Rr( irTT ) <= rB ) inRcvrRanges=.FALSE.
            END IF
            !ir = irTT
         END DO RcvrRanges
@@ -349,7 +348,7 @@ CONTAINS
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
   
   !     == Local Variables ==
-    INTEGER,           PARAMETER       :: BeamWindow = 4
+    INTEGER,           PARAMETER       :: BeamWindow = 2
     REAL (KIND=_RL90), INTENT( IN    ) :: alpha, dalpha ! take-off angle, angular spacing
     COMPLEX,           INTENT( INOUT ) :: U( NRz_per_range, Pos%NRr )  ! complex pressure field
     INTEGER              :: irT( 1 ), irTT
@@ -407,11 +406,14 @@ CONTAINS
         ! calculate beam width beam radius projected onto vertical line
         lambda    = ray2D( iS-1 )%c / IHOP_freq
         sigma     = MAX( ABS( q ), ABS( ray2D( iS )%q( 1 ) ) ) &
-                    / q0 / ABS( rayt( 1 ) ) ! IESCO24: shouldn't this be t(2) 
+                    / q0 / ABS( rayt( 1 ) ) ! IESCO24: AKA rayn( 2 ) 
         sigma     = MAX( sigma, &
                          MIN( 0.2*IHOP_freq*REAL( ray2D( iS )%tau ), &
                               PI*lambda ) )
-        ! default is 4 standard deviations of coverage of the Gaussian curve
+        ! Note on min: "Weinberg and Keenan suggest limiting a beam to a 
+        !               point, by imposing a minimum beam width of pilambda."
+        !               - Jensen, Comp OA 2011
+        ! default is 2 standard deviations of coverage of the Gaussian curve
         RadiusMax = BeamWindow*sigma
 
         ! depth limits of beam; IESCO22: a large range of about 1/2 box depth

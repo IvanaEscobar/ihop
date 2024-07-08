@@ -44,7 +44,7 @@ C     !LOCAL VARIABLES:
       _RS :: data2vec( IHOP_MAX_NC_SIZE*IHOP_MAX_NC_SIZE )
       _RS :: data3vec( IHOP_MAX_NC_SIZE*IHOP_MAX_NC_SIZE )
       _RL :: data4vec( IHOP_MAX_NC_SIZE*IHOP_MAX_NC_SIZE )
-      CHARACTER*(80) :: ihop_file
+      CHARACTER*(MAX_LEN_FNAM) :: ihop_file
 
 C ==================== External Functions ==========================
       INTEGER ILNBLNK
@@ -56,7 +56,7 @@ C Only do I/O if in the main thread
 C Read NetCDF input: setting the acoustic domain
       IL  = ILNBLNK( IHOP_interpfile )
       IF (IL.NE.0) THEN
-          WRITE(ihop_file(1:80), '(1A)') IHOP_interpfile(1:IL)
+          WRITE(ihop_file,'(2a)') ihop_interpfile(1:IL),'.nc'
       ELSE
           ihop_file = IHOP_interpfile
       END IF
@@ -109,7 +109,7 @@ C get data variables
         STOP 'ABNORMAL END: S/R IHOP_INIT_FIXED'
       END IF
 
-C 'reshape' data variables to 2D array
+C 'reshape' data variables to 2D arrays
       k=1
       DO i=1,IHOP_npts_range
        ihop_ranges(i) = data1vec(i)
@@ -121,7 +121,7 @@ C 'reshape' data variables to 2D array
        END DO
       END DO
 
-CC Close NetCDF file
+C Close NetCDF file
       err = NF_CLOSE( ncid )
       IF (err .NE. NF_NOERR) THEN
         WRITE(msgBuf, '(3A)') 'S/R IHOP_INIT_FIXED: ',
