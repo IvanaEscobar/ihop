@@ -13,7 +13,7 @@ MODULE bdry_mod
    USE monotonic_mod,   only: monotonic
    USE ihop_mod,        only: PRTFile, ATIFile, BTYFile
    USE ssp_mod,         only: betaPowerLaw, ft
-  USE atten_mod,        only: CRCI
+   USE atten_mod,       only: CRCI
 
   IMPLICIT NONE
 ! == Global variables ==
@@ -86,7 +86,8 @@ CONTAINS
     CHARACTER (LEN= 1), INTENT( IN ) :: TopATI
     INTEGER :: iSeg
     REAL (KIND=_RL90),  INTENT( IN ) :: DepthT
-    REAL (KIND=_RL90),  ALLOCATABLE  :: phi( : )
+    REAL (KIND=_RL90),  ALLOCATABLE  :: phi(:)
+    REAL (KIND=_RL90),  ALLOCATABLE  :: x(:) 
 
     SELECT CASE ( TopATI )
     CASE ( '~', '*' )
@@ -222,7 +223,10 @@ CONTAINS
 
     CALL ComputeBdryTangentNormal( Top, 'Top' )
 
-    IF ( .NOT. monotonic( Top%x( 1 ), NAtiPts ) ) THEN
+    IF ( ALLOCATED(x) ) DEALLOCATE(x)
+    ALLOCATE( x(NAtiPts) )
+    x = Top%x(1)
+    IF ( .NOT. monotonic( x, NAtiPts ) ) THEN
 #ifdef IHOP_WRITE_OUT
         WRITE(msgBuf,'(2A)') 'BDRYMOD initATI', &
                         'Altimetry ranges are not monotonically increasing'
@@ -265,6 +269,7 @@ SUBROUTINE initBTY( BotBTY, DepthB, myThid )
       INTEGER :: i,j,bi,bj,iSeg
       LOGICAL :: firstnonzero
       REAL (KIND=_RL90) :: gcmbathy(sNx,sNy), gcmmin, gcmmax
+      REAL (KIND=_RL90), ALLOCATABLE :: x(:) 
 
       SELECT CASE ( BotBTY )
       CASE ( '~', '*' )
@@ -481,7 +486,10 @@ SUBROUTINE initBTY( BotBTY, DepthB, myThid )
 
    CALL ComputeBdryTangentNormal( Bot, 'Bot' )
 
-   IF ( .NOT. monotonic( Bot%x( 1 ), NBtyPts ) ) THEN
+   IF ( ALLOCATED(x) ) DEALLOCATE(x)
+   ALLOCATE( x(NBtyPts) )
+   x = Bot%x(1)
+   IF ( .NOT. monotonic( x, NBtyPts ) ) THEN
 # ifdef IHOP_WRITE_OUT
       WRITE(msgBuf,'(2A)') 'BDRYMOD initBTY: ', &
          'Bathymetry ranges are not monotonically increasing'
