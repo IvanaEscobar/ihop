@@ -12,6 +12,8 @@ MODULE bdry_mod
 
    USE monotonic_mod,   only: monotonic
    USE ihop_mod,        only: PRTFile, ATIFile, BTYFile
+   USE ssp_mod,         only: betaPowerLaw, ft
+   USE atten_mod,       only: CRCI
 
   IMPLICIT NONE
 ! == Global variables ==
@@ -28,7 +30,7 @@ MODULE bdry_mod
 ! public interfaces
 !=======================================================================
 
-   public   ReadATI, ReadBTY, GetTopSeg, GetBotSeg, Bot, Top, &
+   public   initATI, initBTY, GetTopSeg, GetBotSeg, Bot, Top, &
             IsegTop, IsegBot, rTopSeg, rBotSeg,&
             iSmallStepCtr, atiType, btyType, NATIPts, NBTYPts, &
             ComputeBdryTangentNormal
@@ -71,7 +73,7 @@ MODULE bdry_mod
    TYPE(BdryPt), ALLOCATABLE :: Top( : ), Bot( : )
 
 CONTAINS
-  SUBROUTINE ReadATI( FileRoot, TopATI, DepthT, myThid ) 
+  SUBROUTINE initATI( TopATI, DepthT, myThid ) 
     ! Reads in the top altimetry
 
   !     == Routine Arguments ==
@@ -82,9 +84,10 @@ CONTAINS
   
   !     == Local Variables ==
     CHARACTER (LEN= 1), INTENT( IN ) :: TopATI
+    INTEGER :: iSeg
     REAL (KIND=_RL90),  INTENT( IN ) :: DepthT
-    REAL (KIND=_RL90),  ALLOCATABLE  :: phi( : )
-    CHARACTER (LEN=80), INTENT( IN ) :: FileRoot
+    REAL (KIND=_RL90),  ALLOCATABLE  :: phi(:)
+    REAL (KIND=_RL90),  ALLOCATABLE  :: x(:) 
 
     SELECT CASE ( TopATI )
     CASE ( '~', '*' )
@@ -98,17 +101,17 @@ CONTAINS
        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 #endif /* IHOP_WRITE_OUT */
 
-       OPEN( UNIT = ATIFile,   FILE = TRIM( FileRoot ) // '.ati', &
+       OPEN( UNIT = ATIFile,   FILE = TRIM( IHOP_fileroot ) // '.ati', &
              STATUS = 'OLD', IOSTAT = IOStat, ACTION = 'READ' )
         IF ( IOsTAT /= 0 ) THEN
 #ifdef IHOP_WRITE_OUT
-            WRITE(msgBuf,'(A)') 'ATIFile = ', TRIM( FileRoot ) // '.ati'
+            WRITE(msgBuf,'(A)') 'ATIFile = ', TRIM( IHOP_fileroot ) // '.ati'
             CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-            WRITE(msgBuf,'(2A)') 'BDRYMOD ReadATI', &
+            WRITE(msgBuf,'(2A)') 'BDRYMOD initATI', &
                 'Unable to open altimetry file'
             CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
-            STOP 'ABNORMAL END: S/R ReadATI'
+            STOP 'ABNORMAL END: S/R initATI'
         END IF
 
        READ(  ATIFile, * ) atiType
@@ -125,11 +128,11 @@ CONTAINS
 #endif /* IHOP_WRITE_OUT */
        CASE DEFAULT
 #ifdef IHOP_WRITE_OUT
-            WRITE(msgBuf,'(2A)') 'BDRYMOD ReadATI', &
+            WRITE(msgBuf,'(2A)') 'BDRYMOD initATI', &
                        'Unknown option for selecting altimetry interpolation'
             CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
-            STOP 'ABNORMAL END: S/R ReadATI'
+            STOP 'ABNORMAL END: S/R initATI'
        END SELECT AltiType
 
        READ(  ATIFile, * ) NatiPts
@@ -144,11 +147,11 @@ CONTAINS
        ALLOCATE( Top(  NatiPts ), phi( NatiPts ), Stat = IAllocStat )
        IF ( IAllocStat /= 0 ) THEN
 #ifdef IHOP_WRITE_OUT
-            WRITE(msgBuf,'(2A)') 'BDRYMOD ReadATI', &
+            WRITE(msgBuf,'(2A)') 'BDRYMOD initATI', &
                 'Insufficient memory for altimetry data: reduce # ati points'
             CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
-            STOP 'ABNORMAL END: S/R ReadATI'
+            STOP 'ABNORMAL END: S/R initATI'
         END IF
 
 #ifdef IHOP_WRITE_OUT
@@ -183,20 +186,20 @@ CONTAINS
 #endif /* IHOP_WRITE_OUT */
           CASE DEFAULT
 #ifdef IHOP_WRITE_OUT
-            WRITE(msgBuf,'(2A)') 'BDRYMOD ReadATI', &
+            WRITE(msgBuf,'(2A)') 'BDRYMOD initATI', &
                             'Unknown option for selecting altimetry option'
             CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
-            STOP 'ABNORMAL END: S/R ReadATI'
+            STOP 'ABNORMAL END: S/R initATI'
           END SELECT
 
           IF ( Top( ii )%x( 2 ) < DepthT ) THEN
 #ifdef IHOP_WRITE_OUT
-            WRITE(msgBuf,'(2A)') 'BDRYMOD ReadATI', &
+            WRITE(msgBuf,'(2A)') 'BDRYMOD initATI', &
                 'Altimetry rises above highest point in the sound speed profile'
             CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
-            STOP 'ABNORMAL END: S/R ReadATI'
+            STOP 'ABNORMAL END: S/R initATI'
           END IF
        END DO atiPt
 
@@ -208,11 +211,11 @@ CONTAINS
         ALLOCATE( Top( 2 ), Stat = IAllocStat )
         IF ( IAllocStat /= 0 ) THEN
 #ifdef IHOP_WRITE_OUT
-            WRITE(msgBuf,'(2A)') 'BDRYMOD ReadATI', &
+            WRITE(msgBuf,'(2A)') 'BDRYMOD initATI', &
                                     'Insufficient memory for altimetry data'
             CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
-            STOP 'ABNORMAL END: S/R ReadATI'
+            STOP 'ABNORMAL END: S/R initATI'
         END IF
         Top( 1 )%x = [ -sqrt( huge( Top( 1 )%x( 1 ) ) ) / 1.0d5, DepthT ]
         Top( 2 )%x = [  sqrt( huge( Top( 1 )%x( 1 ) ) ) / 1.0d5, DepthT ]
@@ -220,21 +223,38 @@ CONTAINS
 
     CALL ComputeBdryTangentNormal( Top, 'Top' )
 
-    IF ( .NOT. monotonic( Top%x( 1 ), NAtiPts ) ) THEN
+    IF ( ALLOCATED(x) ) DEALLOCATE(x)
+    ALLOCATE( x(NAtiPts) )
+    x = Top%x(1)
+    IF ( .NOT. monotonic( x, NAtiPts ) ) THEN
 #ifdef IHOP_WRITE_OUT
-        WRITE(msgBuf,'(2A)') 'BDRYMOD ReadATI', &
+        WRITE(msgBuf,'(2A)') 'BDRYMOD initATI', &
                         'Altimetry ranges are not monotonically increasing'
         CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
-        STOP 'ABNORMAL END: S/R ReadATI'
+        STOP 'ABNORMAL END: S/R initATI'
     END IF 
+
+    ! convert range-dependent geoacoustic parameters from user to program units
+    ! W is dB/wavelength
+    IF ( atiType( 2:2 ) == 'L' ) THEN
+       DO iSeg = 1, NatiPts
+          Top( iSeg )%HS%cp = CRCI( 1D20, Top( iSeg )%HS%alphaR, &
+                                    Top( iSeg )%HS%alphaI, 'W ', betaPowerLaw, &
+                                    ft, myThid ) ! compressional wave speed
+          Top( iSeg )%HS%cs = CRCI( 1D20, Top( iSeg )%HS%betaR,  &
+                                    Top( iSeg )%HS%betaI, 'W ', betaPowerLaw, &
+                                    ft, myThid )   ! shear wave speed
+       END DO
+    END IF
+
  
   RETURN
-  END !SUBROUTINE ReadATI
+  END !SUBROUTINE initATI
 
   ! **********************************************************************!
 
-SUBROUTINE ReadBTY( FileRoot, BotBTY, DepthB, myThid )
+SUBROUTINE initBTY( BotBTY, DepthB, myThid )
    ! Reads in the bottom bathymetry
 
    !     == Routine Arguments ==
@@ -246,10 +266,10 @@ SUBROUTINE ReadBTY( FileRoot, BotBTY, DepthB, myThid )
    !     == Local Variables ==
       CHARACTER (LEN= 1), INTENT( IN ) :: BotBTY
       REAL (KIND=_RL90),  INTENT( IN ) :: DepthB
-      CHARACTER (LEN=80), INTENT( IN ) :: FileRoot
-      INTEGER :: i,j,bi,bj
+      INTEGER :: i,j,bi,bj,iSeg
       LOGICAL :: firstnonzero
       REAL (KIND=_RL90) :: gcmbathy(sNx,sNy), gcmmin, gcmmax
+      REAL (KIND=_RL90), ALLOCATABLE :: x(:) 
 
       SELECT CASE ( BotBTY )
       CASE ( '~', '*' )
@@ -266,19 +286,19 @@ SUBROUTINE ReadBTY( FileRoot, BotBTY, DepthB, myThid )
         ENDIF
 # endif /* IHOP_WRITE_OUT */
 
-         OPEN( UNIT = BTYFile, FILE = TRIM( FileRoot ) // '.bty', &
+         OPEN( UNIT = BTYFile, FILE = TRIM( IHOP_fileroot ) // '.bty', &
                STATUS = 'OLD', IOSTAT = IOStat, ACTION = 'READ' )
          IF ( IOSTAT /= 0 ) THEN
 # ifdef IHOP_WRITE_OUT
-            WRITE(msgBuf,'(A)') 'BTYFile = ', TRIM( FileRoot ) // '.bty'
+            WRITE(msgBuf,'(A)') 'BTYFile = ', TRIM( IHOP_fileroot ) // '.bty'
             ! In adjoint mode we do not write output besides on the first run
             IF (IHOP_dumpfreq.GE.0) &
                 CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-            WRITE(msgBuf,'(2A)') 'BDRYMOD ReadBTY: ', &
+            WRITE(msgBuf,'(2A)') 'BDRYMOD initBTY: ', &
                                  'Unable to open bathymetry file'
             CALL PRINT_ERROR( msgBuf,myThid )
 # endif /* IHOP_WRITE_OUT */
-            STOP 'ABNORMAL END: S/R ReadBTY'
+            STOP 'ABNORMAL END: S/R initBTY'
          END IF
  
          READ( BTYFile, * ) btyType
@@ -299,11 +319,11 @@ SUBROUTINE ReadBTY( FileRoot, BotBTY, DepthB, myThid )
 # endif /* IHOP_WRITE_OUT */
         CASE DEFAULT
 # ifdef IHOP_WRITE_OUT
-            WRITE(msgBuf,'(2A)') 'BDRYMOD ReadBTY: ', &
+            WRITE(msgBuf,'(2A)') 'BDRYMOD initBTY: ', &
                'Unknown option for selecting bathymetry interpolation'
             CALL PRINT_ERROR( msgBuf,myThid )
 # endif /* IHOP_WRITE_OUT */
-            STOP 'ABNORMAL END: S/R ReadBTY'
+            STOP 'ABNORMAL END: S/R initBTY'
         END SELECT BathyType
         ENDIF
 
@@ -321,11 +341,11 @@ SUBROUTINE ReadBTY( FileRoot, BotBTY, DepthB, myThid )
       ALLOCATE( Bot( NbtyPts ), Stat = IAllocStat )
       IF ( IAllocStat /= 0 ) THEN
 # ifdef IHOP_WRITE_OUT
-         WRITE(msgBuf,'(2A)') 'BDRYMOD ReadBTY: ', &
+         WRITE(msgBuf,'(2A)') 'BDRYMOD initBTY: ', &
             'Insufficient memory for bathymetry data: reduce # bty points'
          CALL PRINT_ERROR( msgBuf,myThid )
 # endif /* IHOP_WRITE_OUT */
-         STOP 'ABNORMAL END: S/R ReadBTY'
+         STOP 'ABNORMAL END: S/R initBTY'
       END IF
         
 
@@ -355,11 +375,11 @@ SUBROUTINE ReadBTY( FileRoot, BotBTY, DepthB, myThid )
 # endif /* IHOP_WRITE_OUT */
       CASE DEFAULT
 # ifdef IHOP_WRITE_OUT
-         WRITE(msgBuf,'(2A)') 'BDRYMOD ReadBTY: ', &
+         WRITE(msgBuf,'(2A)') 'BDRYMOD initBTY: ', &
             'Unknown option for selecting bathymetry interpolation'
          CALL PRINT_ERROR( msgBuf,myThid )
 # endif /* IHOP_WRITE_OUT */
-         STOP 'ABNORMAL END: S/R ReadBTY'
+         STOP 'ABNORMAL END: S/R initBTY'
       END SELECT BathyTypeB
     ENDIF
 
@@ -394,7 +414,7 @@ SUBROUTINE ReadBTY( FileRoot, BotBTY, DepthB, myThid )
 # ifdef IHOP_WRITE_OUT
             IF (Bot(ii)%x(2) .lt. gcmmin .or. Bot(ii)%x(2) .gt. gcmmax) THEN
                WRITE(msgBuf,'(2A,F10.2,A,F10.2)') &
-                '** Warning ** BDRYMOD ReadBTY: ', &
+                '** Warning ** BDRYMOD initBTY: ', &
                 'ihop and gcm bathymetry vary, ihop:', Bot(ii)%x(2), 'gcm:', &
                 gcmmax
                CALL PRINT_MESSAGE( msgBuf, errorMessageUnit, SQUEEZE_RIGHT, myThid )
@@ -422,20 +442,20 @@ SUBROUTINE ReadBTY( FileRoot, BotBTY, DepthB, myThid )
 # endif /* IHOP_WRITE_OUT */
          CASE DEFAULT
 # ifdef IHOP_WRITE_OUT
-            WRITE(msgBuf,'(2A)') 'BDRYMOD ReadBTY: ', &
+            WRITE(msgBuf,'(2A)') 'BDRYMOD initBTY: ', &
                'Unknown option for selecting bathymetry interpolation'
             CALL PRINT_ERROR( msgBuf,myThid )
 # endif /* IHOP_WRITE_OUT */
-            STOP 'ABNORMAL END: S/R ReadBTY'
+            STOP 'ABNORMAL END: S/R initBTY'
          END SELECT
 
          IF ( Bot( ii )%x( 2 ) > DepthB ) THEN
 # ifdef IHOP_WRITE_OUT
-            WRITE(msgBuf,'(2A)') 'BDRYMOD ReadBTY: ', &
+            WRITE(msgBuf,'(2A)') 'BDRYMOD initBTY: ', &
                'Bathymetry drops below lowest point in the sound speed profile'
             CALL PRINT_ERROR( msgBuf,myThid )
 # endif /* IHOP_WRITE_OUT */
-            STOP 'ABNORMAL END: S/R ReadBTY'
+            STOP 'ABNORMAL END: S/R initBTY'
          END IF
  
       END DO btyPt
@@ -454,11 +474,11 @@ SUBROUTINE ReadBTY( FileRoot, BotBTY, DepthB, myThid )
       ALLOCATE( Bot( 2 ), Stat = IAllocStat )
       IF ( IAllocStat /= 0 ) THEN
 #  ifdef IHOP_WRITE_OUT
-         WRITE(msgBuf,'(2A)') 'BDRYMOD ReadBTY: ', &
+         WRITE(msgBuf,'(2A)') 'BDRYMOD initBTY: ', &
             'Insufficient memory for bathymetry data'
          CALL PRINT_ERROR( msgBuf,myThid )
 #  endif /* IHOP_WRITE_OUT */
-            STOP 'ABNORMAL END: S/R ReadBTY'
+            STOP 'ABNORMAL END: S/R initBTY'
       END IF
       Bot( 1 )%x = [ -sqrt( huge( Bot( 1 )%x( 1 ) ) ) / 1.0d5, DepthB ]
       Bot( 2 )%x = [  sqrt( huge( Bot( 1 )%x( 1 ) ) ) / 1.0d5, DepthB ]
@@ -466,17 +486,34 @@ SUBROUTINE ReadBTY( FileRoot, BotBTY, DepthB, myThid )
 
    CALL ComputeBdryTangentNormal( Bot, 'Bot' )
 
-   IF ( .NOT. monotonic( Bot%x( 1 ), NBtyPts ) ) THEN
+   IF ( ALLOCATED(x) ) DEALLOCATE(x)
+   ALLOCATE( x(NBtyPts) )
+   x = Bot%x(1)
+   IF ( .NOT. monotonic( x, NBtyPts ) ) THEN
 # ifdef IHOP_WRITE_OUT
-      WRITE(msgBuf,'(2A)') 'BDRYMOD ReadBTY: ', &
+      WRITE(msgBuf,'(2A)') 'BDRYMOD initBTY: ', &
          'Bathymetry ranges are not monotonically increasing'
       CALL PRINT_ERROR( msgBuf,myThid )
 # endif /* IHOP_WRITE_OUT */
-      STOP 'ABNORMAL END: S/R ReadBTY'
+      STOP 'ABNORMAL END: S/R initBTY'
    END IF 
 
+
+   ! convert range-dependent geoacoustic parameters from user to program units
+   ! W is dB/wavelength
+   IF ( btyType( 2:2 ) == 'L' ) THEN
+      DO iSeg = 1, NbtyPts
+         Bot( iSeg )%HS%cp = CRCI( 1D20, Bot( iSeg )%HS%alphaR, &
+                                   Bot( iSeg )%HS%alphaI, 'W ', betaPowerLaw, &
+                                   ft, myThid ) ! compressional wave speed
+         Bot( iSeg )%HS%cs = CRCI( 1D20, Bot( iSeg )%HS%betaR,  &
+                                   Bot( iSeg )%HS%betaI, 'W ', betaPowerLaw, &
+                                   ft, myThid )   ! shear wave speed
+      END DO
+   END IF
+
    RETURN
-END !SUBROUTINE ReadBTY
+END !SUBROUTINE initBTY
 
   ! **********************************************************************!
 

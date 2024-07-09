@@ -9,7 +9,7 @@ influence.f90
 monotonic_mod.f90
 pchip_mod.f90
 poly_mod.f90
-readenvihop.f90
+initenvihop.f90
 refcoef.f90
 sort_mod.f90
 splinec_mod.f90

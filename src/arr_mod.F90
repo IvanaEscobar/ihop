@@ -22,7 +22,8 @@ MODULE arr_mod
 ! public interfaces
 !=======================================================================
 
-    public WriteArrivalsASCII, WriteArrivalsBinary, MaxNArr, NArr, Arr, AddArr 
+    public WriteArrivalsASCII, WriteArrivalsBinary, &
+           MaxNArr, NArr, Arr, AddArr, U
 #ifdef IHOP_THREED
     public NArr3D, Arr3D
 #endif /* IHOP_THREED */
@@ -31,6 +32,7 @@ MODULE arr_mod
 
   INTEGER               :: MaxNArr
   INTEGER, ALLOCATABLE  :: NArr( :, : )
+  COMPLEX, ALLOCATABLE  :: U( :, : )
 #ifdef IHOP_THREED
   INTEGER, ALLOCATABLE  :: NArr3D( :, :, : )
 #endif /* IHOP_THREED */

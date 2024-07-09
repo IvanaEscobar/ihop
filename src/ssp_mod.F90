@@ -871,10 +871,15 @@ SUBROUTINE ExtractSSP( Depth, myThid )
   REAL (KIND=_RL90)             :: sumweights(IHOP_NPTS_RANGE, Nr), &
                                    dcdz, tolerance
   REAL (KIND=_RL90), ALLOCATABLE:: tmpSSP(:,:,:,:)
+  REAL (KIND=_RL90), ALLOCATABLE:: sspcmat(:)
   LOGICAL :: found_interpolation, skip_range
 
   SSP%Nz = Nr+2 ! add z=0 z=Depth layers 
   SSP%Nr = IHOP_NPTS_RANGE
+
+  ! Local allocation
+  IF ( ALLOCATED(sspcmat) ) DEALLOCATE(sspcmat)
+  ALLOCATE( sspcmat(SSP%Nr) )
 
   ALLOCATE( SSP%cMat( SSP%Nz, SSP%Nr ), &
             SSP%czMat( SSP%Nz-1, SSP%Nr ), &
@@ -1101,7 +1106,8 @@ SUBROUTINE ExtractSSP( Depth, myThid )
     WRITE(msgBuf,'(A)') ' Depth (m)     Soundspeed (m/s)'
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
     DO iz = 1, SSP%Nz
-      WRITE(msgBuf,'(12F10.2)'  ) SSP%z( iz ), SSP%cMat( iz, : )
+      sspcmat = ssp%cMat( iz,: )
+      WRITE(msgBuf,'(12F10.2)') SSP%z( iz ), SSPcMat
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
     END DO
   ENDIF
