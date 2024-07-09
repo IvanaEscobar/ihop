@@ -167,9 +167,7 @@ CONTAINS
     Pos%theta( 1 ) = 0.
   
 
-
-
-
+! Allocate arrival and U variables on all MPI processes 
     SELECT CASE ( Beam%RunType( 5:5 ) )
     CASE ( 'I' )
        NRz_per_range = 1         ! irregular grid
@@ -184,11 +182,11 @@ CONTAINS
           ALLOCATE ( U( NRz_per_range, Pos%NRr ), Stat = iAllocStat )
           IF ( iAllocStat/=0 ) THEN
 #ifdef IHOP_WRITE_OUT
-              WRITE(msgBuf,'(2A)') 'BELLHOP BellhopCore: ', & 
+              WRITE(msgBuf,'(2A)') 'BELLHOP IHOP_INIT: ', & 
                              'Insufficient memory for TL matrix: reduce Nr*NRz'
               CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
-              STOP 'ABNORMAL END: S/R BellhopCore'
+              STOP 'ABNORMAL END: S/R IHOP_INIT'
           END IF
           U = 0.0
      CASE ( 'A', 'a', 'R', 'E', 'e' )   ! Arrivals calculation
@@ -207,11 +205,11 @@ CONTAINS
                      NArr( Pos%NRr, NRz_per_range ), Stat = iAllocStat )
           IF ( iAllocStat /= 0 ) THEN
 #ifdef IHOP_WRITE_OUT
-              WRITE(msgBuf,'(2A)') 'BELLHOP BellhopCore: ', & 
+              WRITE(msgBuf,'(2A)') 'BELLHOP IHOP_INIT: ', & 
                'Not enough allocation for Arr; reduce ArrivalsStorage'
               CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
-              STOP 'ABNORMAL END: S/R BellhopCore'
+              STOP 'ABNORMAL END: S/R IHOP_INIT'
           END IF
      CASE DEFAULT
           MaxNArr = 1
@@ -230,28 +228,19 @@ CONTAINS
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-    ! open all output files
+! open all output files
     IF ( IHOP_dumpfreq .GE. 0 ) &
      CALL OpenOutputFiles( IHOP_fileroot, myTime, myIter, myThid )
   
     ! Run Bellhop solver on a single processor
     if (numberOfProcs.gt.1) then
-        if(myProcId.eq.(numberOfProcs-1)) then
+! Use same single processID as IHOP COST package
+!        if(myProcId.eq.(numberOfProcs-1)) then
+        if(myProcId.eq.0) then
             CALL CPU_TIME( Tstart )
             CALL BellhopCore(myThid)
             CALL CPU_TIME( Tstop )
+! Alternitavely, we can broadcast relevant info to all mpi processes Ask P. 
 !#ifdef ALLOW_COST
 !            ! Broadcast info to all MPI procs for COST function accumulation
 !            print *, "escobar: broacasting from pid ", myProcId
