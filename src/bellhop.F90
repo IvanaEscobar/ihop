@@ -285,7 +285,8 @@ CONTAINS
             END SELECT
   
             if (numberOfProcs.gt.1) then
-                if(myProcId.ne.(numberOfProcs-1)) then
+                ! Erase prtfiles that aren't on procid = 0
+                if(myProcId.ne.0) then
                     CLOSE(PRTFile, STATUS='DELETE')
                 else
                     CLOSE(PRTFile)
