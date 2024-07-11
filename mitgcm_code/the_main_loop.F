@@ -365,6 +365,9 @@ CADJ STORE r_low_si                 = tapelev_init, key=1
 CADJ STORE co2atmos = tapelev_init, key = 1
 CADJ STORE alpha    = tapelev_init, key = 1
 # endif
+# ifdef ALLOW_IHOP
+!!ADJ STORE IHOP vars here to tapelev_init (?)
+# endif
 #endif
 
 #ifdef ALLOW_OPENAD
