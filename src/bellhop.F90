@@ -34,8 +34,7 @@ MODULE BELLHOP
   USE ssp_mod,      only:   EvaluateSSP, HSInfo, Bdry, SSP, fT
   USE bdry_mod,     only:   initATI, initBTY, GetTopSeg, GetBotSeg, Bot, Top,  &
                             atiType, btyType, NatiPts, NbtyPts, iSmallStepCtr, &
-                            IsegTop, IsegBot, rTopSeg, rBotSeg,                &
-                            ComputeBdryTangentNormal
+                            IsegTop, IsegBot, rTopSeg, rBotSeg
   USE refCoef,      only:   readReflectionCoefficient,                         &
                             InterpolateReflectionCoefficient, ReflectionCoef,  &
                             RTop, RBot, NBotPts, NTopPts
@@ -99,8 +98,8 @@ CONTAINS
         WRITE(myProcessStr, '(I10.10)') myIter
         IL=ILNBLNK( myProcessStr )
         WRITE(fNam,'(4A)') TRIM(IHOP_fileroot),'.',myProcessStr(1:IL),'.prt'
-        IF ( IHOP_dumpfreq .GE. 0) &
-         OPEN(PRTFile, FILE = fNam, STATUS = 'UNKNOWN', IOSTAT = iostat )
+        IF ( IHOP_dumpfreq.GE.0 ) &
+         OPEN( PRTFile, FILE = fNam, STATUS = 'UNKNOWN', IOSTAT = iostat )
 #ifdef ALLOW_USE_MPI
     ELSE ! using MPI
         CALL MPI_COMM_RANK( MPI_COMM_MODEL, mpiMyId, mpiRC )
@@ -114,7 +113,7 @@ CONTAINS
 
         IF( mpiPidIo.EQ.myProcId ) THEN
 #  ifdef SINGLE_DISK_IO
-         IF( myProcId.eq.0) THEN
+         IF( myProcId.eq.0 ) THEN
 #  endif
             IF (myIter.GE.0) THEN
                 WRITE(fNam,'(4A,I10.10,A)') &
@@ -150,11 +149,11 @@ CONTAINS
     ! BaThYmetry: OPTIONAL, default is BTYFile
     CALL initBTY( Bdry%Bot%HS%Opt( 2:2 ), Bdry%Bot%HS%Depth, myThid )
     ! (top and bottom): OPTIONAL
-    CALL readReflectionCoefficient( IHOP_fileroot, Bdry%Bot%HS%Opt( 1:1 ), &
-                                    Bdry%Top%HS%Opt( 2:2 ), PRTFile ) 
+    CALL readReflectionCoefficient( Bdry%Bot%HS%Opt( 1:1 ), &
+                                    Bdry%Top%HS%Opt( 2:2 ), myThid ) 
     ! Source Beam Pattern: OPTIONAL, default is omni source pattern
     SBPFlag = Beam%RunType( 3:3 )
-    CALL readPat( IHOP_fileroot, myThid )
+    CALL readPat( myThid )
     Pos%Ntheta = 1
     ALLOCATE( Pos%theta( Pos%Ntheta ), Stat = IAllocStat )
     IF ( IAllocStat/=0 ) THEN
