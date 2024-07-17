@@ -54,6 +54,17 @@
 !adj SUBROUTINE bdry_mod::computebdrytangentnormal OUTPUT  =
 
 !     *==========================================================*
+!     | PROCEDURE SORT is linear                                 |
+!     *==========================================================*
+!adj SUBROUTINE sort_mod::sort INPUT   = 1, 2
+!adj SUBROUTINE sort_mod::sort OUTPUT  =
+!adj SUBROUTINE sort_mod::sort ACTIVE  = 1
+
+!================================================================*
+!     *======================= COST FXN =========================*
+!================================================================*
+
+!     *==========================================================*
 !     | SUBROUTINE IHOP_COST_READ_OBS is linear                  |
 !     *==========================================================*
 !ADJ SUBROUTINE  ihop_cost_read_obs   INPUT  =  1,2,3, 5
