@@ -111,6 +111,10 @@ MODULE ssp_mod
   TYPE(BdryType) :: Bdry
 !EOP
 
+#ifdef ALLOW_AUTODIFF_TAMC
+!ADJ PASSIVE betaPowerLaw, fT
+#endif /* ALLOW_AUTODIFF_TAMC */
+
 CONTAINS
   SUBROUTINE EvaluateSSP( x, c, cimag, gradc, crr, crz, czz, rho, Task, &
       myThid )

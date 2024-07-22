@@ -149,10 +149,17 @@ CONTAINS
   FUNCTION fprime_interior_Cmplx( del1, del2, fprime )
 
     COMPLEX (KIND=_RL90), INTENT( IN ) :: del1, del2, fprime
+    REAL (KIND=_RL90)                  :: a,b,c
     COMPLEX (KIND=_RL90)               :: fprime_interior_Cmplx
 
-    fprime_r = fprime_interior( REAL(  del1 ), REAL(  del2 ), REAL(  fprime ) )
-    fprime_i = fprime_interior( AIMAG( del1 ), AIMAG( del2 ), AIMAG( fprime ) )
+    a=REAL(del1)
+    b=REAL(del2)
+    c=REAL(fprime)
+    fprime_r = fprime_interior( a,b,c )
+    a=AIMAG(del1)
+    b=AIMAG(del2)
+    c=AIMAG(fprime)
+    fprime_i = fprime_interior( a,b,c )
 
     fprime_interior_Cmplx = CMPLX( fprime_r, fprime_i, KIND=_RL90 )
 
@@ -164,10 +171,17 @@ CONTAINS
   FUNCTION fprime_left_end_Cmplx( del1, del2, fprime )
 
     COMPLEX (KIND=_RL90), INTENT( IN ) :: del1, del2, fprime
+    REAL (KIND=_RL90)                  :: a,b,c
     COMPLEX (KIND=_RL90)               :: fprime_left_end_Cmplx
 
-    fprime_r = fprime_left_end( REAL(  del1 ), REAL(  del2 ), REAL(  fprime ) )
-    fprime_i = fprime_left_end( AIMAG( del1 ), AIMAG( del2 ), AIMAG( fprime ) )
+    a=REAL(del1)
+    b=REAL(del2)
+    c=REAL(fprime)
+    fprime_r = fprime_left_end( a,b,c )
+    a=AIMAG(del1)
+    b=AIMAG(del2)
+    c=AIMAG(fprime)
+    fprime_i = fprime_left_end( a,b,c )
 
     fprime_left_end_Cmplx = CMPLX( fprime_r, fprime_i, KIND=_RL90 )
 
@@ -179,10 +193,17 @@ CONTAINS
   FUNCTION fprime_right_end_Cmplx( del1, del2, fprime )
 
     COMPLEX (KIND=_RL90), INTENT( IN ) :: del1, del2, fprime
+    REAL (KIND=_RL90)                  :: a,b,c
     COMPLEX (KIND=_RL90)               :: fprime_right_end_Cmplx
 
-    fprime_r = fprime_right_end( REAL(  del1 ), REAL(  del2 ), REAL(  fprime ) )
-    fprime_i = fprime_right_end( AIMAG( del1 ), AIMAG( del2 ), AIMAG( fprime ) )
+    a=REAL(del1)
+    b=REAL(del2)
+    c=REAL(fprime)
+    fprime_r = fprime_right_end( a,b,c )
+    a=AIMAG(del1)
+    b=AIMAG(del2)
+    c=AIMAG(fprime)
+    fprime_i = fprime_right_end( a,b,c )
 
     fprime_right_end_Cmplx = CMPLX( fprime_r, fprime_i, KIND=_RL90 )
 

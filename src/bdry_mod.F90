@@ -71,6 +71,10 @@ MODULE bdry_mod
 
    TYPE(BdryPt), ALLOCATABLE :: Top( : ), Bot( : )
 
+#ifdef ALLOW_AUTODIFF_TAMC
+!ADJ PASSIVE betaPowerLaw, fT
+#endif /* ALLOW_AUTODIFF_TAMC */
+
 CONTAINS
   SUBROUTINE initATI( TopATI, DepthT, myThid ) 
     ! Reads in the top altimetry
