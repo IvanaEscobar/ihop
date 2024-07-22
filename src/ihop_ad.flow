@@ -1,21 +1,75 @@
 !     *==========================================================*
-!     | SUBROUTINE WRITERAY2D is linear                   |
-!     | SUBROUTINE WRITEDEL2D is linear                 |
+!     | SUBROUTINE WRITERAY2D is linear                          |
+!     | SUBROUTINE WRITEDEL2D is linear                          |
 !     *==========================================================*
 !adj SUBROUTINE writeray::writeray2d INPUT   = 1, 2
-!adj SUBROUTINE writeray::writeray2d OUTPUT  =     
+!adj SUBROUTINE writeray::writeray2d OUTPUT  =
 !adj SUBROUTINE writeray::writeray2d MODULE ihop_mod INPUT = ray2D
 
 !adj SUBROUTINE writeray::writedel2d INPUT   = 1, 2
-!adj SUBROUTINE writeray::writedel2d OUTPUT  =     
+!adj SUBROUTINE writeray::writedel2d OUTPUT  =
 !adj SUBROUTINE writeray::writeray2d MODULE ihop_mod INPUT = ray2D
 
+!     *==========================================================*
+!     | SUBROUTINE WRITEARRIVALSACSII is linear                  |
+!     | SUBROUTINE WRITEARRVIALSBINARY is linear                 |
+!     *==========================================================*
 !adj SUBROUTINE arr_mod::writearrivalsascii INPUT   = 1, 2, 3, 4
-!adj SUBROUTINE arr_mod::writearrivalsascii OUTPUT  =     
+!adj SUBROUTINE arr_mod::writearrivalsascii OUTPUT  =
 
 !adj SUBROUTINE arr_mod::writearrivalsbinary INPUT   = 1, 2, 3, 4
-!adj SUBROUTINE arr_mod::writearrivalsbinary OUTPUT  =     
+!adj SUBROUTINE arr_mod::writearrivalsbinary OUTPUT  =
 
-!adj SUBROUTINE ssp_mod::readssp INPUT   = 1, 2, 3
-!adj SUBROUTINE ssp_mod::readssp OUTPUT  =     
+!     *==========================================================*
+!     | SUBROUTINE READSSP is linear                             |
+!     *==========================================================*
+!adj SUBROUTINE ssp_mod::readssp INPUT   = 1, 2
+!adj SUBROUTINE ssp_mod::readssp OUTPUT  =
 !adj SUBROUTINE ssp_mod::readssp MODULE atten_mod INPUT = CRCI
+
+!     *==========================================================*
+!     | SUBROUTINE READPAT is linear                             |
+!     *==========================================================*
+!adj SUBROUTINE beampattern::readpat INPUT   = 1
+!adj SUBROUTINE beampattern::readpat OUTPUT  =
+
+!     *==========================================================*
+!     | SUBROUTINE READREFLECTIONCOEFFICIENT is linear           |
+!     *==========================================================*
+!adj SUBROUTINE refcoef::readreflectioncoefficient INPUT   = 1, 2, 3
+!adj SUBROUTINE refcoef::readreflectioncoefficient OUTPUT  =
+
+!     *==========================================================*
+!     | SUBROUTINE INITATI is linear                             |
+!     | SUBROUTINE INITBTY is linear                             |
+!     | SUBROUTINE COMPUTEBDRYTANGENTNORMAL is linear            |
+!     *==========================================================*
+!adj SUBROUTINE bdry_mod::initati INPUT   = 1, 2, 3
+!adj SUBROUTINE bdry_mod::initati OUTPUT  = 
+
+!adj SUBROUTINE bdry_mod::initbty INPUT   = 1, 2, 3
+!adj SUBROUTINE bdry_mod::initbty OUTPUT  =
+
+!adj SUBROUTINE bdry_mod::computebdrytangentnormal INPUT   = 1, 2
+!adj SUBROUTINE bdry_mod::computebdrytangentnormal OUTPUT  =
+
+!     *==========================================================*
+!     | PROCEDURE SORT is linear                                 |
+!     *==========================================================*
+!adj SUBROUTINE sort_mod::sort INPUT   = 1, 2
+!adj SUBROUTINE sort_mod::sort OUTPUT  =
+!adj SUBROUTINE sort_mod::sort ACTIVE  = 1
+
+!================================================================*
+!     *======================= COST FXN =========================*
+!================================================================*
+
+!     *==========================================================*
+!     | SUBROUTINE IHOP_COST_READ_OBS is linear                  |
+!     *==========================================================*
+!ADJ SUBROUTINE  ihop_cost_read_obs   INPUT  =  1,2,3, 5
+!ADJ SUBROUTINE  ihop_cost_read_obs   DEPEND =  1,2,3 
+!ADJ SUBROUTINE  ihop_cost_read_obs   OUTPUT =        4 
+
+!ADJ SUBROUTINE  NF_OPEN              INPUT = 
+!ADJ SUBROUTINE  NF_CLOSE             INPUT =

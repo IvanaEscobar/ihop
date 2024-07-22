@@ -34,7 +34,8 @@ C     == Global variables ===
 # include "cal.h"
 #endif
 #ifdef ALLOW_CTRL
-# include "OPTIMCYCLE.h"
+# include "optim.h"
+!# include "OPTIMCYCLE.h"
 #endif
 #ifdef ALLOW_IHOP
 # include "IHOP_SIZE.h"
@@ -105,7 +106,7 @@ C !LOCAL VARIABLES:
 
 ! save predicted travel time according to max index
       modval = real( Arr( maxindex,ri,rj )%delay )
-
+! ray storage of top arrival...
 #endif
 
       RETURN

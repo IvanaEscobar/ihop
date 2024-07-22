@@ -31,7 +31,7 @@ MODULE beamPattern
   CHARACTER (LEN=1)          :: SBPFlag ! '*' or 'O' to indicate a directional or omni pattern
 
 CONTAINS
-  SUBROUTINE ReadPat( FileRoot, myThid )
+  SUBROUTINE ReadPat( myThid )
 
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO
@@ -41,7 +41,6 @@ CONTAINS
   
   !     == Local Variables ==
     INTEGER                          :: I, IAllocStat, IOStat
-    CHARACTER (LEN=80), INTENT( IN ) :: FileRoot
 
     IF ( SBPFlag == '*' ) THEN
 #ifdef IHOP_WRITE_OUT
@@ -53,13 +52,13 @@ CONTAINS
        ENDIF
 #endif /* IHOP_WRITE_OUT */
 
-       OPEN( UNIT = SBPFile, FILE = TRIM( FileRoot ) // '.sbp', STATUS = 'OLD',&
+       OPEN( UNIT = SBPFile, FILE = TRIM( IHOP_fileroot ) // '.sbp', STATUS = 'OLD',&
             IOSTAT = IOStat, ACTION = 'READ' )
        IF ( IOstat /= 0 ) THEN
 #ifdef IHOP_WRITE_OUT
             ! In adjoint mode we do not write output besides on the first run
             IF (IHOP_dumpfreq.GE.0) &
-             WRITE( PRTFile, * ) 'SBPFile = ', TRIM( FileRoot ) // '.sbp'
+             WRITE( PRTFile, * ) 'SBPFile = ', TRIM( IHOP_fileroot ) // '.sbp'
             WRITE(msgBuf,'(2A)') 'BEAMPATTERN ReadPat: ', &
                                  'Unable to open source beampattern file'
             CALL PRINT_ERROR( msgBuf,myThid )

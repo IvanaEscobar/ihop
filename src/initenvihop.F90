@@ -38,6 +38,10 @@ MODULE initenvihop
   public    initEnv, OpenOutputFiles, resetMemory
 !=======================================================================
 
+#ifdef ALLOW_AUTODIFF_TAMC
+!ADJ PASSIVE betaPowerLaw, fT
+#endif /* ALLOW_AUTODIFF_TAMC */
+
 CONTAINS
   SUBROUTINE initEnv( myTime, myIter, myThid )
 

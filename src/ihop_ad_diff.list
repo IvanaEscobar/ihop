@@ -3,3 +3,7 @@ ihop_driver.f
 ihop_init_varia.f
 ihop_read_pickup.f
 ihop_sound_speed.f
+ihop_cost_init_varia.f
+ihop_cost_inloop.f
+ihop_cost_modval.f
+cost_ihop.f

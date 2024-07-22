@@ -345,6 +345,7 @@ C--   Initialise float position
       ENDIF
 #endif /* ALLOW_GCHEM */
 
+C--   Initialize pkg/ihop
 #ifdef ALLOW_IHOP
       IF (useIHOP) THEN
         CALL IHOP_INIT_VARIA( myThid )
@@ -545,14 +546,6 @@ CADJ STORE diffkr = tapelev_init, key = 1
 # endif
 #endif /* ALLOW_AUTODIFF_TAMC */
 
-#ifdef ALLOW_IHOP
-# ifdef ALLOW_COST
-      IF (useIHOP) THEN
-        CALL IHOP_COST_INIT_VARIA( myThid )
-      ENDIF
-# endif /* ALLOW_COST */
-#endif /* ALLOW_IHOP */
-
 C--   Initialise pkg/smooth
 #ifdef ALLOW_SMOOTH
       IF (useSMOOTH) THEN
@@ -566,6 +559,15 @@ C--   Initialise pkg/profiles
         CALL PROFILES_INIT_VARIA( myThid )
       ENDIF
 #endif /* ALLOW_PROFILES */
+
+C--   Initialize pkg/ihop cost
+#ifdef ALLOW_IHOP
+# ifdef ALLOW_COST
+      IF (useIHOP) THEN
+        CALL IHOP_COST_INIT_VARIA( myThid )
+      ENDIF
+# endif /* ALLOW_COST */
+#endif /* ALLOW_IHOP */
 
 C--   Initialise pkg/ecco (and related pkgs components)
 #ifdef ALLOW_ECCO

@@ -3,8 +3,8 @@
  useMNC=.false.,
  useIHOP=.true.,
  useDiagnostics=.true.,
-# AD packages 
  useCal=.true.,
+# AD packages 
  useGrdChk=.true.,
  useProfiles=.true.,
  useEcco=.true.,

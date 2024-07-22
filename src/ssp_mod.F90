@@ -111,6 +111,10 @@ MODULE ssp_mod
   TYPE(BdryType) :: Bdry
 !EOP
 
+#ifdef ALLOW_AUTODIFF_TAMC
+!ADJ PASSIVE betaPowerLaw, fT
+#endif /* ALLOW_AUTODIFF_TAMC */
+
 CONTAINS
   SUBROUTINE EvaluateSSP( x, c, cimag, gradc, crr, crz, czz, rho, Task, &
       myThid )
@@ -894,6 +898,8 @@ SUBROUTINE ExtractSSP( Depth, myThid )
       STOP 'ABNORMAL END: S/R ExtractSSP'
   END IF
 
+!!$TAF INIT tape_ssp = 'intermediate'
+
   ! Initiate to ceros
   SSP%cMat  = 0.0 _d 0
   tmpSSP    = 0.0 _d 0
@@ -976,6 +982,7 @@ SUBROUTINE ExtractSSP( Depth, myThid )
                 njj(ii) = njj(ii) + 1
 
                 DO iz = 1, SSP%Nz - 1
+!!$TAF STORE tmpSSP = tape_ssp
                   IF (iz .EQ. 1) THEN
                     ! Top vlevel zero depth
                     tmpSSP(1, ii, bi, bj) = tmpSSP(1, ii, bi, bj) + &
@@ -986,31 +993,31 @@ SUBROUTINE ExtractSSP( Depth, myThid )
                     IF (sumweights(ii, iz - 1) .GT. 0.0) THEN
                       ! Exactly on a cell center, ignore interpolation
                       IF (ihop_idw_weights(ii, jj) .EQ. 0.0) THEN
-                        tmpSSP(iz, ii, bi, bj) = ihop_ssp(i, j, iz - 1, bi, bj)
+                        tmpSSP(iz, ii, bi, bj) = ihop_ssp(i, j, iz-1, bi, bj)
                         njj(ii) = IHOP_npts_idw + 1
 
                       ! Apply IDW interpolation
                       ELSE IF (njj(ii) .LE. IHOP_npts_idw) THEN
                         tmpSSP(iz, ii, bi, bj) = tmpSSP(iz, ii, bi, bj) + &
                           ihop_ssp(i, j, iz - 1, bi, bj) * &
-                          ihop_idw_weights(ii, jj) / sumweights(ii, iz - 1)
+                          ihop_idw_weights(ii, jj) / sumweights(ii, iz-1)
                       END IF
                     END IF
 
                     ! Extrapolate through bathymetry; don't interpolate
-                    IF (iz .EQ. SSP%Nz - 1 .OR. sumweights(ii, iz - 1) .EQ. 0.0) THEN
+                    IF (iz .EQ. SSP%Nz-1 .OR. sumweights(ii, iz-1) .EQ. 0.0) THEN
                       k = iz
 
                       IF (njj(ii) .GE. IHOP_npts_idw) THEN
                         ! Determine if you are at the last vlevel
-                        IF (iz .EQ. SSP%Nz - 1 .AND. sumweights(ii, iz - 1) .NE. 0.0) k = k + 1
+                        IF (iz .EQ. SSP%Nz-1 .AND. sumweights(ii, iz-1) .NE. 0.0) k = k + 1
 
                         ! Calc depth gradient
-                        dcdz = (tmpSSP(k - 1, ii, bi, bj) - tmpSSP(k - 2, ii, bi, bj)) / &
-                               (SSP%z(k - 1) - SSP%z(k - 2))
+                        dcdz = (tmpSSP(k-1, ii, bi, bj) - tmpSSP(k-2, ii, bi, bj)) / &
+                               (SSP%z(k-1) - SSP%z(k-2))
                         ! Extrapolate
                         tmpSSP(k:SSP%Nz, ii, bi, bj) = &
-                          tmpSSP(k - 1, ii, bi, bj) + dcdz * SSP%z(k:SSP%Nz)
+                          tmpSSP(k-1, ii, bi, bj) + dcdz * SSP%z(k:SSP%Nz)
                         ! Move to the next range point, ii
                         found_interpolation = .TRUE.
                       END IF
