@@ -75,6 +75,8 @@ CONTAINS
     REAL    (KIND=_RL90)            :: f2, afreq, alphaT, Thorp, a, FG
     COMPLEX (KIND=_RL90)            :: CRCI
 
+!ADJ PASSIVE beta, fT
+
     afreq = 2.0 * PI * IHOP_freq
 
     !  Convert to Nepers/m 
