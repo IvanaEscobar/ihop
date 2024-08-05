@@ -156,8 +156,8 @@ c     == end of interface ==
 #ifdef ALLOW_IHOP
       do num_file_ihop=1,NFILESMAX_IHOP
 cav this is already global sum
-       f_ihop(num_file_obs)= 
-     &         objf_ihop(num_file_obs)
+       f_ihop(num_file_ihop)= 
+     &         objf_ihop(num_file_ihop)
       enddo
 #endif
 #ifdef ALLOW_GENCOST_CONTRIBUTION
@@ -257,10 +257,10 @@ c--   Sum up all contributions.
 #ifdef ALLOW_IHOP
 c # loop over available misfits and add to the tile level obj
 c # fxn. this is the same loop you would do in cost_final.F
-      do num_file=1,NFILESPROFMAX
+      do num_file_ihop=1,NFILESMAX_IHOP
        tile_fc(bi,bj) = tile_fc(bi,bj)
-     &         + mult_ihop(num_file)
-     &         *objf_ihop(num_file,bi,bj)
+     &         + mult_ihop(num_file_ihop)
+     &         *objf_ihop(num_file_ihop)
       enddo
 #endif
 #ifdef ALLOW_GENCOST_CONTRIBUTION
@@ -312,9 +312,6 @@ c # fxn. this is the same loop you would do in cost_final.F
          f_profiles_mean(num_var)=f_profiles_mean(num_var)
      &           +objf_profiles_mean(num_var,bi,bj)
       enddo
-#endif
-#ifdef ALLOW_IHOP
-c # loop over available misfits and add to whatever f_ihop is...
 #endif
 #ifdef ALLOW_GENCOST_CONTRIBUTION
        do num_var=1,NGENCOST
@@ -424,9 +421,6 @@ c--   Do global summation for each part of the cost function
        _GLOBAL_SUM_RL(f_profiles_mean(num_var), myThid )
       enddo
 #endif
-#ifdef ALLOW_IHOP
-c # Global sum over all tiles to synchornize f_ihop across all MPI procs
-#endif
 #ifdef ALLOW_GENCOST_CONTRIBUTION
        do num_var=1,NGENCOST
         _GLOBAL_SUM_RL(f_gencost(num_var), myThid )
@@ -466,9 +460,6 @@ c # Global sum over all tiles to synchornize f_ihop across all MPI procs
       do num_var=1,NVARMAX
        _GLOBAL_SUM_RL(no_profiles_mean(num_var), myThid )
       enddo
-#endif
-#ifdef ALLOW_IHOP
-c # Global sum over all tiles to synchornize no_ihop across all MPI procs
 #endif
 #ifdef ALLOW_GENCOST_CONTRIBUTION
        do num_var=1,NGENCOST
@@ -532,7 +523,7 @@ c # Global sum over all tiles to synchornize no_ihop across all MPI procs
 #ifdef ALLOW_IHOP
 ! print f_ihop to standard output 
       if (useIHOP) then
-      do num_file_ihop=1,NFILESMAX_ihop
+      do num_file_ihop=1,NFILESMAX_IHOP
        if ( no_ihop(num_file_ihop).GT.zeroRL ) then
         write(msgBuf,'(A,D22.15,i2.0)')
      &    ' --> f_ihop =',f_ihop(num_file_ihop),

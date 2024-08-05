@@ -112,6 +112,7 @@ MODULE ssp_mod
 !EOP
 
 #ifdef ALLOW_AUTODIFF_TAMC
+  INTEGER test
 !ADJ PASSIVE betaPowerLaw, fT
 #endif /* ALLOW_AUTODIFF_TAMC */
 

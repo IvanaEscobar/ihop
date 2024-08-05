@@ -4,4 +4,5 @@
  useIHOP=.true.,
  useDiagnostics=.TRUE.,
  useCal=.true.,
+ useEcco=.true.,
  &
