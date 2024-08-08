@@ -46,7 +46,7 @@ C     !INPUT/OUTPUT PARAMETERS:
 C     == Routine arguments ==
 C     sumPhi :: Result of sum.
 C     myThid :: My thread id.
-      Real*4 adsumPhi
+      Real*4 adsumPhi(ndim,nSx,nSy)
       INTEGER ndim, nval, myThid
 CEOP
 
@@ -97,7 +97,7 @@ C     !INPUT/OUTPUT PARAMETERS:
 C     == Routine arguments ==
 C     sumPhi :: Result of sum.
 C     myThid :: My thread id.
-      Real*8 adsumPhi
+      Real*8 adsumPhi(ndim,nSx,nSy)
       INTEGER ndim, nval, myThid
 CEOP
 
