@@ -3534,7 +3534,7 @@ ad_taf_output.$FS: \$(AD_FLOW_FILES) \$(AD_FILES) \$(AD_F90FILES)
 	@-rm -f \$(AD_FILES:.$FS=_ad.$FS) \$(AD_FILES:.$FS=_ad.o); echo ''
 	@-rm -f \$(AD_F90FILES:.$FS90=_ad.$FS90) \$(AD_F90FILES:.$FS90=_ad.o); echo ''
 	\$(MAKE) -f \$(MAKEFILE) remove_comments
-	\$(TAF) \$(AD_TAF_FLAGS) \$(TAF_EXTRA) -fixed -e \$(FLOWFILES) \$(AD_FILES) -free -N 150 \$(AD_F90FILES)
+	\$(TAF) \$(AD_TAF_FLAGS) \$(TAF_EXTRA) -fixed \$(FLOWFILES) \$(AD_FILES) -free -N 150 \$(AD_F90FILES)
 	\$(MAKE) -f \$(MAKEFILE) adj_sed
 	cat \$(AD_FILES:.$FS=_ad.$FS) > ad_taf_output.$FS
 
@@ -3557,7 +3557,6 @@ ad_prep: \$(AD_FLOW_FILES) \$(AD_FILES) \$(AD_F90FILES)
 
 # ... Escobar needs a hacked target: ad_taf_output after the TAF call...
 ad_postprep: \$(AD_FLOW_FILES) \$(AD_FILES) \$(AD_F90FILES)
-	\$(MAKE) -f \$(MAKEFILE) adj_sed
 	cat \$(AD_FILES:.$FS=_ad.$FS) > ad_taf_output.$FS
 	\$(MAKE) -f \$(MAKEFILE) adobjfiles
 	\$(LINK) -o \${EXE_ADJ} \$(FFLAGS) \$(FOPTIM) \$(AD_FILES:.$FS=_ad.o) \$(AD_F90FILES:.$FS90=_ad.o) \$(NON_AD_F77_SRC_FILES:.F=.o) \$(F90_SRC_FILES:.F90=.o) \$(C_SRC_FILES:.c=.o) \$(LIBS)
@@ -3605,8 +3604,9 @@ ftl_input_code.$FS: \$(AD_FILES)
 	@\$(MAKE) -f \$(MAKEFILE) \$(AD_FLOW_FILES)
 	cat \$(AD_FLOW_FILES) \$(AD_FILES) | sed -f \$(TOOLSDIR)/remove_comments_sed > ftl_input_code.$FS
 
+# this is an unused target and could be removed
 ftltafonly:
-	\$(TAF) \$(FTL_TAF_FLAGS) \$(TAF_EXTRA) ftl_input_code.$FS
+	\$(TAF) \$(FTL_TAF_FLAGS) \$(TAF_EXTRA) -fixed ftl_input_code.$FS
 	ls -l ftl_input_code_tl.$FS
 	cat ftl_input_code_tl.$FS | sed -f \$(TOOLSDIR)/adjoint_sed > ftl_taf_output.$FS
 
@@ -3617,7 +3617,7 @@ cat >>$MAKEFILE <<EOF
 # ... send 1 file to TAF ...
 ftl_taf_output.$FS: ftl_input_code.$FS
 	@-rm -f ftl_input_code_tl.$FS ; echo ''
-	\$(TAF) \$(FTL_TAF_FLAGS) \$(TAF_EXTRA) ftl_input_code.$FS
+	\$(TAF) \$(FTL_TAF_FLAGS) \$(TAF_EXTRA) -fixed ftl_input_code.$FS
 	ls -l ftl_input_code_tl.$FS
 	cat ftl_input_code_tl.$FS | sed -f \$(TOOLSDIR)/adjoint_sed > ftl_taf_output.$FS
 
@@ -3639,7 +3639,7 @@ ftl_taf_output.$FS: \$(AD_FLOW_FILES) \$(AD_FILES)
 	@\$(MAKE) -f \$(MAKEFILE) \$(AD_FLOW_FILES)
 	@-rm -f \$(AD_FILES:.$FS=_tl.$FS) \$(AD_FILES:.$FS=_tl.o); echo ''
 	\$(MAKE) -f \$(MAKEFILE) remove_comments
-	\$(TAF) \$(FTL_TAF_FLAGS) \$(TAF_EXTRA) \$(AD_FLOW_FILES) \$(AD_FILES)
+	\$(TAF) \$(FTL_TAF_FLAGS) \$(TAF_EXTRA) -fixed \$(AD_FLOW_FILES) \$(AD_FILES)
 	\$(MAKE) -f \$(MAKEFILE) ftl_sed
 	cat \$(AD_FILES:.$FS=_tl.$FS) > ftl_taf_output.$FS
 
@@ -3714,6 +3714,7 @@ for i in $AD_FILES ; do
 done
 echo >> $MAKEFILE
 rm -f $TMP.adSrcFiles
+rm -f $TMP.adF90Files
 
 cat >>$MAKEFILE <<EOF
 
@@ -3850,6 +3851,7 @@ for i in $AD_FILES ; do
 done
 echo >> $MAKEFILE
 rm -f $TMP.adSrcFiles
+rm -f $TMP.adF90Files
 
 cat >>$MAKEFILE <<EOF
 

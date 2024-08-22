@@ -1,6 +1,5 @@
 #! /usr/bin/env bash
 #
-#
 # Makefile generator for MITgcm UV codes
 #   created  by cnh 03/98
 #   adapted  by aja 06/98
