@@ -27,3 +27,4 @@ srpos_mod.f90
 ssp_mod.f90
 step.f90
 subtab_mod.f90
+writeray.f90

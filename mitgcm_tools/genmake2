@@ -2801,7 +2801,6 @@ while IFS= read -r f90file; do
             echo "$mod_file $f90file" >> "$TMP.adF90Graph"
         fi
     done
-    fi
 done < "$TMP.adF90Files"
 # Replace alphabetical with topological file order
 tsort "$TMP.adF90Graph" > "$TMP.adF90Files"
@@ -3241,7 +3240,7 @@ cat $TMP.F90srclist      >> $MAKEFILE
 cat $TMP.hsrclist        >> $MAKEFILE
 cat $TMP.ad_flow_files   >> $MAKEFILE
 
-rm -f $TMP.F77srclist $TMP.nonADF77srclist $TMP.nonADF90srclist $TMP.csrclist $TMP.F90srclist $TMP.hsrclist $TMP.ad_flow_files
+#rm -f $TMP.F77srclist $TMP.nonADF77srclist $TMP.nonADF90srclist $TMP.csrclist $TMP.F90srclist $TMP.hsrclist $TMP.ad_flow_files
 
 echo >> $MAKEFILE
 
