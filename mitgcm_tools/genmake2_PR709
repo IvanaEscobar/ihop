@@ -3436,7 +3436,7 @@ for i in $AD_F90FILES ; do
     printf " $i" >> $MAKEFILE
 done
 echo >> $MAKEFILE
-rm -f $TMP.adF90Files
+#rm -f $TMP.adF90Files
 
 if test $CAT_SRC_FOR_TAF = 0 ; then
 cat >>$MAKEFILE <<EOF
@@ -3718,7 +3718,7 @@ for i in $AD_FILES ; do
 done
 echo >> $MAKEFILE
 rm -f $TMP.adSrcFiles
-rm -f $TMP.adF90Files
+#rm -f $TMP.adF90Files
 
 cat >>$MAKEFILE <<EOF
 
@@ -3855,7 +3855,7 @@ for i in $AD_FILES ; do
 done
 echo >> $MAKEFILE
 rm -f $TMP.adSrcFiles
-rm -f $TMP.adF90Files
+#rm -f $TMP.adF90Files
 
 cat >>$MAKEFILE <<EOF
 
