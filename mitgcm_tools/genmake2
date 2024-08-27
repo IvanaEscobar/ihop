@@ -3126,13 +3126,12 @@ done < "$TMP.F90Files"
 tsort "$TMP.F90Graph" > "$TMP.F90Files"
 #
 # Format to F90srclist specs
-sed -i 's|.*/||' "$TMP.F90Files"
-sed -i 's/^/ /; s/$/ \\/' "$TMP.F90Files"
-sed -i '2,$d' $TMP.F90srclist
-cat $TMP.F90Files >> $TMP.F90srclist
+sed -e 's|.*/||' -e 's/^/ /' -e 's/$/ \\/' "$TMP.F90Files" > "$TMP.F90Files.tmp"
+sed -i '2,$d' "$TMP.F90srclist"
+cat "$TMP.F90Files.tmp" >> "$TMP.F90srclist"
 #
 # Clean up topological sorting files
-rm -rf $TMP.F90Files
+rm -rf $TMP.F90Files.tmp $TMP.F90Files
 rm -rf $TMP.F90Graph
 
 rm -rf $TMP.links
