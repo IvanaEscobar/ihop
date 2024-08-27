@@ -3578,7 +3578,7 @@ cat >>$MAKEFILE <<EOF
 # ... send 1 fixed format file and 1 free format file to TAF ...
 ad_taf_output.$FS: ad_inpF90_code.$FS90 ad_input_code.$FS
 	@-rm -f ad_input_code_ad.$FS ad_inpF90_code_ad.$FS90 ; echo ''
-	\$(TAF) \$(AD_TAF_FLAGS) \$(TAF_EXTRA) -free ad_inpF90_code.$FS90 -fixed ad_input_code.$FS
+	\$(TAF) \$(AD_TAF_FLAGS) \$(TAF_EXTRA) -free -N 150 ad_inpF90_code.$FS90 -fixed -e ad_input_code.$FS
 	ls -l ad_inpF90_code_ad.$FS90 ad_input_code_ad.$FS
 	cat ad_input_code_ad.$FS | sed -f \$(TOOLSDIR)/adjoint_sed > ad_taf_output.$FS
 
@@ -3607,8 +3607,9 @@ ad_taf_output.$FS: \$(AD_FLOW_FILES) \$(AD_F90FILES) \$(AD_FILES)
 	@-rm -f \$(AD_F90FILES:.$FS90=_ad.$FS90) \$(AD_F90FILES:.$FS90=_ad.o); echo ''
 	@-rm -f \$(AD_FILES:.$FS=_ad.$FS) \$(AD_FILES:.$FS=_ad.o); echo ''
 	\$(MAKE) -f \$(MAKEFILE) remove_comments
-	\$(TAF) \$(AD_TAF_FLAGS) \$(TAF_EXTRA) -free \$(AD_F90FILES) -fixed \$(FLOWFILES) \$(AD_FILES)
+	\$(TAF) \$(AD_TAF_FLAGS) \$(TAF_EXTRA) -free -N 150 \$(AD_F90FILES) -fixed -e \$(FLOWFILES) \$(AD_FILES)
 	\$(MAKE) -f \$(MAKEFILE) adj_sed
+	cat \$(AD_F90FILES:.$FS90=_ad.$FS90) > ad_taf_outpF90.$FS90
 	cat \$(AD_FILES:.$FS=_ad.$FS) > ad_taf_output.$FS
 
 
