@@ -60,6 +60,20 @@
 !adj SUBROUTINE sort_mod::sort OUTPUT  =
 !adj SUBROUTINE sort_mod::sort ACTIVE  = 1
 
+!     *==========================================================*
+!     | SUBROUTINE READVECTOR is linear                          |
+!     | SUBROUTINE READFREQVEC is linear                         |
+!     *==========================================================*
+!adj SUBROUTINE srpos_mod::readvector INPUT   = 1, 2, 3, 4, 5
+!adj SUBROUTINE srpos_mod::readvector OUTPUT  =    2
+!adj SUBROUTINE srpos_mod::readvector DEPEND  = 1  
+!adj SUBROUTINE srpos_mod::readvector MODULE sort_mod INPUT = sort
+!adj SUBROUTINE srpos_mod::readvector MODULE subtab_mod INPUT = subtab
+
+!adj SUBROUTINE srpos_mod::readfreqvec INPUT   = 1, 2
+!adj SUBROUTINE srpos_mod::readfreqvec OUTPUT  = 
+!adj SUBROUTINE srpos_mod::readfreqvec MODULE subtab_mod INPUT = subtab
+
 !================================================================*
 !     *======================= COST FXN =========================*
 !================================================================*
