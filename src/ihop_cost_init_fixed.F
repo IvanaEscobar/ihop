@@ -1,4 +1,5 @@
 #include "IHOP_OPTIONS.h"
+#include "AD_CONFIG.h"
 
       subroutine ihop_cost_init_fixed( myThid )
 
