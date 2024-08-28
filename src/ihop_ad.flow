@@ -58,7 +58,6 @@
 !     *==========================================================*
 !adj SUBROUTINE sort_mod::sort INPUT   = 1, 2
 !adj SUBROUTINE sort_mod::sort OUTPUT  =
-!adj SUBROUTINE sort_mod::sort ACTIVE  = 1
 
 !     *==========================================================*
 !     | SUBROUTINE READVECTOR is linear                          |
