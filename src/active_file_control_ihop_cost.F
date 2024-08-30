@@ -57,7 +57,7 @@ C !LOCAL VARIABLES:
       integer  vec_start, vec_count
       integer  ivar, i
       _RL      active_data_t
-      real*8   vec_tmp(2)
+      Real*8   vec_tmp(2)
 
 c     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
 c     >>>>>>>>>>>>>>>>>>> FORWARD RUN <<<<<<<<<<<<<<<<<<<

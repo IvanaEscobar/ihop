@@ -32,7 +32,7 @@ C !FUNCTIONS
       EXTERNAL ILNBLNK
 CEOP
 
-#if defined(ALLOW_IHOP) && defined(ALLOW_COST)
+#if (defined ALLOW_IHOP) && (defined ALLOW_COST)
 C !LOCAL VARIABLES: 
 #ifndef HAVE_SYSTEM
       CHARACTER*(MAX_LEN_MBUF) msgBuf

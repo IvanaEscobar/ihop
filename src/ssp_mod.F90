@@ -1036,7 +1036,7 @@ SUBROUTINE ExtractSSP( Depth, myThid )
   IF ((nPx.GT.1) .OR. (nPy.GT.1)) THEN
     CALL GLOBAL_VEC_SUM_R8(SSP%Nz*SSP%Nr,SSP%Nz*SSP%Nr,tmpSSP,myThid)
   ENDIF
-  SSP%cMAT = tmpSSP(:,:,1,1)
+  SSP%cMat = tmpSSP(:,:,1,1)
   IF(ALLOCATED(tmpSSP)) DEALLOCATE(tmpSSP)
   !==================================================
   ! END IDW Interpolate

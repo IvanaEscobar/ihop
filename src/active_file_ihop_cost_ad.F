@@ -8,9 +8,9 @@ C--   o adactive_read_ihop_glob
 C--   o adactive_write_ihop_glob
 
 CBOP
-C     !ROUTINE: ADACTIVE_READ_ihop_TILE
+C     !ROUTINE: ADACTIVE_READ_IHOP_TILE
 C     !INTERFACE:
-      SUBROUTINE ADACTIVE_READ_ihop_TILE(
+      SUBROUTINE ADACTIVE_READ_IHOP_TILE(
      I                              active_num_file,
      I                              adactive_var,
      I                              irec,
@@ -65,9 +65,9 @@ CEOP
 C     ==================================================================
 
 CBOP
-C     !ROUTINE: ADACTIVE_WRITE_ihop_TILE
+C     !ROUTINE: ADACTIVE_WRITE_IHOP_TILE
 C     !INTERFACE:
-      SUBROUTINE ADACTIVE_WRITE_ihop_TILE(
+      SUBROUTINE ADACTIVE_WRITE_IHOP_TILE(
      I                                  active_num_file,
      I                                  adactive_var,
      I                                  irec,
@@ -123,9 +123,9 @@ C     ==================================================================
 
 
 CBOP
-C     !ROUTINE: ADACTIVE_READ_ihop_GLOB
+C     !ROUTINE: ADACTIVE_READ_IHOP_GLOB
 C     !INTERFACE:
-      SUBROUTINE ADACTIVE_READ_ihop_GLOB(
+      SUBROUTINE ADACTIVE_READ_IHOP_GLOB(
      I                              active_num_file,
      I                              adactive_var,
      I                              irec,
@@ -135,8 +135,8 @@ C     !INTERFACE:
 
 C     !DESCRIPTION:
 C     ==================================================================
-C     | SUBROUTINE ADACTIVE_READ_ihop_GLOB
-C     | Adjoint of ACTIVE_READ_ihop_GLOB.F
+C     | SUBROUTINE ADACTIVE_READ_IHOP_GLOB
+C     | Adjoint of ACTIVE_READ_IHOP_GLOB.F
 C     ==================================================================
 
 C !USES:
@@ -179,9 +179,9 @@ CEOP
 C     ==================================================================
 
 CBOP
-C     !ROUTINE: ADACTIVE_WRITE_ihop_GLOB
+C     !ROUTINE: ADACTIVE_WRITE_IHOP_GLOB
 C     !INTERFACE:
-      SUBROUTINE ADACTIVE_WRITE_ihop_GLOB(
+      SUBROUTINE ADACTIVE_WRITE_IHOP_GLOB(
      I                                  active_num_file,
      I                                  adactive_var,
      I                                  irec,
@@ -191,8 +191,8 @@ C     !INTERFACE:
 
 C     !DESCRIPTION:
 C     ==================================================================
-C     | SUBROUTINE ADACTIVE_WRITE_ihop_GLOB
-C     | Adjoint of ACTIVE_WRITE_ihop_GLOB.F
+C     | SUBROUTINE ADACTIVE_WRITE_IHOP_GLOB
+C     | Adjoint of ACTIVE_WRITE_IHOP_GLOB.F
 C     ==================================================================
 
 C !USES:
