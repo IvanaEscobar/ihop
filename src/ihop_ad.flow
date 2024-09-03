@@ -1,88 +1,99 @@
 !     *==========================================================*
-!     | SUBROUTINE WRITERAY2D is linear                          |
-!     | SUBROUTINE WRITEDEL2D is linear                          |
+!     | SUBROUTINE WRITERAY2D  is passive                        |
+!     | SUBROUTINE WRITEDEL2D  is passive                        |
 !     *==========================================================*
-!adj SUBROUTINE writeray::writeray2d INPUT   = 1, 2
-!adj SUBROUTINE writeray::writeray2d OUTPUT  =
-!adj SUBROUTINE writeray::writeray2d MODULE ihop_mod INPUT = ray2D
+!$TAF SUBROUTINE writeray::writeray2d INPUT   = 1, 2
+!$TAF SUBROUTINE writeray::writeray2d OUTPUT  =
+!$TAF SUBROUTINE writeray::writeray2d MODULE ihop_mod INPUT = ray2D
 
-!adj SUBROUTINE writeray::writedel2d INPUT   = 1, 2
-!adj SUBROUTINE writeray::writedel2d OUTPUT  =
-!adj SUBROUTINE writeray::writeray2d MODULE ihop_mod INPUT = ray2D
-
-!     *==========================================================*
-!     | SUBROUTINE WRITEARRIVALSACSII is linear                  |
-!     | SUBROUTINE WRITEARRVIALSBINARY is linear                 |
-!     *==========================================================*
-!adj SUBROUTINE arr_mod::writearrivalsascii INPUT   = 1, 2, 3, 4
-!adj SUBROUTINE arr_mod::writearrivalsascii OUTPUT  =
-
-!adj SUBROUTINE arr_mod::writearrivalsbinary INPUT   = 1, 2, 3, 4
-!adj SUBROUTINE arr_mod::writearrivalsbinary OUTPUT  =
+!$TAF SUBROUTINE writeray::writedel2d INPUT   = 1, 2
+!$TAF SUBROUTINE writeray::writedel2d OUTPUT  =
+!$TAF SUBROUTINE writeray::writeray2d MODULE ihop_mod INPUT = ray2D
 
 !     *==========================================================*
-!     | SUBROUTINE READSSP is linear                             |
+!     | SUBROUTINE WRITEARRIVALSACSII  is passive                |
+!     | SUBROUTINE WRITEARRVIALSBINARY is passive                |
+!     | SUBROUTINE OPENOUTPUTFILS      is passive                |
 !     *==========================================================*
-!adj SUBROUTINE ssp_mod::readssp INPUT   = 1, 2
-!adj SUBROUTINE ssp_mod::readssp OUTPUT  =
-!adj SUBROUTINE ssp_mod::readssp MODULE atten_mod INPUT = CRCI
+!$TAF SUBROUTINE arr_mod::writearrivalsascii INPUT   = 1, 2, 3, 4
+!$TAF SUBROUTINE arr_mod::writearrivalsascii OUTPUT  =
+
+!$TAF SUBROUTINE arr_mod::writearrivalsbinary INPUT   = 1, 2, 3, 4
+!$TAF SUBROUTINE arr_mod::writearrivalsbinary OUTPUT  =
+
+!$TAF SUBROUTINE initenvihop::OpenOutputFiles  INPUT  = 1, 2, 3, 4
+!$TAF SUBROUTINE initenvihop::OpenOutputFiles OUTPUT  = 
 
 !     *==========================================================*
-!     | SUBROUTINE READPAT is linear                             |
+!     | SUBROUTINE READSSP  is passive                           |
 !     *==========================================================*
-!adj SUBROUTINE beampattern::readpat INPUT   = 1
-!adj SUBROUTINE beampattern::readpat OUTPUT  =
+!$TAF SUBROUTINE ssp_mod::readssp INPUT   = 1, 2
+!$TAF SUBROUTINE ssp_mod::readssp OUTPUT  =
+!$TAF SUBROUTINE ssp_mod::readssp MODULE atten_mod INPUT = CRCI
 
 !     *==========================================================*
-!     | SUBROUTINE READREFLECTIONCOEFFICIENT is linear           |
+!     | SUBROUTINE READPAT  is passive                           |
 !     *==========================================================*
-!adj SUBROUTINE refcoef::readreflectioncoefficient INPUT   = 1, 2, 3
-!adj SUBROUTINE refcoef::readreflectioncoefficient OUTPUT  =
+!$TAF SUBROUTINE beampattern::readpat INPUT   = 1
+!$TAF SUBROUTINE beampattern::readpat OUTPUT  =
+!$TAF SUBROUTINE beampattern::readpat MODULE beampattern OUTPUT  = SrcBmPat
 
 !     *==========================================================*
-!     | SUBROUTINE INITATI is linear                             |
-!     | SUBROUTINE INITBTY is linear                             |
-!     | SUBROUTINE COMPUTEBDRYTANGENTNORMAL is linear            |
+!     | SUBROUTINE READREFLECTIONCOEFFICIENT  is passive           |
 !     *==========================================================*
-!adj SUBROUTINE bdry_mod::initati INPUT   = 1, 2, 3
-!adj SUBROUTINE bdry_mod::initati OUTPUT  = 
-
-!adj SUBROUTINE bdry_mod::initbty INPUT   = 1, 2, 3
-!adj SUBROUTINE bdry_mod::initbty OUTPUT  =
-
-!adj SUBROUTINE bdry_mod::computebdrytangentnormal INPUT   = 1, 2
-!adj SUBROUTINE bdry_mod::computebdrytangentnormal OUTPUT  =
+!$TAF SUBROUTINE refcoef::readreflectioncoefficient INPUT   = 1, 2, 3
+!$TAF SUBROUTINE refcoef::readreflectioncoefficient OUTPUT  =
+!$TAF SUBROUTINE refcoef::readreflectioncoefficient MODULE refCoef OUTPUT = NBotPts,NTopPts
+!$TAF SUBROUTINE refcoef::readreflectioncoefficient MODULE refCoef OUTPUT = NkTab
+!$TAF SUBROUTINE refcoef::readreflectioncoefficient MODULE refCoef OUTPUT = iTab,xTab,fTab,gTab
+!$TAF SUBROUTINE refcoef::readreflectioncoefficient MODULE refCoef OUTPUT = RBot,RTop
 
 !     *==========================================================*
-!     | PROCEDURE SORT is linear                                 |
+!     | SUBROUTINE INITATI  is passive                             |
+!     | SUBROUTINE INITBTY  is passive                             |
+!     | SUBROUTINE COMPUTEBDRYTANGENTNORMAL  is passive            |
 !     *==========================================================*
-!adj SUBROUTINE sort_mod::sort INPUT   = 1, 2
-!adj SUBROUTINE sort_mod::sort OUTPUT  =
+!$TAF SUBROUTINE bdry_mod::initati INPUT   = 1, 2, 3
+!$TAF SUBROUTINE bdry_mod::initati OUTPUT  = 
+!$TAF SUBROUTINE bdry_mod::initati MODULE bdry_mod OUTPUT  = top
+
+!$TAF SUBROUTINE bdry_mod::initbty INPUT   = 1, 2, 3
+!$TAF SUBROUTINE bdry_mod::initbty OUTPUT  =
+!$TAF SUBROUTINE bdry_mod::initati MODULE bdry_mod OUTPUT  = bot
+
+!$TAF SUBROUTINE bdry_mod::computebdrytangentnormal INPUT   = 1, 2
+!$TAF SUBROUTINE bdry_mod::computebdrytangentnormal OUTPUT  =
 
 !     *==========================================================*
-!     | SUBROUTINE READVECTOR is linear                          |
-!     | SUBROUTINE READFREQVEC is linear                         |
+!     | PROCEDURE SORT  is passive                                 |
 !     *==========================================================*
-!adj SUBROUTINE srpos_mod::readvector INPUT   = 1, 2, 3, 4, 5
-!adj SUBROUTINE srpos_mod::readvector OUTPUT  =    2
-!adj SUBROUTINE srpos_mod::readvector DEPEND  = 1  
-!adj SUBROUTINE srpos_mod::readvector MODULE sort_mod INPUT = sort
-!adj SUBROUTINE srpos_mod::readvector MODULE subtab_mod INPUT = subtab
+!$TAF SUBROUTINE sort_mod::sort INPUT   = 1, 2
+!$TAF SUBROUTINE sort_mod::sort OUTPUT  =
 
-!adj SUBROUTINE srpos_mod::readfreqvec INPUT   = 1, 2
-!adj SUBROUTINE srpos_mod::readfreqvec OUTPUT  = 
-!adj SUBROUTINE srpos_mod::readfreqvec MODULE subtab_mod INPUT = subtab
+!     *==========================================================*
+!     | SUBROUTINE READVECTOR  is passive                          |
+!     | SUBROUTINE READFREQVEC  is passive                         |
+!     *==========================================================*
+!$TAF SUBROUTINE srpos_mod::readvector INPUT   = 1, 2, 3, 4, 5
+!$TAF SUBROUTINE srpos_mod::readvector OUTPUT  =    2
+!$TAF SUBROUTINE srpos_mod::readvector DEPEND  = 1  
+!$TAF SUBROUTINE srpos_mod::readvector MODULE sort_mod INPUT = sort
+!$TAF SUBROUTINE srpos_mod::readvector MODULE subtab_mod INPUT = subtab
+
+!$TAF SUBROUTINE srpos_mod::readfreqvec INPUT   = 1, 2
+!$TAF SUBROUTINE srpos_mod::readfreqvec OUTPUT  = 
+!$TAF SUBROUTINE srpos_mod::readfreqvec MODULE subtab_mod INPUT = subtab
 
 !================================================================*
 !     *======================= COST FXN =========================*
 !================================================================*
 
 !     *==========================================================*
-!     | SUBROUTINE IHOP_COST_READ_OBS is linear                  |
+!     | SUBROUTINE IHOP_COST_READ_OBS  is passive                  |
 !     *==========================================================*
-!ADJ SUBROUTINE  ihop_cost_read_obs   INPUT  =  1,2,3, 5
-!ADJ SUBROUTINE  ihop_cost_read_obs   DEPEND =  1,2,3 
-!ADJ SUBROUTINE  ihop_cost_read_obs   OUTPUT =        4 
+!$TAF SUBROUTINE  ihop_cost_read_obs   INPUT  =  1,2,3, 5
+!$TAF SUBROUTINE  ihop_cost_read_obs   DEPEND =  1,2,3 
+!$TAF SUBROUTINE  ihop_cost_read_obs   OUTPUT =        4 
 
-!ADJ SUBROUTINE  NF_OPEN              INPUT = 
-!ADJ SUBROUTINE  NF_CLOSE             INPUT =
+!$TAF SUBROUTINE  NF_OPEN              INPUT = 
+!$TAF SUBROUTINE  NF_CLOSE             INPUT =
