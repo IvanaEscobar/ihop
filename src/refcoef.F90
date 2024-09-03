@@ -87,7 +87,7 @@ CONTAINS
 #ifdef IHOP_WRITE_OUT
        ! In adjoint mode we do not write output besides on the first run
        IF (IHOP_dumpfreq.GE.0) &
-        WRITE( PRTFile,'(2A,I)' ) 'Number of points in bottom reflection ', &
+        WRITE( PRTFile,'(2A,I10)' ) 'Number of points in bottom reflection ', &
                            'coefficient = ', NBotPts
 #endif /* IHOP_WRITE_OUT */
 
@@ -142,7 +142,7 @@ CONTAINS
 #ifdef IHOP_WRITE_OUT
        ! In adjoint mode we do not write output besides on the first run
        IF (IHOP_dumpfreq.GE.0) &
-        WRITE( PRTFile,'(2A,I)' ) 'Number of points in top reflection ', & 
+        WRITE( PRTFile,'(2A,I10)' ) 'Number of points in top reflection ', & 
                            'coefficient = ', NTopPts
 #endif /* IHOP_WRITE_OUT */
 

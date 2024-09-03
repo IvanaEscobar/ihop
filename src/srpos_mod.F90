@@ -10,7 +10,6 @@ MODULE srpos_mod
 
   USE subTab_mod,       only: SubTab
   USE monotonic_mod,    only: monotonic
-  USE sort_mod,         only: Sort
   USE ihop_mod,         only: PRTFile
 
 ! ! USES
@@ -53,12 +52,13 @@ MODULE srpos_mod
   TYPE ( Position ) :: Pos ! structure containing source and receiver positions
 
 CONTAINS
-  SUBROUTINE ReadfreqVec( freq0, BroadbandOption, myThid )
+  SUBROUTINE ReadfreqVec( BroadbandOption, myThid )
 
     ! Optionally reads a vector of source frequencies for a broadband run
     ! If the broadband option is not selected, then the input freq (a scalar) 
     ! is stored in the frequency vector
-    
+    ! IHOP_freq is source frequency
+
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO
   !     msgBuf :: Used to build messages for printing.
@@ -66,7 +66,6 @@ CONTAINS
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
   
   !     == Local Variables ==
-    REAL (KIND=_RL90),  INTENT( IN ) :: freq0   ! Source frequency
     CHARACTER,          INTENT( IN ) :: BroadbandOption*( 1 )
     INTEGER :: ifreq
 
@@ -131,7 +130,7 @@ CONTAINS
        ENDIF
 #endif /* IHOP_WRITE_OUT */
     ELSE
-       freqVec( 1 ) = freq0
+       freqVec( 1 ) = IHOP_freq 
     END IF
 
   RETURN
@@ -333,6 +332,8 @@ CONTAINS
     ! Read a vector x
     ! Description is something like 'receiver ranges'
     ! Units       is something like 'km'
+
+    USE sort_mod,         only: Sort
 
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO

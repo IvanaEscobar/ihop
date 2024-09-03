@@ -168,7 +168,7 @@ CONTAINS
 #ifdef IHOP_THREED
     CALL ReadRcvrBearings( myThid )
 #endif /* IHOP_THREED */
-    CALL ReadfreqVec( IHOP_freq,  Bdry%Top%HS%Opt( 6:6 ), myThid )
+    CALL ReadfreqVec( Bdry%Top%HS%Opt( 6:6 ), myThid )
 
     ! *** run type ***
     Beam%RunType = IHOP_runopt

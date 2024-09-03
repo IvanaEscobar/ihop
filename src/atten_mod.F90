@@ -11,7 +11,9 @@ MODULE atten_mod
   !  complex sound speed
   !  Includes a formula for volume attenuation
 
+#ifdef IHOP_WRITE_OUT
   USE ihop_mod, only: PRTFile
+#endif
 ! ! USES
   implicit none
 !  == Global variables ==
@@ -70,7 +72,7 @@ CONTAINS
     ! alpha imaginary part of sound speed
 
     INTEGER, INTENT( IN ) :: myThid
-    REAL (KIND=_RL90), INTENT( IN ) :: alpha, c, z, beta, fT
+    REAL (KIND=_RL90), INTENT( IN ) :: z, c, alpha, beta, fT
     CHARACTER (LEN=2), INTENT( IN ) :: AttenUnit
     REAL    (KIND=_RL90)            :: f2, afreq, alphaT, Thorp, a, FG
     COMPLEX (KIND=_RL90)            :: CRCI

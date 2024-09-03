@@ -698,7 +698,7 @@ C--   Reset the model iteration counter and the model time.
 #ifdef ALLOW_DEBUG
         IF (debugMode) CALL DEBUG_CALL('ihop_cost_inloop',myThid)
 #endif
-c--     Accumulate in-situ time averages of theta, salt, and SSH.
+c--     Accumulate in-situ acoutsic travel times. 
 #ifdef ALLOW_AUTODIFF
 C--   Reset the model iteration counter and the model time.
         myIter = nIter0 + (iloop-1)
@@ -771,7 +771,7 @@ c--   Accumulate travel times
         CALL TIMER_START('IHOP_COST_INLOOP    [THE_MAIN_LOOP]', myThid)
         CALL IHOP_COST_INLOOP( endtime, myThid )
         CALL TIMER_STOP ('IHOP_COST_INLOOP    [THE_MAIN_LOOP]', myThid)
-c--   Compute all obsfit cost function contributions.
+c--   Compute all ihop cost function contributions.
         CALL TIMER_START('COST_IHOP   [THE_MAIN_LOOP]', myThid)
         CALL COST_IHOP( myIter, myTime, myThid )
         CALL TIMER_STOP ('COST_IHOP   [THE_MAIN_LOOP]', myThid)
