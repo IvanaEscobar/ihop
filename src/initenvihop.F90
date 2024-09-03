@@ -38,9 +38,6 @@ MODULE initenvihop
   public    initEnv, OpenOutputFiles, resetMemory
 !=======================================================================
 
-#ifdef ALLOW_AUTODIFF_TAMC
-!ADJ PASSIVE betaPowerLaw, fT
-#endif /* ALLOW_AUTODIFF_TAMC */
 
 CONTAINS
   SUBROUTINE initEnv( myTime, myIter, myThid )
@@ -71,6 +68,10 @@ CONTAINS
     CHARACTER (LEN= 2) :: AttenUnit
     CHARACTER (LEN=10) :: PlotType
 
+    !RG
+    Bdry%Bot%HS = HSInfo(0.,0.,0.,0., 0.,0. , (0.,0.),(0.,0.), '', '' )
+    Bdry%Top%HS = HSInfo(0.,0.,0.,0., 0.,0. , (0.,0.),(0.,0.), '', '' )
+ 
     ! *** ihop info to PRTFile ***
     CALL openPRTFile( myTime, myIter, myThid )
 
@@ -889,6 +890,8 @@ CONTAINS
     HS%cs  = 0.0
     HS%rho = 0.0
 
+    zTemp = 999.            !RG
+    fT    = 1D20            !RG
     SELECT CASE ( HS%BC )
     CASE ( 'A' )                  ! *** Half-space properties ***
        ! IEsco23: MISSING IF BOTTOM BC CHECK

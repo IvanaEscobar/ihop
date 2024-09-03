@@ -186,12 +186,11 @@ CONTAINS
         ! In adjoint mode we do not write output besides on the first run
         IF (IHOP_dumpfreq.GE.0) &
             CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-        WRITE(msgBuf,'(A)') 'SSPMOD evalSSP: Invalid SSP profile option'
+        WRITE(msgBuf,'(A)') 'SSPMOD initSSP: Invalid SSP profile option'
         CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
-        STOP 'ABNORMAL END: S/R evalSSP'
+        STOP 'ABNORMAL END: S/R initSSP'
     END SELECT
-
   RETURN
   END !SUBROUTINE initSSP
   
@@ -233,6 +232,13 @@ CONTAINS
         CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
         STOP 'ABNORMAL END: S/R evalSSP'
+        c = 0.         !RG
+        cimag = 0.     !RG
+        gradc = 0.     !RG
+        crr   = 0.     !RG
+        crz   = 0.     !RG
+        czz   = 0.     !RG
+        rho   = 0.     !RG
     END SELECT
 
   RETURN

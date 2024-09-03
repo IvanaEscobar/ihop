@@ -75,11 +75,11 @@ CONTAINS
 
     INTEGER, INTENT( IN ) :: N
     REAL (KIND=_RL90) :: x( * ), xTemp
-
+!$TAF init Sortd = static, N-1
     IF ( N == 1 ) RETURN
 
     DO I = 2, N
-
+!$TAF store x(1) = Sortd
        xTemp = x( I )
 
        IF ( xTemp < x( 1 ) ) THEN

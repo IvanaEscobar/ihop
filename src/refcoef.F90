@@ -113,6 +113,10 @@ CONTAINS
 
     ELSE   ! should allocate something anyway, since variable is passed
        ALLOCATE(  RBot( 1 ), Stat = IAllocStat )
+       RBot(1)%theta = 0.  !RG
+       RBot(1)%R = 0.      !RG
+       RBot(1)%phi = 0.    !RG
+       NBotPts = 1         !RG
     ENDIF
 
     ! Optionally read in top reflection coefficient

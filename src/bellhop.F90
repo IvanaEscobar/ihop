@@ -31,7 +31,7 @@ MODULE BELLHOP
   USE initenvihop,  only:   initEnv, openOutputFiles, resetMemory
   USE angle_mod,    only:   Angles, ialpha
   USE srPos_mod,    only:   Pos
-  USE ssp_mod,      only:   evalSSP, HSInfo, Bdry, SSP, fT
+  USE ssp_mod,      only:   evalSSP, HSInfo, Bdry, SSP
   USE bdry_mod,     only:   initATI, initBTY, GetTopSeg, GetBotSeg, Bot, Top,  &
                             atiType, btyType, NatiPts, NbtyPts, iSmallStepCtr, &
                             IsegTop, IsegBot, rTopSeg, rBotSeg
@@ -45,7 +45,7 @@ MODULE BELLHOP
   USE writeRay,     only:   WriteRay2D, WriteDel2D
   USE arr_mod,      only:   WriteArrivalsASCII,WriteArrivalsBinary,MaxNArr,    &
                             Arr, NArr, U
-  
+  USE ssp_mod,      only: betaPowerLaw, fT     !RG
 
 !   !USES:
   IMPLICIT NONE
@@ -190,8 +190,10 @@ CONTAINS
           U = 0.0
      CASE ( 'A', 'a', 'R', 'E', 'e' )   ! Arrivals calculation
           ALLOCATE ( U( 1,1 ), Stat = iAllocStat )   ! open a dummy variable
+          U( 1,1 ) = 0.                              !RG set value
      CASE DEFAULT
           ALLOCATE ( U( 1,1 ), Stat = iAllocStat )   ! open a dummy variable
+          U( 1,1 ) = 0.                              !RG set value
      END SELECT
   
      ! for an arrivals run, allocate space for arrivals matrices
@@ -302,7 +304,8 @@ CONTAINS
   
   ! **********************************************************************!
   SUBROUTINE BellhopCore( myThid )
-  
+  USE ssp_mod,  only: iSegr           !RG
+  USE influence,  only: ratio1, rB    !RG
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO
   !     msgBuf :: Used to build messages for printing.
@@ -314,7 +317,9 @@ CONTAINS
                             NalphaOpt
     REAL    (KIND=_RL90) :: Amp0, DalphaOpt, xs( 2 ), RadMax, s, &
                             c, cimag, gradc( 2 ), crr, crz, czz, rho
-  
+
+!$TAF init BellhopCore1 = static, Pos%NSz
+!$TAF init BellhopCore2 = static, Pos%NSz*Angles%Nalpha
     afreq = 2.0 * PI * IHOP_freq
   
     Angles%alpha  = Angles%alpha * deg2rad  ! convert to radians
@@ -335,6 +340,7 @@ CONTAINS
     !         begin solve         !
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     SourceDepth: DO is = 1, Pos%NSz
+!$TAF store beam,betapowerlaw,isegr,ssp = BellhopCore1
        xs = [ zeroRL, Pos%Sz( is ) ]   ! source coordinate, assuming source @ r=0
   
        SELECT CASE ( Beam%RunType( 1:1 ) )
@@ -367,6 +373,7 @@ CONTAINS
   
        ! Trace successive beams
        DeclinationAngle: DO ialpha = 1, Angles%Nalpha
+!$TAF store arr,bdry,isegr,narr,ratio1,rb,ssp,u = BellhopCore2
           ! take-off declination angle in degrees
           SrcDeclAngle = rad2deg * Angles%alpha( ialpha )
   
@@ -405,6 +412,7 @@ CONTAINS
              END IF
 #endif /* IHOP_WRITE_OUT */
              
+             betapowerlaw = 1. !RG?
              ! Trace a ray, update ray2D structure
              CALL TraceRay2D( xs, Angles%alpha( ialpha ), Amp0, myThid )   
   
@@ -413,7 +421,6 @@ CONTAINS
                 CALL WriteRay2D( SrcDeclAngle, Beam%Nsteps )
                 IF (writeDelay) CALL WriteDel2D( SrcDeclAngle, Beam%Nsteps )
              ELSE ! Compute the contribution to the field
-                
                 SELECT CASE ( Beam%Type( 1:1 ) )
                 CASE ( 'g' )
                    CALL InfluenceGeoHatRayCen(    U, Angles%alpha( ialpha ), &
@@ -464,7 +471,7 @@ CONTAINS
     ! Traces the beam corresponding to a particular take-off angle, alpha [rad]
   
     USE step,     only: Step2D
-  
+    USE ssp_mod,  only: iSegr           !RG
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO
   !     msgBuf :: Used to build messages for printing.
@@ -543,6 +550,8 @@ CONTAINS
     is = 0
     continue_steps = .true.
     Stepping: DO istep = 1, MaxN - 1
+!$TAF store bdry,beam,continue_steps,distbegbot,distbegtop = TraceRay2D
+!$TAF store is,isegbot,isegr,isegtop,ray2d,rbotseg,rtopseg,ssp = TraceRay2D
        IF ( continue_steps ) THEN
          is  = is + 1 ! old step
          is1 = is + 1 ! new step forward

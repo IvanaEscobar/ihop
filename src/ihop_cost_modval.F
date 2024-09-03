@@ -98,6 +98,7 @@ C !LOCAL VARIABLES:
       maxindex  = 1
 
       DO ii=1,Narr(ri,rj)
+!!$TAF store maxarrval = ihop_cost
           IF (arrval(ii) > maxarrval) THEN
               maxarrval = arrval(ii)
               maxindex  = ii

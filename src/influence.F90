@@ -44,6 +44,7 @@ MODULE influence
 
 CONTAINS
   SUBROUTINE InfluenceGeoHatRayCen( U, alpha, dalpha, myThid )
+    use arr_mod, only: NArr, Arr         !RG
 
     ! Geometrically-spreading beams with a hat-shaped beam in ray-centered 
     ! coordinates
@@ -66,6 +67,9 @@ CONTAINS
 
     !!! need to add logic related to NRz_per_range
 
+!$TAF init iRayCen1 = static, (Beam%Nsteps-1)*NRz_per_range
+!$TAF init iRayCen2 = static, (Beam%Nsteps-1)*ihop_nrr*NRz_per_range
+
     q0           = ray2D( 1 )%c / Dalpha   ! Reference for J = q0 / q
     SrcDeclAngle = rad2deg * alpha          ! take-off angle in degrees
 
@@ -84,6 +88,7 @@ CONTAINS
     ! a segment of the TL line, so no special treatment is necessary
  
     ! point source (cylindrical coordinates): default behavior
+    Ratio1 = 1.0d0          !RG
     IF ( Beam%RunType( 4:4 ) == 'R' ) Ratio1 = SQRT( ABS( COS( alpha ) ) ) 
 
     ray2D( 1:Beam%Nsteps )%Amp = Ratio1 * SQRT( ray2D( 1:Beam%Nsteps )%c ) &
@@ -110,12 +115,14 @@ CONTAINS
        END IF
 
        Stepping: DO iS = 2, Beam%Nsteps
+!$TAF store ira,irb,na,nb,phase,qold,ra,rb = iRayCen1
          skip_step = .FALSE.
        
          ! Compute ray-centered coordinates, (znV, rnV)
        
          ! If normal is parallel to TL-line, skip to the next step on ray
          IF (ABS(znV(iS)) < 1D-10) THEN
+           rB = something
            skip_step = .TRUE.
          ELSE
            nB = (zR - ray2D(iS)%x(2)) / znV(iS)
@@ -154,6 +161,7 @@ CONTAINS
        
            ! Compute influence for each receiver
            DO ir = irA + 1 - II, irB + II, SIGN(1, irB - irA)
+!$TAF store Arr(:,ir,iz),NArr(ir,iz),q = iRayCen2
              W = (Pos%Rr(ir) - rA) / (rB - rA)  ! relative range between rR
              n = ABS(nA + W * (nB - nA))
              q = ray2D(iS - 1)%q(1) + W * dq(iS - 1)  ! interpolated amplitude
@@ -187,7 +195,7 @@ CONTAINS
   ! **********************************************************************!
 
   SUBROUTINE InfluenceGeoHatCart( U, alpha, Dalpha, myThid )
-
+    use arr_mod, only: NArr, Arr         !RG
     ! Geometric, hat-shaped beams in Cartesisan coordinates
 
   !     == Routine Arguments ==
@@ -207,6 +215,10 @@ CONTAINS
     COMPLEX (KIND=_RL90) :: dtauds
     LOGICAL              :: inRcvrRanges
 
+!$TAF init iiitape1 = static, (Beam%Nsteps-1)
+!$TAF init iiitape2 = static, (Beam%Nsteps-1)*ihop_nrr
+!$TAF init iiitape3 = static, (Beam%Nsteps-1)*ihop_nrr*NRz_per_range
+
     q0           = ray2D( 1 )%c / Dalpha   ! Reference for J = q0 / q
     SrcDeclAngle = rad2deg * alpha         ! take-off angle, degrees
     phase        = 0.0
@@ -220,9 +232,11 @@ CONTAINS
     IF ( ray2D( 1 )%t( 1 ) < 0.0d0 .AND. ir > 1 ) ir = ir - 1  
 
     ! point source: the default option
+    Ratio1 = 1.0d0          !RG
     IF ( Beam%RunType( 4 : 4 ) == 'R' ) Ratio1 = SQRT( ABS( COS( alpha ) ) )  
 
     Stepping: DO iS = 2, Beam%Nsteps
+!$TAF store phase,qold,ra = iiitape1
        rB     = ray2D( iS   )%x( 1 )
        x_ray  = ray2D( iS-1 )%x
 
@@ -260,6 +274,7 @@ CONTAINS
         ! compute beam influence for this segment of the ray
         inRcvrRanges=.TRUE.
         RcvrRanges: DO ir = 1, ihop_nrr
+!$TAF store inrcvrranges = iiitape2
            ! is Rr( ir ) contained in [ rA, rB )? Then compute beam influence
            IF ( Pos%Rr( ir ) >= MIN( rA, rB ) &
                 .AND. Pos%Rr( ir ) < MAX( rA, rB ) &
@@ -273,6 +288,7 @@ CONTAINS
               END IF
 
               RcvrDepths: DO iz = 1, NRz_per_range
+!$TAF store Arr(:,ir,iz),NArr(ir,iz),q = iiitape3
                  ! is x_rcvr( 2, iz ) contained in ( zmin, zmax )?
                  IF (       x_rcvr( 2, iz ) .GE. zmin &
                       .AND. x_rcvr( 2, iz ) .LE. zmax ) THEN
@@ -337,6 +353,7 @@ CONTAINS
   ! **********************************************************************!
 
   SUBROUTINE InfluenceGeoGaussianCart( U, alpha, Dalpha, myThid )
+    use arr_mod, only: NArr, Arr         !RG
 
     ! Geometric, Gaussian beams in Cartesian coordintes
     
@@ -356,6 +373,10 @@ CONTAINS
                             rLen, RadiusMax, zMin, zMax, sigma, lambda, A, dqds
     COMPLEX (KIND=_RL90) :: dtauds
     LOGICAL              :: inRcvrRanges
+
+!$TAF init iGauCart1 = static, (Beam%Nsteps-1)
+!$TAF init iGauCart2 = static, (Beam%Nsteps-1)*ihop_nrr
+!$TAF init iGauCart3 = static, (Beam%Nsteps-1)*ihop_nrr*NRz_per_range
 
     q0           = ray2D( 1 )%c / Dalpha   ! Reference for J = q0 / q
     SrcDeclAngle = rad2deg * alpha          ! take-off angle in degrees
@@ -381,6 +402,7 @@ CONTAINS
     END IF
 
     Stepping: DO iS = 2, Beam%Nsteps
+!$TAF store phase,qold,ra = iGauCart1
        rB    = ray2D( iS     )%x( 1 )
        x_ray = ray2D( iS - 1 )%x
 
@@ -428,12 +450,14 @@ CONTAINS
         ! compute beam influence for this segment of the ray
         inRcvrRanges=.TRUE.
         RcvrRanges: DO ir = 1, ihop_nrr
+!$TAF store inrcvrranges = iGauCart2
            ! is Rr( ir ) contained in [ rA, rB )? Then compute beam influence
            IF ( Pos%Rr( ir ) >= MIN( rA, rB ) &
                 .AND. Pos%Rr( ir ) < MAX( rA, rB ) &
                 .AND. inRcvrRanges ) THEN
 
               RcvrDepths: DO iz = 1, NRz_per_range
+!$TAF store arr,narr,q = iGauCart3
                  IF ( Beam%RunType( 5 : 5 ) == 'I' ) THEN
                     x_rcvr = [ Pos%Rr( ir ), Pos%Rz( ir ) ]   ! irregular   grid
                  ELSE
