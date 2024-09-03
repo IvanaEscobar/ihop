@@ -49,6 +49,9 @@
 !C   this allows to read & do simple linear time interpolation of oceanic
 !C   forcing fields, if no specific pkg (e.g., EXF) is used to compute them.
 #undef EXCLUDE_FFIELDS_LOAD
+!C   If defined, use same method (with pkg/autodiff compiled or not) for checking
+!C   when to load new reccord ; by default, use simpler method with pkg/autodiff.
+#undef STORE_LOADEDREC_TEST
 
 !C o Include/exclude phi_hyd calculation code
 #define INCLUDE_PHIHYD_CALCULATION_CODE
@@ -127,6 +130,9 @@
 #undef SOLVE_DIAGONAL_LOWMEMORY
 !C   The following one suitable for AD but does not vectorize
 #undef SOLVE_DIAGONAL_KINNER
+
+!C   Implementation alternative (might be faster on some platforms ?)
+#undef USE_MASK_AND_NO_IF
 
 !C-- Retired code options:
 
