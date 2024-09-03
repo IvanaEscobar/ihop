@@ -10,7 +10,7 @@ MODULE initenvihop
 
   USE ihop_mod,     only: PRTFile, RAYFile, DELFile, ARRFile, SHDFile, &
                           Title, Beam
-  USE ssp_mod,      only: EvaluateSSP, HSInfo, Bdry, SSP, zTemp, alphaR, betaR,&
+  USE ssp_mod,      only: initSSP, HSInfo, Bdry, SSP, zTemp, alphaR, betaR,&
                           alphaI, betaI, rhoR, betaPowerLaw, fT
   USE atten_mod,    only: CRCI, T, Salinity, pH, z_bar, iBio, NBioLayers, bio
 
@@ -66,7 +66,7 @@ CONTAINS
   ! == Local Variables ==
     REAL (KIND=_RL90),  PARAMETER :: c0 = 1500.0
     REAL               :: ZMin, ZMax
-    REAL (KIND=_RL90)  :: x( 2 ), c, cimag, gradc( 2 ), crr, crz, czz, rho, &
+    REAL (KIND=_RL90)  :: x( 2 ), c, cimag, gradc( 2 ), crz, czz, rho, &
                           Depth
     CHARACTER (LEN= 2) :: AttenUnit
     CHARACTER (LEN=10) :: PlotType
@@ -108,7 +108,7 @@ CONTAINS
     _END_MASTER(myThid)
 #endif /* IHOP_WRITE_OUT */
 
-    CALL EvaluateSSP( x, c, cimag, gradc, crr, crz, czz, rho, 'INI', myThid )
+    CALL initSSP( x, myThid )
 
     Bdry%Top%HS%Depth = SSP%z( 1 )   ! first SSP point is top depth
 

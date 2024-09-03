@@ -7,7 +7,7 @@ MODULE step
     ! </CONTACT>
 
   USE ihop_mod, only: Beam, ray2DPt
-  USE ssp_mod,  only: EvaluateSSP, SSP, iSegz, iSegr
+  USE ssp_mod,  only: evalSSP, SSP, iSegz, iSegr
 
 ! !USES:
   IMPLICIT NONE
@@ -61,8 +61,7 @@ CONTAINS
 
     ! *** Phase 1 (an Euler step)
 
-    CALL EvaluateSSP( ray0%x, c0, cimag0, gradc0, crr0, crz0, czz0, rho, &
-                      'TAB', myThid )
+    CALL evalSSP( ray0%x, c0, cimag0, gradc0, crr0, crz0, czz0, rho, myThid )
 
     csq0      = c0 * c0
     cnn0_csq0 = crr0*ray0%t( 2 )**2 - 2.0*crz0*ray0%t( 1 )*ray0%t( 2 ) &
@@ -86,8 +85,7 @@ CONTAINS
 
     ! *** Phase 2 (update step size, and Polygon march forward) 
 
-    CALL EvaluateSSP( ray1%x, c1, cimag1, gradc1, crr1, crz1, czz1, rho, & 
-                      'TAB', myThid  )
+    CALL evalSSP( ray1%x, c1, cimag1, gradc1, crr1, crz1, czz1, rho, myThid )
     csq1      = c1 * c1
     cnn1_csq1 = crr1*ray1%t( 2 )**2 - 2.0*crz1*ray1%t( 1 )*ray1%t( 2 ) &
               + czz1*ray1%t( 1 )**2
@@ -123,8 +121,7 @@ CONTAINS
     ray2%NumBotBnc = ray0%NumBotBnc
 
     ! If we crossed an interface, apply linear jump condition
-    CALL EvaluateSSP( ray2%x, c2, cimag2, gradc2, crr2, crz2, czz2, rho, &
-                      'TAB', myThid )
+    CALL evalSSP( ray2%x, c2, cimag2, gradc2, crr2, crz2, czz2, rho, myThid )
     ray2%c = c2
 
     IF ( iSegz /= iSegz0 .OR. iSegr /= iSegr0 ) THEN
@@ -160,8 +157,11 @@ CONTAINS
     USE bdry_mod, only: rTopSeg, rBotSeg, iSmallStepCtr
 
     INTEGER,           INTENT( IN    ) :: iSegz0, iSegr0  ! SSP layer ray is in
-    REAL (KIND=_RL90), INTENT( IN    ) :: x0( 2 ), urayt( 2 )   ! ray coordinate and tangent
-    REAL (KIND=_RL90), INTENT( IN    ) :: Topx( 2 ), Topn( 2 ), Botx( 2 ), Botn( 2 ) ! Top, bottom coordinate and normal
+    ! ray coordinate and tangent
+    REAL (KIND=_RL90), INTENT( IN    ) :: x0( 2 ), urayt( 2 )
+    ! Top, bottom coordinate and normal
+    REAL (KIND=_RL90), INTENT( IN    ) :: Topx( 2 ), Topn( 2 )
+    REAL (KIND=_RL90), INTENT( IN    ) :: Botx( 2 ), Botn( 2 ) 
     REAL (KIND=_RL90), INTENT( INOUT ) :: h ! reduced step size 
     REAL (KIND=_RL90)                  :: hInt, hTop, hBot, hSeg, &
                                           hBoxr, hBoxz ! trial step sizes

@@ -31,7 +31,7 @@ MODULE BELLHOP
   USE initenvihop,  only:   initEnv, openOutputFiles, resetMemory
   USE angle_mod,    only:   Angles, ialpha
   USE srPos_mod,    only:   Pos
-  USE ssp_mod,      only:   EvaluateSSP, HSInfo, Bdry, SSP, fT
+  USE ssp_mod,      only:   evalSSP, HSInfo, Bdry, SSP, fT
   USE bdry_mod,     only:   initATI, initBTY, GetTopSeg, GetBotSeg, Bot, Top,  &
                             atiType, btyType, NatiPts, NbtyPts, iSmallStepCtr, &
                             IsegTop, IsegBot, rTopSeg, rBotSeg
@@ -344,8 +344,7 @@ CONTAINS
           NArr = 0
        END SELECT
   
-       CALL EvaluateSSP(  xs, c, cimag, gradc, crr, crz, czz, rho, &
-                          'TAB', myThid  )
+       CALL evalSSP(  xs, c, cimag, gradc, crr, crz, czz, rho, myThid  )
   
        !!IESCO22: BEAM stuff !!
        RadMax = 5 * c / IHOP_freq  ! 5 wavelength max radius IEsco22: unused
@@ -486,8 +485,7 @@ CONTAINS
   
     ! Initial conditions (IC)
     iSmallStepCtr = 0
-    CALL EvaluateSSP( xs, c, cimag, gradc, crr, crz, czz, rho, &
-                      'TAB', myThid )
+    CALL evalSSP( xs, c, cimag, gradc, crr, crz, czz, rho, myThid )
     ray2D( 1 )%c         = c              ! sound speed at source [m/s]
     ray2D( 1 )%x         = xs             ! range and depth of source
     ray2D( 1 )%t         = [ COS( alpha ), SIN( alpha ) ] / c ! unit tangent / c
@@ -765,8 +763,7 @@ CONTAINS
     ! Based on formulas given by Muller, Geoph. J. R.A.S., 79 (1984).
   
     ! Get c
-    CALL EvaluateSSP( ray2D( is )%x, c, cimag, gradc, crr, crz, czz, rho, & 
-                      'TAB', myThid  )
+    CALL evalSSP( ray2D( is )%x, c, cimag, gradc, crr, crz, czz, rho, myThid )
   
     ! unmodified unit ray tangent and normal
     rayt = c * ray2D( is )%t                              ! unit tangent to ray
