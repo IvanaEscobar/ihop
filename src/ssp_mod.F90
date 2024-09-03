@@ -260,6 +260,8 @@ CONTAINS
     REAL (KIND=_RL90), INTENT( OUT ) :: c, cimag, gradc( 2 ), crr, crz, czz, &
                                         rho ! sound speed and its derivatives
     
+    
+    iSegz = 1                   !RG
     IF ( x( 2 ) < SSP%z( iSegz ) .OR. x( 2 ) > SSP%z( iSegz+1 ) ) THEN
       foundz=.false.
 !IEsco23 Test this: 
@@ -303,6 +305,7 @@ CONTAINS
     ! sound speed and its derivatives
     REAL (KIND=_RL90), INTENT( OUT ) :: c, cimag, gradc( 2 ), crr, crz, czz, rho
     
+    iSegz = 1                   !RG
     IF ( x( 2 ) < SSP%z( iSegz ) .OR. x( 2 ) > SSP%z( iSegz+1 ) ) THEN
        foundz=.false.
 !IEsco23 Test this: 
@@ -348,7 +351,7 @@ CONTAINS
     COMPLEX (KIND=_RL90) :: c_cmplx
 
 
-
+    iSegz = 1                   !RG
     IF ( x( 2 ) < SSP%z( iSegz ) .OR. x( 2 ) > SSP%z( iSegz+1 ) ) THEN
        foundz=.false.
 !IEsco23 Test this: 
@@ -408,6 +411,7 @@ CONTAINS
 
     ! *** Section to return SSP info ***
 
+    iSegz = 1                   !RG
      IF ( x( 2 ) < SSP%z( iSegz ) .OR. x( 2 ) > SSP%z( iSegz+1 ) ) THEN
         foundz=.false.
 !IEsco23 Test this: 
@@ -462,6 +466,7 @@ CONTAINS
   
     ! IESCO22: iSegz is the depth index containing x depth
     ! find depth-layer where x(2) in ( SSP%z( iSegz ), SSP%z( iSegz+1 ) )
+    iSegz = 1                   !RG
     IF ( x( 2 ) < SSP%z( iSegz ) .OR. x( 2 ) > SSP%z( iSegz+1 ) ) THEN
        foundz=.false.
        DO iz = 2, SSP%Nz   ! Search for bracketting Depths
@@ -491,6 +496,7 @@ CONTAINS
     END IF
   
     ! find range-segment where x(1) in [ SSP%Seg%r( iSegr ), SSP%Seg%r( iSegr+1 ) )
+    iSegr = 1           !RG
     IF ( x( 1 ) < SSP%Seg%r( iSegr ) .OR. x( 1 ) >= SSP%Seg%r( iSegr+1 ) ) THEN
       foundr=.false.
       DO irT = 2, SSP%Nr   ! Search for bracketting segment ranges
@@ -571,6 +577,8 @@ CONTAINS
   !     == Local Variables ==
     REAL (KIND=_RL90), INTENT(IN) :: Depth
     INTEGER :: iz2
+
+    betaPowerLaw = 1.                        !RG
 
     ! I/O on main thread only
     _BEGIN_MASTER(myThid)
@@ -811,6 +819,8 @@ SUBROUTINE ExtractSSP( Depth, myThid )
   REAL (KIND=_RL90), ALLOCATABLE:: sspcmat(:)
   LOGICAL :: found_interpolation, skip_range
 
+  betaPowerLaw = 1.      !RG
+
   SSP%Nz = Nr+2 ! add z=0 z=Depth layers 
   SSP%Nr = IHOP_NPTS_RANGE
 
@@ -830,8 +840,6 @@ SUBROUTINE ExtractSSP( Depth, myThid )
 # endif /* IHOP_WRITE_OUT */
       STOP 'ABNORMAL END: S/R ExtractSSP'
   END IF
-
-!!$TAF INIT tape_ssp = 'intermediate'
 
   ! Initiate to ceros
   SSP%cMat  = 0.0 _d 0
@@ -903,11 +911,14 @@ SUBROUTINE ExtractSSP( Depth, myThid )
   ! interpolate SSP with adaptive IDW from gcm grid to ihop grid 
   DO bj=myByLo(myThid),myByHi(myThid)
     DO bi=myBxLo(myThid),myBxHi(myThid)
+!$TAF INIT tape_ssp1 = static, 100                  !RG
+!$TAF INIT tape_ssp2 = static, 100                  !RG
       DO j=1,sNy
         DO i=1,sNx
           DO ii=1,IHOP_npts_range
             found_interpolation = .FALSE.
             DO jj=1,IHOP_npts_idw
+!$TAF STORE found_interpolation = tape_ssp1                    !RG
               ! Interpolate from GCM grid cell centers
               IF (ABS(xC(i, j, bi, bj) - ihop_xc(ii, jj)) .LE. tolerance .AND. &
                   ABS(yC(i, j, bi, bj) - ihop_yc(ii, jj)) .LE. tolerance .AND. &
@@ -915,7 +926,7 @@ SUBROUTINE ExtractSSP( Depth, myThid )
                 njj(ii) = njj(ii) + 1
 
                 DO iz = 1, SSP%Nz - 1
-!!$TAF STORE tmpSSP = tape_ssp
+!$TAF STORE tmpSSP(:,ii,bi,bj),njj(ii) = tape_ssp2                    !RG
                   IF (iz .EQ. 1) THEN
                     ! Top vlevel zero depth
                     tmpSSP(1, ii, bi, bj) = tmpSSP(1, ii, bi, bj) + &
