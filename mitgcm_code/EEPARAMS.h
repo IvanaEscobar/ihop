@@ -27,14 +27,11 @@
       PARAMETER ( MAX_LEN_PREC = 200 )
 
 !C     MAX_NO_THREADS  :: Maximum number of threads allowed.
-!CC    MAX_NO_PROCS    :: Maximum number of processes allowed.
-!CC    MAX_NO_BARRIERS :: Maximum number of distinct thread "barriers"
+!C     GSVec_size      :: Maximum buffer size for Global Sum Vector array
       INTEGER MAX_NO_THREADS
       PARAMETER ( MAX_NO_THREADS =  4 )
-!c     INTEGER MAX_NO_PROCS
-!c     PARAMETER ( MAX_NO_PROCS   =  70000 )
-!c     INTEGER MAX_NO_BARRIERS
-!c     PARAMETER ( MAX_NO_BARRIERS = 1 )
+      INTEGER GSVec_size
+      PARAMETER ( GSVec_size = 1024 )
 
 !C     Particularly weird and obscure voodoo numbers
 !C     lShare :: This wants to be the length in
@@ -57,10 +54,6 @@
       PARAMETER ( lShare1 =  cacheLineSize )
       PARAMETER ( lShare4 =  cacheLineSize/4 )
       PARAMETER ( lShare8 =  cacheLineSize/8 )
-
-!CC    MAX_VGS  :: Maximum buffer size for Global Vector Sum
-!c     INTEGER MAX_VGS
-!c     PARAMETER ( MAX_VGS = 8192 )
 
 !C     ========  EESIZE.h  ========================================
 
