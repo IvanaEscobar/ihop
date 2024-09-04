@@ -122,8 +122,8 @@ CONTAINS
        
          ! If normal is parallel to TL-line, skip to the next step on ray
          IF (ABS(znV(iS)) < 1D-10) THEN
-           rB = something
            skip_step = .TRUE.
+           rB = 1D10
          ELSE
            nB = (zR - ray2D(iS)%x(2)) / znV(iS)
            rB = ray2D(iS)%x(1) + nB * rnV(iS)

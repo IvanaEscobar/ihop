@@ -26,10 +26,16 @@
 
 !     *==========================================================*
 !     | SUBROUTINE READSSP  is passive                           |
+!     | SUBROUTINE WRITESSP is passive                           |
 !     *==========================================================*
 !$TAF SUBROUTINE ssp_mod::readssp INPUT   = 1, 2
 !$TAF SUBROUTINE ssp_mod::readssp OUTPUT  =
 !$TAF SUBROUTINE ssp_mod::readssp MODULE atten_mod INPUT = CRCI
+
+!$TAF SUBROUTINE ssp_mod::writessp INPUT   = 1
+!$TAF SUBROUTINE ssp_mod::writessp OUTPUT  =
+!$TAF SUBROUTINE ssp_mod::writessp MODULE ihop_mod INPUT = PRTFile
+!$TAF SUBROUTINE ssp_mod::writessp MODULE ssp_mod INPUT = SSP
 
 !     *==========================================================*
 !     | SUBROUTINE READPAT  is passive                           |
@@ -39,7 +45,7 @@
 !$TAF SUBROUTINE beampattern::readpat MODULE beampattern OUTPUT  = SrcBmPat
 
 !     *==========================================================*
-!     | SUBROUTINE READREFLECTIONCOEFFICIENT  is passive           |
+!     | SUBROUTINE READREFLECTIONCOEFFICIENT  is passive         |
 !     *==========================================================*
 !$TAF SUBROUTINE refcoef::readreflectioncoefficient INPUT   = 1, 2, 3
 !$TAF SUBROUTINE refcoef::readreflectioncoefficient OUTPUT  =
@@ -49,9 +55,9 @@
 !$TAF SUBROUTINE refcoef::readreflectioncoefficient MODULE refCoef OUTPUT = RBot,RTop
 
 !     *==========================================================*
-!     | SUBROUTINE INITATI  is passive                             |
-!     | SUBROUTINE INITBTY  is passive                             |
-!     | SUBROUTINE COMPUTEBDRYTANGENTNORMAL  is passive            |
+!     | SUBROUTINE INITATI  is passive                           |
+!     | SUBROUTINE INITBTY  is passive                           |
+!     | SUBROUTINE COMPUTEBDRYTANGENTNORMAL  is passive          |
 !     *==========================================================*
 !$TAF SUBROUTINE bdry_mod::initati INPUT   = 1, 2, 3
 !$TAF SUBROUTINE bdry_mod::initati OUTPUT  = 
@@ -65,14 +71,23 @@
 !$TAF SUBROUTINE bdry_mod::computebdrytangentnormal OUTPUT  =
 
 !     *==========================================================*
-!     | PROCEDURE SORT  is passive                                 |
+!     | PROCEDURE SORT  is passive                               |
+!     |     SUBROUTINE SORT_SNGL  is passive                     |
+!     |     SUBROUTINE SORT_DBLE  is passive                     |
+!     |     SUBROUTINE SORT_CMPLX is passive                     |
 !     *==========================================================*
-!$TAF SUBROUTINE sort_mod::sort INPUT   = 1, 2
-!$TAF SUBROUTINE sort_mod::sort OUTPUT  =
+!$TAF SUBROUTINE sort_mod::sort_sngl INPUT   = 1, 2
+!$TAF SUBROUTINE sort_mod::sort_sngl OUTPUT  =
+
+!$TAF SUBROUTINE sort_mod::sort_dble INPUT   = 1, 2
+!$TAF SUBROUTINE sort_mod::sort_dble OUTPUT  =
+
+!$TAF SUBROUTINE sort_mod::sort_cmplx INPUT   = 1, 2
+!$TAF SUBROUTINE sort_mod::sort_cmplx OUTPUT  =
 
 !     *==========================================================*
-!     | SUBROUTINE READVECTOR  is passive                          |
-!     | SUBROUTINE READFREQVEC  is passive                         |
+!     | SUBROUTINE READVECTOR  is passive                        |
+!     | SUBROUTINE READFREQVEC is passive                        |
 !     *==========================================================*
 !$TAF SUBROUTINE srpos_mod::readvector INPUT   = 1, 2, 3, 4, 5
 !$TAF SUBROUTINE srpos_mod::readvector OUTPUT  =    2
@@ -89,7 +104,7 @@
 !================================================================*
 
 !     *==========================================================*
-!     | SUBROUTINE IHOP_COST_READ_OBS  is passive                  |
+!     | SUBROUTINE IHOP_COST_READ_OBS  is passive                |
 !     *==========================================================*
 !$TAF SUBROUTINE  ihop_cost_read_obs   INPUT  =  1,2,3, 5
 !$TAF SUBROUTINE  ihop_cost_read_obs   DEPEND =  1,2,3 

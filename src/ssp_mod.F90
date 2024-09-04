@@ -30,7 +30,7 @@ MODULE ssp_mod
 ! public interfaces
 !=======================================================================
 
-    public initSSP, evalSSP, HSInfo, Bdry, SSP, zTemp, alphaR, betaR, &
+    public initSSP, evalSSP, HSInfo, Bdry, SSP, alphaR, betaR, &
            alphaI, betaI, rhoR, betaPowerLaw, fT, iSegz, iSegr
 
 !=======================================================================
@@ -58,7 +58,7 @@ MODULE ssp_mod
   INTEGER                :: iostat, iallocstat
   INTEGER,           PRIVATE :: iz
   REAL (KIND=_RL90), PRIVATE :: Depth, W
-  REAL (KIND=_RL90)          :: zTemp, betaPowerLaw = 1, fT = 1D20
+  REAL (KIND=_RL90)          :: betaPowerLaw = 1, fT = 1D20
   ! DEFAULT values, BELLHOP only uses alphaR
   REAL (KIND=_RL90)          :: alphaR = 1500, betaR = 0, alphaI = 0, &
                                 betaI = 0, rhoR = 1

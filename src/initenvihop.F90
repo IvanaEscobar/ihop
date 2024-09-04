@@ -10,9 +10,8 @@ MODULE initenvihop
 
   USE ihop_mod,     only: PRTFile, RAYFile, DELFile, ARRFile, SHDFile, &
                           Title, Beam
-  USE ssp_mod,      only: initSSP, HSInfo, Bdry, SSP, zTemp, alphaR, betaR,&
-                          alphaI, betaI, rhoR, betaPowerLaw, fT
-  USE atten_mod,    only: CRCI, T, Salinity, pH, z_bar, iBio, NBioLayers, bio
+  USE ssp_mod,      only: initSSP, HSInfo, Bdry, SSP
+  USE atten_mod,    only: CRCI
 
 ! ! USES
   implicit none
@@ -68,6 +67,9 @@ CONTAINS
     CHARACTER (LEN= 2) :: AttenUnit
     CHARACTER (LEN=10) :: PlotType
 
+    ! init local variables
+    AttenUnit = '  '
+
     !RG
     Bdry%Bot%HS = HSInfo(0.,0.,0.,0., 0.,0. , (0.,0.),(0.,0.), '', '' )
     Bdry%Top%HS = HSInfo(0.,0.,0.,0., 0.,0. , (0.,0.),(0.,0.), '', '' )
@@ -78,18 +80,18 @@ CONTAINS
     ! *** Top Boundary ***
     Bdry%Top%HS%Opt = IHOP_topopt
     Bdry%Top%HS%Depth = 0 !initiate to dummy value
-    CALL ReadTopOpt( Bdry%Top%HS%Opt, Bdry%Top%HS%BC, AttenUnit, myThid )
 
+    CALL ReadTopOpt( Bdry%Top%HS%BC, AttenUnit, myThid )
     CALL TopBot( AttenUnit, Bdry%Top%HS, myThid )
 
-    ! *** Ocean SSP ***
+    ! *** Bottom Boundary ***
+    Bdry%Bot%HS%Opt = IHOP_botopt 
     IF ( IHOP_depth.NE.0 ) THEN
         Bdry%Bot%HS%Depth = IHOP_depth
     ELSE
         ! Extend by 5 wavelengths
         Bdry%Bot%HS%Depth = rkSign*rF( Nr+1 ) + 5*c0/IHOP_freq 
     END IF
-    x = [ 0.0 _d 0, Bdry%Bot%HS%Depth ]   ! tells SSP Depth to read to
 
 #ifdef IHOP_WRITE_OUT
     !   Only do I/O in the main thread
@@ -103,55 +105,42 @@ CONTAINS
      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
      WRITE(msgBuf,'(2A)') 'Top options: ', Bdry%Top%HS%Opt
      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    ENDIF
+     WRITE(msgBuf,'(A)') 
+     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+     WRITE(msgBuf,'(2A)') 'Bottom options: ', Bdry%Bot%HS%Opt
+     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 
+     SELECT CASE ( Bdry%Bot%HS%Opt( 2 : 2 ) )
+       CASE ( '~', '*' )
+#ifdef IHOP_WRITE_OUT
+         WRITE(msgBuf,'(A)') '    Bathymetry file selected'
+         CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+#endif /* IHOP_WRITE_OUT */
+       CASE( ' ' )
+       CASE DEFAULT
+#ifdef IHOP_WRITE_OUT
+         WRITE(msgBuf,'(2A)') 'INITENVIHOP initEnv: ', & 
+                          'Unknown bottom option letter in second position'
+         CALL PRINT_ERROR( msgBuf,myThid )
+#endif /* IHOP_WRITE_OUT */
+         STOP 'ABNORMAL END: S/R initEnv'
+       END SELECT
+    ENDIF
     !   Only do I/O in the main thread
     _END_MASTER(myThid)
 #endif /* IHOP_WRITE_OUT */
 
+    Bdry%Bot%HS%BC = Bdry%Bot%HS%Opt( 1:1 )
+    CALL TopBot( AttenUnit, Bdry%Bot%HS, myThid )
+
+
+    ! *** Ocean SSP ***
+    x = [ 0.0 _d 0, Bdry%Bot%HS%Depth ]   ! tells SSP Depth to read to
     CALL initSSP( x, myThid )
 
     Bdry%Top%HS%Depth = SSP%z( 1 )   ! first SSP point is top depth
 
-    ! *** Bottom Boundary ***
-    ! bottom depth should perhaps be set the same way?
-    Bdry%Bot%HS%Opt = IHOP_botopt 
-
-    !   Only do I/O if in the main thread
-    _BEGIN_MASTER(myThid)
-    ! In adjoint mode we do not write output besides on the first run
-    IF (IHOP_dumpfreq.GE.0) THEN
-#ifdef IHOP_WRITE_OUT
-        WRITE(msgBuf,'(A)') 
-        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-        WRITE(msgBuf,'(2A)') 'Bottom options: ', Bdry%Bot%HS%Opt
-        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-#endif /* IHOP_WRITE_OUT */
-
-        SELECT CASE ( Bdry%Bot%HS%Opt( 2 : 2 ) )
-        CASE ( '~', '*' )
-#ifdef IHOP_WRITE_OUT
-            WRITE(msgBuf,'(A)') '    Bathymetry file selected'
-            CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-#endif /* IHOP_WRITE_OUT */
-        CASE( ' ' )
-        CASE DEFAULT
-#ifdef IHOP_WRITE_OUT
-            WRITE(msgBuf,'(2A)') 'INITENVIHOP initEnv: ', & 
-                             'Unknown bottom option letter in second position'
-            CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
-            STOP 'ABNORMAL END: S/R initEnv'
-        END SELECT
-    ENDIF
-
-    !   Only do I/O in the main thread
-    _END_MASTER(myThid)
-
-    Bdry%Bot%HS%BC = Bdry%Bot%HS%Opt( 1 : 1 )
-    CALL TopBot( AttenUnit, Bdry%Bot%HS, myThid )
-
-    ! *** source and receiver locations ***
+    ! *** Source and Receiver locations ***
     CALL ReadSxSy( myThid ) ! Read source/receiver x-y coordinates
     ZMin = SNGL( Bdry%Top%HS%Depth )
     ZMax = SNGL( Bdry%Bot%HS%Depth )
@@ -437,7 +426,8 @@ CONTAINS
 
   !**********************************************************************!
 
-  SUBROUTINE ReadTopOpt( TopOpt, BC, AttenUnit, myThid )
+  SUBROUTINE ReadTopOpt( BC, AttenUnit, myThid )
+    USE atten_mod, only: T, Salinity, pH, z_bar, iBio, NBioLayers, bio
 
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO
@@ -446,15 +436,12 @@ CONTAINS
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
   
   !     == Local Variables ==
-    CHARACTER (LEN= 6), INTENT( OUT ) :: TopOpt
-    CHARACTER (LEN= 1), INTENT( OUT ) :: BC         ! Boundary condition type
-    CHARACTER (LEN= 2), INTENT( OUT ) :: AttenUnit
+    CHARACTER (LEN= 1), INTENT( OUT )   :: BC ! Boundary condition type
+    CHARACTER (LEN= 2), INTENT( INOUT ) :: AttenUnit
 
-    TopOpt = IHOP_topopt
-
-    SSP%Type  = TopOpt( 1 : 1 )
-    BC        = TopOpt( 2 : 2 )
-    AttenUnit = TopOpt( 3 : 4 )
+    SSP%Type  = IHOP_TopOpt( 1:1 )
+    BC        = IHOP_TopOpt( 2:2 )
+    AttenUnit = IHOP_TopOpt( 3:4 )
     SSP%AttenUnit = AttenUnit
 
     ! In adjoint mode we do not write output besides on the first run
@@ -508,7 +495,7 @@ CONTAINS
 
     ! Attenuation options
 
-    SELECT CASE ( AttenUnit( 1 : 1 ) )
+    SELECT CASE ( AttenUnit( 1:1 ) )
     CASE ( 'N' )
 #ifdef IHOP_WRITE_OUT
        WRITE(msgBuf,'(A)') '    Attenuation units: nepers/m'
@@ -550,7 +537,7 @@ CONTAINS
 
     ! optional addition of volume attenuation using standard formulas
 
-    SELECT CASE ( AttenUnit( 2 : 2 ) )
+    SELECT CASE ( AttenUnit( 2:2 ) )
     CASE ( 'T' )
 #ifdef IHOP_WRITE_OUT
        WRITE(msgBuf,'(A)') '    THORP volume attenuation added'
@@ -597,7 +584,7 @@ CONTAINS
         STOP 'ABNORMAL END: S/R ReadTopOpt'
     END SELECT
 
-    SELECT CASE ( TopOpt( 5 : 5 ) )
+    SELECT CASE ( IHOP_TopOpt( 5:5 ) )
     CASE ( '~', '*' )
 #ifdef IHOP_WRITE_OUT
        WRITE(msgBuf,'(A)') '    Altimetry file selected'
@@ -613,7 +600,7 @@ CONTAINS
         STOP 'ABNORMAL END: S/R ReadTopOpt'
     END SELECT
 
-    SELECT CASE ( TopOpt( 6 : 6 ) )
+    SELECT CASE ( IHOP_TopOpt( 6:6 ) )
     CASE ( 'I' )
 #ifdef IHOP_WRITE_OUT
        WRITE(msgBuf,'(A)') '    Development options enabled'
@@ -819,6 +806,7 @@ CONTAINS
   !**********************************************************************!
 
   SUBROUTINE TopBot( AttenUnit, HS, myThid )
+    USE ssp_mod, only: fT, betaPowerLaw, rhoR, alphaR, betaR, alphaI, betaI
 
     ! Handles top and bottom boundary conditions
 
@@ -832,6 +820,7 @@ CONTAINS
     CHARACTER (LEN=2), INTENT( IN    ) :: AttenUnit
     TYPE ( HSInfo ),   INTENT( INOUT ) :: HS
     REAL (KIND=_RL90) :: Mz, vr, alpha2_f     ! values related to grain size
+    REAL (KIND=_RL90) :: ztemp 
 
     ! In adjoint mode we do not write output besides on the first run
     IF (IHOP_dumpfreq.GE.0) THEN
@@ -881,17 +870,18 @@ CONTAINS
 #endif /* IHOP_WRITE_OUT */
         STOP 'ABNORMAL END: S/R TopBot'
     END SELECT
-
     ENDIF ! no output on adjoint runs
 
     ! ****** Read in BC parameters depending on particular choice ******
-
     HS%cp  = 0.0
     HS%cs  = 0.0
     HS%rho = 0.0
 
-    zTemp = 999.            !RG
-    fT    = 1D20            !RG
+    ! RG recommends resetting to the default values from ssp_mod.F90
+    betaPowerLaw = 1.0
+    fT           = 1D20
+    rhoR         = 1.0
+    
     SELECT CASE ( HS%BC )
     CASE ( 'A' )                  ! *** Half-space properties ***
        ! IEsco23: MISSING IF BOTTOM BC CHECK
@@ -916,21 +906,19 @@ CONTAINS
 #endif /* IHOP_WRITE_OUT */
        ! dummy parameters for a layer with a general power law for attenuation
        ! these are not in play because the AttenUnit for this is not allowed yet
-       !freq0         = IHOP_freq
-       betaPowerLaw  = 1.0
-       ft            = 1000.0
+       fT            = 1000.0
 
        HS%cp  = CRCI( zTemp, alphaR, alphaI, AttenUnit, &
-                      betaPowerLaw, ft, myThid )
+                      betaPowerLaw, fT, myThid )
        HS%cs  = CRCI( zTemp, betaR,  betaI, AttenUnit, &
-                      betaPowerLaw, ft, myThid )
+                      betaPowerLaw, fT, myThid )
 
        HS%rho = rhoR
     CASE ( 'G' )            ! *** Grain size (formulas from UW-APL HF Handbook)
        ! These formulas are from the UW-APL Handbook
        ! The code is taken from older Matlab and is unnecesarily verbose
        ! vr   is the sound speed ratio
-       ! rhor is the density ratio
+       ! rhoR is the density ratio
        !READ(  ENVFile, *    ) zTemp, Mz
 #ifdef IHOP_WRITE_OUT
        WRITE(msgBuf,'( F10.2, 3X, F10.2 )' ) zTemp, Mz
@@ -941,15 +929,15 @@ CONTAINS
 
        IF ( Mz >= -1 .AND. Mz < 1 ) THEN
           vr   = 0.002709 * Mz**2 - 0.056452 * Mz + 1.2778
-          rhor = 0.007797 * Mz**2 - 0.17057  * Mz + 2.3139
+          rhoR = 0.007797 * Mz**2 - 0.17057  * Mz + 2.3139
        ELSE IF ( Mz >= 1 .AND. Mz < 5.3 ) THEN
           vr   = -0.0014881 * Mz**3 + 0.0213937 * Mz**2 - 0.1382798 * Mz &
                + 1.3425
-          rhor = -0.0165406 * Mz**3 + 0.2290201 * Mz**2 - 1.1069031 * Mz &
+          rhoR = -0.0165406 * Mz**3 + 0.2290201 * Mz**2 - 1.1069031 * Mz &
                + 3.0455
        ELSE
           vr   = -0.0024324 * Mz + 1.0019
-          rhor = -0.0012973 * Mz + 1.1565
+          rhoR = -0.0012973 * Mz + 1.1565
        END IF
 
        IF ( Mz >= -1 .AND. Mz < 0 ) THEN
@@ -974,12 +962,12 @@ CONTAINS
        ! loss parameter Sect. IV., Eq. (4) of handbook
        alphaI = alpha2_f * ( vr / 1000 ) * 1500.0 * log( 10.0 ) / ( 40.0*PI )
 
-       HS%cp  = CRCI( zTemp, alphaR, alphaI, 'L ', betaPowerLaw, ft, myThid )
+       HS%cp  = CRCI( zTemp, alphaR, alphaI, 'L ', betaPowerLaw, fT, myThid )
        HS%cs  = 0.0
        HS%rho = rhoR
 #ifdef IHOP_WRITE_OUT
        WRITE(msgBuf,'(A,2F10.2,3X,A,F10.2,3X,A,F10.2)') &
-           'Converted sound speed =', HS%cp, 'density = ', rhor, &
+           'Converted sound speed =', HS%cp, 'density = ', rhoR, &
            'loss parm = ', alphaI
        ! In adjoint mode we do not write output besides on the first run
        IF (IHOP_dumpfreq.GE.0) &
@@ -1382,7 +1370,7 @@ CONTAINS
     !   Only do I/O in the main thread
     _END_MASTER(myThid)
 
-  END ! SUBROUTINE openPRTFile
+  END !SUBROUTINE openPRTFile
 
 
   !**********************************************************************!
@@ -1437,6 +1425,6 @@ CONTAINS
         ray2D(iStep)%tau = (zeroRL, zeroRL)
     END DO
 
-  END ! SUBROUTINE resetMemory
+  END !SUBROUTINE resetMemory
 
 END MODULE initenvihop

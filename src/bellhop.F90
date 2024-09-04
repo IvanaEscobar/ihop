@@ -77,13 +77,12 @@ CONTAINS
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
   
   !     == Local Variables ==
-    LOGICAL, PARAMETER  :: Inline = .FALSE.
     INTEGER             :: iostat, iAllocStat, ierr
     INTEGER             :: jj 
     REAL                :: Tstart, Tstop
   ! added locally previously read in from unknown mod ... IEsco22
     CHARACTER ( LEN=2 ) :: AttenUnit
-  ! For MPI writing: copying eeboot_minimal.F
+  ! For MPI writing: inspo from eeboot_minimal.F
     CHARACTER*(MAX_LEN_FNAM)    :: fNam
     CHARACTER*(6)               :: fmtStr
     INTEGER                     :: mpiRC, IL
@@ -187,13 +186,13 @@ CONTAINS
 #endif /* IHOP_WRITE_OUT */
               STOP 'ABNORMAL END: S/R IHOP_INIT'
           END IF
-          U = 0.0
+          U = 0.0                                    ! init default value
      CASE ( 'A', 'a', 'R', 'E', 'e' )   ! Arrivals calculation
           ALLOCATE ( U( 1,1 ), Stat = iAllocStat )   ! open a dummy variable
-          U( 1,1 ) = 0.                              !RG set value
+          U( 1,1 ) = 0.                              ! init default value
      CASE DEFAULT
           ALLOCATE ( U( 1,1 ), Stat = iAllocStat )   ! open a dummy variable
-          U( 1,1 ) = 0.                              !RG set value
+          U( 1,1 ) = 0.                              ! init default value
      END SELECT
   
      ! for an arrivals run, allocate space for arrivals matrices
@@ -218,6 +217,8 @@ CONTAINS
                      NArr( Pos%NRr, NRz_per_range ), Stat = iAllocStat )
      END SELECT
   
+     ! init Arr, Narr
+     ! Arr = something
      NArr( 1:Pos%NRr, 1:NRz_per_range ) = 0 ! IEsco22 unnecessary? NArr = 0 below
   
 #ifdef IHOP_WRITE_OUT
@@ -305,7 +306,7 @@ CONTAINS
   ! **********************************************************************!
   SUBROUTINE BellhopCore( myThid )
   USE ssp_mod,  only: iSegr           !RG
-  USE influence,  only: ratio1, rB    !RG
+!  USE influence,  only: ratio1, rB    !RG
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO
   !     msgBuf :: Used to build messages for printing.
@@ -340,7 +341,14 @@ CONTAINS
     !         begin solve         !
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     SourceDepth: DO is = 1, Pos%NSz
-!$TAF store beam,betapowerlaw,isegr,ssp = BellhopCore1
+!$TAF store beam,betapowerlaw,isegr = BellhopCore1
+! IESCO24: Write derived type with allocatable memory by type: SSP from ssp_mod
+! Scalar components
+!$TAF store ssp%npts,ssp%nr,ssp%nx,ssp%ny,ssp%nz = BellhopCore1
+! Fixed arrays
+!$TAF store ssp%z,ssp%rho,ssp%c,ssp%cz = BellhopCore1
+! Allocatable arrays
+!$TAF store ssp%cmat,ssp%czmat = BellhopCore1
        xs = [ zeroRL, Pos%Sz( is ) ]   ! source coordinate, assuming source @ r=0
   
        SELECT CASE ( Beam%RunType( 1:1 ) )
@@ -373,7 +381,15 @@ CONTAINS
   
        ! Trace successive beams
        DeclinationAngle: DO ialpha = 1, Angles%Nalpha
-!$TAF store arr,bdry,isegr,narr,ratio1,rb,ssp,u = BellhopCore2
+!$TAF store arr,bdry,isegr,narr,u = BellhopCore2
+!!$TAF store ratio1,rb = BellhopCore2
+! IESCO24: Write derived type with allocatable memory by type: SSP from ssp_mod
+! Scalar components
+!$TAF store ssp%npts,ssp%nr,ssp%nx,ssp%ny,ssp%nz = BellhopCore2
+! Fixed arrays
+!$TAF store ssp%z,ssp%rho,ssp%c,ssp%cz = BellhopCore2
+! Allocatable arrays
+!$TAF store ssp%cmat,ssp%czmat = BellhopCore2
           ! take-off declination angle in degrees
           SrcDeclAngle = rad2deg * Angles%alpha( ialpha )
   
@@ -468,7 +484,7 @@ CONTAINS
   
   SUBROUTINE TraceRay2D( xs, alpha, Amp0, myThid )
   
-    ! Traces the beam corresponding to a particular take-off angle, alpha [rad]
+  ! Traces the beam corresponding to a particular take-off angle, alpha [rad]
   
     USE step,     only: Step2D
     USE ssp_mod,  only: iSegr           !RG
@@ -479,12 +495,12 @@ CONTAINS
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
   
   !     == Local Variables ==
-    REAL (KIND=_RL90), INTENT( IN ) :: xs( 2 )     ! coordinate of source
+    REAL (KIND=_RL90), INTENT( IN ) :: xs(2)       ! coordinate of source
     REAL (KIND=_RL90), INTENT( IN ) :: alpha, Amp0 ! angle in rad, beam amp
     INTEGER           :: is, is1                   ! indices for ray step
-    REAL (KIND=_RL90) :: c, cimag, gradc( 2 ), crr, crz, czz, rho
-    REAL (KIND=_RL90) :: dEndTop( 2 ), dEndBot( 2 ), TopnInt( 2 ), BotnInt( 2 ), &
-                         ToptInt( 2 ), BottInt( 2 ), rayt(2), raytOld(2)
+    REAL (KIND=_RL90) :: c, cimag, gradc(2), crr, crz, czz, rho
+    REAL (KIND=_RL90) :: dEndTop(2), dEndBot(2), TopnInt(2), BotnInt(2), &
+                         ToptInt(2), BottInt(2), rayt(2), raytOld(2)
     ! Distances from ray beginning, end to top and bottom
     REAL (KIND=_RL90) :: DistBegTop, DistEndTop, DistBegBot, DistEndBot 
     REAL (KIND=_RL90) :: sss, declAlpha, declAlphaOld
@@ -546,12 +562,21 @@ CONTAINS
        RETURN       ! source must be within the domain
     END IF
   
+
+!$TAF init TraceRay2D = 'bellhoptraceray2d'
     ! Trace the beam (Reflect2D increments the step index, is)
     is = 0
     continue_steps = .true.
     Stepping: DO istep = 1, MaxN - 1
 !$TAF store bdry,beam,continue_steps,distbegbot,distbegtop = TraceRay2D
-!$TAF store is,isegbot,isegr,isegtop,ray2d,rbotseg,rtopseg,ssp = TraceRay2D
+!$TAF store is,isegbot,isegr,isegtop,ray2d,rbotseg,rtopseg = TraceRay2D
+! IESCO24: Write derived type with allocatable memory by type: SSP from ssp_mod
+! Scalar components
+!$TAF store ssp%npts,ssp%nr,ssp%nx,ssp%ny,ssp%nz = TraceRay2D
+! Fixed arrays
+!$TAF store ssp%z,ssp%rho,ssp%c,ssp%cz = TraceRay2D
+! Allocatable arrays
+!$TAF store ssp%cmat,ssp%czmat = TraceRay2D
        IF ( continue_steps ) THEN
          is  = is + 1 ! old step
          is1 = is + 1 ! new step forward
