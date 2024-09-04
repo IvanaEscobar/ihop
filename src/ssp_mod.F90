@@ -816,7 +816,6 @@ SUBROUTINE ExtractSSP( Depth, myThid )
   REAL (KIND=_RL90)             :: sumweights(IHOP_NPTS_RANGE, Nr), &
                                    dcdz, tolerance
   REAL (KIND=_RL90), ALLOCATABLE:: tmpSSP(:,:,:,:)
-  REAL (KIND=_RL90), ALLOCATABLE:: sspcmat(:)
   LOGICAL :: found_interpolation, skip_range
 
   betaPowerLaw = 1.      !RG
@@ -824,13 +823,9 @@ SUBROUTINE ExtractSSP( Depth, myThid )
   SSP%Nz = Nr+2 ! add z=0 z=Depth layers 
   SSP%Nr = IHOP_NPTS_RANGE
 
-  ! Local allocation
-  IF ( ALLOCATED(sspcmat) ) DEALLOCATE(sspcmat)
-  ALLOCATE( sspcmat(SSP%Nr) )
-
   ALLOCATE( SSP%cMat( SSP%Nz, SSP%Nr ), &
             SSP%czMat( SSP%Nz-1, SSP%Nr ), &
-            SSP%Seg%r( SSP%Nr ), tmpSSP(SSP%Nz,SSP%Nr,nSx,nSy),&
+            SSP%Seg%r( SSP%Nr ), tmpSSP(SSP%Nz,SSP%Nr,nSx,nSy), &
             STAT = iallocstat )
   IF ( iallocstat /= 0 ) THEN
 # ifdef IHOP_WRITE_OUT
@@ -962,7 +957,7 @@ SUBROUTINE ExtractSSP( Depth, myThid )
                         ! Extrapolate
                         tmpSSP(k:SSP%Nz, ii, bi, bj) = &
                           tmpSSP(k-1, ii, bi, bj) + dcdz * SSP%z(k:SSP%Nz)
-                        ! Move to the next range point, ii
+                        ! Move to next range point, ii
                         found_interpolation = .TRUE.
                       END IF
                     END IF
@@ -985,8 +980,6 @@ SUBROUTINE ExtractSSP( Depth, myThid )
   ! END IDW Interpolate
   !==================================================
 
-  ! I/O on main thread only
-  _BEGIN_MASTER(myThid)
   ! set vector structured c, rho, and cz for first range point
   DO iz = 1,SSP%Nz
     alphaR = SSP%cMat( iz, 1 )
@@ -1015,7 +1008,38 @@ SUBROUTINE ExtractSSP( Depth, myThid )
                                  ( SSP%z( iz ) - SSP%z( iz-1 ) )
   END DO
 
-  ! Write relevant diagnostics
+  ! Write to PRTFile
+  CALL writeSSP( myThid )
+
+  ! Modify from [m] to [km]
+  SSP%Seg%r = 1000.0 * SSP%Seg%r
+
+RETURN
+END !SUBROUTINE ExtractSSP
+
+
+SUBROUTINE writeSSP( myThid )
+  ! Extracts SSP from MITgcm grid points
+
+  USE ihop_mod,  only: PRTFile
+
+  ! == Routine Arguments ==
+  ! myThid :: Thread number. Unused by IESCO
+  ! msgBuf :: Used to build messages for printing.
+  INTEGER, INTENT(IN)     :: myThid
+  CHARACTER*(MAX_LEN_MBUF):: msgBuf
+  CHARACTER*(80)          :: fmtstr
+
+  ! == Local Variables ==
+  INTEGER           :: k
+  REAL (KIND=_RL90) :: sspcmat(SSP%Nr)
+
+  ! init local vars
+  sspcmat = 0.0
+
+  ! I/O on main thread only
+  _BEGIN_MASTER(myThid)
+
 #ifdef IHOP_WRITE_OUT
   ! In adjoint mode we do not write output besides on the first run
   IF (IHOP_dumpfreq.GE.0) THEN
@@ -1056,9 +1080,9 @@ SUBROUTINE ExtractSSP( Depth, myThid )
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
     WRITE(msgBuf,'(A)') ' Depth (m)     Soundspeed (m/s)'
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    DO iz = 1, SSP%Nz
-      sspcmat = ssp%cMat( iz,: )
-      WRITE(msgBuf,'(12F10.2)') SSP%z( iz ), SSPcMat
+    DO k = 1, SSP%Nz
+      sspcmat = ssp%cMat( k,: )
+      WRITE(msgBuf,'(12F10.2)') SSP%z( k ), sspcmat 
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
     END DO
   ENDIF
@@ -1067,9 +1091,7 @@ SUBROUTINE ExtractSSP( Depth, myThid )
   _END_MASTER(myThid)
   _BARRIER
 
-  SSP%Seg%r = 1000.0 * SSP%Seg%r   ! convert km to m
-
 RETURN
-END !SUBROUTINE ExtractSSP
+END !SUBROUTINE writeSSP
 
 END MODULE ssp_mod
