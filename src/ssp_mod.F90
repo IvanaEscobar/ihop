@@ -59,7 +59,7 @@ MODULE ssp_mod
   INTEGER,           PRIVATE :: iz
   REAL (KIND=_RL90), PRIVATE :: Depth, W
   REAL (KIND=_RL90)          :: betaPowerLaw = 1, fT = 1D20
-  ! DEFAULT values, BELLHOP only uses alphaR
+  ! DEFAULT values, BELLHOP only modifies alphaR
   REAL (KIND=_RL90)          :: alphaR = 1500, betaR = 0, alphaI = 0, &
                                 betaI = 0, rhoR = 1
                             
@@ -127,12 +127,12 @@ CONTAINS
   
   !     == Local Variables ==
     REAL (KIND=_RL90), INTENT( IN  ) :: x( 2 )  ! r-z SSP evaluation point
-    INTEGER :: irt, iz2
+    INTEGER :: ir, iz
 
     ! All methods require Depth
     Depth = x( 2 )
-    IF (useSSPFile .EQV. .TRUE.) THEN ! eqv for logical operands
-      ! Check if SSPFile exists
+    ! Check if SSPFile exists
+    IF (useSSPFile .EQV. .TRUE.) THEN
       CALL ReadSSP( Depth, myThid )
     ELSE
       CALL ExtractSSP(Depth, myThid )
@@ -140,8 +140,8 @@ CONTAINS
 
     SELECT CASE ( SSP%Type )
     CASE ( 'N' )  !  N2-linear profile option
-       SSP%n2(  1 : SSP%NPts ) = 1.0 / SSP%c( 1 : SSP%NPts )**2
-       !IEsco23 Test this: SSP%n2(  1 : SSP%Nz ) = 1.0 / SSP%c( 1 : SSP%Nz )**2
+       SSP%n2(  1:SSP%NPts ) = 1.0 / SSP%c( 1:SSP%NPts )**2
+       !IEsco23 Test this: SSP%n2(  1:SSP%Nz ) = 1.0 / SSP%c( 1:SSP%Nz )**2
 
        ! compute gradient, n2z
        DO iz = 2, SSP%Npts
@@ -164,19 +164,18 @@ CONTAINS
 !       SSP%cSpline( 1, 1 : SSP%Nz ) = SSP%c( 1 : SSP%Nz )
        
        ! Compute spline coefs
-       CALL CSpline( SSP%z, SSP%cSpline( 1, 1 ), SSP%NPts, &
-                    0, 0, SSP%NPts )
+       CALL CSpline( SSP%z, SSP%cSpline( 1, 1 ), SSP%NPts, 0, 0, SSP%NPts )
 !IEsco23 Test this: 
 !      CALL CSpline( SSP%z, SSP%cSpline( 1,1 ), SSP%Nz,iBCBeg, iBCEnd, SSP%Nz )
 
     CASE ( 'Q' )
        ! calculate cz
-       DO irT = 1, SSP%Nr
-         DO iz2 = 2, SSP%Nz
+       DO ir = 1, SSP%Nr
+         DO iz = 2, SSP%Nz
            ! delta_z = ( SSP%z( iz2 ) - SSP%z( iz2-1 ) )
-           SSP%czMat( iz2-1, irT ) = ( SSP%cMat( iz2  , irT ) - &
-                                       SSP%cMat( iz2-1, irT ) ) / &
-                                    ( SSP%z( iz2 ) - SSP%z( iz2-1 ) )
+           SSP%czMat( iz-1, ir ) = ( SSP%cMat( iz,   ir ) - &
+                                     SSP%cMat( iz-1, ir ) ) / &
+                                   ( SSP%z( iz ) - SSP%z( iz-1 ) )
          END DO
        END DO
 

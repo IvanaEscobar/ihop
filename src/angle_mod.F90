@@ -54,7 +54,7 @@ MODULE angle_mod
   Type( AnglesStructure ) :: Angles
 
 CONTAINS
-  SUBROUTINE ReadRayElevationAngles( freq, Depth, TopOpt, RunType, myThid )
+  SUBROUTINE ReadRayElevationAngles( Depth, TopOpt, RunType, myThid )
 
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO
@@ -63,30 +63,31 @@ CONTAINS
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
   
   !     == Local Variables ==
-    REAL (KIND=_RL90),  INTENT( IN  ) :: freq, Depth
+    REAL (KIND=_RL90),  INTENT( IN  ) :: Depth
     CHARACTER (LEN= 6), INTENT( IN  ) :: TopOpt, RunType
     REAL (KIND=_RL90)   :: d_theta_recommended
 
-    IF ( TopOpt( 6 : 6 ) == 'I' ) THEN ! option to trace a single beam
+    IF ( TopOpt( 6:6 ) == 'I' ) THEN ! option to trace a single beam
+       Angles%Nalpha = 0
        !READ( ENVFile, * ) Angles%Nalpha, Angles%iSingle_alpha 
     ELSE
        Angles%Nalpha = IHOP_nalpha
     END IF
 
     IF ( Angles%Nalpha == 0 ) THEN   ! automatically estimate Nalpha to use
-       IF ( RunType( 1 : 1 ) == 'R' ) THEN
+       IF ( RunType( 1:1 ) == 'R' ) THEN
           ! For a ray trace plot, we don't want too many rays ...
           Angles%Nalpha = 50         
        ELSE
           ! you're letting ME choose? OK: ideas based on an isospeed ocean
           ! limit based on phase of adjacent beams at maximum range
-          Angles%Nalpha = MAX( INT( 0.3 * Pos%Rr( Pos%NRr ) * freq / c0 ), 300 )
+          Angles%Nalpha = MAX( INT( 0.3*Pos%Rr( Pos%NRr )*IHOP_freq/c0 ), 300 )
 
           ! limit based on having beams that are thin with respect to the water 
           ! depth assumes also a full 360 degree angular spread of rays should 
           ! check which Depth is used here, in case where there is a variable 
           ! bathymetry
-          d_theta_recommended = ATAN( Depth / ( 10.0 * Pos%Rr( Pos%NRr ) ) )
+          d_theta_recommended = ATAN( Depth / ( 10.0*Pos%Rr( Pos%NRr ) ) )
           Angles%Nalpha = MAX( INT( PI / d_theta_recommended ), Angles%Nalpha )
        END IF
     END IF
@@ -101,16 +102,20 @@ CONTAINS
         STOP 'ABNORMAL END: S/R ReadRayElevationAngles'
     END IF
 
+    ! init Angles%alpha
+    Angles%alpha = 0.0
     Angles%alpha(1:2) = IHOP_alpha
-    IF ( Angles%Nalpha > 2 ) Angles%alpha( 3 ) = -999.9
+    IF ( Angles%Nalpha > 2 ) Angles%alpha(3) = -999.9
 
+    ! set intermediate values of alpha
     CALL SubTab( Angles%alpha, Angles%Nalpha )
     CALL Sort(   Angles%alpha, Angles%Nalpha )
 
     ! full 360-degree sweep? remove duplicate beam
-    IF ( Angles%Nalpha > 1 .AND. ABS( MOD( Angles%alpha( Angles%Nalpha ) - & 
-                    Angles%alpha( 1 ), 360.0D0 ) ) < 10.0 * TINY( 1.0D0 ) ) &
-                    Angles%Nalpha = Angles%Nalpha - 1
+    IF ( Angles%Nalpha > 1 .AND. &
+         ABS( MOD( Angles%alpha(Angles%Nalpha) - &
+                   Angles%alpha(1), 360.0 ) ) < 10.0*TINY(1.0D0) ) &
+      Angles%Nalpha = Angles%Nalpha - 1
 
 #ifdef IHOP_WRITE_OUT
     ! In adjoint mode we do not write output besides on the first run
@@ -144,7 +149,7 @@ CONTAINS
 #endif /* IHOP_WRITE_OUT */
 
     IF ( Angles%Nalpha>1 .AND. &
-    Angles%alpha(Angles%Nalpha) == Angles%alpha(1) ) THEN
+         Angles%alpha(Angles%Nalpha) == Angles%alpha(1) ) THEN
 #ifdef IHOP_WRITE_OUT
         WRITE(msgBuf,'(2A)') 'ANGLEMOD ReadRayElevationAngles:', &
         'First and last beam take-off angle are identical'
@@ -153,9 +158,9 @@ CONTAINS
         STOP 'ABNORMAL END: S/R ReadRayElevationAngles'
     END IF
 
-    IF ( TopOpt( 6 : 6 ) == 'I' ) THEN
+    IF ( TopOpt( 6:6 ) == 'I' ) THEN
         IF ( Angles%iSingle_alpha<1 .OR. &
-           Angles%iSingle_alpha>Angles%Nalpha ) THEN
+             Angles%iSingle_alpha>Angles%Nalpha ) THEN
 #ifdef IHOP_WRITE_OUT
             WRITE(msgBuf,'(2A)') 'ANGLEMOD ReadRayElevationAngles:', &
             'Selected beam, iSingl not in [ 1, Angles%Nalpha ]'
@@ -170,7 +175,7 @@ CONTAINS
 
   !**********************************************************************!
 #ifdef IHOP_THREED
-  SUBROUTINE ReadRayBearingAngles( freq, TopOpt, RunType, myThid )
+  SUBROUTINE ReadRayBearingAngles( TopOpt, RunType, myThid )
 
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO
@@ -179,7 +184,6 @@ CONTAINS
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
   
   !     == Local Variables ==
-    REAL (KIND=_RL90), INTENT( IN ) :: freq
     CHARACTER (LEN= 6), INTENT( IN ) :: TopOpt, RunType
 
 #ifdef IHOP_WRITE_OUT
@@ -201,7 +205,7 @@ CONTAINS
           ! For a ray trace plot, we don't want too many rays ...
           Angles%Nbeta = 50         
        ELSE
-          Angles%Nbeta = MAX( INT( 0.1 * Pos%rr( Pos%NRr ) * freq / c0 ), 300 )
+          Angles%Nbeta = MAX( INT( 0.1*Pos%rr( Pos%NRr )*IHOP_freq / c0 ), 300 )
        END IF
     END IF
 
