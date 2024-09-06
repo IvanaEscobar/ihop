@@ -141,40 +141,42 @@ CONTAINS
 
        ! In adjoint mode we do not write output besides on the first run
        IF (IHOP_dumpfreq.GE.0) THEN
-       AltiType: SELECT CASE ( atiType( 1 : 1 ) )
+       SELECT CASE ( atiType( 1:1 ) )
 
-       CASE ( 'C' )
+        CASE ( 'C' )
 #ifdef IHOP_WRITE_OUT
           WRITE(msgBuf,'(A)') 'Curvilinear Interpolation'
           CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 #endif /* IHOP_WRITE_OUT */
-       CASE ( 'L' )
+        CASE ( 'L' )
 #ifdef IHOP_WRITE_OUT
           WRITE(msgBuf,'(A)') 'Piecewise linear interpolation'
           CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 #endif /* IHOP_WRITE_OUT */
-       CASE DEFAULT
+        CASE DEFAULT
 #ifdef IHOP_WRITE_OUT
             WRITE(msgBuf,'(2A)') 'BDRYMOD initATI', &
                        'Unknown option for selecting altimetry interpolation'
             CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
             STOP 'ABNORMAL END: S/R initATI'
-       END SELECT AltiType
+       END SELECT
        ENDIF
 
 
        READ(  ATIFile, * ) NAtiPts
 #ifdef IHOP_WRITE_OUT
        WRITE(msgBuf,'(A,I10)') 'Number of altimetry points = ', NAtiPts
-       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+       ! In adjoint mode we do not write output besides on the first run
+       IF (IHOP_dumpfreq.GE.0) &
+         CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 #endif /* IHOP_WRITE_OUT */
 
        ! we'll be extending the altimetry to infinity to the left and right
        NAtiPts = NAtiPts + 2  
 
-       IF (ALLOCATED(phi)) DEALLOCATE(phi)
-       ALLOCATE( Top(  NAtiPts ), phi( NAtiPts ), Stat = IAllocStat )
+       IF (ALLOCATED(Top)) DEALLOCATE(Top)
+       ALLOCATE( Top( NAtiPts ), Stat = IAllocStat )
        IF ( IAllocStat /= 0 ) THEN
 #ifdef IHOP_WRITE_OUT
             WRITE(msgBuf,'(2A)') 'BDRYMOD initATI', &
@@ -197,7 +199,7 @@ CONTAINS
        ! Read in the altimetry
        atiPt: DO ii = 2, NAtiPts - 1
 
-          SELECT CASE ( atiType( 2 : 2 ) )
+          SELECT CASE ( atiType( 2:2 ) )
           CASE ( 'S', '' )
             READ( ATIFile, * ) Top( ii )%x
 #ifdef IHOP_WRITE_OUT
@@ -359,26 +361,26 @@ CONTAINS
  
          ! In adjoint mode we do not write output besides on the first run
          IF (IHOP_dumpfreq.GE.0) THEN
-         BathyType: SELECT CASE ( btyType( 1 : 1 ) )
+         SELECT CASE ( btyType( 1:1 ) )
 
-        CASE ( 'C' )
+            CASE ( 'C' )
 # ifdef IHOP_WRITE_OUT
-            WRITE(msgBuf,'(A)') 'Curvilinear Interpolation'
-            CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+              WRITE(msgBuf,'(A)') 'Curvilinear Interpolation'
+              CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 # endif /* IHOP_WRITE_OUT */
-        CASE ( 'L' )
+            CASE ( 'L' )
 # ifdef IHOP_WRITE_OUT
-            WRITE(msgBuf,'(A)') 'Piecewise linear interpolation'
-            CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+              WRITE(msgBuf,'(A)') 'Piecewise linear interpolation'
+              CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 # endif /* IHOP_WRITE_OUT */
-        CASE DEFAULT
+            CASE DEFAULT
 # ifdef IHOP_WRITE_OUT
-            WRITE(msgBuf,'(2A)') 'BDRYMOD initBTY: ', &
-               'Unknown option for selecting bathymetry interpolation'
-            CALL PRINT_ERROR( msgBuf,myThid )
+              WRITE(msgBuf,'(2A)') 'BDRYMOD initBTY: ', &
+                 'Unknown option for selecting bathymetry interpolation'
+              CALL PRINT_ERROR( msgBuf,myThid )
 # endif /* IHOP_WRITE_OUT */
-            STOP 'ABNORMAL END: S/R initBTY'
-        END SELECT BathyType
+              STOP 'ABNORMAL END: S/R initBTY'
+        END SELECT
         ENDIF
 
 
@@ -410,15 +412,15 @@ CONTAINS
       WRITE(msgBuf,'(A)') 
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 #endif /* IHOP_WRITE_OUT */
-      BathyTypeB: SELECT CASE ( btyType( 2:2 ) )
-      CASE ( 'S', '' )
+      SELECT CASE ( btyType( 2:2 ) )
+        CASE ( 'S', '' )
 # ifdef IHOP_WRITE_OUT
          WRITE(msgBuf,'(A)') 'Short format (bathymetry only)'
          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
          WRITE(msgBuf,'(A)') ' Range (km)  Depth (m)'
          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 # endif /* IHOP_WRITE_OUT */
-       CASE ( 'L' )
+        CASE ( 'L' )
 # ifdef IHOP_WRITE_OUT
          WRITE(msgBuf,'(A)') 'Long format (bathymetry and geoacoustics)'
          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
@@ -428,14 +430,14 @@ CONTAINS
          WRITE(msgBuf,'(A)') 
          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 # endif /* IHOP_WRITE_OUT */
-      CASE DEFAULT
+        CASE DEFAULT
 # ifdef IHOP_WRITE_OUT
          WRITE(msgBuf,'(2A)') 'BDRYMOD initBTY: ', &
             'Unknown option for selecting bathymetry interpolation'
          CALL PRINT_ERROR( msgBuf,myThid )
 # endif /* IHOP_WRITE_OUT */
          STOP 'ABNORMAL END: S/R initBTY'
-      END SELECT BathyTypeB
+      END SELECT
     ENDIF
 
       ! R_low check of gcm depths, change to positive values
@@ -512,7 +514,6 @@ CONTAINS
 # endif /* IHOP_WRITE_OUT */
             STOP 'ABNORMAL END: S/R initBTY'
          END IF
- 
       END DO btyPt
 
       CLOSE( BTYFile )
@@ -554,16 +555,23 @@ CONTAINS
    END IF 
 
 
+    ! Initiate Bot
+    DO ii = 1, NBtyPts
+       ! compressional wave speed
+       Bot( ii )%HS%cP = -999.
+       ! shear wave speed
+       Bot( ii )%HS%cS = -999.
+    END DO
    ! convert range-dependent geoacoustic parameters from user to program units
    ! W is dB/wavelength
    IF ( btyType( 2:2 ) == 'L' ) THEN
       DO ii = 1, NBtyPts
          ! compressional wave speed
-         Bot( ii )%HS%cp = CRCI( 1D20, Bot( ii )%HS%alphaR, &
+         Bot( ii )%HS%cP = CRCI( 1D20, Bot( ii )%HS%alphaR, &
                                    Bot( ii )%HS%alphaI, 'W ', bPower, fT, &
                                    myThid )
          ! shear wave speed
-         Bot( ii )%HS%cs = CRCI( 1D20, Bot( ii )%HS%betaR,  &
+         Bot( ii )%HS%cS = CRCI( 1D20, Bot( ii )%HS%betaR,  &
                                    Bot( ii )%HS%betaI, 'W ', bPower, fT, &
                                    myThid )
       END DO

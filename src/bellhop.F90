@@ -25,8 +25,8 @@ MODULE BELLHOP
   ! Systems Center
 
   
-  USE ihop_mod,     only:   rad2deg, i, Beam, ray2D, NRz_per_range, afreq, &
-                            SrcDeclAngle, iSmallStepCtr, &
+  USE ihop_mod,     only:   rad2deg, i, Beam, ray2D, NRz_per_range, afreq,     &
+                            SrcDeclAngle, iSmallStepCtr,                       &
                             PRTFile, SHDFile, ARRFile, RAYFile, DELFile   
   USE initenvihop,  only:   initEnv, openOutputFiles, resetMemory
   USE angle_mod,    only:   Angles, ialpha
