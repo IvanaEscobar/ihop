@@ -26,7 +26,7 @@ MODULE BELLHOP
 
   
   USE ihop_mod,     only:   rad2deg, i, MaxN, Title, Beam, ray2D, istep,       &
-                            NRz_per_range, afreq, SrcDeclAngle,                &
+                            NRz_per_range, afreq, SrcDeclAngle, iSmallStepCtr, &
                             PRTFile, SHDFile, ARRFile, RAYFile, DELFile   
   USE initenvihop,  only:   initEnv, openOutputFiles, resetMemory
   USE angle_mod,    only:   Angles, ialpha
@@ -34,12 +34,12 @@ MODULE BELLHOP
   USE ssp_mod,      only:   evalSSP, SSP
   !HSInfo, Bdry, 
   USE bdry_mod,     only:   initATI, initBTY, GetTopSeg, GetBotSeg, Bot, Top,  &
-                            atiType, btyType, NatiPts, NbtyPts, iSmallStepCtr, &
-                            IsegTop, IsegBot, rTopSeg, rBotSeg, Bdry
+                            atiType, btyType, IsegTop, IsegBot,                &
+                            rTopSeg, rBotSeg, Bdry
   USE refCoef,      only:   readReflectionCoefficient,                         &
                             InterpolateReflectionCoefficient, ReflectionCoef,  &
                             RTop, RBot, NBotPts, NTopPts
-  USE influence,    only:   InfluenceGeoHatRayCen,&! InfluenceSGB,             &
+  USE influence,    only:   InfluenceGeoHatRayCen,                             &
                             InfluenceGeoGaussianCart, InfluenceGeoHatCart,     &
                             ScalePressure
   USE beamPattern 

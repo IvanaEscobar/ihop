@@ -153,8 +153,8 @@ CONTAINS
 
     ! calculate a reduced step size, h, that lands on any points where the 
     ! environment leaves water
-
-    USE bdry_mod, only: rTopSeg, rBotSeg, iSmallStepCtr
+    USE ihop_mod, only: iSmallStepCtr
+    USE bdry_mod, only: rTopSeg, rBotSeg
 
     INTEGER,           INTENT( IN    ) :: iSegz0, iSegr0  ! SSP layer ray is in
     ! ray coordinate and tangent
