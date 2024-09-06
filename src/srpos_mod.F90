@@ -107,6 +107,9 @@ CONTAINS
         STOP 'ABNORMAL END: S/R ReadfreqVec'
     END IF
 
+    ! set default values
+    freqVec = 0.0 
+
     IF ( BroadbandOption == 'B' ) THEN
 #ifdef IHOP_WRITE_OUT
        WRITE(msgBuf,'(A)') 'Frequencies (Hz)'
@@ -114,7 +117,7 @@ CONTAINS
        IF (IHOP_dumpfreq.GE.0) &
         CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 #endif /* IHOP_WRITE_OUT */
-       freqVec( 3 ) = -999.9
+       freqVec(3) = -999.9
        !READ(  ENVFile, * ) freqVec( 1 : Nfreq )
        CALL SubTab( freqVec, Nfreq )
 
@@ -130,7 +133,7 @@ CONTAINS
        ENDIF
 #endif /* IHOP_WRITE_OUT */
     ELSE
-       freqVec( 1 ) = IHOP_freq 
+       freqVec(1) = IHOP_freq 
     END IF
 
   RETURN
@@ -186,7 +189,7 @@ CONTAINS
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
   
   !     == Local Variables ==
-    REAL,    INTENT( IN ) :: zMin, zMax
+    REAL(KIND=_RL90),    INTENT( IN ) :: zMin, zMax
 
     CALL ReadVector( Pos%NSz, Pos%Sz, 'Source   depths, Sz', 'm', &
                     myThid )
@@ -197,8 +200,7 @@ CONTAINS
     ALLOCATE( Pos%ws( Pos%NSz ), Pos%iSz( Pos%NSz ), Stat = IAllocStat )
     IF ( IAllocStat /= 0 ) THEN
 #ifdef IHOP_WRITE_OUT
-        WRITE(msgBuf,'(2A)') 'SRPOSITIONS ReadSzRz: ', &
-                             'Too many sources'
+        WRITE(msgBuf,'(A)') 'SRPOSITIONS ReadSzRz: Too many sources'
         CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
         STOP 'ABNORMAL END: S/R ReadSzRz'
@@ -208,40 +210,44 @@ CONTAINS
     ALLOCATE( Pos%wr( Pos%NRz ), Pos%iRz( Pos%NRz ), Stat = IAllocStat  )
     IF ( IAllocStat /= 0 ) THEN
 #ifdef IHOP_WRITE_OUT
-        WRITE(msgBuf,'(2A)') 'SRPOSITIONS ReadSzRz: ', &
-                             'Too many receivers'
+        WRITE(msgBuf,'(A)') 'SRPOSITIONS ReadSzRz: Too many receivers'
         CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
         STOP 'ABNORMAL END: S/R ReadSzRz'
     END IF
+ 
+    ! Set default values
+    Pos%ws = 0
+    Pos%isz = 0
+    Pos%wr = 0
+    Pos%irz = 0
 
     ! *** Check for Sz/Rz in water column ***
-
 #ifdef IHOP_WRITE_OUT
     ! In adjoint mode we do not write output besides on the first run
     IF (IHOP_dumpfreq.GE.0) THEN
-        IF ( ANY( Pos%Sz( 1 : Pos%NSz ) < zMin ) ) THEN
+        IF ( ANY( Pos%Sz( 1:Pos%NSz ) < zMin ) ) THEN
            WHERE ( Pos%Sz < zMin ) Pos%Sz = zMin
            WRITE(msgBuf,'(2A)') 'Warning in ReadSzRz : Source above or too ',&
                                'near the top bdry has been moved down'
            CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
         END IF
 
-        IF ( ANY( Pos%Sz( 1 : Pos%NSz ) > zMax ) ) THEN
+        IF ( ANY( Pos%Sz( 1:Pos%NSz ) > zMax ) ) THEN
            WHERE( Pos%Sz > zMax ) Pos%Sz = zMax
            WRITE(msgBuf,'(2A)') 'Warning in ReadSzRz : Source below or too ',&
                                'near the bottom bdry has been moved up'
            CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
         END IF
 
-        IF ( ANY( Pos%Rz( 1 : Pos%NRz ) < zMin ) ) THEN
+        IF ( ANY( Pos%Rz( 1:Pos%NRz ) < zMin ) ) THEN
            WHERE( Pos%Rz < zMin ) Pos%Rz = zMin
            WRITE(msgBuf,'(2A)') 'Warning in ReadSzRz : Receiver above or too ',&
                'near the top bdry has been moved down'
            CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
         END IF
 
-        IF ( ANY( Pos%Rz( 1 : Pos%NRz ) > zMax ) ) THEN
+        IF ( ANY( Pos%Rz( 1:Pos%NRz ) > zMax ) ) THEN
            WHERE( Pos%Rz > zMax ) Pos%Rz = zMax
            WRITE(msgBuf,'(2A)') 'Warning in ReadSzRz : Receiver below or too ',&
                                'near the bottom bdry has been moved up'
@@ -270,6 +276,7 @@ CONTAINS
 
     ! calculate range spacing
     Pos%delta_r = 0.0
+    ! IESCO24: Assumes uniform spacing in ranges btwn receivers
     IF ( Pos%NRr /= 1 ) Pos%delta_r = Pos%Rr( Pos%NRr ) - Pos%Rr( Pos%NRr-1 )
 
     IF ( .NOT. monotonic( Pos%Rr, Pos%NRr ) ) THEN
@@ -407,7 +414,7 @@ CONTAINS
 
     ! Vectors in km should be converted to m for internal use
     IF ( LEN_TRIM( Units ) >= 2 ) THEN
-       IF ( Units( 1 : 2 ) == 'km' ) x = 1000.0 * x
+       IF ( Units( 1:2 ) == 'km' ) x = 1000.0 * x
     END IF
 
   RETURN

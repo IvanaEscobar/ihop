@@ -12,7 +12,6 @@ MODULE bdry_mod
 
    USE monotonic_mod,   only: monotonic
    USE ihop_mod,        only: PRTFile, ATIFile, BTYFile
-   USE ssp_mod,         only: betaPowerLaw, ft
    USE atten_mod,       only: CRCI
 
   IMPLICIT NONE
@@ -32,7 +31,8 @@ MODULE bdry_mod
 
    public   initATI, initBTY, GetTopSeg, GetBotSeg, Bot, Top, &
             IsegTop, IsegBot, rTopSeg, rBotSeg,&
-            iSmallStepCtr, atiType, btyType, NATIPts, NBTYPts
+            iSmallStepCtr, atiType, btyType, NATIPts, NBTYPts, &
+            HSInfo, Bdry
 
 !=======================================================================
 
@@ -46,7 +46,7 @@ MODULE bdry_mod
    CHARACTER  (LEN=2) :: atiType= 'LS', btyType = 'LS'
 
    ! ***Halfspace properties***
-   TYPE HSInfo2
+   TYPE HSInfo
       ! compressional and shear wave speeds/attenuations in user units
       REAL     (KIND=_RL90)   :: alphaR, alphaI, betaR, betaI  
       REAL     (KIND=_RL90)   :: rho, Depth  ! density, depth
@@ -66,18 +66,28 @@ MODULE bdry_mod
                            Noden( 2 )    ! normal at the node 
       REAL (KIND=_RL90) :: Dx, Dxx, &    ! 1st, 2nd derivatives wrt depth
                            Dss           ! derivative along tangent
-      TYPE( HSInfo2 )   :: HS
+      TYPE( HSInfo )   :: HS
    END TYPE
 
    TYPE(BdryPt), ALLOCATABLE :: Top( : ), Bot( : )
 
-#ifdef ALLOW_AUTODIFF_TAMC
-!ADJ PASSIVE betaPowerLaw, fT
-#endif /* ALLOW_AUTODIFF_TAMC */
+   TYPE BdryPt2
+      TYPE( HSInfo )   :: HS
+   END TYPE
+
+   TYPE BdryType
+      TYPE( BdryPt2 )   :: Top, Bot
+   END TYPE BdryType
+
+   TYPE(BdryType) :: Bdry
 
 CONTAINS
   SUBROUTINE initATI( TopATI, DepthT, myThid ) 
     ! Reads in the top altimetry
+  ! IESCO24
+  ! fT = 1000 ONLY for acousto-elastic halfspaces, I will have to pass this
+  ! parameter in a different way after ssp_mod is split btwn fixed and varia
+  !USE initenvihop, only: fT
 
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO
@@ -91,6 +101,12 @@ CONTAINS
     REAL (KIND=_RL90),  INTENT( IN ) :: DepthT
     REAL (KIND=_RL90),  ALLOCATABLE  :: phi(:)
     REAL (KIND=_RL90),  ALLOCATABLE  :: x(:) 
+    REAL (KIND=_RL90)   :: bPower, fT
+
+  ! IESCO24 fT init
+  bPower = 1.0
+  fT     = 1000.0
+
 
     SELECT CASE ( TopATI )
     CASE ( '~', '*' )
@@ -256,16 +272,29 @@ CONTAINS
      STOP 'ABNORMAL END: S/R initATI'
     END IF 
 
+    ! Initiate Top
+    DO iSeg = 1, NatiPts
+       ! compressional wave speed
+       Top( iSeg )%HS%cp = CRCI( 1D20, Top( iSeg )%HS%alphaR, &
+                                 Top( iSeg )%HS%alphaI, 'W ', bPower, fT, &
+                                 myThid ) 
+       ! shear wave speed
+       Top( iSeg )%HS%cs = CRCI( 1D20, Top( iSeg )%HS%betaR,  &
+                                 Top( iSeg )%HS%betaI, 'W ', bPower, fT, &
+                                 myThid )
+    END DO
     ! convert range-dependent geoacoustic parameters from user to program units
     ! W is dB/wavelength
     IF ( atiType( 2:2 ) == 'L' ) THEN
        DO iSeg = 1, NatiPts
+          ! compressional wave speed
           Top( iSeg )%HS%cp = CRCI( 1D20, Top( iSeg )%HS%alphaR, &
-                                    Top( iSeg )%HS%alphaI, 'W ', betaPowerLaw, &
-                                    ft, myThid ) ! compressional wave speed
+                                    Top( iSeg )%HS%alphaI, 'W ', bPower, fT, &
+                                    myThid ) 
+          ! shear wave speed
           Top( iSeg )%HS%cs = CRCI( 1D20, Top( iSeg )%HS%betaR,  &
-                                    Top( iSeg )%HS%betaI, 'W ', betaPowerLaw, &
-                                    ft, myThid )   ! shear wave speed
+                                    Top( iSeg )%HS%betaI, 'W ', bPower, fT, &
+                                    myThid )
        END DO
     END IF
 
@@ -273,10 +302,14 @@ CONTAINS
   RETURN
   END !SUBROUTINE initATI
 
-  ! **********************************************************************!
+! **********************************************************************!
 
-SUBROUTINE initBTY( BotBTY, DepthB, myThid )
-   ! Reads in the bottom bathymetry
+  SUBROUTINE initBTY( BotBTY, DepthB, myThid )
+    ! Reads in the bottom bathymetry
+  ! IESCO24
+  ! fT = 1000 ONLY for acousto-elastic halfspaces, I will have to pass this
+  ! parameter in a different way after ssp_mod is split btwn fixed and varia
+  !USE initenvihop, only: fT
 
    !     == Routine Arguments ==
    !     myThid :: Thread number. Unused by IESCO
@@ -291,6 +324,11 @@ SUBROUTINE initBTY( BotBTY, DepthB, myThid )
       REAL (KIND=_RL90) :: gcmbathy(sNx,sNy), gcmmin, gcmmax
       REAL (KIND=_RL90), ALLOCATABLE :: x(:) 
       LOGICAL :: firstnonzero
+      REAL (KIND=_RL90)   :: bPower, fT
+
+  ! IESCO24 fT init
+  bPower = 1.0
+  fT     = 1000.0
 
       SELECT CASE ( BotBTY )
       CASE ( '~', '*' )
@@ -525,19 +563,21 @@ SUBROUTINE initBTY( BotBTY, DepthB, myThid )
    ! W is dB/wavelength
    IF ( btyType( 2:2 ) == 'L' ) THEN
       DO iSeg = 1, NbtyPts
+         ! compressional wave speed
          Bot( iSeg )%HS%cp = CRCI( 1D20, Bot( iSeg )%HS%alphaR, &
-                                   Bot( iSeg )%HS%alphaI, 'W ', betaPowerLaw, &
-                                   ft, myThid ) ! compressional wave speed
+                                   Bot( iSeg )%HS%alphaI, 'W ', bPower, fT, &
+                                   myThid )
+         ! shear wave speed
          Bot( iSeg )%HS%cs = CRCI( 1D20, Bot( iSeg )%HS%betaR,  &
-                                   Bot( iSeg )%HS%betaI, 'W ', betaPowerLaw, &
-                                   ft, myThid )   ! shear wave speed
+                                   Bot( iSeg )%HS%betaI, 'W ', bPower, fT, &
+                                   myThid )
       END DO
    END IF
 
    RETURN
-END !SUBROUTINE initBTY
+  END !SUBROUTINE initBTY
 
-  ! **********************************************************************!
+! **********************************************************************!
 
   SUBROUTINE ComputeBdryTangentNormal( Bdry, BotTop )
 

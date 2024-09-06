@@ -75,11 +75,9 @@ CONTAINS
 
     INTEGER, INTENT( IN ) :: N
     REAL (KIND=_RL90) :: x( * ), xTemp
-
     IF ( N == 1 ) RETURN
 
     DO I = 2, N
-
        xTemp = x( I )
 
        IF ( xTemp < x( 1 ) ) THEN

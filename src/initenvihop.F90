@@ -8,11 +8,10 @@ MODULE initenvihop
 
   ! mbp 12/2018, based on much older subroutine
 
-  USE ihop_mod,     only: PRTFile, RAYFile, DELFile, ARRFile, SHDFile, &
-                          Title, Beam
-  USE ssp_mod,      only: EvaluateSSP, HSInfo, Bdry, SSP, zTemp, alphaR, betaR,&
-                          alphaI, betaI, rhoR, betaPowerLaw, fT
-  USE atten_mod,    only: CRCI, T, Salinity, pH, z_bar, iBio, NBioLayers, bio
+  USE ihop_mod,  only: PRTFile, RAYFile, DELFile, ARRFile, SHDFile, Title, Beam
+  USE ssp_mod,   only: initSSP, SSP
+  USE bdry_mod,  only: Bdry, HSInfo
+  USE atten_mod, only: CRCI
 
 ! ! USES
   implicit none
@@ -27,10 +26,6 @@ MODULE initenvihop
 #include "cal.h"
 #endif /* ALLOW_CAL */
 
-!   == External Functions ==
-    INTEGER  ILNBLNK
-    EXTERNAL ILNBLNK
-
   PRIVATE
 
 !   == Public Interfaces ==
@@ -38,9 +33,11 @@ MODULE initenvihop
   public    initEnv, OpenOutputFiles, resetMemory
 !=======================================================================
 
-#ifdef ALLOW_AUTODIFF_TAMC
-!ADJ PASSIVE betaPowerLaw, fT
-#endif /* ALLOW_AUTODIFF_TAMC */
+! INPUT/OUTPUT PARAMETERS:
+
+! == External Functions ==
+  INTEGER  ILNBLNK
+  EXTERNAL ILNBLNK
 
 CONTAINS
   SUBROUTINE initEnv( myTime, myIter, myThid )
@@ -65,30 +62,36 @@ CONTAINS
   
   ! == Local Variables ==
     REAL (KIND=_RL90),  PARAMETER :: c0 = 1500.0
-    REAL               :: ZMin, ZMax
-    REAL (KIND=_RL90)  :: x( 2 ), c, cimag, gradc( 2 ), crr, crz, czz, rho, &
-                          Depth
+    REAL (KIND=_RL90)  :: x(2), c, cimag, gradc(2), crz, czz, rho, Depth
     CHARACTER (LEN= 2) :: AttenUnit
     CHARACTER (LEN=10) :: PlotType
 
+    ! init local variables
+    AttenUnit = ''
+    PlotType  = ''
+
+    !RG
+    Bdry%Bot%HS = HSInfo(0.,0.,0.,0., 0.,0. , (0.,0.),(0.,0.), '', '' )
+    Bdry%Top%HS = HSInfo(0.,0.,0.,0., 0.,0. , (0.,0.),(0.,0.), '', '' )
+ 
     ! *** ihop info to PRTFile ***
     CALL openPRTFile( myTime, myIter, myThid )
 
     ! *** Top Boundary ***
     Bdry%Top%HS%Opt = IHOP_topopt
     Bdry%Top%HS%Depth = 0 !initiate to dummy value
-    CALL ReadTopOpt( Bdry%Top%HS%Opt, Bdry%Top%HS%BC, AttenUnit, myThid )
 
+    CALL ReadTopOpt( Bdry%Top%HS%BC, AttenUnit, myThid )
     CALL TopBot( AttenUnit, Bdry%Top%HS, myThid )
 
-    ! *** Ocean SSP ***
+    ! *** Bottom Boundary ***
+    Bdry%Bot%HS%Opt = IHOP_botopt 
     IF ( IHOP_depth.NE.0 ) THEN
         Bdry%Bot%HS%Depth = IHOP_depth
     ELSE
         ! Extend by 5 wavelengths
         Bdry%Bot%HS%Depth = rkSign*rF( Nr+1 ) + 5*c0/IHOP_freq 
     END IF
-    x = [ 0.0 _d 0, Bdry%Bot%HS%Depth ]   ! tells SSP Depth to read to
 
 #ifdef IHOP_WRITE_OUT
     !   Only do I/O in the main thread
@@ -102,103 +105,74 @@ CONTAINS
      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
      WRITE(msgBuf,'(2A)') 'Top options: ', Bdry%Top%HS%Opt
      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    ENDIF
+     WRITE(msgBuf,'(A)') 
+     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+     WRITE(msgBuf,'(2A)') 'Bottom options: ', Bdry%Bot%HS%Opt
+     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 
+     SELECT CASE ( Bdry%Bot%HS%Opt( 2 : 2 ) )
+       CASE ( '~', '*' )
+#ifdef IHOP_WRITE_OUT
+         WRITE(msgBuf,'(A)') '    Bathymetry file selected'
+         CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+#endif /* IHOP_WRITE_OUT */
+       CASE( ' ' )
+       CASE DEFAULT
+#ifdef IHOP_WRITE_OUT
+         WRITE(msgBuf,'(2A)') 'INITENVIHOP initEnv: ', & 
+                          'Unknown bottom option letter in second position'
+         CALL PRINT_ERROR( msgBuf,myThid )
+#endif /* IHOP_WRITE_OUT */
+         STOP 'ABNORMAL END: S/R initEnv'
+       END SELECT
+    ENDIF
     !   Only do I/O in the main thread
     _END_MASTER(myThid)
 #endif /* IHOP_WRITE_OUT */
 
-    CALL EvaluateSSP( x, c, cimag, gradc, crr, crz, czz, rho, 'INI', myThid )
-
-    Bdry%Top%HS%Depth = SSP%z( 1 )   ! first SSP point is top depth
-
-    ! *** Bottom Boundary ***
-    ! bottom depth should perhaps be set the same way?
-    Bdry%Bot%HS%Opt = IHOP_botopt 
-
-    !   Only do I/O if in the main thread
-    _BEGIN_MASTER(myThid)
-    ! In adjoint mode we do not write output besides on the first run
-    IF (IHOP_dumpfreq.GE.0) THEN
-#ifdef IHOP_WRITE_OUT
-        WRITE(msgBuf,'(A)') 
-        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-        WRITE(msgBuf,'(2A)') 'Bottom options: ', Bdry%Bot%HS%Opt
-        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-#endif /* IHOP_WRITE_OUT */
-
-        SELECT CASE ( Bdry%Bot%HS%Opt( 2 : 2 ) )
-        CASE ( '~', '*' )
-#ifdef IHOP_WRITE_OUT
-            WRITE(msgBuf,'(A)') '    Bathymetry file selected'
-            CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-#endif /* IHOP_WRITE_OUT */
-        CASE( ' ' )
-        CASE DEFAULT
-#ifdef IHOP_WRITE_OUT
-            WRITE(msgBuf,'(2A)') 'INITENVIHOP initEnv: ', & 
-                             'Unknown bottom option letter in second position'
-            CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
-            STOP 'ABNORMAL END: S/R initEnv'
-        END SELECT
-    ENDIF
-
-    !   Only do I/O in the main thread
-    _END_MASTER(myThid)
-
-    Bdry%Bot%HS%BC = Bdry%Bot%HS%Opt( 1 : 1 )
+    Bdry%Bot%HS%BC = Bdry%Bot%HS%Opt( 1:1 )
     CALL TopBot( AttenUnit, Bdry%Bot%HS, myThid )
 
-    ! *** source and receiver locations ***
+
+    ! *** Ocean SSP ***
+    x = [ 0.0 _d 0, Bdry%Bot%HS%Depth ]   ! tells SSP Depth to read to
+    CALL initSSP( x, myThid )
+
+    Bdry%Top%HS%Depth = SSP%z( 1 )   ! first SSP point is top depth
+    Depth = Bdry%Bot%HS%Depth - Bdry%Top%HS%Depth ! water column depth
+
+    ! *** Source locations ***
     CALL ReadSxSy( myThid ) ! Read source/receiver x-y coordinates
-    ZMin = SNGL( Bdry%Top%HS%Depth )
-    ZMax = SNGL( Bdry%Bot%HS%Depth )
 
     Pos%NSz = IHOP_nsd
     Pos%NRz = IHOP_nrd
+
     CALL AllocatePos( Pos%NSz, Pos%Sz, IHOP_sd )
     CALL AllocatePos( Pos%NRz, Pos%Rz, IHOP_rd )
-    CALL ReadSzRz( ZMin, ZMax, myThid )
+    CALL ReadSzRz( Bdry%Top%HS%Depth, Bdry%Bot%HS%Depth, myThid )
 
+    ! *** Receiver locations ***
     Pos%NRr = IHOP_nrr
     CALL AllocatePos( Pos%NRr, Pos%Rr, IHOP_rr )
     CALL ReadRcvrRanges( myThid )
-
 #ifdef IHOP_THREED
     CALL ReadRcvrBearings( myThid )
 #endif /* IHOP_THREED */
+
+    ! *** Broadband frequencies ***
     CALL ReadfreqVec( Bdry%Top%HS%Opt( 6:6 ), myThid )
 
-    ! *** run type ***
+    ! *** Run type ***
     Beam%RunType = IHOP_runopt
     CALL ReadRunType( Beam%RunType, PlotType, myThid )
 
-    Depth = Zmax - Zmin   ! water depth
-    CALL ReadRayElevationAngles( IHOP_freq, Depth, Bdry%Top%HS%Opt, &
-        Beam%RunType, myThid )
+    CALL ReadRayElevationAngles( Depth, Bdry%Top%HS%Opt, Beam%RunType, myThid )
 #ifdef IHOP_THREED
-    CALL ReadRayBearingAngles( IHOP_freq, Bdry%Top%HS%Opt, Beam%RunType, myThid )
+    CALL ReadRayBearingAngles( Bdry%Top%HS%Opt, Beam%RunType, myThid )
 #endif /* IHOP_THREED */
 
-#ifdef IHOP_WRITE_OUT
-    !   Only do I/O if in the main thread
-    _BEGIN_MASTER(myThid)
-    ! In adjoint mode we do not write output besides on the first run
-    IF (IHOP_dumpfreq.GE.0) THEN
 
-        WRITE(msgBuf,'(A)') 
-        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-        WRITE(msgBuf,'(2A)')'______________________________________________', &
-                            '_____________'
-        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-        WRITE(msgBuf,'(A)') 
-        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-
-    ENDIF
-    !   Only do I/O in the main thread
-    _END_MASTER(myThid)
-#endif /* IHOP_WRITE_OUT */
+    ! *** Acoustic grid ***
 
     ! Limits for tracing beams
 #ifdef IHOP_THREED
@@ -216,6 +190,11 @@ CONTAINS
 #ifdef IHOP_WRITE_OUT
     ! In adjoint mode we do not write output besides on the first run
     IF (IHOP_dumpfreq.GE.0) THEN
+        WRITE(msgBuf,'(A)') 
+        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+        WRITE(msgBuf,'(2A)')'______________________________________________', &
+                            '_____________'
+        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
         WRITE(msgBuf,'(A)') 
         CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
         WRITE(msgBuf,'(A,A,G11.4,A)') &
@@ -238,38 +217,34 @@ CONTAINS
     ! Step size in meters [m]
     Beam%deltas = IHOP_step
     
+    IF ( Beam%deltas == 0.0 ) THEN ! Automatic step size option
+        Beam%deltas = ( Depth ) / 10.   
+    END IF
+#ifdef IHOP_WRITE_OUT
     !   Only do I/O if in the main thread
     _BEGIN_MASTER(myThid)
-
-    IF ( Beam%deltas == 0.0 ) THEN ! Automatic step size option
-        Beam%deltas = ( Bdry%Bot%HS%Depth - Bdry%Top%HS%Depth ) / 10.0   
-#ifdef IHOP_WRITE_OUT
-        ! In adjoint mode we do not write output besides on the first run
-        IF (IHOP_dumpfreq.GE.0) THEN
-        
-            WRITE(msgBuf,'(A)') 
-            CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-            WRITE(msgBuf,'(A,G11.4,A)') &
-                ' Step length, deltas = ', Beam%deltas, ' m (automatic step)'
-            CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-
-        ENDIF
-    ELSE
+    ! In adjoint mode we do not write output besides on the first run
+    IF (IHOP_dumpfreq.GE.0) THEN
+        WRITE(msgBuf,'(A)') 
+        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+        WRITE(msgBuf,'(2A)')'__________________________________________', &
+                            '_________________'
+        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+        WRITE(msgBuf,'(A)') 
+        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
         WRITE(msgBuf,'(A,G11.4,A)') &
             ' Step length, deltas = ', Beam%deltas, ' m'
-        ! In adjoint mode we do not write output besides on the first run
-        IF (IHOP_dumpfreq.GE.0) &
-            CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-#endif /* IHOP_WRITE_OUT */
-    END IF
+        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 
+    ENDIF
     !   Only do I/O in the main thread
     _END_MASTER(myThid)
+#endif /* IHOP_WRITE_OUT */
 
     ! Domain size
-    Beam%Box%z = Bdry%Bot%HS%Depth ! in m
+    Beam%Box%Z = Bdry%Bot%HS%Depth ! in [m]
     ! Extend beam box by a single step size forward
-    Beam%Box%r = ihop_rr(nrd) + Beam%deltas/1000. ! in [km]
+    Beam%Box%R = IHOP_rr(nrd) + Beam%deltas/1000. ! in [km]
 
 #ifdef IHOP_WRITE_OUT
     !   Only do I/O if in the main thread
@@ -291,20 +266,19 @@ CONTAINS
     _END_MASTER(myThid)
 #endif /* IHOP_WRITE_OUT */
 
-    Beam%Box%r = Beam%Box%r*1000.   ! convert km to m
+    Beam%Box%R = Beam%Box%R*1000.   ! convert km to m
 #endif /* IHOP_THREED */
 
+
     ! *** Beam characteristics ***
-    Beam%Type( 4 : 4 ) = Beam%RunType( 7 : 7 )   ! selects beam shift option
+    Beam%Type( 4:4 ) = Beam%RunType( 7:7 )   ! selects beam shift option
           
 #ifdef IHOP_WRITE_OUT
     !   Only do I/O if in the main thread
     _BEGIN_MASTER(myThid)
-
     ! In adjoint mode we do not write output besides on the first run
     IF (IHOP_dumpfreq.GE.0) THEN
-
-        SELECT CASE ( Beam%Type( 4 : 4 ) )
+        SELECT CASE ( Beam%Type( 4:4 ) )
         CASE ( 'S' )
            WRITE(msgBuf,'(A)') ' Beam shift in effect'
            CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
@@ -312,13 +286,15 @@ CONTAINS
            WRITE(msgBuf,'(A)') ' No beam shift in effect'
            CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
         END SELECT
-
+        WRITE(msgBuf,'(A)')
+        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
     ENDIF
     !   Only do I/O in the main thread
     _END_MASTER(myThid)
 #endif /* IHOP_WRITE_OUT */
 
-    ! no worry about the beam type if this is a ray trace run
+    ! don't worry about the beam type if this is a ray trace run
+    ! using 'e' requires Beam%Type to be set
     IF ( Beam%RunType( 1:1 ) /= 'R' .OR. Beam%RunType( 1:1 ) /= 'E' ) THEN 
 
        ! Beam%Type( 1 : 1 ) is
@@ -327,8 +303,6 @@ CONTAINS
        !   'B' Geometric Gaussian beams in Cartesian coordinates
        !   'b' Geometric Gaussian beams in ray-centered coordinates
        !   'S' Simple Gaussian beams
-       !   'C' Cerveny Gaussian beams in Cartesian coordinates
-       !   'R' Cerveny Gaussian beams in Ray-centered coordinates
        ! Beam%Type( 2 : 2 ) controls the setting of the beam width
        !   'F' space Filling
        !   'M' minimum width
@@ -345,98 +319,36 @@ CONTAINS
        ! Curvature change can cause overflow in grazing case
        ! Suppress by setting BeamType( 3 : 3 ) = 'Z'
 
-       Beam%Type( 1 : 1 ) = Beam%RunType( 2 : 2 )
-       !   Only do I/O if in the main thread
-       _BEGIN_MASTER(myThid)
+       Beam%Type( 1:1 ) = Beam%RunType( 2:2 )
 
-       ! In adjoint mode we do not write output besides on the first run
-       IF (IHOP_dumpfreq.GE.0) THEN
-
-        SELECT CASE ( Beam%Type( 1 : 1 ) )
+        SELECT CASE ( Beam%Type( 1:1 ) )
         CASE ( 'G', 'g' , '^', 'B', 'b', 'S' )   
-        CASE ( 'R', 'C' )   
-#ifdef IHOP_WRITE_OUT
-          WRITE(msgBuf,'(A)') 
-          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-          WRITE(msgBuf,'(A)') 
-          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-          WRITE(msgBuf,'(2A)') 'Type of beam = ', Beam%Type( 1:1 )
-          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-#endif /* IHOP_WRITE_OUT */
-
-          SELECT CASE ( Beam%Type( 3 : 3 ) )
-          CASE ( 'D' )
-#ifdef IHOP_WRITE_OUT
-            WRITE(msgBuf,'(A)') 'Curvature doubling invoked'
-            CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-#endif /* IHOP_WRITE_OUT */
-          CASE ( 'Z' )
-#ifdef IHOP_WRITE_OUT
-            WRITE(msgBuf,'(A)') 'Curvature zeroing invoked'
-            CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-#endif /* IHOP_WRITE_OUT */
-          CASE ( 'S' )
-#ifdef IHOP_WRITE_OUT
-            WRITE(msgBuf,'(A)') 'Standard curvature condition'
-            CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-#endif /* IHOP_WRITE_OUT */
-          CASE DEFAULT
-#ifdef IHOP_WRITE_OUT
-                WRITE(msgBuf,'(2A)') 'INITENVIHOP initEnv: ', & 
-                                     'Unknown curvature condition'
-                CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
-                STOP 'ABNORMAL END: S/R initEnv'
-          END SELECT
-
-#ifdef IHOP_WRITE_OUT
-          WRITE(msgBuf,'(A,F1.2)') 'UNUSED epsMultiplier', Beam%epsMultiplier
-          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-          WRITE(msgBuf,'(A,F10.2)') 'Range for choosing beam width', Beam%rLoop
-          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-
-          ! Images, windows
-          WRITE(msgBuf,'(A)') 
-          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-          WRITE(msgBuf,'(A,I10)') 'Number of images, Nimage  = ', Beam%Nimage
-          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-          WRITE(msgBuf,'(A,I10)') 'Beam windowing parameter  = ', Beam%iBeamWindow
-          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-          WRITE(msgBuf,'(A)') 'Component                 = ', Beam%Component
-          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-#endif /* IHOP_WRITE_OUT */
         CASE DEFAULT
 #ifdef IHOP_WRITE_OUT
-            WRITE(msgBuf,'(2A)') 'INITENVIHOP initEnv: ', & 
+            !   Only do I/O if in the main thread
+            _BEGIN_MASTER(myThid)
+            ! In adjoint mode we do not write output besides on the first run
+            IF (IHOP_dumpfreq.GE.0) THEN
+
+                WRITE(msgBuf,'(2A)') 'INITENVIHOP initEnv: ', & 
                                 'Unknown beam type (second letter of run type)'
-            CALL PRINT_ERROR( msgBuf,myThid )
+                CALL PRINT_ERROR( msgBuf,myThid )
+            ENDIF ! No output in adjoint mode
+            !   Only do I/O in the main thread
+            _END_MASTER(myThid)
 #endif /* IHOP_WRITE_OUT */
             STOP 'ABNORMAL END: S/R initEnv'
         END SELECT
 
-       ENDIF ! No output in adjoint mode
-       !   Only do I/O in the main thread
-       _END_MASTER(myThid)
     END IF
 
-#ifdef IHOP_WRITE_OUT
-    !   Only do I/O if in the main thread
-    _BEGIN_MASTER(myThid)
-
-    WRITE(msgBuf,'(A)') 
-    ! In adjoint mode we do not write output besides on the first run
-    IF (IHOP_dumpfreq.GE.0) &
-        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-
-    !   Only do I/O in the main thread
-    _END_MASTER(myThid)
-#endif /* IHOP_WRITE_OUT */
   RETURN
   END !SUBROUTINE initEnv
 
   !**********************************************************************!
 
-  SUBROUTINE ReadTopOpt( TopOpt, BC, AttenUnit, myThid )
+  SUBROUTINE ReadTopOpt( BC, AttenUnit, myThid )
+    USE atten_mod, only: T, Salinity, pH, z_bar, iBio, NBioLayers, bio
 
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO
@@ -445,15 +357,12 @@ CONTAINS
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
   
   !     == Local Variables ==
-    CHARACTER (LEN= 6), INTENT( OUT ) :: TopOpt
-    CHARACTER (LEN= 1), INTENT( OUT ) :: BC         ! Boundary condition type
-    CHARACTER (LEN= 2), INTENT( OUT ) :: AttenUnit
+    CHARACTER (LEN= 1), INTENT( OUT )   :: BC ! Boundary condition type
+    CHARACTER (LEN= 2), INTENT( INOUT ) :: AttenUnit
 
-    TopOpt = IHOP_topopt
-
-    SSP%Type  = TopOpt( 1 : 1 )
-    BC        = TopOpt( 2 : 2 )
-    AttenUnit = TopOpt( 3 : 4 )
+    SSP%Type  = IHOP_TopOpt( 1:1 )
+    BC        = IHOP_TopOpt( 2:2 )
+    AttenUnit = IHOP_TopOpt( 3:4 )
     SSP%AttenUnit = AttenUnit
 
     ! In adjoint mode we do not write output besides on the first run
@@ -507,7 +416,7 @@ CONTAINS
 
     ! Attenuation options
 
-    SELECT CASE ( AttenUnit( 1 : 1 ) )
+    SELECT CASE ( AttenUnit( 1:1 ) )
     CASE ( 'N' )
 #ifdef IHOP_WRITE_OUT
        WRITE(msgBuf,'(A)') '    Attenuation units: nepers/m'
@@ -549,7 +458,7 @@ CONTAINS
 
     ! optional addition of volume attenuation using standard formulas
 
-    SELECT CASE ( AttenUnit( 2 : 2 ) )
+    SELECT CASE ( AttenUnit( 2:2 ) )
     CASE ( 'T' )
 #ifdef IHOP_WRITE_OUT
        WRITE(msgBuf,'(A)') '    THORP volume attenuation added'
@@ -596,7 +505,7 @@ CONTAINS
         STOP 'ABNORMAL END: S/R ReadTopOpt'
     END SELECT
 
-    SELECT CASE ( TopOpt( 5 : 5 ) )
+    SELECT CASE ( IHOP_TopOpt( 5:5 ) )
     CASE ( '~', '*' )
 #ifdef IHOP_WRITE_OUT
        WRITE(msgBuf,'(A)') '    Altimetry file selected'
@@ -612,7 +521,7 @@ CONTAINS
         STOP 'ABNORMAL END: S/R ReadTopOpt'
     END SELECT
 
-    SELECT CASE ( TopOpt( 6 : 6 ) )
+    SELECT CASE ( IHOP_TopOpt( 6:6 ) )
     CASE ( 'I' )
 #ifdef IHOP_WRITE_OUT
        WRITE(msgBuf,'(A)') '    Development options enabled'
@@ -647,7 +556,7 @@ CONTAINS
   
   !     == Local Variables ==
     CHARACTER (LEN= 7), INTENT( INOUT ) :: RunType
-    CHARACTER (LEN=10), INTENT( OUT ) :: PlotType
+    CHARACTER (LEN=10), INTENT( INOUT ) :: PlotType
 
     ! In adjoint mode we do not write output besides on the first run
     IF (IHOP_dumpfreq.LT.0) RETURN
@@ -707,7 +616,7 @@ CONTAINS
         STOP 'ABNORMAL END: S/R ReadRunType'
     END SELECT
 
-    SELECT CASE ( RunType( 2 : 2 ) )
+    SELECT CASE ( RunType( 2:2 ) )
     CASE ( 'C' )
 #ifdef IHOP_WRITE_OUT
        WRITE(msgBuf,'(A)') 'Cartesian beams'
@@ -739,14 +648,14 @@ CONTAINS
        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 #endif /* IHOP_WRITE_OUT */
     CASE DEFAULT
-       RunType( 2 : 2 ) = 'G'
+       RunType( 2:2 ) = 'G'
 #ifdef IHOP_WRITE_OUT
        WRITE(msgBuf,'(A)') 'Geometric hat beams in Cartesian coordinates'
        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 #endif /* IHOP_WRITE_OUT */
     END SELECT
 
-    SELECT CASE ( RunType( 4 : 4 ) )
+    SELECT CASE ( RunType( 4:4 ) )
     CASE ( 'R' )
 #ifdef IHOP_WRITE_OUT
        WRITE(msgBuf,'(A)') 'Point source (cylindrical coordinates)'
@@ -758,14 +667,14 @@ CONTAINS
        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 #endif /* IHOP_WRITE_OUT */
     CASE DEFAULT
-       RunType( 4 : 4 ) = 'R'
+       RunType( 4:4 ) = 'R'
 #ifdef IHOP_WRITE_OUT
        WRITE(msgBuf,'(A)') 'Point source (cylindrical coordinates)'
        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 #endif /* IHOP_WRITE_OUT */
     END SELECT
 
-    SELECT CASE ( RunType( 5 : 5 ) )
+    SELECT CASE ( RunType( 5:5 ) )
     CASE ( 'R' )
 #ifdef IHOP_WRITE_OUT
        WRITE(msgBuf,'(2A)') 'Rectilinear receiver grid: Receivers at', &
@@ -793,11 +702,11 @@ CONTAINS
                            ' Rr( : ) x Rz( : )'
        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 #endif /* IHOP_WRITE_OUT */
-       RunType( 5 : 5 ) = 'R'
+       RunType( 5:5 ) = 'R'
        PlotType = 'rectilin  '
     END SELECT
 
-    SELECT CASE ( RunType( 6 : 6 ) )
+    SELECT CASE ( RunType( 6:6 ) )
     CASE ( '2' )
 #ifdef IHOP_WRITE_OUT
        WRITE(msgBuf,'(A)') 'N x 2D calculation (neglects horizontal refraction)'
@@ -809,7 +718,7 @@ CONTAINS
        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 #endif /* IHOP_WRITE_OUT */
     CASE DEFAULT
-       RunType( 6 : 6 ) = '2'
+       RunType( 6:6 ) = '2'
     END SELECT
 
   RETURN
@@ -818,6 +727,7 @@ CONTAINS
   !**********************************************************************!
 
   SUBROUTINE TopBot( AttenUnit, HS, myThid )
+    USE ssp_mod, only: rhoR, alphaR, betaR, alphaI, betaI
 
     ! Handles top and bottom boundary conditions
 
@@ -831,6 +741,7 @@ CONTAINS
     CHARACTER (LEN=2), INTENT( IN    ) :: AttenUnit
     TYPE ( HSInfo ),   INTENT( INOUT ) :: HS
     REAL (KIND=_RL90) :: Mz, vr, alpha2_f     ! values related to grain size
+    REAL (KIND=_RL90) :: ztemp, bPower, fT
 
     ! In adjoint mode we do not write output besides on the first run
     IF (IHOP_dumpfreq.GE.0) THEN
@@ -880,15 +791,18 @@ CONTAINS
 #endif /* IHOP_WRITE_OUT */
         STOP 'ABNORMAL END: S/R TopBot'
     END SELECT
-
     ENDIF ! no output on adjoint runs
 
     ! ****** Read in BC parameters depending on particular choice ******
-
     HS%cp  = 0.0
     HS%cs  = 0.0
     HS%rho = 0.0
 
+    ! RG recommends resetting to the default values from ssp_mod.F90
+    bPower = 1.0
+    fT     = 1D20
+    rhoR   = 1.0
+    
     SELECT CASE ( HS%BC )
     CASE ( 'A' )                  ! *** Half-space properties ***
        ! IEsco23: MISSING IF BOTTOM BC CHECK
@@ -913,21 +827,17 @@ CONTAINS
 #endif /* IHOP_WRITE_OUT */
        ! dummy parameters for a layer with a general power law for attenuation
        ! these are not in play because the AttenUnit for this is not allowed yet
-       !freq0         = IHOP_freq
-       betaPowerLaw  = 1.0
-       ft            = 1000.0
+       fT            = 1000.0
 
-       HS%cp  = CRCI( zTemp, alphaR, alphaI, AttenUnit, &
-                      betaPowerLaw, ft, myThid )
-       HS%cs  = CRCI( zTemp, betaR,  betaI, AttenUnit, &
-                      betaPowerLaw, ft, myThid )
+       HS%cp  = CRCI( zTemp, alphaR, alphaI, AttenUnit, bPower, fT, myThid )
+       HS%cs  = CRCI( zTemp, betaR,  betaI,  AttenUnit, bPower, fT, myThid )
 
        HS%rho = rhoR
     CASE ( 'G' )            ! *** Grain size (formulas from UW-APL HF Handbook)
        ! These formulas are from the UW-APL Handbook
        ! The code is taken from older Matlab and is unnecesarily verbose
        ! vr   is the sound speed ratio
-       ! rhor is the density ratio
+       ! rhoR is the density ratio
        !READ(  ENVFile, *    ) zTemp, Mz
 #ifdef IHOP_WRITE_OUT
        WRITE(msgBuf,'( F10.2, 3X, F10.2 )' ) zTemp, Mz
@@ -938,15 +848,15 @@ CONTAINS
 
        IF ( Mz >= -1 .AND. Mz < 1 ) THEN
           vr   = 0.002709 * Mz**2 - 0.056452 * Mz + 1.2778
-          rhor = 0.007797 * Mz**2 - 0.17057  * Mz + 2.3139
+          rhoR = 0.007797 * Mz**2 - 0.17057  * Mz + 2.3139
        ELSE IF ( Mz >= 1 .AND. Mz < 5.3 ) THEN
           vr   = -0.0014881 * Mz**3 + 0.0213937 * Mz**2 - 0.1382798 * Mz &
                + 1.3425
-          rhor = -0.0165406 * Mz**3 + 0.2290201 * Mz**2 - 1.1069031 * Mz &
+          rhoR = -0.0165406 * Mz**3 + 0.2290201 * Mz**2 - 1.1069031 * Mz &
                + 3.0455
        ELSE
           vr   = -0.0024324 * Mz + 1.0019
-          rhor = -0.0012973 * Mz + 1.1565
+          rhoR = -0.0012973 * Mz + 1.1565
        END IF
 
        IF ( Mz >= -1 .AND. Mz < 0 ) THEN
@@ -971,12 +881,12 @@ CONTAINS
        ! loss parameter Sect. IV., Eq. (4) of handbook
        alphaI = alpha2_f * ( vr / 1000 ) * 1500.0 * log( 10.0 ) / ( 40.0*PI )
 
-       HS%cp  = CRCI( zTemp, alphaR, alphaI, 'L ', betaPowerLaw, ft, myThid )
+       HS%cp  = CRCI( zTemp, alphaR, alphaI, 'L ', bPower, fT, myThid )
        HS%cs  = 0.0
        HS%rho = rhoR
 #ifdef IHOP_WRITE_OUT
        WRITE(msgBuf,'(A,2F10.2,3X,A,F10.2,3X,A,F10.2)') &
-           'Converted sound speed =', HS%cp, 'density = ', rhor, &
+           'Converted sound speed =', HS%cp, 'density = ', rhoR, &
            'loss parm = ', alphaI
        ! In adjoint mode we do not write output besides on the first run
        IF (IHOP_dumpfreq.GE.0) &
@@ -1297,6 +1207,9 @@ CONTAINS
 
     IF ( ALLOCATED(x_out) ) DEALLOCATE(x_out)
     ALLOCATE( x_out(MAX(3, Nx)) )
+
+    ! set default values
+    x_out    = 0.0
     x_out(3) = -999.9
 
     DO i = 1, Nx
@@ -1379,7 +1292,7 @@ CONTAINS
     !   Only do I/O in the main thread
     _END_MASTER(myThid)
 
-  END ! SUBROUTINE openPRTFile
+  END !SUBROUTINE openPRTFile
 
 
   !**********************************************************************!
@@ -1434,6 +1347,6 @@ CONTAINS
         ray2D(iStep)%tau = (zeroRL, zeroRL)
     END DO
 
-  END ! SUBROUTINE resetMemory
+  END !SUBROUTINE resetMemory
 
 END MODULE initenvihop

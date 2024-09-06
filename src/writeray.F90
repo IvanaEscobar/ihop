@@ -14,7 +14,7 @@ MODULE writeRay
   ! These have lengths Nsteps1 vs. Nsteps for the entire ray
 
   USE ihop_mod, only: RAYFile, DELFile, ray2D
-  USE ssp_mod,  only: Bdry
+  USE bdry_mod,  only: Bdry
 
   IMPLICIT NONE
 !   == Global variables ==
@@ -70,12 +70,12 @@ CONTAINS
 
 !   WRITE(*, '(A,G,3I)') "Escobar:",alpha0, N2, ray2D(N2)%NumTopBnc, ray2D(N2)%NumBotBnc
 #ifdef IHOP_WRITE_OUT
-    WRITE( RAYFile, '(G12.6)') alpha0
+    WRITE( RAYFile, '(G16.10)') alpha0
     WRITE( RAYFile, '(3I10)' ) N2, ray2D( Nsteps1 )%NumTopBnc, &
                         ray2D( Nsteps1 )%NumBotBnc
 
     DO is = 1, N2
-       WRITE( RAYFile, '(2G12.6)' ) ray2D( is )%x
+       WRITE( RAYFile, '(2G16.10)' ) ray2D( is )%x
     END DO
 #endif /* IHOP_WRITE_OUT */
 
@@ -112,12 +112,12 @@ CONTAINS
     ! write to delay file
 
 #ifdef IHOP_WRITE_OUT
-    WRITE( DELFile, '(G12.6)' ) alpha0
+    WRITE( DELFile, '(G16.10)' ) alpha0
     WRITE( DELFile, '(3I10)' ) N2, ray2D( Nsteps1 )%NumTopBnc, &
                         ray2D( Nsteps1 )%NumBotBnc
 
     DO is = 1, N2
-       WRITE( DELFile, '(2G12.6)' ) REAL(ray2D( is )%tau), ray2D( is )%x(2)
+       WRITE( DELFile, '(2G16.10)' ) REAL(ray2D( is )%tau), ray2D( is )%x(2)
     END DO
 #endif /* IHOP_WRITE_OUT */
 

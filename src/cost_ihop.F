@@ -174,6 +174,7 @@ C Combine MPI processes
        IF ( myProcId .eq. 0 ) THEN
 C Loop over global obs
         DO m=1,NOBSMAX_IHOP
+         ihop_globaldummy(num_file) = 0           !RG
          IF (m.LE.ObsNo(num_file)) THEN
 
           ihop_modval=0.

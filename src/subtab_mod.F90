@@ -32,8 +32,8 @@ MODULE subTab_mod
 CONTAINS
   SUBROUTINE SubTab_sngl( x, Nx )
 
-    INTEGER, INTENT( IN )    :: Nx
     REAL,    INTENT( INOUT ) :: x( Nx )
+    INTEGER, INTENT( IN )    :: Nx
     REAL                     :: deltax
 
     IF ( Nx >= 3 ) THEN
@@ -49,8 +49,8 @@ CONTAINS
 
   SUBROUTINE SubTab_dble( x, Nx )
 
-    INTEGER,            INTENT( IN    ) :: Nx
     REAL (KIND=_RL90),  INTENT( INOUT ) :: x( Nx )
+    INTEGER,            INTENT( IN    ) :: Nx
     REAL (KIND=_RL90)   :: deltax
 
     IF ( Nx >= 3 ) THEN

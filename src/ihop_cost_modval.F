@@ -92,12 +92,14 @@ C !LOCAL VARIABLES:
 
       ENDDO !ii
 
+!$TAF init ihop_modval = 'ihop_cost_modval'
 ! Find index of maximum amplitude for each ri,rj arrival, a hand-writted
 ! maxloc
       maxarrval = arrval(1)
       maxindex  = 1
 
       DO ii=1,Narr(ri,rj)
+!$TAF store maxarrval = ihop_modval
           IF (arrval(ii) > maxarrval) THEN
               maxarrval = arrval(ii)
               maxindex  = ii
