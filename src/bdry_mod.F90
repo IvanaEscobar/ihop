@@ -84,7 +84,10 @@ MODULE bdry_mod
 CONTAINS
   SUBROUTINE initATI( TopATI, DepthT, myThid ) 
     ! Reads in the top altimetry
-    USE initenvihop,         only: fT
+  ! IESCO24
+  ! fT = 1000 ONLY for acousto-elastic halfspaces, I will have to pass this
+  ! parameter in a different way after ssp_mod is split btwn fixed and varia
+  !USE initenvihop, only: fT
 
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO
@@ -98,7 +101,12 @@ CONTAINS
     REAL (KIND=_RL90),  INTENT( IN ) :: DepthT
     REAL (KIND=_RL90),  ALLOCATABLE  :: phi(:)
     REAL (KIND=_RL90),  ALLOCATABLE  :: x(:) 
-    REAL (KIND=_RL90)   :: bPower = 1.0
+    REAL (KIND=_RL90)   :: bPower, fT
+
+  ! IESCO24 fT init
+  bPower = 1.0
+  fT     = 1000.0
+
 
     SELECT CASE ( TopATI )
     CASE ( '~', '*' )
@@ -287,7 +295,10 @@ CONTAINS
 
   SUBROUTINE initBTY( BotBTY, DepthB, myThid )
     ! Reads in the bottom bathymetry
-    USE initenvihop,         only: fT
+  ! IESCO24
+  ! fT = 1000 ONLY for acousto-elastic halfspaces, I will have to pass this
+  ! parameter in a different way after ssp_mod is split btwn fixed and varia
+  !USE initenvihop, only: fT
 
    !     == Routine Arguments ==
    !     myThid :: Thread number. Unused by IESCO
@@ -301,8 +312,12 @@ CONTAINS
       REAL (KIND=_RL90),  INTENT( IN ) :: DepthB
       REAL (KIND=_RL90) :: gcmbathy(sNx,sNy), gcmmin, gcmmax
       REAL (KIND=_RL90), ALLOCATABLE :: x(:) 
-      REAL (KIND=_RL90)   :: bPower = 1.0
       LOGICAL :: firstnonzero
+      REAL (KIND=_RL90)   :: bPower, fT
+
+  ! IESCO24 fT init
+  bPower = 1.0
+  fT     = 1000.0
 
       SELECT CASE ( BotBTY )
       CASE ( '~', '*' )

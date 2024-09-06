@@ -86,27 +86,6 @@ MODULE ssp_mod
   END TYPE SSPStructure
 
   TYPE( SSPStructure ) :: SSP
-
-!  ! *** Halfspace properties structure ***
-!
-!  TYPE HSInfo
-!     ! compressional and shear wave speeds/attenuations in user units
-!     REAL   (KIND=_RL90)    :: alphaR, alphaI, betaR, betaI    
-!     REAL   (KIND=_RL90)    :: rho, Depth        ! density, depth
-!     COMPLEX(KIND=_RL90)    :: cP, cS            ! P-wave, S-wave speeds
-!     CHARACTER (LEN=1)      :: BC                ! Boundary condition type
-!     CHARACTER (LEN=6)      :: Opt
-!  END TYPE HSInfo
-!
-!  TYPE BdryPt
-!     TYPE( HSInfo )   :: HS
-!  END TYPE
-!
-!  TYPE BdryType
-!     TYPE( BdryPt )   :: Top, Bot
-!  END TYPE BdryType
-!
-!  TYPE(BdryType) :: Bdry
 !EOP
 
 CONTAINS
