@@ -115,7 +115,7 @@ CONTAINS
        END IF
 
        Stepping: DO iS = 2, Beam%Nsteps
-!$TAF store ira,irb,na,nb,phase,qold,ra,rb = iRayCen1
+!$TAF store ira,irb,na,nb,phase,qold,ra = iRayCen1
          skip_step = .FALSE.
        
          ! Compute ray-centered coordinates, (znV, rnV)
@@ -161,7 +161,7 @@ CONTAINS
        
            ! Compute influence for each receiver
            DO ir = irA + 1 - II, irB + II, SIGN(1, irB - irA)
-!$TAF store Arr(:,ir,iz),NArr(ir,iz),q = iRayCen2
+!$TAF store Arr(:,ir,iz),NArr(ir,iz) = iRayCen2
              W = (Pos%Rr(ir) - rA) / (rB - rA)  ! relative range between rR
              n = ABS(nA + W * (nB - nA))
              q = ray2D(iS - 1)%q(1) + W * dq(iS - 1)  ! interpolated amplitude

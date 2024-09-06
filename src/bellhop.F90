@@ -341,12 +341,11 @@ CONTAINS
     !         begin solve         !
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     SourceDepth: DO is = 1, Pos%NSz
-!$TAF store beam,isegr = BellhopCore1
+!$TAF store beam = BellhopCore1
 ! IESCO24: Write derived type with allocatable memory by type: SSP from ssp_mod
 ! Scalar components
-!$TAF store ssp%npts,ssp%nr,ssp%nx,ssp%ny,ssp%nz = BellhopCore1
 ! Fixed arrays
-!$TAF store ssp%z,ssp%rho,ssp%c,ssp%cz = BellhopCore1
+!$TAF store ssp%z = BellhopCore1
 ! Allocatable arrays
 !$TAF store ssp%cmat,ssp%czmat = BellhopCore1
        xs = [ zeroRL, Pos%Sz( is ) ]   ! source coordinate, assuming source @ r=0
@@ -385,9 +384,7 @@ CONTAINS
 !!$TAF store ratio1,rb = BellhopCore2
 ! IESCO24: Write derived type with allocatable memory by type: SSP from ssp_mod
 ! Scalar components
-!$TAF store ssp%npts,ssp%nr,ssp%nx,ssp%ny,ssp%nz = BellhopCore2
 ! Fixed arrays
-!$TAF store ssp%z,ssp%rho,ssp%c,ssp%cz = BellhopCore2
 ! Allocatable arrays
 !$TAF store ssp%cmat,ssp%czmat = BellhopCore2
           ! take-off declination angle in degrees
@@ -568,12 +565,10 @@ CONTAINS
     continue_steps = .true.
     Stepping: DO istep = 1, MaxN - 1
 !$TAF store bdry,beam,continue_steps,distbegbot,distbegtop = TraceRay2D
-!$TAF store is,isegbot,isegr,isegtop,ray2d,rbotseg,rtopseg = TraceRay2D
+!$TAF store is,isegbot,isegtop,ray2d,rbotseg,rtopseg = TraceRay2D
 ! IESCO24: Write derived type with allocatable memory by type: SSP from ssp_mod
 ! Scalar components
-!$TAF store ssp%npts,ssp%nr,ssp%nx,ssp%ny,ssp%nz = TraceRay2D
 ! Fixed arrays
-!$TAF store ssp%z,ssp%rho,ssp%c,ssp%cz = TraceRay2D
 ! Allocatable arrays
 !$TAF store ssp%cmat,ssp%czmat = TraceRay2D
        IF ( continue_steps ) THEN
@@ -753,7 +748,7 @@ CONTAINS
   ! **********************************************************************!
   
   SUBROUTINE Reflect2D( is, HS, BotTop, tBdry, nBdry, kappa, RefC, Npts, myThid )
-    USE bdry_mod, only: HSInfo2
+    USE bdry_mod, only: HSInfo
   
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO
@@ -766,7 +761,7 @@ CONTAINS
     REAL (KIND=_RL90),    INTENT( IN ) :: tBdry(2), nBdry(2)  ! Tangent and normal to the boundary
     REAL (KIND=_RL90),    INTENT( IN ) :: kappa ! Boundary curvature, for curvilinear grids
     CHARACTER (LEN=3),    INTENT( IN ) :: BotTop       ! bottom or top reflection
-    TYPE( HSInfo2 ),       INTENT( IN ) :: HS           ! half-space properties
+    TYPE( HSInfo ),       INTENT( IN ) :: HS           ! half-space properties
     TYPE(ReflectionCoef), INTENT( IN ) :: RefC( NPts ) ! reflection coefficient
     INTEGER,              INTENT( INOUT ) :: is
     INTEGER              :: is1

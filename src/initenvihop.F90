@@ -8,12 +8,10 @@ MODULE initenvihop
 
   ! mbp 12/2018, based on much older subroutine
 
-  USE ihop_mod,     only: PRTFile, RAYFile, DELFile, ARRFile, SHDFile, &
-                          Title, Beam
-  USE ssp_mod,      only: initSSP, SSP
-  !HSInfo, Bdry, 
-  USE bdry_mod, only: Bdry, HSInfo2
-  USE atten_mod,    only: CRCI
+  USE ihop_mod,  only: PRTFile, RAYFile, DELFile, ARRFile, SHDFile, Title, Beam
+  USE ssp_mod,   only: initSSP, SSP
+  USE bdry_mod,  only: Bdry, HSInfo
+  USE atten_mod, only: CRCI
 
 ! ! USES
   implicit none
@@ -73,8 +71,8 @@ CONTAINS
     PlotType  = ''
 
     !RG
-    Bdry%Bot%HS = HSInfo2(0.,0.,0.,0., 0.,0. , (0.,0.),(0.,0.), '', '' )
-    Bdry%Top%HS = HSInfo2(0.,0.,0.,0., 0.,0. , (0.,0.),(0.,0.), '', '' )
+    Bdry%Bot%HS = HSInfo(0.,0.,0.,0., 0.,0. , (0.,0.),(0.,0.), '', '' )
+    Bdry%Top%HS = HSInfo(0.,0.,0.,0., 0.,0. , (0.,0.),(0.,0.), '', '' )
  
     ! *** ihop info to PRTFile ***
     CALL openPRTFile( myTime, myIter, myThid )
@@ -741,7 +739,7 @@ CONTAINS
   
   !     == Local Variables ==
     CHARACTER (LEN=2), INTENT( IN    ) :: AttenUnit
-    TYPE ( HSInfo2 ),   INTENT( INOUT ) :: HS
+    TYPE ( HSInfo ),   INTENT( INOUT ) :: HS
     REAL (KIND=_RL90) :: Mz, vr, alpha2_f     ! values related to grain size
     REAL (KIND=_RL90) :: ztemp, bPower, fT
 

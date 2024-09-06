@@ -32,7 +32,7 @@ MODULE bdry_mod
    public   initATI, initBTY, GetTopSeg, GetBotSeg, Bot, Top, &
             IsegTop, IsegBot, rTopSeg, rBotSeg,&
             iSmallStepCtr, atiType, btyType, NATIPts, NBTYPts, &
-            HSInfo2, Bdry
+            HSInfo, Bdry
 
 !=======================================================================
 
@@ -46,7 +46,7 @@ MODULE bdry_mod
    CHARACTER  (LEN=2) :: atiType= 'LS', btyType = 'LS'
 
    ! ***Halfspace properties***
-   TYPE HSInfo2
+   TYPE HSInfo
       ! compressional and shear wave speeds/attenuations in user units
       REAL     (KIND=_RL90)   :: alphaR, alphaI, betaR, betaI  
       REAL     (KIND=_RL90)   :: rho, Depth  ! density, depth
@@ -66,13 +66,13 @@ MODULE bdry_mod
                            Noden( 2 )    ! normal at the node 
       REAL (KIND=_RL90) :: Dx, Dxx, &    ! 1st, 2nd derivatives wrt depth
                            Dss           ! derivative along tangent
-      TYPE( HSInfo2 )   :: HS
+      TYPE( HSInfo )   :: HS
    END TYPE
 
    TYPE(BdryPt), ALLOCATABLE :: Top( : ), Bot( : )
 
    TYPE BdryPt2
-      TYPE( HSInfo2 )   :: HS
+      TYPE( HSInfo )   :: HS
    END TYPE
 
    TYPE BdryType
@@ -272,6 +272,17 @@ CONTAINS
      STOP 'ABNORMAL END: S/R initATI'
     END IF 
 
+    ! Initiate Top
+    DO iSeg = 1, NatiPts
+       ! compressional wave speed
+       Top( iSeg )%HS%cp = CRCI( 1D20, Top( iSeg )%HS%alphaR, &
+                                 Top( iSeg )%HS%alphaI, 'W ', bPower, fT, &
+                                 myThid ) 
+       ! shear wave speed
+       Top( iSeg )%HS%cs = CRCI( 1D20, Top( iSeg )%HS%betaR,  &
+                                 Top( iSeg )%HS%betaI, 'W ', bPower, fT, &
+                                 myThid )
+    END DO
     ! convert range-dependent geoacoustic parameters from user to program units
     ! W is dB/wavelength
     IF ( atiType( 2:2 ) == 'L' ) THEN
