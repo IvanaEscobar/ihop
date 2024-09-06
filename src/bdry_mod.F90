@@ -37,6 +37,7 @@ MODULE bdry_mod
 
    INTEGER, PARAMETER :: Number_to_Echo = 21
    INTEGER            :: IsegTop, IsegBot ! indices point to current active segment
+   INTEGER, PROTECTED :: NBtyPts = 2, NAtiPts = 2
    INTEGER            :: IOStat, IAllocStat
 
    ! range intervals defining the current active segment
@@ -64,7 +65,7 @@ MODULE bdry_mod
                            Noden( 2 )    ! normal at the node 
       REAL (KIND=_RL90) :: Dx, Dxx, &    ! 1st, 2nd derivatives wrt depth
                            Dss           ! derivative along tangent
-      TYPE( HSInfo )   :: HS
+      TYPE( HSInfo )    :: HS
    END TYPE
 
    TYPE(BdryPt), ALLOCATABLE :: Top( : ), Bot( : )
@@ -96,7 +97,6 @@ CONTAINS
   !     == Local Variables ==
     CHARACTER (LEN= 1), INTENT( IN ) :: TopATI
     INTEGER :: ii
-    INTEGER :: NAtiPts = 2
     REAL (KIND=_RL90),  INTENT( IN ) :: DepthT
     REAL (KIND=_RL90),  ALLOCATABLE  :: phi(:)
     REAL (KIND=_RL90),  ALLOCATABLE  :: x(:) 
@@ -315,16 +315,15 @@ CONTAINS
    !     == Local Variables ==
       CHARACTER (LEN= 1), INTENT( IN ) :: BotBTY
       INTEGER :: i,j,bi,bj,ii
-      INTEGER :: NBtyPts = 2
       REAL (KIND=_RL90),  INTENT( IN ) :: DepthB
       REAL (KIND=_RL90) :: gcmbathy(sNx,sNy), gcmmin, gcmmax
       REAL (KIND=_RL90), ALLOCATABLE :: x(:) 
       LOGICAL :: firstnonzero
       REAL (KIND=_RL90)   :: bPower, fT
 
-  ! IESCO24 fT init
-  bPower = 1.0
-  fT     = 1000.0
+      ! IESCO24 fT init
+      bPower = 1.0
+      fT     = 1000.0
 
       SELECT CASE ( BotBTY )
       CASE ( '~', '*' )
@@ -592,6 +591,7 @@ CONTAINS
     TYPE(BdryPt)                     :: Bdry( : )
     CHARACTER (LEN=3),  INTENT( IN ) :: BotTop ! Flag indicating bottom or top reflection
     CHARACTER (LEN=2)                :: CurvilinearFlag = '-'
+    INTEGER :: ii
 
     SELECT CASE ( BotTop )
     CASE ( 'Bot' )

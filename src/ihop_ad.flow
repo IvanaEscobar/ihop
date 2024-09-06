@@ -67,7 +67,7 @@
 !$TAF SUBROUTINE bdry_mod::initbty OUTPUT  =
 !$TAF SUBROUTINE bdry_mod::initati MODULE bdry_mod OUTPUT  = bot
 
-!$TAF SUBROUTINE bdry_mod::computebdrytangentnormal INPUT   = 1, 2
+!$TAF SUBROUTINE bdry_mod::computebdrytangentnormal INPUT   = 1, 2, 3
 !$TAF SUBROUTINE bdry_mod::computebdrytangentnormal OUTPUT  =
 
 !     *==========================================================*
