@@ -12,7 +12,6 @@ MODULE bdry_mod
 
    USE monotonic_mod,   only: monotonic
    USE ihop_mod,        only: PRTFile, ATIFile, BTYFile
-   USE ssp_mod,         only: betaPowerLaw, ft
    USE atten_mod,       only: CRCI
 
   IMPLICIT NONE
@@ -32,7 +31,8 @@ MODULE bdry_mod
 
    public   initATI, initBTY, GetTopSeg, GetBotSeg, Bot, Top, &
             IsegTop, IsegBot, rTopSeg, rBotSeg,&
-            iSmallStepCtr, atiType, btyType, NATIPts, NBTYPts
+            iSmallStepCtr, atiType, btyType, NATIPts, NBTYPts, &
+            HSInfo2, Bdry
 
 !=======================================================================
 
@@ -71,13 +71,20 @@ MODULE bdry_mod
 
    TYPE(BdryPt), ALLOCATABLE :: Top( : ), Bot( : )
 
-#ifdef ALLOW_AUTODIFF_TAMC
-!ADJ PASSIVE betaPowerLaw, fT
-#endif /* ALLOW_AUTODIFF_TAMC */
+   TYPE BdryPt2
+      TYPE( HSInfo2 )   :: HS
+   END TYPE
+
+   TYPE BdryType
+      TYPE( BdryPt2 )   :: Top, Bot
+   END TYPE BdryType
+
+   TYPE(BdryType) :: Bdry
 
 CONTAINS
   SUBROUTINE initATI( TopATI, DepthT, myThid ) 
     ! Reads in the top altimetry
+    USE initenvihop,         only: fT
 
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO
@@ -91,6 +98,7 @@ CONTAINS
     REAL (KIND=_RL90),  INTENT( IN ) :: DepthT
     REAL (KIND=_RL90),  ALLOCATABLE  :: phi(:)
     REAL (KIND=_RL90),  ALLOCATABLE  :: x(:) 
+    REAL (KIND=_RL90)   :: bPower = 1.0
 
     SELECT CASE ( TopATI )
     CASE ( '~', '*' )
@@ -260,12 +268,14 @@ CONTAINS
     ! W is dB/wavelength
     IF ( atiType( 2:2 ) == 'L' ) THEN
        DO iSeg = 1, NatiPts
+          ! compressional wave speed
           Top( iSeg )%HS%cp = CRCI( 1D20, Top( iSeg )%HS%alphaR, &
-                                    Top( iSeg )%HS%alphaI, 'W ', betaPowerLaw, &
-                                    ft, myThid ) ! compressional wave speed
+                                    Top( iSeg )%HS%alphaI, 'W ', bPower, fT, &
+                                    myThid ) 
+          ! shear wave speed
           Top( iSeg )%HS%cs = CRCI( 1D20, Top( iSeg )%HS%betaR,  &
-                                    Top( iSeg )%HS%betaI, 'W ', betaPowerLaw, &
-                                    ft, myThid )   ! shear wave speed
+                                    Top( iSeg )%HS%betaI, 'W ', bPower, fT, &
+                                    myThid )
        END DO
     END IF
 
@@ -273,10 +283,11 @@ CONTAINS
   RETURN
   END !SUBROUTINE initATI
 
-  ! **********************************************************************!
+! **********************************************************************!
 
-SUBROUTINE initBTY( BotBTY, DepthB, myThid )
-   ! Reads in the bottom bathymetry
+  SUBROUTINE initBTY( BotBTY, DepthB, myThid )
+    ! Reads in the bottom bathymetry
+    USE initenvihop,         only: fT
 
    !     == Routine Arguments ==
    !     myThid :: Thread number. Unused by IESCO
@@ -290,6 +301,7 @@ SUBROUTINE initBTY( BotBTY, DepthB, myThid )
       REAL (KIND=_RL90),  INTENT( IN ) :: DepthB
       REAL (KIND=_RL90) :: gcmbathy(sNx,sNy), gcmmin, gcmmax
       REAL (KIND=_RL90), ALLOCATABLE :: x(:) 
+      REAL (KIND=_RL90)   :: bPower = 1.0
       LOGICAL :: firstnonzero
 
       SELECT CASE ( BotBTY )
@@ -525,19 +537,21 @@ SUBROUTINE initBTY( BotBTY, DepthB, myThid )
    ! W is dB/wavelength
    IF ( btyType( 2:2 ) == 'L' ) THEN
       DO iSeg = 1, NbtyPts
+         ! compressional wave speed
          Bot( iSeg )%HS%cp = CRCI( 1D20, Bot( iSeg )%HS%alphaR, &
-                                   Bot( iSeg )%HS%alphaI, 'W ', betaPowerLaw, &
-                                   ft, myThid ) ! compressional wave speed
+                                   Bot( iSeg )%HS%alphaI, 'W ', bPower, fT, &
+                                   myThid )
+         ! shear wave speed
          Bot( iSeg )%HS%cs = CRCI( 1D20, Bot( iSeg )%HS%betaR,  &
-                                   Bot( iSeg )%HS%betaI, 'W ', betaPowerLaw, &
-                                   ft, myThid )   ! shear wave speed
+                                   Bot( iSeg )%HS%betaI, 'W ', bPower, fT, &
+                                   myThid )
       END DO
    END IF
 
    RETURN
-END !SUBROUTINE initBTY
+  END !SUBROUTINE initBTY
 
-  ! **********************************************************************!
+! **********************************************************************!
 
   SUBROUTINE ComputeBdryTangentNormal( Bdry, BotTop )
 

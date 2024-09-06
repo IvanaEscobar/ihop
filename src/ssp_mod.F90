@@ -14,7 +14,7 @@ MODULE ssp_mod
   ! Also, a greater premium has been placed on returning this info quickly, 
   ! since BELLHOP calls it at every step so more information is pre-computed
 
-  USE ihop_mod,     only: PRTFile, SSPFile
+  USE ihop_mod,     only: PRTFile
 
   IMPLICIT NONE
 ! == Global variables ==
@@ -30,8 +30,8 @@ MODULE ssp_mod
 ! public interfaces
 !=======================================================================
 
-    public initSSP, evalSSP, HSInfo, Bdry, SSP, alphaR, betaR, &
-           alphaI, betaI, rhoR, betaPowerLaw, fT, iSegz, iSegr
+    public initSSP, evalSSP, SSP, alphaR, betaR, &
+           alphaI, betaI, rhoR, iSegz, iSegr
 
 !=======================================================================
 
@@ -58,7 +58,6 @@ MODULE ssp_mod
   INTEGER                :: iostat, iallocstat
   INTEGER,           PRIVATE :: iz
   REAL (KIND=_RL90), PRIVATE :: Depth, W
-  REAL (KIND=_RL90)          :: betaPowerLaw = 1, fT = 1D20
   ! DEFAULT values, BELLHOP only modifies alphaR
   REAL (KIND=_RL90)          :: alphaR = 1500, betaR = 0, alphaI = 0, &
                                 betaI = 0, rhoR = 1
@@ -88,26 +87,26 @@ MODULE ssp_mod
 
   TYPE( SSPStructure ) :: SSP
 
-  ! *** Halfspace properties structure ***
-
-  TYPE HSInfo
-     ! compressional and shear wave speeds/attenuations in user units
-     REAL   (KIND=_RL90)    :: alphaR, alphaI, betaR, betaI    
-     REAL   (KIND=_RL90)    :: rho, Depth        ! density, depth
-     COMPLEX(KIND=_RL90)    :: cP, cS            ! P-wave, S-wave speeds
-     CHARACTER (LEN=1)      :: BC                ! Boundary condition type
-     CHARACTER (LEN=6)      :: Opt
-  END TYPE HSInfo
-
-  TYPE BdryPt
-     TYPE( HSInfo )   :: HS
-  END TYPE
-
-  TYPE BdryType
-     TYPE( BdryPt )   :: Top, Bot
-  END TYPE BdryType
-
-  TYPE(BdryType) :: Bdry
+!  ! *** Halfspace properties structure ***
+!
+!  TYPE HSInfo
+!     ! compressional and shear wave speeds/attenuations in user units
+!     REAL   (KIND=_RL90)    :: alphaR, alphaI, betaR, betaI    
+!     REAL   (KIND=_RL90)    :: rho, Depth        ! density, depth
+!     COMPLEX(KIND=_RL90)    :: cP, cS            ! P-wave, S-wave speeds
+!     CHARACTER (LEN=1)      :: BC                ! Boundary condition type
+!     CHARACTER (LEN=6)      :: Opt
+!  END TYPE HSInfo
+!
+!  TYPE BdryPt
+!     TYPE( HSInfo )   :: HS
+!  END TYPE
+!
+!  TYPE BdryType
+!     TYPE( BdryPt )   :: Top, Bot
+!  END TYPE BdryType
+!
+!  TYPE(BdryType) :: Bdry
 !EOP
 
 CONTAINS
@@ -116,6 +115,7 @@ CONTAINS
 
     ! Call the particular profile routine indicated by the SSP%Type and 
     ! perform initialize SSP structures 
+    USE ihop_mod,   only: SSPFile
     USE pchip_mod,  only: PCHIP
     USE splinec_mod,only: cspline
 
@@ -566,6 +566,10 @@ CONTAINS
 
     USE atten_mod, only: CRCI
     USE ihop_mod,  only: SSPFile
+  ! IESCO24
+  ! fT = 1000 ONLY for acousto-elastic halfspaces, I will have to pass this
+  ! parameter in a different way after ssp_mod is split btwn fixed and varia
+  !USE initenvihop, only: fT
 
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO
@@ -576,8 +580,11 @@ CONTAINS
   !     == Local Variables ==
     REAL (KIND=_RL90), INTENT(IN) :: Depth
     INTEGER :: iz2
+    REAL (KIND=_RL90) :: bPower, fT
 
-    betaPowerLaw = 1.                        !RG
+  ! IESCO24 fT init
+  bPower = 1.0
+  fT = 1000.0
 
     ! I/O on main thread only
     _BEGIN_MASTER(myThid)
@@ -732,9 +739,9 @@ CONTAINS
         CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 #endif /* IHOP_WRITE_OUT */
 
-       SSP%c(   iz ) = CRCI( SSP%z( iz ), alphaR, alphaI, &
-                             SSP%AttenUnit, betaPowerLaw, fT, myThid )
-       SSP%rho( iz ) = rhoR !IEsco22: set to a default value of 1
+       SSP%c(iz) = CRCI( SSP%z(iz), alphaR, alphaI, SSP%AttenUnit, bPower, fT, &
+                           myThid )
+       SSP%rho(iz) = rhoR !IEsco22: set to a default value of 1
 
        ! verify depths are monotone increasing
        IF ( iz > 1 ) THEN
@@ -800,6 +807,11 @@ SUBROUTINE ExtractSSP( Depth, myThid )
   ! Extracts SSP from MITgcm grid points
 
   USE atten_mod, only: CRCI
+  USE bdry_mod, only: Bdry
+  ! IESCO24
+  ! fT = 1000 ONLY for acousto-elastic halfspaces, I will have to pass this
+  ! parameter in a different way after ssp_mod is split btwn fixed and varia
+  !USE initenvihop, only: fT
 
   ! == Routine Arguments ==
   ! myThid :: Thread number. Unused by IESCO
@@ -816,8 +828,11 @@ SUBROUTINE ExtractSSP( Depth, myThid )
                                    dcdz, tolerance
   REAL (KIND=_RL90), ALLOCATABLE:: tmpSSP(:,:,:,:)
   LOGICAL :: found_interpolation, skip_range
+  REAL (KIND=_RL90)             :: bPower, fT
 
-  betaPowerLaw = 1.      !RG
+  ! IESCO24 fT init
+  bPower = 1.0
+  fT = 1000.0
 
   SSP%Nz = Nr+2 ! add z=0 z=Depth layers 
   SSP%Nr = IHOP_NPTS_RANGE
@@ -983,9 +998,9 @@ SUBROUTINE ExtractSSP( Depth, myThid )
   DO iz = 1,SSP%Nz
     alphaR = SSP%cMat( iz, 1 )
 
-    SSP%c(   iz ) = CRCI( SSP%z( iz ), alphaR, alphaI, &
-                          SSP%AttenUnit, betaPowerLaw, fT, myThid )
-    SSP%rho( iz ) = rhoR
+    SSP%c(iz) = CRCI( SSP%z(iz), alphaR, alphaI, SSP%AttenUnit, bPower, fT, &
+                        myThid )
+    SSP%rho(iz) = rhoR
 
     IF ( iz > 1 ) THEN
       IF ( SSP%z( iz ) .LE. SSP%z( iz-1 ) ) THEN

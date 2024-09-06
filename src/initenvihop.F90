@@ -10,7 +10,9 @@ MODULE initenvihop
 
   USE ihop_mod,     only: PRTFile, RAYFile, DELFile, ARRFile, SHDFile, &
                           Title, Beam
-  USE ssp_mod,      only: initSSP, HSInfo, Bdry, SSP
+  USE ssp_mod,      only: initSSP, SSP
+  !HSInfo, Bdry, 
+  USE bdry_mod, only: Bdry, HSInfo2
   USE atten_mod,    only: CRCI
 
 ! ! USES
@@ -26,10 +28,6 @@ MODULE initenvihop
 #include "cal.h"
 #endif /* ALLOW_CAL */
 
-!   == External Functions ==
-    INTEGER  ILNBLNK
-    EXTERNAL ILNBLNK
-
   PRIVATE
 
 !   == Public Interfaces ==
@@ -37,6 +35,11 @@ MODULE initenvihop
   public    initEnv, OpenOutputFiles, resetMemory
 !=======================================================================
 
+! INPUT/OUTPUT PARAMETERS:
+
+! == External Functions ==
+  INTEGER  ILNBLNK
+  EXTERNAL ILNBLNK
 
 CONTAINS
   SUBROUTINE initEnv( myTime, myIter, myThid )
@@ -70,8 +73,8 @@ CONTAINS
     PlotType  = ''
 
     !RG
-    Bdry%Bot%HS = HSInfo(0.,0.,0.,0., 0.,0. , (0.,0.),(0.,0.), '', '' )
-    Bdry%Top%HS = HSInfo(0.,0.,0.,0., 0.,0. , (0.,0.),(0.,0.), '', '' )
+    Bdry%Bot%HS = HSInfo2(0.,0.,0.,0., 0.,0. , (0.,0.),(0.,0.), '', '' )
+    Bdry%Top%HS = HSInfo2(0.,0.,0.,0., 0.,0. , (0.,0.),(0.,0.), '', '' )
  
     ! *** ihop info to PRTFile ***
     CALL openPRTFile( myTime, myIter, myThid )
@@ -726,7 +729,7 @@ CONTAINS
   !**********************************************************************!
 
   SUBROUTINE TopBot( AttenUnit, HS, myThid )
-    USE ssp_mod, only: fT, betaPowerLaw, rhoR, alphaR, betaR, alphaI, betaI
+    USE ssp_mod, only: rhoR, alphaR, betaR, alphaI, betaI
 
     ! Handles top and bottom boundary conditions
 
@@ -738,9 +741,9 @@ CONTAINS
   
   !     == Local Variables ==
     CHARACTER (LEN=2), INTENT( IN    ) :: AttenUnit
-    TYPE ( HSInfo ),   INTENT( INOUT ) :: HS
+    TYPE ( HSInfo2 ),   INTENT( INOUT ) :: HS
     REAL (KIND=_RL90) :: Mz, vr, alpha2_f     ! values related to grain size
-    REAL (KIND=_RL90) :: ztemp 
+    REAL (KIND=_RL90) :: ztemp, bPower, fT
 
     ! In adjoint mode we do not write output besides on the first run
     IF (IHOP_dumpfreq.GE.0) THEN
@@ -798,9 +801,9 @@ CONTAINS
     HS%rho = 0.0
 
     ! RG recommends resetting to the default values from ssp_mod.F90
-    betaPowerLaw = 1.0
-    fT           = 1D20
-    rhoR         = 1.0
+    bPower = 1.0
+    fT     = 1D20
+    rhoR   = 1.0
     
     SELECT CASE ( HS%BC )
     CASE ( 'A' )                  ! *** Half-space properties ***
@@ -828,10 +831,8 @@ CONTAINS
        ! these are not in play because the AttenUnit for this is not allowed yet
        fT            = 1000.0
 
-       HS%cp  = CRCI( zTemp, alphaR, alphaI, AttenUnit, &
-                      betaPowerLaw, fT, myThid )
-       HS%cs  = CRCI( zTemp, betaR,  betaI, AttenUnit, &
-                      betaPowerLaw, fT, myThid )
+       HS%cp  = CRCI( zTemp, alphaR, alphaI, AttenUnit, bPower, fT, myThid )
+       HS%cs  = CRCI( zTemp, betaR,  betaI,  AttenUnit, bPower, fT, myThid )
 
        HS%rho = rhoR
     CASE ( 'G' )            ! *** Grain size (formulas from UW-APL HF Handbook)
@@ -882,7 +883,7 @@ CONTAINS
        ! loss parameter Sect. IV., Eq. (4) of handbook
        alphaI = alpha2_f * ( vr / 1000 ) * 1500.0 * log( 10.0 ) / ( 40.0*PI )
 
-       HS%cp  = CRCI( zTemp, alphaR, alphaI, 'L ', betaPowerLaw, fT, myThid )
+       HS%cp  = CRCI( zTemp, alphaR, alphaI, 'L ', bPower, fT, myThid )
        HS%cs  = 0.0
        HS%rho = rhoR
 #ifdef IHOP_WRITE_OUT

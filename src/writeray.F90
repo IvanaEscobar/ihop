@@ -14,7 +14,7 @@ MODULE writeRay
   ! These have lengths Nsteps1 vs. Nsteps for the entire ray
 
   USE ihop_mod, only: RAYFile, DELFile, ray2D
-  USE ssp_mod,  only: Bdry
+  USE bdry_mod,  only: Bdry
 
   IMPLICIT NONE
 !   == Global variables ==

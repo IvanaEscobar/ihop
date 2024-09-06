@@ -31,10 +31,11 @@ MODULE BELLHOP
   USE initenvihop,  only:   initEnv, openOutputFiles, resetMemory
   USE angle_mod,    only:   Angles, ialpha
   USE srPos_mod,    only:   Pos
-  USE ssp_mod,      only:   evalSSP, HSInfo, Bdry, SSP
+  USE ssp_mod,      only:   evalSSP, SSP
+  !HSInfo, Bdry, 
   USE bdry_mod,     only:   initATI, initBTY, GetTopSeg, GetBotSeg, Bot, Top,  &
                             atiType, btyType, NatiPts, NbtyPts, iSmallStepCtr, &
-                            IsegTop, IsegBot, rTopSeg, rBotSeg
+                            IsegTop, IsegBot, rTopSeg, rBotSeg, Bdry
   USE refCoef,      only:   readReflectionCoefficient,                         &
                             InterpolateReflectionCoefficient, ReflectionCoef,  &
                             RTop, RBot, NBotPts, NTopPts
@@ -45,7 +46,6 @@ MODULE BELLHOP
   USE writeRay,     only:   WriteRay2D, WriteDel2D
   USE arr_mod,      only:   WriteArrivalsASCII,WriteArrivalsBinary,MaxNArr,    &
                             Arr, NArr, U
-  USE ssp_mod,      only: betaPowerLaw, fT     !RG
 
 !   !USES:
   IMPLICIT NONE
@@ -341,7 +341,7 @@ CONTAINS
     !         begin solve         !
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     SourceDepth: DO is = 1, Pos%NSz
-!$TAF store beam,betapowerlaw,isegr = BellhopCore1
+!$TAF store beam,isegr = BellhopCore1
 ! IESCO24: Write derived type with allocatable memory by type: SSP from ssp_mod
 ! Scalar components
 !$TAF store ssp%npts,ssp%nr,ssp%nx,ssp%ny,ssp%nz = BellhopCore1
@@ -428,7 +428,6 @@ CONTAINS
              END IF
 #endif /* IHOP_WRITE_OUT */
              
-             betapowerlaw = 1. !RG?
              ! Trace a ray, update ray2D structure
              CALL TraceRay2D( xs, Angles%alpha( ialpha ), Amp0, myThid )   
   
@@ -754,6 +753,7 @@ CONTAINS
   ! **********************************************************************!
   
   SUBROUTINE Reflect2D( is, HS, BotTop, tBdry, nBdry, kappa, RefC, Npts, myThid )
+    USE bdry_mod, only: HSInfo2
   
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO
@@ -766,7 +766,7 @@ CONTAINS
     REAL (KIND=_RL90),    INTENT( IN ) :: tBdry(2), nBdry(2)  ! Tangent and normal to the boundary
     REAL (KIND=_RL90),    INTENT( IN ) :: kappa ! Boundary curvature, for curvilinear grids
     CHARACTER (LEN=3),    INTENT( IN ) :: BotTop       ! bottom or top reflection
-    TYPE( HSInfo ),       INTENT( IN ) :: HS           ! half-space properties
+    TYPE( HSInfo2 ),       INTENT( IN ) :: HS           ! half-space properties
     TYPE(ReflectionCoef), INTENT( IN ) :: RefC( NPts ) ! reflection coefficient
     INTEGER,              INTENT( INOUT ) :: is
     INTEGER              :: is1
