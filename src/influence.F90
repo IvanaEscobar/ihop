@@ -67,8 +67,13 @@ CONTAINS
 
     !!! need to add logic related to NRz_per_range
 
-!$TAF init iRayCen1 = static, (Beam%Nsteps-1)*NRz_per_range
-!$TAF init iRayCen2 = static, (Beam%Nsteps-1)*ihop_nrr*NRz_per_range
+!!$TAF init iRayCen0a = static, (Beam%Nsteps)
+!!$TAF init iRayCen0b = static, (Beam%Nsteps)*2 
+!$TAF init iRayCen1  = static, (Beam%Nsteps-1)*NRz_per_range
+!$TAF init iRayCen2  = static, (Beam%Nsteps-1)*ihop_nrr*NRz_per_range
+
+!!$TAF store ray2d(1:Beam%Nsteps)%amp,ray2d(1:Beam%Nsteps)%c = iRayCen0a
+!!$TAF store ray2d(1:Beam%Nsteps)%t(1:2) = iRayCen0b
 
     q0           = ray2D( 1 )%c / Dalpha   ! Reference for J = q0 / q
     SrcDeclAngle = rad2deg * alpha          ! take-off angle in degrees
@@ -161,7 +166,7 @@ CONTAINS
        
            ! Compute influence for each receiver
            DO ir = irA + 1 - II, irB + II, SIGN(1, irB - irA)
-!$TAF store Arr(:,ir,iz),NArr(ir,iz) = iRayCen2
+!$TAF store Arr(:,ir,iz),NArr(ir,iz),W = iRayCen2
              W = (Pos%Rr(ir) - rA) / (rB - rA)  ! relative range between rR
              n = ABS(nA + W * (nB - nA))
              q = ray2D(iS - 1)%q(1) + W * dq(iS - 1)  ! interpolated amplitude
@@ -236,7 +241,7 @@ CONTAINS
     IF ( Beam%RunType( 4 : 4 ) == 'R' ) Ratio1 = SQRT( ABS( COS( alpha ) ) )  
 
     Stepping: DO iS = 2, Beam%Nsteps
-!$TAF store phase,qold,ra = iiitape1
+!$TAF store phase,qold,ra,rayt,rlen = iiitape1
        rB     = ray2D( iS   )%x( 1 )
        x_ray  = ray2D( iS-1 )%x
 
@@ -402,7 +407,7 @@ CONTAINS
     END IF
 
     Stepping: DO iS = 2, Beam%Nsteps
-!$TAF store phase,qold,ra = iGauCart1
+!$TAF store phase,qold,ra,rayt = iGauCart1
        rB    = ray2D( iS     )%x( 1 )
        x_ray = ray2D( iS - 1 )%x
 

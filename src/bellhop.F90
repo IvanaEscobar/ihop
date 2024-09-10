@@ -37,7 +37,7 @@ MODULE BELLHOP
                             atiType, btyType, IsegTop, IsegBot,                &
                             rTopSeg, rBotSeg, Bdry
   USE refCoef,      only:   readReflectionCoefficient,                         &
-                            InterpolateReflectionCoefficient, ReflectionCoef,  &
+                            InterpolateReflectionCoefficient,  &
                             RTop, RBot, NBotPts, NTopPts
   USE influence,    only:   InfluenceGeoHatRayCen,                             &
                             InfluenceGeoGaussianCart, InfluenceGeoHatCart,     &
@@ -321,6 +321,7 @@ CONTAINS
 
 !$TAF init BellhopCore1 = static, Pos%NSz
 !$TAF init BellhopCore2 = static, Pos%NSz*Angles%Nalpha
+
     afreq = 2.0 * PI * IHOP_freq
   
     Angles%alpha  = Angles%alpha * deg2rad  ! convert to radians
@@ -341,6 +342,7 @@ CONTAINS
     !         begin solve         !
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     SourceDepth: DO is = 1, Pos%NSz
+
 !$TAF store beam = BellhopCore1
 ! IESCO24: Write derived type with allocatable memory by type: SSP from ssp_mod
 ! Scalar components
@@ -348,6 +350,7 @@ CONTAINS
 !$TAF store ssp%z = BellhopCore1
 ! Allocatable arrays
 !$TAF store ssp%cmat,ssp%czmat = BellhopCore1
+
        xs = [ zeroRL, Pos%Sz( is ) ]   ! source coordinate, assuming source @ r=0
   
        SELECT CASE ( Beam%RunType( 1:1 ) )
@@ -503,6 +506,8 @@ CONTAINS
     REAL (KIND=_RL90) :: sss, declAlpha, declAlphaOld
     LOGICAL           :: RayTurn = .FALSE., continue_steps
   
+!$TAF init TraceRay2D = static, MaxN-1 
+
     ! Initial conditions (IC)
     iSmallStepCtr = 0
     CALL evalSSP( xs, c, cimag, gradc, crr, crz, czz, rho, myThid )
@@ -560,19 +565,19 @@ CONTAINS
     END IF
   
 
-!$TAF init TraceRay2D = 'bellhoptraceray2d'
     ! Trace the beam (Reflect2D increments the step index, is)
     is = 0
     continue_steps = .true.
     Stepping: DO istep = 1, MaxN - 1
 !$TAF store bdry,beam,continue_steps,distbegbot,distbegtop = TraceRay2D
-!$TAF store is,isegbot,isegtop,ray2d,rbotseg,rtopseg = TraceRay2D
+!$TAF store isegbot,isegtop,ray2d,rbotseg,rtopseg = TraceRay2D
 ! IESCO24: Write derived type with allocatable memory by type: SSP from ssp_mod
 ! Scalar components
 ! Fixed arrays
 ! Allocatable arrays
 !$TAF store ssp%cmat,ssp%czmat = TraceRay2D
        IF ( continue_steps ) THEN
+!$TAF store is = TraceRay2D
          is  = is + 1 ! old step
          is1 = is + 1 ! new step forward
   
@@ -750,6 +755,7 @@ CONTAINS
   
   SUBROUTINE Reflect2D( is, HS, BotTop, tBdry, nBdry, kappa, RefC, Npts, myThid )
     USE bdry_mod, only: HSInfo
+    USE refCoef,  only: ReflectionCoef
   
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO
@@ -778,6 +784,14 @@ CONTAINS
     COMPLEX (KIND=_RL90) :: ch, a, b, d, sb, delta, ddelta ! for beam shift
     TYPE(ReflectionCoef) :: RInt
   
+!$TAF init reflect2d1 = 'bellhopreflectray2d'
+
+    ! Init default values for local derived type Rint
+    Rint%R = 0.0
+    Rint%phi = 0.0
+    Rint%theta = -999.0
+
+    ! increment stepping counters
     is  = is + 1 ! old step
     is1 = is + 1 ! new step reflected (same x, updated basis vectors)
   
@@ -832,6 +846,7 @@ CONTAINS
     ray2D( is1 )%q   = ray2D( is )%q
   
     ! account for phase change
+
   
     SELECT CASE ( HS%BC )
     CASE ( 'R' )                 ! rigid
@@ -841,6 +856,7 @@ CONTAINS
        ray2D( is1 )%Amp   = ray2D( is )%Amp
        ray2D( is1 )%Phase = ray2D( is )%Phase + PI
     CASE ( 'F' )                 ! file
+!$TAF store rint = reflect2d1
        RInt%theta = rad2deg * ABS( ATAN2( Th, Tg ) )           ! angle of incidence (relative to normal to bathymetry)
        IF ( RInt%theta > 90 ) RInt%theta = 180. - RInt%theta  ! reflection coefficient is symmetric about 90 degrees
        CALL InterpolateReflectionCoefficient( RInt, RefC, Npts )
