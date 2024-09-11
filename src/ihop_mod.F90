@@ -28,7 +28,7 @@ MODULE ihop_mod
             PRTFile, RAYFile, DELFile, SHDFile, ARRFile, SSPFile,&
             ATIFile, BTYFile, BRCFile, TRCFile, IRCFile, SBPFile,& 
             MaxN, Nrz_per_range, iStep, afreq, SrcDeclAngle,     &
-            Title, Beam, ray2D, ray2DPt, iSmallStepCtr
+            Title, Beam, ray2D, ray2DPt, iSmallStepCtr, rxyz
 
 !=======================================================================
 

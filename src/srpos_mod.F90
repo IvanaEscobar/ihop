@@ -26,7 +26,7 @@ MODULE srpos_mod
 ! public interfaces
 !=======================================================================
 
-    public Pos, Number_to_Echo, Nfreq, freqVec, ReadSxSy, ReadSzRz, &
+    public Pos, Nfreq, freqVec, ReadSxSy, ReadSzRz, &
            ReadRcvrRanges, ReadFreqVec 
 #ifdef IHOP_THREED
     public ReadRcvrBearings 

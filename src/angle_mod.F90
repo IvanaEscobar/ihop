@@ -8,7 +8,7 @@ MODULE angle_mod
 
   USE ihop_mod,     only: PRTFile
   USE subTab_mod,   only: SubTab
-  USE srPos_mod,    only: Pos, Number_to_Echo
+  USE srPos_mod,    only: Pos
   USE sort_mod,     only: Sort
 
 ! ! USES
@@ -32,6 +32,7 @@ MODULE angle_mod
 
 !=======================================================================
 
+  INTEGER, PARAMETER :: Number_to_Echo = 10 
   INTEGER          :: ialpha
 #ifdef IHOP_THREED
   INTEGER          :: ibeta

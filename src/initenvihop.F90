@@ -760,6 +760,17 @@ CONTAINS
     REAL (KIND=_RL90) :: Mz, vr, alpha2_f     ! values related to grain size
     REAL (KIND=_RL90) :: ztemp, bPower, fT
 
+    ! ****** Read in BC parameters depending on particular choice ******
+    HS%cp  = 0.0
+    HS%cs  = 0.0
+    HS%rho = 0.0
+
+    ! RG recommends resetting to the default values from ssp_mod.F90
+    bPower = 1.0
+    fT     = 1D20
+    rhoR   = 1.0
+    
+
     ! In adjoint mode we do not write output besides on the first run
     IF (IHOP_dumpfreq.GE.0) THEN
     ! Echo to PRTFile user's choice of boundary condition
@@ -810,16 +821,6 @@ CONTAINS
     END SELECT
     ENDIF ! no output on adjoint runs
 
-    ! ****** Read in BC parameters depending on particular choice ******
-    HS%cp  = 0.0
-    HS%cs  = 0.0
-    HS%rho = 0.0
-
-    ! RG recommends resetting to the default values from ssp_mod.F90
-    bPower = 1.0
-    fT     = 1D20
-    rhoR   = 1.0
-    
     SELECT CASE ( HS%BC )
     CASE ( 'A' )                  ! *** Half-space properties ***
        ! IEsco23: MISSING IF BOTTOM BC CHECK
@@ -909,6 +910,13 @@ CONTAINS
        IF (IHOP_dumpfreq.GE.0) &
         CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 #endif /* IHOP_WRITE_OUT */
+    CASE DEFAULT
+#ifdef IHOP_WRITE_OUT
+        WRITE(msgBuf,'(2A)') 'INITENVIHOP TopBot: ', & 
+                             'Unknown boundary condition type'
+        CALL PRINT_ERROR( msgBuf,myThid )
+#endif /* IHOP_WRITE_OUT */
+        STOP 'ABNORMAL END: S/R TopBot'
     END SELECT
 
   RETURN
