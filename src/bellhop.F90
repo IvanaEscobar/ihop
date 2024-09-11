@@ -91,6 +91,8 @@ CONTAINS
     INTEGER, PARAMETER   :: ArrivalsStorage = 2000, MinNArr = 10
   ! ===========================================================================
  
+!$TAF init ihop_init1 = 'BellhopIhop_init'
+
     ! Open the print file: template from eeboot_minimal.F
 #ifdef IHOP_WRITE_OUT
     IF ( .NOT.usingMPI ) THEN
@@ -138,6 +140,18 @@ CONTAINS
 # endif /* ALLOW_USE_MPI */
     END IF
 #endif /* IHOP_WRITE_OUT */
+
+! IESCO24: Write derived type with allocatable memory by type: Pos from srpos_mod
+! Scalar components
+! Allocatable arrays
+!$TAF store pos%wr,pos%ws = ihop_init1
+
+! IESCO24: Write derived type with allocatable memory by type: SSP from ssp_mod
+! Scalar components
+! Fixed arrays
+!$TAF store ssp%z = ihop_init1
+! Allocatable arrays
+!$TAF store ssp%czmat,ssp%seg%r,ssp%seg%x,ssp%seg%y,ssp%seg%z = ihop_init1
 
     ! Reset memory
     CALL resetMemory() 
@@ -347,7 +361,6 @@ CONTAINS
 ! IESCO24: Write derived type with allocatable memory by type: SSP from ssp_mod
 ! Scalar components
 ! Fixed arrays
-!$TAF store ssp%z = BellhopCore1
 ! Allocatable arrays
 !$TAF store ssp%cmat,ssp%czmat = BellhopCore1
 
@@ -383,7 +396,7 @@ CONTAINS
   
        ! Trace successive beams
        DeclinationAngle: DO ialpha = 1, Angles%Nalpha
-!$TAF store arr,bdry,isegr,narr,u = BellhopCore2
+!$TAF store arr,bdry,narr,u = BellhopCore2
 !!$TAF store ratio1,rb = BellhopCore2
 ! IESCO24: Write derived type with allocatable memory by type: SSP from ssp_mod
 ! Scalar components

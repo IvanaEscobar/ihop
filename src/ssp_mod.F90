@@ -108,6 +108,14 @@ CONTAINS
     REAL (KIND=_RL90), INTENT( IN  ) :: x( 2 )  ! r-z SSP evaluation point
     INTEGER :: ir, iz
 
+!$TAF init initssp1 = 'ssp_mod_initssp'
+
+! IESCO24: Write derived type with allocatable memory by type: SSP from ssp_mod
+! Scalar components
+! Fixed arrays
+! Allocatable arrays
+!$TAF store ssp%cmat,ssp%czmat,ssp%seg%r,ssp%seg%x,ssp%seg%y,ssp%seg%z = initssp1
+
     ! All methods require Depth
     Depth = x( 2 )
     ! Check if SSPFile exists
@@ -923,6 +931,7 @@ SUBROUTINE ExtractSSP( Depth, myThid )
                   ELSE ! 2:(SSP%Nz-1)
                     ! Middle depth layers, only when not already underground
                     IF (sumweights(ii, iz - 1) .GT. 0.0) THEN
+!$TAF STORE njj(ii) = tape_ssp2                    !RG
                       ! Exactly on a cell center, ignore interpolation
                       IF (ihop_idw_weights(ii, jj) .EQ. 0.0) THEN
                         tmpSSP(iz, ii, bi, bj) = ihop_ssp(i, j, iz-1, bi, bj)

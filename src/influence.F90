@@ -166,7 +166,7 @@ CONTAINS
        
            ! Compute influence for each receiver
            DO ir = irA + 1 - II, irB + II, SIGN(1, irB - irA)
-!$TAF store Arr(:,ir,iz),NArr(ir,iz),W = iRayCen2
+!$TAF store Arr(:,ir,iz),NArr(ir,iz) = iRayCen2
              W = (Pos%Rr(ir) - rA) / (rB - rA)  ! relative range between rR
              n = ABS(nA + W * (nB - nA))
              q = ray2D(iS - 1)%q(1) + W * dq(iS - 1)  ! interpolated amplitude
@@ -241,7 +241,7 @@ CONTAINS
     IF ( Beam%RunType( 4 : 4 ) == 'R' ) Ratio1 = SQRT( ABS( COS( alpha ) ) )  
 
     Stepping: DO iS = 2, Beam%Nsteps
-!$TAF store phase,qold,ra,rayt,rlen = iiitape1
+!$TAF store phase,qold,ra = iiitape1
        rB     = ray2D( iS   )%x( 1 )
        x_ray  = ray2D( iS-1 )%x
 
@@ -407,7 +407,7 @@ CONTAINS
     END IF
 
     Stepping: DO iS = 2, Beam%Nsteps
-!$TAF store phase,qold,ra,rayt = iGauCart1
+!$TAF store phase,qold,ra = iGauCart1
        rB    = ray2D( iS     )%x( 1 )
        x_ray = ray2D( iS - 1 )%x
 
