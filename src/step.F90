@@ -153,8 +153,8 @@ CONTAINS
 
     ! calculate a reduced step size, h, that lands on any points where the 
     ! environment leaves water
-
-    USE bdry_mod, only: rTopSeg, rBotSeg, iSmallStepCtr
+    USE ihop_mod, only: iSmallStepCtr
+    USE bdry_mod, only: rTopSeg, rBotSeg
 
     INTEGER,           INTENT( IN    ) :: iSegz0, iSegr0  ! SSP layer ray is in
     ! ray coordinate and tangent
@@ -172,6 +172,10 @@ CONTAINS
     ! Keep in mind possibility that user put source right on an interface
     ! and that multiple events can occur (crossing interface, top, and bottom 
     ! in a single step).
+
+!$TAF init reducestep2d = static, 50 
+
+!$TAF store h = reducestep2d
 
     x = x0 + h * urayt ! take a trial Euler step
 
@@ -205,7 +209,11 @@ CONTAINS
     rSeg( 1 ) = MAX( rTopSeg( 1 ), rBotSeg( 1 ) )
     rSeg( 2 ) = MIN( rTopSeg( 2 ), rBotSeg( 2 ) )
 
+!$TAF store rseg = reducestep2d
+
     IF ( SSP%Type == 'Q' ) THEN ! Quad: 2D range-dependent SSP
+!$TAF store rseg = reducestep2d
+
        rSeg( 1 ) = MAX( rSeg( 1 ), SSP%Seg%r( iSegr0     ) )
        rSeg( 2 ) = MIN( rSeg( 2 ), SSP%Seg%r( iSegr0 + 1 ) )
     END IF

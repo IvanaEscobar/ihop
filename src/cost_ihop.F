@@ -167,7 +167,7 @@ C Combine all threads here
 C Combine MPI processes
        DO ii=1,NOBSMAX_IHOP
         tmpgs = ihopObs_buff(ii)
-        _GLOBAL_SUM_RL (tmpgs, myThid) 
+        _GLOBAL_SUM_RL(tmpgs, myThid) 
         ihopObs_modval_glob(ii) = tmpgs
        ENDDO     
 

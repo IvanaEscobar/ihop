@@ -30,16 +30,15 @@ MODULE bdry_mod
 !=======================================================================
 
    public   initATI, initBTY, GetTopSeg, GetBotSeg, Bot, Top, &
-            IsegTop, IsegBot, rTopSeg, rBotSeg,&
-            iSmallStepCtr, atiType, btyType, NATIPts, NBTYPts, &
-            HSInfo, Bdry
+            IsegTop, IsegBot, rTopSeg, rBotSeg, &
+            atiType, btyType, HSInfo, Bdry
 
 !=======================================================================
 
    INTEGER, PARAMETER :: Number_to_Echo = 21
    INTEGER            :: IsegTop, IsegBot ! indices point to current active segment
-   INTEGER, PROTECTED :: NATIPts = 2, NBTYPts = 2
-   INTEGER            :: ii, IOStat, IAllocStat, iSmallStepCtr = 0
+   INTEGER, PROTECTED :: NBtyPts = 2, NAtiPts = 2
+   INTEGER            :: IOStat, IAllocStat
 
    ! range intervals defining the current active segment
    REAL (KIND=_RL90)  :: rTopseg( 2 ), rBotseg( 2 )  
@@ -66,7 +65,7 @@ MODULE bdry_mod
                            Noden( 2 )    ! normal at the node 
       REAL (KIND=_RL90) :: Dx, Dxx, &    ! 1st, 2nd derivatives wrt depth
                            Dss           ! derivative along tangent
-      TYPE( HSInfo )   :: HS
+      TYPE( HSInfo )    :: HS
    END TYPE
 
    TYPE(BdryPt), ALLOCATABLE :: Top( : ), Bot( : )
@@ -97,15 +96,15 @@ CONTAINS
   
   !     == Local Variables ==
     CHARACTER (LEN= 1), INTENT( IN ) :: TopATI
-    INTEGER :: iSeg
+    INTEGER :: ii
     REAL (KIND=_RL90),  INTENT( IN ) :: DepthT
     REAL (KIND=_RL90),  ALLOCATABLE  :: phi(:)
     REAL (KIND=_RL90),  ALLOCATABLE  :: x(:) 
     REAL (KIND=_RL90)   :: bPower, fT
 
-  ! IESCO24 fT init
-  bPower = 1.0
-  fT     = 1000.0
+    ! IESCO24 fT init
+    bPower = 1.0
+    fT     = 1000.0
 
 
     SELECT CASE ( TopATI )
@@ -142,40 +141,42 @@ CONTAINS
 
        ! In adjoint mode we do not write output besides on the first run
        IF (IHOP_dumpfreq.GE.0) THEN
-       AltiType: SELECT CASE ( atiType( 1 : 1 ) )
+       SELECT CASE ( atiType( 1:1 ) )
 
-       CASE ( 'C' )
+        CASE ( 'C' )
 #ifdef IHOP_WRITE_OUT
           WRITE(msgBuf,'(A)') 'Curvilinear Interpolation'
           CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 #endif /* IHOP_WRITE_OUT */
-       CASE ( 'L' )
+        CASE ( 'L' )
 #ifdef IHOP_WRITE_OUT
           WRITE(msgBuf,'(A)') 'Piecewise linear interpolation'
           CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 #endif /* IHOP_WRITE_OUT */
-       CASE DEFAULT
+        CASE DEFAULT
 #ifdef IHOP_WRITE_OUT
             WRITE(msgBuf,'(2A)') 'BDRYMOD initATI', &
                        'Unknown option for selecting altimetry interpolation'
             CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
             STOP 'ABNORMAL END: S/R initATI'
-       END SELECT AltiType
+       END SELECT
        ENDIF
 
 
-       READ(  ATIFile, * ) NatiPts
+       READ(  ATIFile, * ) NAtiPts
 #ifdef IHOP_WRITE_OUT
-       WRITE(msgBuf,'(A,I10)') 'Number of altimetry points = ', NatiPts
-       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+       WRITE(msgBuf,'(A,I10)') 'Number of altimetry points = ', NAtiPts
+       ! In adjoint mode we do not write output besides on the first run
+       IF (IHOP_dumpfreq.GE.0) &
+         CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 #endif /* IHOP_WRITE_OUT */
 
        ! we'll be extending the altimetry to infinity to the left and right
-       NatiPts = NatiPts + 2  
+       NAtiPts = NAtiPts + 2  
 
-       IF (ALLOCATED(phi)) DEALLOCATE(phi)
-       ALLOCATE( Top(  NatiPts ), phi( NatiPts ), Stat = IAllocStat )
+       IF (ALLOCATED(Top)) DEALLOCATE(Top)
+       ALLOCATE( Top( NAtiPts ), Stat = IAllocStat )
        IF ( IAllocStat /= 0 ) THEN
 #ifdef IHOP_WRITE_OUT
             WRITE(msgBuf,'(2A)') 'BDRYMOD initATI', &
@@ -196,13 +197,13 @@ CONTAINS
 #endif /* IHOP_WRITE_OUT */
 
        ! Read in the altimetry
-       atiPt: DO ii = 2, NatiPts - 1
+       atiPt: DO ii = 2, NAtiPts - 1
 
-          SELECT CASE ( atiType( 2 : 2 ) )
+          SELECT CASE ( atiType( 2:2 ) )
           CASE ( 'S', '' )
             READ( ATIFile, * ) Top( ii )%x
 #ifdef IHOP_WRITE_OUT
-            IF ( ii < Number_to_Echo .OR. ii == NatiPts ) THEN   
+            IF ( ii < Number_to_Echo .OR. ii == NAtiPts ) THEN   
                 WRITE( msgBuf,"(2G11.3)" ) Top( ii )%x 
                 CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
             END IF
@@ -212,7 +213,7 @@ CONTAINS
                                  Top( ii )%HS%betaR, Top( ii )%HS%rho, &
                                  Top( ii )%HS%alphaI, Top( ii )%HS%betaI
 #ifdef IHOP_WRITE_OUT
-             IF ( ii < Number_to_Echo .OR. ii == NatiPts ) THEN   
+             IF ( ii < Number_to_Echo .OR. ii == NAtiPts ) THEN   
               WRITE( msgBuf,"(7G11.3)" ) &
                   Top( ii )%x, Top( ii )%HS%alphaR, Top( ii )%HS%betaR, &
                   Top( ii )%HS%rho, Top( ii )%HS%alphaI, Top( ii )%HS%betaI
@@ -258,7 +259,7 @@ CONTAINS
         Top( 2 )%x = [  sqrt( huge( Top( 1 )%x( 1 ) ) ) / 1.0d5, DepthT ]
     END SELECT
 
-    CALL ComputeBdryTangentNormal( Top, 'Top' )
+    CALL ComputeBdryTangentNormal( Top, 'Top', NAtiPts )
 
     IF ( ALLOCATED(x) ) DEALLOCATE(x)
     ALLOCATE( x(NAtiPts) )
@@ -273,27 +274,23 @@ CONTAINS
     END IF 
 
     ! Initiate Top
-    DO iSeg = 1, NatiPts
+    DO ii = 1, NAtiPts
        ! compressional wave speed
-       Top( iSeg )%HS%cp = CRCI( 1D20, Top( iSeg )%HS%alphaR, &
-                                 Top( iSeg )%HS%alphaI, 'W ', bPower, fT, &
-                                 myThid ) 
+       Top( ii )%HS%cP = -999.
        ! shear wave speed
-       Top( iSeg )%HS%cs = CRCI( 1D20, Top( iSeg )%HS%betaR,  &
-                                 Top( iSeg )%HS%betaI, 'W ', bPower, fT, &
-                                 myThid )
+       Top( ii )%HS%cS = -999.
     END DO
     ! convert range-dependent geoacoustic parameters from user to program units
     ! W is dB/wavelength
     IF ( atiType( 2:2 ) == 'L' ) THEN
-       DO iSeg = 1, NatiPts
+       DO ii = 1, NAtiPts
           ! compressional wave speed
-          Top( iSeg )%HS%cp = CRCI( 1D20, Top( iSeg )%HS%alphaR, &
-                                    Top( iSeg )%HS%alphaI, 'W ', bPower, fT, &
+          Top( ii )%HS%cP = CRCI( 1D20, Top( ii )%HS%alphaR, &
+                                    Top( ii )%HS%alphaI, 'W ', bPower, fT, &
                                     myThid ) 
           ! shear wave speed
-          Top( iSeg )%HS%cs = CRCI( 1D20, Top( iSeg )%HS%betaR,  &
-                                    Top( iSeg )%HS%betaI, 'W ', bPower, fT, &
+          Top( ii )%HS%cS = CRCI( 1D20, Top( ii )%HS%betaR,  &
+                                    Top( ii )%HS%betaI, 'W ', bPower, fT, &
                                     myThid )
        END DO
     END IF
@@ -319,16 +316,16 @@ CONTAINS
   
    !     == Local Variables ==
       CHARACTER (LEN= 1), INTENT( IN ) :: BotBTY
-      INTEGER :: i,j,bi,bj,iSeg
+      INTEGER :: i,j,bi,bj,ii
       REAL (KIND=_RL90),  INTENT( IN ) :: DepthB
       REAL (KIND=_RL90) :: gcmbathy(sNx,sNy), gcmmin, gcmmax
       REAL (KIND=_RL90), ALLOCATABLE :: x(:) 
       LOGICAL :: firstnonzero
       REAL (KIND=_RL90)   :: bPower, fT
 
-  ! IESCO24 fT init
-  bPower = 1.0
-  fT     = 1000.0
+      ! IESCO24 fT init
+      bPower = 1.0
+      fT     = 1000.0
 
       SELECT CASE ( BotBTY )
       CASE ( '~', '*' )
@@ -364,41 +361,41 @@ CONTAINS
  
          ! In adjoint mode we do not write output besides on the first run
          IF (IHOP_dumpfreq.GE.0) THEN
-         BathyType: SELECT CASE ( btyType( 1 : 1 ) )
+         SELECT CASE ( btyType( 1:1 ) )
 
-        CASE ( 'C' )
+            CASE ( 'C' )
 # ifdef IHOP_WRITE_OUT
-            WRITE(msgBuf,'(A)') 'Curvilinear Interpolation'
-            CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+              WRITE(msgBuf,'(A)') 'Curvilinear Interpolation'
+              CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 # endif /* IHOP_WRITE_OUT */
-        CASE ( 'L' )
+            CASE ( 'L' )
 # ifdef IHOP_WRITE_OUT
-            WRITE(msgBuf,'(A)') 'Piecewise linear interpolation'
-            CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+              WRITE(msgBuf,'(A)') 'Piecewise linear interpolation'
+              CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 # endif /* IHOP_WRITE_OUT */
-        CASE DEFAULT
+            CASE DEFAULT
 # ifdef IHOP_WRITE_OUT
-            WRITE(msgBuf,'(2A)') 'BDRYMOD initBTY: ', &
-               'Unknown option for selecting bathymetry interpolation'
-            CALL PRINT_ERROR( msgBuf,myThid )
+              WRITE(msgBuf,'(2A)') 'BDRYMOD initBTY: ', &
+                 'Unknown option for selecting bathymetry interpolation'
+              CALL PRINT_ERROR( msgBuf,myThid )
 # endif /* IHOP_WRITE_OUT */
-            STOP 'ABNORMAL END: S/R initBTY'
-        END SELECT BathyType
+              STOP 'ABNORMAL END: S/R initBTY'
+        END SELECT
         ENDIF
 
 
-      READ( BTYFile, * ) NbtyPts
+      READ( BTYFile, * ) NBtyPts
 #ifdef IHOP_WRITE_OUT
-      WRITE(msgBuf,'(A,I10)') 'Number of bathymetry points = ', NbtyPts
+      WRITE(msgBuf,'(A,I10)') 'Number of bathymetry points = ', NBtyPts
       ! In adjoint mode we do not write output besides on the first run
       IF (IHOP_dumpfreq.GE.0) &
         CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 #endif /* IHOP_WRITE_OUT */
 
       ! we'll be extending the bathymetry to infinity on both sides
-      NbtyPts = NbtyPts + 2  
+      NBtyPts = NBtyPts + 2  
      
-      ALLOCATE( Bot( NbtyPts ), Stat = IAllocStat )
+      ALLOCATE( Bot( NBtyPts ), Stat = IAllocStat )
       IF ( IAllocStat /= 0 ) THEN
 # ifdef IHOP_WRITE_OUT
          WRITE(msgBuf,'(2A)') 'BDRYMOD initBTY: ', &
@@ -415,15 +412,15 @@ CONTAINS
       WRITE(msgBuf,'(A)') 
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 #endif /* IHOP_WRITE_OUT */
-      BathyTypeB: SELECT CASE ( btyType( 2:2 ) )
-      CASE ( 'S', '' )
+      SELECT CASE ( btyType( 2:2 ) )
+        CASE ( 'S', '' )
 # ifdef IHOP_WRITE_OUT
          WRITE(msgBuf,'(A)') 'Short format (bathymetry only)'
          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
          WRITE(msgBuf,'(A)') ' Range (km)  Depth (m)'
          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 # endif /* IHOP_WRITE_OUT */
-       CASE ( 'L' )
+        CASE ( 'L' )
 # ifdef IHOP_WRITE_OUT
          WRITE(msgBuf,'(A)') 'Long format (bathymetry and geoacoustics)'
          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
@@ -433,14 +430,14 @@ CONTAINS
          WRITE(msgBuf,'(A)') 
          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 # endif /* IHOP_WRITE_OUT */
-      CASE DEFAULT
+        CASE DEFAULT
 # ifdef IHOP_WRITE_OUT
          WRITE(msgBuf,'(2A)') 'BDRYMOD initBTY: ', &
             'Unknown option for selecting bathymetry interpolation'
          CALL PRINT_ERROR( msgBuf,myThid )
 # endif /* IHOP_WRITE_OUT */
          STOP 'ABNORMAL END: S/R initBTY'
-      END SELECT BathyTypeB
+      END SELECT
     ENDIF
 
       ! R_low check of gcm depths, change to positive values
@@ -466,7 +463,7 @@ CONTAINS
       END DO
 
       ! Read in the bathymetry
-      btyPt: DO ii = 2, NbtyPts - 1
+      btyPt: DO ii = 2, NBtyPts - 1
 
          SELECT CASE ( btyType( 2:2 ) )
          CASE ( 'S', '' )   ! short format
@@ -479,7 +476,7 @@ CONTAINS
               'gcm:', gcmmax
              CALL PRINT_MESSAGE(msgBuf, errorMessageUnit, SQUEEZE_RIGHT, myThid)
             END IF
-            IF ( ii < Number_to_Echo .OR. ii == NbtyPts ) THEN  
+            IF ( ii < Number_to_Echo .OR. ii == NBtyPts ) THEN  
                WRITE(msgBuf,'(2G11.3)' ) Bot( ii )%x
                ! In adjoint mode we do not write output besides on the first run
                IF (IHOP_dumpfreq.GE.0) &
@@ -491,7 +488,7 @@ CONTAINS
                                 Bot( ii )%HS%betaR, Bot( ii )%HS%rho, &
                                 Bot( ii )%HS%alphaI, Bot( ii )%HS%betaI
 # ifdef IHOP_WRITE_OUT
-            IF ( ii < Number_to_Echo .OR. ii == NbtyPts ) THEN   
+            IF ( ii < Number_to_Echo .OR. ii == NBtyPts ) THEN   
                WRITE( msgBuf,'(2F10.2,3X,2F10.2,3X,F6.2,3X,2F10.4)' ) &
                   Bot( ii )%x, Bot( ii )%HS%alphaR, Bot( ii )%HS%betaR, &
                   Bot( ii )%HS%rho, Bot( ii )%HS%alphaI, Bot( ii )%HS%betaI
@@ -517,7 +514,6 @@ CONTAINS
 # endif /* IHOP_WRITE_OUT */
             STOP 'ABNORMAL END: S/R initBTY'
          END IF
- 
       END DO btyPt
 
       CLOSE( BTYFile )
@@ -544,7 +540,7 @@ CONTAINS
       Bot( 2 )%x = [  sqrt( huge( Bot( 1 )%x( 1 ) ) ) / 1.0d5, DepthB ]
    END SELECT
 
-   CALL ComputeBdryTangentNormal( Bot, 'Bot' )
+   CALL ComputeBdryTangentNormal( Bot, 'Bot', NBtyPts )
 
    IF ( ALLOCATED(x) ) DEALLOCATE(x)
    ALLOCATE( x(NBtyPts) )
@@ -559,17 +555,24 @@ CONTAINS
    END IF 
 
 
+    ! Initiate Bot
+    DO ii = 1, NBtyPts
+       ! compressional wave speed
+       Bot( ii )%HS%cP = -999.
+       ! shear wave speed
+       Bot( ii )%HS%cS = -999.
+    END DO
    ! convert range-dependent geoacoustic parameters from user to program units
    ! W is dB/wavelength
    IF ( btyType( 2:2 ) == 'L' ) THEN
-      DO iSeg = 1, NbtyPts
+      DO ii = 1, NBtyPts
          ! compressional wave speed
-         Bot( iSeg )%HS%cp = CRCI( 1D20, Bot( iSeg )%HS%alphaR, &
-                                   Bot( iSeg )%HS%alphaI, 'W ', bPower, fT, &
+         Bot( ii )%HS%cP = CRCI( 1D20, Bot( ii )%HS%alphaR, &
+                                   Bot( ii )%HS%alphaI, 'W ', bPower, fT, &
                                    myThid )
          ! shear wave speed
-         Bot( iSeg )%HS%cs = CRCI( 1D20, Bot( iSeg )%HS%betaR,  &
-                                   Bot( iSeg )%HS%betaI, 'W ', bPower, fT, &
+         Bot( ii )%HS%cS = CRCI( 1D20, Bot( ii )%HS%betaR,  &
+                                   Bot( ii )%HS%betaI, 'W ', bPower, fT, &
                                    myThid )
       END DO
    END IF
@@ -579,7 +582,7 @@ CONTAINS
 
 ! **********************************************************************!
 
-  SUBROUTINE ComputeBdryTangentNormal( Bdry, BotTop )
+  SUBROUTINE ComputeBdryTangentNormal( Bdry, BotTop, NPts )
 
     ! Does some pre-processing on the boundary points to pre-compute segment
     ! lengths  (%Len),
@@ -590,19 +593,18 @@ CONTAINS
     ! The boundary is also extended with a constant depth to infinity to cover 
     ! cases where the ray leaves the domain defined by the user
 
-    INTEGER                          :: NPts = 0
+    INTEGER, INTENT(IN)              :: NPts
     REAL (KIND=_RL90), ALLOCATABLE   :: phi( : )
     REAL (KIND=_RL90)                :: sss
     TYPE(BdryPt)                     :: Bdry( : )
     CHARACTER (LEN=3),  INTENT( IN ) :: BotTop ! Flag indicating bottom or top reflection
     CHARACTER (LEN=2)                :: CurvilinearFlag = '-'
+    INTEGER :: ii
 
     SELECT CASE ( BotTop )
     CASE ( 'Bot' )
-       NPts = NbtyPts
        CurvilinearFlag = btyType
     CASE ( 'Top' )
-       NPts = NatiPts
        CurvilinearFlag = atiType
     END SELECT
 
@@ -704,8 +706,8 @@ CONTAINS
 
     IsegTopT = MAXLOC( Top( : )%x( 1 ), Top( : )%x( 1 ) < r )
 
-    ! IsegTop MUST LIE IN [ 1, NatiPts-1 ]
-    IF ( IsegTopT( 1 ) > 0 .AND. IsegTopT( 1 ) < NatiPts ) THEN  
+    ! IsegTop MUST LIE IN [ 1, NAtiPts-1 ]
+    IF ( IsegTopT( 1 ) > 0 .AND. IsegTopT( 1 ) < NAtiPts ) THEN  
        IsegTop = IsegTopT( 1 )
        ! segment limits in range
        rTopSeg = [ Top( IsegTop )%x( 1 ), Top( IsegTop+1 )%x( 1 ) ]   
@@ -717,7 +719,7 @@ CONTAINS
             CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
             WRITE(msgBuf,'(A,F10.4)') 'rLeft  = ', Top( 1       )%x( 1 )
             CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-            WRITE(msgBuf,'(A,F10.4)') 'rRight = ', Top( NatiPts )%x( 1 )
+            WRITE(msgBuf,'(A,F10.4)') 'rRight = ', Top( NAtiPts )%x( 1 )
             CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
             WRITE(msgBuf,'(2A)') 'BDRYMOD GetTopSeg', &
                                  'Top altimetry undefined above the ray'
@@ -746,8 +748,8 @@ CONTAINS
     REAL (KIND=_RL90), INTENT( IN ) :: r
 
     IsegBotT = MAXLOC( Bot( : )%x( 1 ), Bot( : )%x( 1 ) < r )
-    ! IsegBot MUST LIE IN [ 1, NbtyPts-1 ]
-    IF ( IsegBotT( 1 ) > 0 .AND. IsegBotT( 1 ) < NbtyPts ) THEN
+    ! IsegBot MUST LIE IN [ 1, NBtyPts-1 ]
+    IF ( IsegBotT( 1 ) > 0 .AND. IsegBotT( 1 ) < NBtyPts ) THEN
        IsegBot = IsegBotT( 1 )   
        ! segment limits in range
        rBotSeg = [ Bot( IsegBot )%x( 1 ), Bot( IsegBot + 1 )%x( 1 ) ]
@@ -759,7 +761,7 @@ CONTAINS
             CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
             WRITE(msgBuf,'(A,F10.4)') 'rLeft  = ', Bot( 1       )%x( 1 )
             CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-            WRITE(msgBuf,'(A,F10.4)') 'rRight = ', Bot( NbtyPts )%x( 1 )
+            WRITE(msgBuf,'(A,F10.4)') 'rRight = ', Bot( NBtyPts )%x( 1 )
             CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
             WRITE(msgBuf,'(2A)') 'BDRYMOD GetBotSeg', &
                                  'Bottom bathymetry undefined below the source'

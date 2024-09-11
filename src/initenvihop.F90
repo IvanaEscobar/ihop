@@ -65,6 +65,8 @@ CONTAINS
     REAL (KIND=_RL90)  :: x(2), c, cimag, gradc(2), crz, czz, rho, Depth
     CHARACTER (LEN= 2) :: AttenUnit
     CHARACTER (LEN=10) :: PlotType
+    
+!$TAF init initEnv1 = 'initenvihop_initenv'
 
     ! init local variables
     AttenUnit = ''
@@ -133,6 +135,21 @@ CONTAINS
     Bdry%Bot%HS%BC = Bdry%Bot%HS%Opt( 1:1 )
     CALL TopBot( AttenUnit, Bdry%Bot%HS, myThid )
 
+! IESCO24: Write derived type with allocatable memory by type: Bdry from bdry_mod
+! Scalar components
+!$TAF store bdry%top%hs%depth,bdry%top%hs%bc = initEnv1
+
+! IESCO24: Write derived type with allocatable memory by type: SSP from ssp_mod
+! Scalar components
+! Fixed arrays
+! Allocatable arrays
+!$TAF store ssp%czmat,ssp%seg%r,ssp%seg%x,ssp%seg%y,ssp%seg%z = initEnv1
+
+! IESCO24: Write derived type with allocatable memory by type: Pos from srpos_mod
+! Scalar components
+! Allocatable arrays
+!$TAF store pos%rr = initEnv1
+!$TAF store pos%theta,pos%wr,pos%ws = initEnv1
 
     ! *** Ocean SSP ***
     x = [ 0.0 _d 0, Bdry%Bot%HS%Depth ]   ! tells SSP Depth to read to

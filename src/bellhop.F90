@@ -25,8 +25,8 @@ MODULE BELLHOP
   ! Systems Center
 
   
-  USE ihop_mod,     only:   rad2deg, i, MaxN, Title, Beam, ray2D, istep,       &
-                            NRz_per_range, afreq, SrcDeclAngle,                &
+  USE ihop_mod,     only:   rad2deg, i, Beam, ray2D, NRz_per_range, afreq,     &
+                            SrcDeclAngle, iSmallStepCtr,                       &
                             PRTFile, SHDFile, ARRFile, RAYFile, DELFile   
   USE initenvihop,  only:   initEnv, openOutputFiles, resetMemory
   USE angle_mod,    only:   Angles, ialpha
@@ -34,12 +34,12 @@ MODULE BELLHOP
   USE ssp_mod,      only:   evalSSP, SSP
   !HSInfo, Bdry, 
   USE bdry_mod,     only:   initATI, initBTY, GetTopSeg, GetBotSeg, Bot, Top,  &
-                            atiType, btyType, NatiPts, NbtyPts, iSmallStepCtr, &
-                            IsegTop, IsegBot, rTopSeg, rBotSeg, Bdry
+                            atiType, btyType, IsegTop, IsegBot,                &
+                            rTopSeg, rBotSeg, Bdry
   USE refCoef,      only:   readReflectionCoefficient,                         &
-                            InterpolateReflectionCoefficient, ReflectionCoef,  &
+                            InterpolateReflectionCoefficient,  &
                             RTop, RBot, NBotPts, NTopPts
-  USE influence,    only:   InfluenceGeoHatRayCen,&! InfluenceSGB,             &
+  USE influence,    only:   InfluenceGeoHatRayCen,                             &
                             InfluenceGeoGaussianCart, InfluenceGeoHatCart,     &
                             ScalePressure
   USE beamPattern 
@@ -91,6 +91,8 @@ CONTAINS
     INTEGER, PARAMETER   :: ArrivalsStorage = 2000, MinNArr = 10
   ! ===========================================================================
  
+!$TAF init ihop_init1 = 'BellhopIhop_init'
+
     ! Open the print file: template from eeboot_minimal.F
 #ifdef IHOP_WRITE_OUT
     IF ( .NOT.usingMPI ) THEN
@@ -138,6 +140,18 @@ CONTAINS
 # endif /* ALLOW_USE_MPI */
     END IF
 #endif /* IHOP_WRITE_OUT */
+
+! IESCO24: Write derived type with allocatable memory by type: Pos from srpos_mod
+! Scalar components
+! Allocatable arrays
+!$TAF store pos%wr,pos%ws = ihop_init1
+
+! IESCO24: Write derived type with allocatable memory by type: SSP from ssp_mod
+! Scalar components
+! Fixed arrays
+!$TAF store ssp%z = ihop_init1
+! Allocatable arrays
+!$TAF store ssp%czmat,ssp%seg%r,ssp%seg%x,ssp%seg%y,ssp%seg%z = ihop_init1
 
     ! Reset memory
     CALL resetMemory() 
@@ -321,6 +335,7 @@ CONTAINS
 
 !$TAF init BellhopCore1 = static, Pos%NSz
 !$TAF init BellhopCore2 = static, Pos%NSz*Angles%Nalpha
+
     afreq = 2.0 * PI * IHOP_freq
   
     Angles%alpha  = Angles%alpha * deg2rad  ! convert to radians
@@ -341,13 +356,13 @@ CONTAINS
     !         begin solve         !
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     SourceDepth: DO is = 1, Pos%NSz
-!$TAF store beam = BellhopCore1
+
 ! IESCO24: Write derived type with allocatable memory by type: SSP from ssp_mod
 ! Scalar components
 ! Fixed arrays
-!$TAF store ssp%z = BellhopCore1
 ! Allocatable arrays
 !$TAF store ssp%cmat,ssp%czmat = BellhopCore1
+
        xs = [ zeroRL, Pos%Sz( is ) ]   ! source coordinate, assuming source @ r=0
   
        SELECT CASE ( Beam%RunType( 1:1 ) )
@@ -380,13 +395,23 @@ CONTAINS
   
        ! Trace successive beams
        DeclinationAngle: DO ialpha = 1, Angles%Nalpha
-!$TAF store arr,bdry,isegr,narr,u = BellhopCore2
-!!$TAF store ratio1,rb = BellhopCore2
+
+!$TAF store arr,narr,u = BellhopCore2
+!!$TAF store beam%nsteps,beam%runtype = BellhopCore2
+
 ! IESCO24: Write derived type with allocatable memory by type: SSP from ssp_mod
 ! Scalar components
 ! Fixed arrays
 ! Allocatable arrays
+
+! IESCO24: Write derived type with allocatable memory by type: Bdry from bdry_mod
+! Scalar components
+!!$TAF store bdry%bot%hs%cp,bdry%bot%hs%cs,bdry%bot%hs%rho = BellhopCore2
+! Fixed arrays
+! Allocatable arrays
 !$TAF store ssp%cmat,ssp%czmat = BellhopCore2
+
+
           ! take-off declination angle in degrees
           SrcDeclAngle = rad2deg * Angles%alpha( ialpha )
   
@@ -407,6 +432,14 @@ CONTAINS
              Amp0 = ( 1 - s ) * SrcBmPat( IBP, 2 ) + s * SrcBmPat( IBP + 1, 2 )
              ! IEsco22: When a beam pattern isn't specified, Amp0 = 0
   
+!$TAF store amp0,beam%runtype,beam%nsteps = BellhopCore2
+! IESCO24: Write derived type with allocatable memory by type: Bdry from bdry_mod
+! Scalar components
+!!$TAF store bdry%bot%hs%cp,bdry%bot%hs%cs,bdry%bot%hs%rho = BellhopCore2
+!$TAF store bdry%top%hs%cp,bdry%top%hs%cs,bdry%top%hs%rho = BellhopCore2
+! Fixed arrays
+! Allocatable arrays
+
              ! Lloyd mirror pattern for semi-coherent option
              IF ( Beam%RunType( 1:1 ) == 'S' ) &
                 Amp0 = Amp0 * SQRT( 2.0 ) * ABS( SIN( afreq / c * xs( 2 ) &
@@ -482,6 +515,7 @@ CONTAINS
   
   ! Traces the beam corresponding to a particular take-off angle, alpha [rad]
   
+    USE ihop_mod, only: MaxN, istep
     USE step,     only: Step2D
     USE ssp_mod,  only: iSegr           !RG
   !     == Routine Arguments ==
@@ -502,6 +536,14 @@ CONTAINS
     REAL (KIND=_RL90) :: sss, declAlpha, declAlphaOld
     LOGICAL           :: RayTurn = .FALSE., continue_steps
   
+!$TAF init TraceRay2D = static, MaxN-1 
+!$TAF init TraceRay2D1 = 'bellhop_traceray2d'
+
+! IESCO24: Write derived type with allocatable memory by type: Bdry from bdry_mod
+! Scalar components
+!$TAF store ssp = TraceRay2D1
+!$TAF store beam = TraceRay2D1
+
     ! Initial conditions (IC)
     iSmallStepCtr = 0
     CALL evalSSP( xs, c, cimag, gradc, crr, crz, czz, rho, myThid )
@@ -559,22 +601,30 @@ CONTAINS
     END IF
   
 
-!$TAF init TraceRay2D = 'bellhoptraceray2d'
     ! Trace the beam (Reflect2D increments the step index, is)
     is = 0
     continue_steps = .true.
     Stepping: DO istep = 1, MaxN - 1
-!$TAF store bdry,beam,continue_steps,distbegbot,distbegtop = TraceRay2D
-!$TAF store is,isegbot,isegtop,ray2d,rbotseg,rtopseg = TraceRay2D
+
+!$TAF store is,beam,continue_steps,distbegbot,distbegtop = TraceRay2D
+
 ! IESCO24: Write derived type with allocatable memory by type: SSP from ssp_mod
 ! Scalar components
 ! Fixed arrays
 ! Allocatable arrays
 !$TAF store ssp%cmat,ssp%czmat = TraceRay2D
+
+! IESCO24: Write derived type with allocatable memory by type: Bdry from bdry_mod
+! Scalar components
+!$TAF store bdry%top%hs%cp,bdry%top%hs%cs,bdry%top%hs%rho = TraceRay2D
+
        IF ( continue_steps ) THEN
          is  = is + 1 ! old step
          is1 = is + 1 ! new step forward
   
+!$TAF store is,isegbot,isegtop,rbotseg,rtopseg = TraceRay2D
+!$TAF store ray2d = TraceRay2D
+
          CALL Step2D( ray2D( is ), ray2D( is1 ),  &
               Top( IsegTop )%x, Top( IsegTop )%n, &
               Bot( IsegBot )%x, Bot( IsegBot )%n, myThid )
@@ -627,6 +677,8 @@ CONTAINS
   
          ! IESCO22: Did new ray point cross top boundary? Then reflect
          IF ( DistBegTop > 0.0d0 .AND. DistEndTop <= 0.0d0 ) THEN 
+
+!$TAF store isegtop = TraceRay2D
   
             IF ( atiType == 'C' ) THEN ! curvilinear interpolation
                ! proportional distance along segment
@@ -641,6 +693,8 @@ CONTAINS
                ToptInt = Top( IsegTop )%t
             END IF
   
+!$TAF store is,isegtop = TraceRay2D
+  
             CALL Reflect2D( is, Bdry%Top%HS,    'TOP',  ToptInt,    TopnInt, &
                                 Top( IsegTop )%kappa,   RTop,       NTopPTS, &
                                 myThid ) 
@@ -651,6 +705,8 @@ CONTAINS
   
          ! IESCO22: Did ray cross bottom boundary? Then reflect
          ELSE IF ( DistBegBot > 0.0d0 .AND. DistEndBot <= 0.0d0 ) THEN
+  
+!$TAF store isegbot = TraceRay2D
   
             IF ( btyType == 'C' ) THEN ! curvilinear interpolation
                ! proportional distance along segment
@@ -665,6 +721,8 @@ CONTAINS
                BottInt = Bot( IsegBot )%t
             END IF
   
+!$TAF store is,isegbot = TraceRay2D
+
             CALL Reflect2D( is, Bdry%Bot%HS,    'BOT',  BottInt,    BotnInt, &
                                 Bot( IsegBot )%kappa,   RBot,       NBotPTS, &
                                 myThid ) 
@@ -749,6 +807,7 @@ CONTAINS
   
   SUBROUTINE Reflect2D( is, HS, BotTop, tBdry, nBdry, kappa, RefC, Npts, myThid )
     USE bdry_mod, only: HSInfo
+    USE refCoef,  only: ReflectionCoef
   
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO
@@ -777,6 +836,14 @@ CONTAINS
     COMPLEX (KIND=_RL90) :: ch, a, b, d, sb, delta, ddelta ! for beam shift
     TYPE(ReflectionCoef) :: RInt
   
+!$TAF init reflect2d1 = 'bellhopreflectray2d'
+
+    ! Init default values for local derived type Rint
+    Rint%R = 0.0
+    Rint%phi = 0.0
+    Rint%theta = -999.0
+
+    ! increment stepping counters
     is  = is + 1 ! old step
     is1 = is + 1 ! new step reflected (same x, updated basis vectors)
   
@@ -831,6 +898,7 @@ CONTAINS
     ray2D( is1 )%q   = ray2D( is )%q
   
     ! account for phase change
+
   
     SELECT CASE ( HS%BC )
     CASE ( 'R' )                 ! rigid
@@ -840,6 +908,7 @@ CONTAINS
        ray2D( is1 )%Amp   = ray2D( is )%Amp
        ray2D( is1 )%Phase = ray2D( is )%Phase + PI
     CASE ( 'F' )                 ! file
+!$TAF store rint = reflect2d1
        RInt%theta = rad2deg * ABS( ATAN2( Th, Tg ) )           ! angle of incidence (relative to normal to bathymetry)
        IF ( RInt%theta > 90 ) RInt%theta = 180. - RInt%theta  ! reflection coefficient is symmetric about 90 degrees
        CALL InterpolateReflectionCoefficient( RInt, RefC, Npts )

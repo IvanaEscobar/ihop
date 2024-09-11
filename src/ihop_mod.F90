@@ -28,7 +28,7 @@ MODULE ihop_mod
             PRTFile, RAYFile, DELFile, SHDFile, ARRFile, SSPFile,&
             ATIFile, BTYFile, BRCFile, TRCFile, IRCFile, SBPFile,& 
             MaxN, Nrz_per_range, iStep, afreq, SrcDeclAngle,     &
-            Title, Beam, ray2D, ray2DPt
+            Title, Beam, ray2D, ray2DPt, iSmallStepCtr
 
 !=======================================================================
 
@@ -50,6 +50,7 @@ MODULE ihop_mod
                         MaxN = 100000
 
   ! *** varying parameters for ihop ***
+  INTEGER            :: iSmallStepCtr = 0
   INTEGER            :: Nrz_per_range, iStep
   REAL (KIND=_RL90)  :: afreq, SrcDeclAngle, SrcAzimAngle
   CHARACTER (LEN=80) :: Title

@@ -11,7 +11,7 @@ MODULE influence
   ! mbp 12/2018, based on much older subroutines
 
   USE ihop_mod,     only: rad2deg, i, PRTFile, MaxN, Beam, ray2D, &
-                          SrcDeclAngle, NRz_per_range, afreq
+                          SrcDeclAngle, NRz_per_range
   USE srPos_mod,    only: Pos
 ! sspMod used to construct image beams in the Cerveny style beam routines
   USE arr_mod,      only: AddArr
@@ -67,8 +67,11 @@ CONTAINS
 
     !!! need to add logic related to NRz_per_range
 
-!$TAF init iRayCen1 = static, (Beam%Nsteps-1)*NRz_per_range
-!$TAF init iRayCen2 = static, (Beam%Nsteps-1)*ihop_nrr*NRz_per_range
+!$TAF init iRayCen0  = 'influence_iraycen'
+!$TAF init iRayCen1  = static, (Beam%Nsteps-1)*NRz_per_range
+!$TAF init iRayCen2  = static, (Beam%Nsteps-1)*ihop_nrr*NRz_per_range
+
+!$TAF store ray2d = iRayCen0
 
     q0           = ray2D( 1 )%c / Dalpha   ! Reference for J = q0 / q
     SrcDeclAngle = rad2deg * alpha          ! take-off angle in degrees
@@ -168,6 +171,7 @@ CONTAINS
              L = ABS(q) / q0   ! beam radius
        
              IF (n < L) THEN  ! in beam window: update delay, Amp, phase
+!$TAF store w = iRayCen2
                delay = ray2D(iS - 1)%tau + W * dtau(iS - 1)
                Amp = ray2D(iS)%Amp / SQRT(ABS(q))
                W = (L - n) / L  ! hat function: 1 on center, 0 on edge
@@ -236,7 +240,9 @@ CONTAINS
     IF ( Beam%RunType( 4 : 4 ) == 'R' ) Ratio1 = SQRT( ABS( COS( alpha ) ) )  
 
     Stepping: DO iS = 2, Beam%Nsteps
+
 !$TAF store phase,qold,ra = iiitape1
+
        rB     = ray2D( iS   )%x( 1 )
        x_ray  = ray2D( iS-1 )%x
 
@@ -245,6 +251,9 @@ CONTAINS
        rlen = NORM2( rayt )
        ! if duplicate point in ray, skip to next step along the ray
        IF ( rlen .GE. 1.0D3 * SPACING( ray2D( iS )%x( 1 ) ) ) THEN 
+
+!$TAF store rlen,rayt= iiitape1
+
         rayt = rayt / rlen                    ! unit tangent of ray @ A
         rayn = [ -rayt( 2 ), rayt( 1 ) ]      ! unit normal  of ray @ A
         RcvrDeclAngle = rad2deg * ATAN2( rayt( 2 ), rayt( 1 ) )
@@ -412,6 +421,9 @@ CONTAINS
        rlen = NORM2( rayt )
        ! if duplicate point in ray, skip to next step along the ray
        IF ( rlen .GE. 1.0D3 * SPACING( ray2D( iS )%x( 1 ) ) ) THEN
+
+!$TAF store rlen,rayt = iGauCart1
+
         rayt = rayt / rlen
         rayn = [ -rayt( 2 ), rayt( 1 ) ]      ! unit normal to ray
         RcvrDeclAngle = rad2deg * ATAN2( rayt( 2 ), rayt( 1 ) )
@@ -529,6 +541,8 @@ CONTAINS
   ! **********************************************************************!
   
   SUBROUTINE ApplyContribution( U )
+    USE ihop_mod, only: afreq
+
     COMPLEX, INTENT( INOUT ) :: U
 
     SELECT CASE( Beam%RunType( 1:1 ) )
@@ -568,91 +582,7 @@ CONTAINS
   RETURN
   END !SUBROUTINE ApplyContribution
                  
-!  ! **********************************************************************!
-!
-!  SUBROUTINE InfluenceSGB( U, alpha, Dalpha )
-!
-!    ! Bucker's Simple Gaussian Beams in Cartesian coordinates
-!
-!    REAL (KIND=_RL90), INTENT( IN    ) :: alpha, dalpha ! take-off angle, angular spacing
-!    COMPLEX,           INTENT( INOUT ) :: U( NRz_per_range, Pos%NRr ) ! complex pressure field
-!    REAL (KIND=_RL90)     :: x( 2 ), rayt( 2 ), A, beta, cn, CPA, deltaz, DS, & 
-!                             sint, SX1, thet
-!    COMPLEX (KIND=_RL90)  :: contri, tau
-!
-!    Ratio1 = SQRT(  COS( alpha ) )
-!    phase  = 0
-!    qOld   = 1.0
-!    BETA   = 0.98  ! Beam Factor
-!    A      = -4.0 * LOG( BETA ) / Dalpha**2
-!    CN     = Dalpha * SQRT( A / PI )
-!    rA     = ray2D( 1 )%x( 1 )
-!    ir     = 1
-!
-!    Stepping: DO iS = 2, Beam%Nsteps
-!
-!       rB = ray2D( iS )%x( 1 )
-!
-!       ! phase shifts at caustics
-!       q  = ray2D( iS - 1 )%q( 1 )
-!       IF ( q < 0.0d0 .AND. qOld >= 0.0d0 &
-!            .OR. q > 0.0d0 .AND. qOld <= 0.0d0 ) &
-!        phase = phase + PI / 2.
-!       qold = q
-!
-!       RcvrRanges: DO WHILE ( ABS( rB - rA ) > 1.0D3 * SPACING( rA ) &
-!           .AND. rB > Pos%Rr( ir ) )   ! Loop over bracketted receiver ranges
-!
-!          W    = ( Pos%Rr( ir ) - rA ) / ( rB - rA )
-!          x    = ray2D( iS-1 )%x    + W * ( ray2D( iS )%x    - ray2D( iS-1 )%x )
-!          rayt = ray2D( iS-1 )%t    + W * ( ray2D( iS )%t    - ray2D( iS-1 )%t )
-!          q    = ray2D( iS-1 )%q(1) + W * ( ray2D( iS )%q(1) - ray2D( iS-1 )%q(1) )
-!          tau  = ray2D( iS-1 )%tau  + W * ( ray2D( iS )%tau  - ray2D( iS-1 )%tau )
-!
-!          ! following is incorrect because ray doesn't always use a step of deltas
-!          SINT = ( iS-1 ) * Beam%deltas + W * Beam%deltas
-!
-!          IF ( q < 0.0d0 .AND. qOld >= 0.0d0 &
-!               .OR. q > 0.0d0 .AND. qOld <= 0.0d0 ) &
-!            phase = phase + PI / 2. ! phase shifts at caustics
-!
-!          RcvrDepths: DO iz = 1, NRz_per_range
-!             deltaz =  Pos%Rz( iz ) - x( 2 )   ! ray to rcvr distance
-!             ! Adeltaz    = ABS( deltaz )
-!             ! IF ( Adeltaz < RadiusMax ) THEN
-!             SELECT CASE( Beam%RunType( 1:1 ) )
-!             CASE ( 'E', 'e' )         ! eigenrays
-!                SrcDeclAngle = rad2deg * alpha   ! take-off angle in degrees
-!                CALL WriteRay2D( SrcDeclAngle, iS )
-!                IF (writeDelay) CALL WriteDel2D( SrcDeclAngle, iS )
-!             CASE DEFAULT         ! coherent TL
-!                CPA    = ABS( deltaz * ( rB - rA ) ) / SQRT( ( rB - rA )**2 &
-!                         + ( ray2D( iS )%x( 2 ) - ray2D( iS-1 )%x( 2 ) )**2  )
-!                DS     = SQRT( deltaz **2 - CPA **2 )
-!                SX1    = SINT + DS
-!                thet   = ATAN( CPA / SX1 )
-!                delay  = tau + rayt( 2 ) * deltaz
-!                contri = Ratio1 * CN * ray2D( iS )%Amp &
-!                       * EXP( -A * thet**2 &
-!                              - i*( afreq*delay - ray2D( iS )%Phase - phase ) )&
-!                       / SQRT( SX1 )
-!                U( iz, ir ) = U( iz, ir ) + CMPLX( contri )
-!             END SELECT
-!             ! END IF
-!          END DO RcvrDepths
-!
-!          qOld = q
-!          ir   = ir + 1
-!          IF ( ir > Pos%NRr ) RETURN
-!       END DO RcvrRanges
-!
-!       rA = rB
-!    END DO Stepping
-!
-!  RETURN
-!  END !SUBROUTINE InfluenceSGB
-!
-  ! **********************************************************************!
+! **********************************************************************!
 
   SUBROUTINE ScalePressure( Dalpha, c, r, U, NRz, Nr, RunType, freq )
 

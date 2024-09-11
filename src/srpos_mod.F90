@@ -187,9 +187,11 @@ CONTAINS
   !     msgBuf :: Used to build messages for printing.
     INTEGER, INTENT( IN )   :: myThid
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
-  
+
   !     == Local Variables ==
     REAL(KIND=_RL90),    INTENT( IN ) :: zMin, zMax
+
+!$TAF init readszrz1 = 'srpos_mod_readszrz'
 
     CALL ReadVector( Pos%NSz, Pos%Sz, 'Source   depths, Sz', 'm', &
                     myThid )
@@ -226,6 +228,7 @@ CONTAINS
 #ifdef IHOP_WRITE_OUT
     ! In adjoint mode we do not write output besides on the first run
     IF (IHOP_dumpfreq.GE.0) THEN
+!$TAF store pos%nrz,pos%nsz,pos%rz,pos%sz = readszrz1
         IF ( ANY( Pos%Sz( 1:Pos%NSz ) < zMin ) ) THEN
            WHERE ( Pos%Sz < zMin ) Pos%Sz = zMin
            WRITE(msgBuf,'(2A)') 'Warning in ReadSzRz : Source above or too ',&
