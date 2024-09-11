@@ -173,6 +173,10 @@ CONTAINS
     ! and that multiple events can occur (crossing interface, top, and bottom 
     ! in a single step).
 
+!$TAF init reducestep2d = static, 100
+
+!$TAF store h = reducestep2d
+
     x = x0 + h * urayt ! take a trial Euler step
 
     ! interface crossing in depth

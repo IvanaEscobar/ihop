@@ -357,7 +357,6 @@ CONTAINS
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     SourceDepth: DO is = 1, Pos%NSz
 
-!$TAF store beam = BellhopCore1
 ! IESCO24: Write derived type with allocatable memory by type: SSP from ssp_mod
 ! Scalar components
 ! Fixed arrays
@@ -396,13 +395,23 @@ CONTAINS
   
        ! Trace successive beams
        DeclinationAngle: DO ialpha = 1, Angles%Nalpha
-!$TAF store arr,bdry,narr,u = BellhopCore2
-!!$TAF store ratio1,rb = BellhopCore2
+
+!$TAF store arr,narr,u = BellhopCore2
+!$TAF store beam%nsteps,beam%runtype = BellhopCore2
+
 ! IESCO24: Write derived type with allocatable memory by type: SSP from ssp_mod
 ! Scalar components
 ! Fixed arrays
 ! Allocatable arrays
+
+! IESCO24: Write derived type with allocatable memory by type: Bdry from bdry_mod
+! Scalar components
+!$TAF store bdry%bot%hs%cp,bdry%bot%hs%cs,bdry%bot%hs%rho = BellhopCore2
+! Fixed arrays
+! Allocatable arrays
 !$TAF store ssp%cmat,ssp%czmat = BellhopCore2
+
+
           ! take-off declination angle in degrees
           SrcDeclAngle = rad2deg * Angles%alpha( ialpha )
   
@@ -423,6 +432,14 @@ CONTAINS
              Amp0 = ( 1 - s ) * SrcBmPat( IBP, 2 ) + s * SrcBmPat( IBP + 1, 2 )
              ! IEsco22: When a beam pattern isn't specified, Amp0 = 0
   
+!$TAF store amp0,beam%runtype,beam%nsteps = BellhopCore2
+! IESCO24: Write derived type with allocatable memory by type: Bdry from bdry_mod
+! Scalar components
+!$TAF store bdry%bot%hs%cp,bdry%bot%hs%cs,bdry%bot%hs%rho = BellhopCore2
+!$TAF store bdry%top%hs%cp,bdry%top%hs%cs,bdry%top%hs%rho = BellhopCore2
+! Fixed arrays
+! Allocatable arrays
+
              ! Lloyd mirror pattern for semi-coherent option
              IF ( Beam%RunType( 1:1 ) == 'S' ) &
                 Amp0 = Amp0 * SQRT( 2.0 ) * ABS( SIN( afreq / c * xs( 2 ) &
@@ -520,6 +537,13 @@ CONTAINS
     LOGICAL           :: RayTurn = .FALSE., continue_steps
   
 !$TAF init TraceRay2D = static, MaxN-1 
+!$TAF init TraceRay2D1 = 'bellhop_traceray2d'
+
+!$TAF store beam%runtype = TraceRay2D1
+! IESCO24: Write derived type with allocatable memory by type: Bdry from bdry_mod
+! Scalar components
+!$TAF store ssp = TraceRay2D1
+!$TAF store beam = TraceRay2D1
 
     ! Initial conditions (IC)
     iSmallStepCtr = 0
@@ -582,18 +606,26 @@ CONTAINS
     is = 0
     continue_steps = .true.
     Stepping: DO istep = 1, MaxN - 1
-!$TAF store bdry,beam,continue_steps,distbegbot,distbegtop = TraceRay2D
-!$TAF store isegbot,isegtop,ray2d,rbotseg,rtopseg = TraceRay2D
+
+!$TAF store is,beam,continue_steps,distbegbot,distbegtop = TraceRay2D
+
 ! IESCO24: Write derived type with allocatable memory by type: SSP from ssp_mod
 ! Scalar components
 ! Fixed arrays
 ! Allocatable arrays
 !$TAF store ssp%cmat,ssp%czmat = TraceRay2D
+
+! IESCO24: Write derived type with allocatable memory by type: Bdry from bdry_mod
+! Scalar components
+!$TAF store bdry%top%hs%cp,bdry%top%hs%cs,bdry%top%hs%rho = TraceRay2D
+
        IF ( continue_steps ) THEN
-!$TAF store is = TraceRay2D
          is  = is + 1 ! old step
          is1 = is + 1 ! new step forward
   
+!$TAF store is,isegbot,isegtop,rbotseg,rtopseg = TraceRay2D
+!$TAF store ray2d = TraceRay2D
+
          CALL Step2D( ray2D( is ), ray2D( is1 ),  &
               Top( IsegTop )%x, Top( IsegTop )%n, &
               Bot( IsegBot )%x, Bot( IsegBot )%n, myThid )
