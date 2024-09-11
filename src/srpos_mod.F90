@@ -224,12 +224,11 @@ CONTAINS
     Pos%wr = 0
     Pos%irz = 0
 
-!$TAF store pos%nrz,pos%nsz,pos%rz,pos%sz = readszrz1
-  
     ! *** Check for Sz/Rz in water column ***
 #ifdef IHOP_WRITE_OUT
     ! In adjoint mode we do not write output besides on the first run
     IF (IHOP_dumpfreq.GE.0) THEN
+!$TAF store pos%nrz,pos%nsz,pos%rz,pos%sz = readszrz1
         IF ( ANY( Pos%Sz( 1:Pos%NSz ) < zMin ) ) THEN
            WHERE ( Pos%Sz < zMin ) Pos%Sz = zMin
            WRITE(msgBuf,'(2A)') 'Warning in ReadSzRz : Source above or too ',&

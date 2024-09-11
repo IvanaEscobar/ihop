@@ -164,13 +164,14 @@ CONTAINS
        
            ! Compute influence for each receiver
            DO ir = irA + 1 - II, irB + II, SIGN(1, irB - irA)
-!$TAF store Arr(:,ir,iz),NArr(ir,iz),w = iRayCen2
+!$TAF store Arr(:,ir,iz),NArr(ir,iz) = iRayCen2
              W = (Pos%Rr(ir) - rA) / (rB - rA)  ! relative range between rR
              n = ABS(nA + W * (nB - nA))
              q = ray2D(iS - 1)%q(1) + W * dq(iS - 1)  ! interpolated amplitude
              L = ABS(q) / q0   ! beam radius
        
              IF (n < L) THEN  ! in beam window: update delay, Amp, phase
+!$TAF store w = iRayCen2
                delay = ray2D(iS - 1)%tau + W * dtau(iS - 1)
                Amp = ray2D(iS)%Amp / SQRT(ABS(q))
                W = (L - n) / L  ! hat function: 1 on center, 0 on edge
@@ -249,10 +250,10 @@ CONTAINS
        rayt = ray2D( iS )%x - x_ray 
        rlen = NORM2( rayt )
        ! if duplicate point in ray, skip to next step along the ray
+       IF ( rlen .GE. 1.0D3 * SPACING( ray2D( iS )%x( 1 ) ) ) THEN 
 
 !$TAF store rlen,rayt= iiitape1
 
-       IF ( rlen .GE. 1.0D3 * SPACING( ray2D( iS )%x( 1 ) ) ) THEN 
         rayt = rayt / rlen                    ! unit tangent of ray @ A
         rayn = [ -rayt( 2 ), rayt( 1 ) ]      ! unit normal  of ray @ A
         RcvrDeclAngle = rad2deg * ATAN2( rayt( 2 ), rayt( 1 ) )
@@ -420,6 +421,9 @@ CONTAINS
        rlen = NORM2( rayt )
        ! if duplicate point in ray, skip to next step along the ray
        IF ( rlen .GE. 1.0D3 * SPACING( ray2D( iS )%x( 1 ) ) ) THEN
+
+!$TAF store rlen,rayt = iGauCart1
+
         rayt = rayt / rlen
         rayn = [ -rayt( 2 ), rayt( 1 ) ]      ! unit normal to ray
         RcvrDeclAngle = rad2deg * ATAN2( rayt( 2 ), rayt( 1 ) )

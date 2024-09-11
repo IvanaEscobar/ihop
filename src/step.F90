@@ -173,7 +173,7 @@ CONTAINS
     ! and that multiple events can occur (crossing interface, top, and bottom 
     ! in a single step).
 
-!$TAF init reducestep2d = static, 100
+!$TAF init reducestep2d = static, 50 
 
 !$TAF store h = reducestep2d
 
@@ -209,7 +209,11 @@ CONTAINS
     rSeg( 1 ) = MAX( rTopSeg( 1 ), rBotSeg( 1 ) )
     rSeg( 2 ) = MIN( rTopSeg( 2 ), rBotSeg( 2 ) )
 
+!$TAF store rseg = reducestep2d
+
     IF ( SSP%Type == 'Q' ) THEN ! Quad: 2D range-dependent SSP
+!$TAF store rseg = reducestep2d
+
        rSeg( 1 ) = MAX( rSeg( 1 ), SSP%Seg%r( iSegr0     ) )
        rSeg( 2 ) = MIN( rSeg( 2 ), SSP%Seg%r( iSegr0 + 1 ) )
     END IF

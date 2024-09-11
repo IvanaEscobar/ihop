@@ -397,7 +397,7 @@ CONTAINS
        DeclinationAngle: DO ialpha = 1, Angles%Nalpha
 
 !$TAF store arr,narr,u = BellhopCore2
-!$TAF store beam%nsteps,beam%runtype = BellhopCore2
+!!$TAF store beam%nsteps,beam%runtype = BellhopCore2
 
 ! IESCO24: Write derived type with allocatable memory by type: SSP from ssp_mod
 ! Scalar components
@@ -406,7 +406,7 @@ CONTAINS
 
 ! IESCO24: Write derived type with allocatable memory by type: Bdry from bdry_mod
 ! Scalar components
-!$TAF store bdry%bot%hs%cp,bdry%bot%hs%cs,bdry%bot%hs%rho = BellhopCore2
+!!$TAF store bdry%bot%hs%cp,bdry%bot%hs%cs,bdry%bot%hs%rho = BellhopCore2
 ! Fixed arrays
 ! Allocatable arrays
 !$TAF store ssp%cmat,ssp%czmat = BellhopCore2
@@ -435,7 +435,7 @@ CONTAINS
 !$TAF store amp0,beam%runtype,beam%nsteps = BellhopCore2
 ! IESCO24: Write derived type with allocatable memory by type: Bdry from bdry_mod
 ! Scalar components
-!$TAF store bdry%bot%hs%cp,bdry%bot%hs%cs,bdry%bot%hs%rho = BellhopCore2
+!!$TAF store bdry%bot%hs%cp,bdry%bot%hs%cs,bdry%bot%hs%rho = BellhopCore2
 !$TAF store bdry%top%hs%cp,bdry%top%hs%cs,bdry%top%hs%rho = BellhopCore2
 ! Fixed arrays
 ! Allocatable arrays
@@ -539,7 +539,6 @@ CONTAINS
 !$TAF init TraceRay2D = static, MaxN-1 
 !$TAF init TraceRay2D1 = 'bellhop_traceray2d'
 
-!$TAF store beam%runtype = TraceRay2D1
 ! IESCO24: Write derived type with allocatable memory by type: Bdry from bdry_mod
 ! Scalar components
 !$TAF store ssp = TraceRay2D1
@@ -678,6 +677,8 @@ CONTAINS
   
          ! IESCO22: Did new ray point cross top boundary? Then reflect
          IF ( DistBegTop > 0.0d0 .AND. DistEndTop <= 0.0d0 ) THEN 
+
+!$TAF store isegtop = TraceRay2D
   
             IF ( atiType == 'C' ) THEN ! curvilinear interpolation
                ! proportional distance along segment
@@ -692,6 +693,8 @@ CONTAINS
                ToptInt = Top( IsegTop )%t
             END IF
   
+!$TAF store is,isegtop = TraceRay2D
+  
             CALL Reflect2D( is, Bdry%Top%HS,    'TOP',  ToptInt,    TopnInt, &
                                 Top( IsegTop )%kappa,   RTop,       NTopPTS, &
                                 myThid ) 
@@ -702,6 +705,8 @@ CONTAINS
   
          ! IESCO22: Did ray cross bottom boundary? Then reflect
          ELSE IF ( DistBegBot > 0.0d0 .AND. DistEndBot <= 0.0d0 ) THEN
+  
+!$TAF store isegbot = TraceRay2D
   
             IF ( btyType == 'C' ) THEN ! curvilinear interpolation
                ! proportional distance along segment
@@ -716,6 +721,8 @@ CONTAINS
                BottInt = Bot( IsegBot )%t
             END IF
   
+!$TAF store is,isegbot = TraceRay2D
+
             CALL Reflect2D( is, Bdry%Bot%HS,    'BOT',  BottInt,    BotnInt, &
                                 Bot( IsegBot )%kappa,   RBot,       NBotPTS, &
                                 myThid ) 
