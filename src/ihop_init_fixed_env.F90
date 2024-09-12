@@ -1,5 +1,7 @@
 #include "IHOP_OPTIONS.h"
 MODULE init_mod
+
+IMPLICIT NONE
 PRIVATE
 
 public ihop_init_fixed_env
@@ -10,17 +12,21 @@ CONTAINS
   ! ===========================================================================
 
   ! USES
-    IMPLICIT NONE
     USE bdry_mod,  only: Bdry, HSInfo
     USE srpos_mod, only: Pos, ReadSxSy, ReadSzRz, ReadRcvrRanges, ReadFreqVec
-    USE ssp_mod,   only: SSP
+    USE ssp_mod,   only: SSP, initSSP
     USE ihop_mod,  only: Beam, rxyz
     USE angle_mod, only: Angles, ReadRayElevationAngles
 
   ! ===========================================================================
   !     == Global Variables ==
-#include "IHOP_SIZE.h"
-#include "IHOP.h"
+#include "SIZE.h"
+#include "GRID.h"
+#include "EEPARAMS.h"
+#ifdef ALLOW_IHOP
+# include "IHOP_SIZE.h"
+# include "IHOP.h"
+#endif
 
   ! ===========================================================================
   !     == Routine Arguments ==
@@ -29,16 +35,18 @@ CONTAINS
     INTEGER, INTENT( IN )   :: myThid
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
 
-  ! ===========================================================================
-  !     == Local Variables ==
-    INTEGER             :: iAllocStat, ierr
-    INTEGER             :: jj 
-  ! added locally previously read in from unknown mod ... IEsco22
-    CHARACTER ( LEN=2 ) :: AttenUnit
-    INTEGER              :: iSeg
-    INTEGER, PARAMETER   :: ArrivalsStorage = 2000, MinNArr = 10
-
-  ! ===========================================================================
+!!  ! ===========================================================================
+!!  !     == Local Variables ==
+!!    INTEGER             :: iAllocStat, ierr
+!!    INTEGER             :: jj 
+    REAL (KIND=_RL90), PARAMETER :: c0 = 1500.0
+    CHARACTER (LEN=2) :: AttenUnit
+    CHARACTER (LEN=10) :: PlotType
+    REAL (KIND=_RL90) :: x(2), Depth
+!!    INTEGER              :: iSeg
+!!    INTEGER, PARAMETER   :: ArrivalsStorage = 2000, MinNArr = 10
+!!
+!!  ! ===========================================================================
  
   !IESCO24: some notes while I noodle
     ! Use data.ihop, set time series invariant parameters. These are fixed 
@@ -57,6 +65,9 @@ CONTAINS
     !   - Bot%Natipts,x,
     ! This subroutine will set parameters that shouldn't need to be modified 
     ! throughout the MITgcm model run
+
+    ! === Set local parameters ===
+    AttenUnit = ''
 
     ! === Set nonallocatable derived type components from other modules ===
     Bdry%Bot%HS = HSInfo(0.,0.,0.,0., 0.,0. , (0.,0.),(0.,0.), '', '' )
@@ -409,6 +420,16 @@ CONTAINS
   ! **********************************************************************!
   SUBROUTINE ReadTopOpt( BC, AttenUnit, myThid )
     USE atten_mod, only: T, Salinity, pH, z_bar, iBio, NBioLayers, bio
+    USE ssp_mod, only: SSP
+
+  ! ===========================================================================
+  !     == Global Variables ==
+#include "SIZE.h"
+#include "EEPARAMS.h"
+#ifdef ALLOW_IHOP
+# include "IHOP_SIZE.h"
+# include "IHOP.h"
+#endif
 
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO
@@ -494,7 +515,17 @@ CONTAINS
   !**********************************************************************!
   SUBROUTINE TopBot( AttenUnit, HS, myThid )
     ! Handles top and bottom boundary conditions
-    use atten_mod, only: CRCI
+    USE atten_mod, only: CRCI
+    USE bdry_mod,  only: HSInfo
+    
+  ! ===========================================================================
+  !     == Global Variables ==
+#include "SIZE.h"
+#include "EEPARAMS.h"
+#ifdef ALLOW_IHOP
+# include "IHOP_SIZE.h"
+# include "IHOP.h"
+#endif
 
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO
@@ -585,6 +616,10 @@ CONTAINS
 
     ! Read the RunType variable and print to .prt file
     USE srPos_mod, only: Pos
+    
+  ! ===========================================================================
+  !     == Global Variables ==
+#include "EEPARAMS.h"
 
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO
