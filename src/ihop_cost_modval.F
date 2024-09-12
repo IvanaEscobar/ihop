@@ -39,8 +39,10 @@ C     == Global variables ===
 #endif
 #ifdef ALLOW_IHOP
 # include "IHOP_SIZE.h"
-# include "IHOP_COST.h"
 # include "netcdf.inc"
+# ifdef ALLOW_COST
+#  include "IHOP_COST.h"
+# endif
 #endif
 #ifdef ALLOW_AUTODIFF
 # include "tamc.h"

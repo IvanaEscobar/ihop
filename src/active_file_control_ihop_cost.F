@@ -36,7 +36,9 @@ C !USES:
 #ifdef ALLOW_IHOP
 # include "netcdf.inc"
 # include "IHOP_SIZE.h"
-# include "IHOP_COST.h"
+# ifdef ALLOW_COST
+#  include "IHOP_COST.h"
+# endif
 #endif
 
 C !INPUT PARAMETERS:
@@ -51,7 +53,7 @@ C !INPUT PARAMETERS:
 
 CEOP
 
-#ifdef ALLOW_IHOP
+#if (defined ALLOW_IHOP) && (defined ALLOW_COST)
 C !LOCAL VARIABLES:
       integer  err, varid1, varid2
       integer  vec_start, vec_count
@@ -225,7 +227,9 @@ C !USES:
 #ifdef ALLOW_IHOP
 # include "netcdf.inc"
 # include "IHOP_SIZE.h"
-# include "IHOP_COST.h"
+# ifdef ALLOW_COST
+#  include "IHOP_COST.h"
+# endif
 #endif
 
 C !INPUT PARAMETERS:
@@ -238,7 +242,7 @@ C !INPUT PARAMETERS:
       _RL      active_var
 CEOP
 
-#ifdef ALLOW_IHOP
+#if (defined ALLOW_IHOP) && (defined ALLOW_COST)
 C !LOCAL VARIABLES:
       integer  err, varid1, varid2, varid3
       integer  vec_start, vec_count
@@ -369,7 +373,9 @@ C !USES:
 #ifdef ALLOW_IHOP
 # include "netcdf.inc"
 # include "IHOP_SIZE.h"
-# include "IHOP_COST.h"
+# ifdef ALLOW_COST
+#  include "IHOP_COST.h"
+# endif
 #endif
 
 C !INPUT PARAMETERS:
@@ -384,7 +390,7 @@ C !INPUT PARAMETERS:
 
 CEOP
 
-#ifdef ALLOW_IHOP
+#if (defined ALLOW_IHOP) && (defined ALLOW_COST)
 C !LOCAL VARIABLES:
       integer  err, varid1, varid2
       integer  vec_start, vec_count
@@ -496,7 +502,9 @@ C !USES:
 #ifdef ALLOW_IHOP
 # include "netcdf.inc"
 # include "IHOP_SIZE.h"
-# include "IHOP_COST.h"
+# ifdef ALLOW_COST
+#  include "IHOP_COST.h"
+# endif
 #endif
 
 C !INPUT PARAMETERS:
@@ -509,7 +517,7 @@ C !INPUT PARAMETERS:
       _RL      active_var
 CEOP
 
-#ifdef ALLOW_IHOP
+#if (defined ALLOW_IHOP) && (defined ALLOW_COST)
 C !LOCAL VARIABLES:
       integer  err, varid1, varid2
       integer  vec_start, vec_count

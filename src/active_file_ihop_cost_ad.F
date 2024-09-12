@@ -31,7 +31,9 @@ C !USES:
 #include "SIZE.h"
 #ifdef ALLOW_IHOP
 # include "IHOP_SIZE.h"
-# include "IHOP_COST.h"
+# ifdef ALLOW_COST
+#  include "IHOP_COST.h"
+# endif
 #endif
 
 C !INPUT PARAMETERS:
@@ -50,7 +52,7 @@ C                      variable and write to active file
       LOGICAL lAdInit
 CEOP
 
-#ifdef ALLOW_IHOP
+#if (defined ALLOW_IHOP) && (defined ALLOW_COST)
 
       CALL active_read_ihop_tile_rl( fidadj_obs(active_num_file,bi,bj),
      &     active_num_file,
@@ -88,7 +90,9 @@ C !USES:
 #include "SIZE.h"
 #ifdef ALLOW_IHOP
 # include "IHOP_SIZE.h"
-# include "IHOP_COST.h"
+# ifdef ALLOW_COST
+#  include "IHOP_COST.h"
+# endif
 #endif
 
 C !INPUT PARAMETERS:
@@ -107,7 +111,7 @@ C                      variable and write to active file
       _RL     dummy
 CEOP
 
-#ifdef ALLOW_IHOP
+#if (defined ALLOW_IHOP) && (defined ALLOW_COST)
 
       CALL active_write_ihop_tile_rl( fidadj_obs(active_num_file,bi,bj),
      &     active_num_file,
@@ -145,7 +149,9 @@ C !USES:
 #include "SIZE.h"
 #ifdef ALLOW_IHOP
 # include "IHOP_SIZE.h"
-# include "IHOP_COST.h"
+# ifdef ALLOW_COST
+#  include "IHOP_COST.h"
+# endif
 #endif
 
 C !INPUT PARAMETERS:
@@ -164,7 +170,7 @@ C                      variable and write to active file
       LOGICAL lAdInit
 CEOP
 
-#ifdef ALLOW_IHOP
+#if (defined ALLOW_IHOP) && (defined ALLOW_COST)
 
       CALL active_read_ihop_glob_rl( fidadglobal(active_num_file),
      &     active_num_file,
@@ -201,7 +207,9 @@ C !USES:
 #include "SIZE.h"
 #ifdef ALLOW_IHOP
 # include "IHOP_SIZE.h"
-# include "IHOP_COST.h"
+# ifdef ALLOW_COST
+#  include "IHOP_COST.h"
+# endif
 #endif
 
 C !INPUT PARAMETERS:
@@ -220,7 +228,7 @@ C                      variable and write to active file
       _RL     dummy
 CEOP
 
-#ifdef ALLOW_IHOP
+#if (defined ALLOW_IHOP) && (defined ALLOW_COST)
 
       CALL active_write_ihop_glob_rl( fidadglobal(active_num_file),
      &     active_num_file,

@@ -29,7 +29,9 @@ C == Global variables ===
 # include "netcdf.inc"
 # include "IHOP_SIZE.h"
 # include "IHOP.h"
-# include "IHOP_COST.h"
+# ifdef ALLOW_COST
+#  include "IHOP_COST.h"
+# endif
 #endif
 
 C !INPUT/OUTPUT PARAMETERS:
@@ -42,7 +44,7 @@ C vec_loc   ::
       _RL     vec_loc
 CEOP
 
-#ifdef ALLOW_IHOP
+#if (defined ALLOW_IHOP) && (defined ALLOW_COST)
 
 C !LOCAL VARIABLES:
 c tmpObsNo :: number of obs in the file

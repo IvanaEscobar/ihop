@@ -89,11 +89,13 @@ C    !FUNCTIONS:
      &      ihop_idw_weights,
      &      ihop_ranges
 
+#ifdef ALLOW_COST
       NAMELIST /IHOP_COST_NML/
      &      ihopdoncoutput,
      &      ihopObsDir,
      &      ihopObsFiles,
      &      mult_ihop
+#endif
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 

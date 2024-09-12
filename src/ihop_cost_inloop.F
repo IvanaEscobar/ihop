@@ -32,8 +32,10 @@ C     == Global variables ===
 #endif
 #ifdef ALLOW_IHOP
 # include "IHOP_SIZE.h"
-# include "IHOP_COST.h"
 # include "netcdf.inc"
+# ifdef ALLOW_COST
+#  include "IHOP_COST.h"
+# endif
 #endif
 #ifdef ALLOW_AUTODIFF
 # include "tamc.h"
@@ -71,6 +73,7 @@ C !LOCAL VARIABLES:
 !      itdkey = bi + (bj - 1)*nSx + (ikey_dynamics - 1)*nSx*nSy
 #endif
 
+#ifdef ALLOW_COST
         _BEGIN_MASTER( myThid )
 
       DO bj=1,nSy
@@ -109,6 +112,7 @@ C !LOCAL VARIABLES:
 
         _END_MASTER( myThid )
 
+#endif /* ALLOW_COST */
 #endif
 
       RETURN

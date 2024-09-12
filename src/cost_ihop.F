@@ -73,15 +73,17 @@ C bi,bj     :: Tile indices
       logical exst
       _RL  objf_ihop_glo
       _RL  num_ihop_glo
-      _RL  ihopObs_buff(NOBSMAX_IHOP)
-      _RL  samples_mask_buff(NOBSMAX_IHOP)
-      _RL  ihopObs_modval_glob(NOBSMAX_IHOP)
-      _RL  samples_mask_glob(NOBSMAX_IHOP)
       _RL  tmpgs
       INTEGER tmpgsi
       INTEGER ObsNo2,fid,dimid
       INTEGER nmodmean, nobsmean
       _RL offset, mod_mean, ihop_mean
+#ifdef ALLOW_COST
+      _RL  ihopObs_buff(NOBSMAX_IHOP)
+      _RL  samples_mask_buff(NOBSMAX_IHOP)
+      _RL  ihopObs_modval_glob(NOBSMAX_IHOP)
+      _RL  samples_mask_glob(NOBSMAX_IHOP)
+#endif
  
 C !FUNCTIONS
       INTEGER  ILNBLNK
