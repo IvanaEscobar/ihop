@@ -61,6 +61,9 @@ MODULE ssp_mod
   ! DEFAULT values, BELLHOP only modifies alphaR
   REAL (KIND=_RL90)          :: alphaR = 1500, betaR = 0, alphaI = 0, &
                                 betaI = 0, rhoR = 1
+  ! SSP interpolation parameters, only used in ssp_mod
+  COMPLEX (KIND=_RL90) :: n2(MaxSSP), n2z(MaxSSP)
+  COMPLEX (KIND=_RL90) :: cSpln( 4, MaxSSP ), cCoef( 4, MaxSSP )   
                             
 ! TYPE STRUCTURES
 ! == Type Structures ==
@@ -72,17 +75,14 @@ MODULE ssp_mod
   TYPE SSPStructure
     INTEGER                 :: NPts, Nr, Nx, Ny, Nz
     REAL    (KIND=_RL90)    :: z( MaxSSP ), rho( MaxSSP )
-    COMPLEX (KIND=_RL90)    :: c( MaxSSP ), cz( MaxSSP ), n2( MaxSSP ), &
-                               n2z( MaxSSP ), cSpline( 4, MaxSSP )
-    REAL    (KIND=_RL90), ALLOCATABLE   :: cMat( :, : ),     czMat( :, : )
+    COMPLEX (KIND=_RL90)    :: c( MaxSSP ), cz( MaxSSP )
+    REAL    (KIND=_RL90), ALLOCATABLE   :: cMat( :, : ), czMat( :, : )
 #ifdef IHOP_THREED
     REAL    (KIND=_RL90), ALLOCATABLE   :: cMat3( :, :, : ), czMat3( :, :, : )
 #endif /* IHOP_THREED */
     TYPE ( rxyz_vector ) :: Seg
     CHARACTER (LEN=1)    :: Type
     CHARACTER (LEN=2)    :: AttenUnit
-    ! for PCHIP coefs.
-    COMPLEX (KIND=_RL90)    :: cCoef( 4, MaxSSP ), CSWork( 4, MaxSSP )   
   END TYPE SSPStructure
 
   TYPE( SSPStructure ) :: SSP
@@ -116,6 +116,12 @@ CONTAINS
 ! Allocatable arrays
 !$TAF store ssp%cmat,ssp%czmat,ssp%seg%r,ssp%seg%x,ssp%seg%y,ssp%seg%z = initssp1
 
+    ! init defaults for ssp_mod scoped arrays
+    n2    = (-1.,-1.)
+    n2z   = (-1.,-1.)
+    cSpln = (-1.,-1.)
+    cCoef = (-1.,-1.)
+
     ! All methods require Depth
     Depth = x( 2 )
     ! Check if SSPFile exists
@@ -127,13 +133,13 @@ CONTAINS
 
     SELECT CASE ( SSP%Type )
     CASE ( 'N' )  !  N2-linear profile option
-       SSP%n2(  1:SSP%NPts ) = 1.0 / SSP%c( 1:SSP%NPts )**2
-       !IEsco23 Test this: SSP%n2(  1:SSP%Nz ) = 1.0 / SSP%c( 1:SSP%Nz )**2
+       n2( 1:SSP%NPts ) = 1.0 / SSP%c( 1:SSP%NPts )**2
+       !IEsco23 Test this: n2(  1:SSP%Nz ) = 1.0 / SSP%c( 1:SSP%Nz )**2
 
        ! compute gradient, n2z
        DO iz = 2, SSP%Npts
-          SSP%n2z( iz - 1 ) = ( SSP%n2(   iz ) - SSP%n2(   iz - 1 ) ) / &
-                              ( SSP%z(    iz ) - SSP%z(    iz - 1 ) )
+          n2z( iz-1 ) = (  n2(   iz ) - n2(    iz-1 ) ) / &
+                        ( SSP%z( iz ) - SSP%z( iz-1 ) )
        END DO
 
     CASE ( 'C' )  !  C-linear profile option
@@ -141,19 +147,19 @@ CONTAINS
        !                                                               2      3
        ! compute coefficients of std cubic polynomial: c0 + c1*x + c2*x + c3*x
        !
-       CALL PCHIP( SSP%z, SSP%c, SSP%NPts, SSP%cCoef, SSP%CSWork )
+       CALL PCHIP( SSP%z, SSP%c, SSP%NPts, cCoef, cSpln )
 !IEsco23 Test this: 
-!       CALL PCHIP( SSP%z, SSP%c, SSP%Nz, SSP%cCoef, SSP%CSWork )
+!       CALL PCHIP( SSP%z, SSP%c, SSP%Nz, cCoef, cSpln )
 
     CASE ( 'S' )  !  Cubic spline profile option
-       SSP%cSpline( 1, 1:SSP%NPts ) = SSP%c( 1:SSP%NPts )
+       cSpln( 1, 1:SSP%NPts ) = SSP%c( 1:SSP%NPts )
 !IEsco23 Test this: 
-!       SSP%cSpline( 1, 1 : SSP%Nz ) = SSP%c( 1 : SSP%Nz )
+!       cSpln( 1, 1 : SSP%Nz ) = SSP%c( 1 : SSP%Nz )
        
        ! Compute spline coefs
-       CALL CSpline( SSP%z, SSP%cSpline( 1, 1 ), SSP%NPts, 0, 0, SSP%NPts )
+       CALL cSpline( SSP%z, cSpln( 1, 1 ), SSP%NPts, 0, 0, SSP%NPts )
 !IEsco23 Test this: 
-!      CALL CSpline( SSP%z, SSP%cSpline( 1,1 ), SSP%Nz,iBCBeg, iBCEnd, SSP%Nz )
+!      CALL CSpline( SSP%z, cSpln( 1,1 ), SSP%Nz,iBCBeg, iBCEnd, SSP%Nz )
 
     CASE ( 'Q' )
        ! calculate cz
@@ -262,12 +268,12 @@ CONTAINS
 
     W = ( x( 2 ) - SSP%z( iSegz ) ) / ( SSP%z( iSegz+1 ) - SSP%z( iSegz ) )
 
-    c     = REAL(  1.0D0 / SQRT( ( 1.0D0-W ) * SSP%n2( iSegz ) &
-            + W * SSP%n2( iSegz+1 ) ) )
-    cimag = AIMAG( 1.0D0 / SQRT( ( 1.0D0-W ) * SSP%n2( iSegz ) &
-            + W * SSP%n2( iSegz+1 ) ) )
+    c     = REAL(  1.0D0 / SQRT( ( 1.0D0-W ) * n2( iSegz ) &
+            + W * n2( iSegz+1 ) ) )
+    cimag = AIMAG( 1.0D0 / SQRT( ( 1.0D0-W ) * n2( iSegz ) &
+            + W * n2( iSegz+1 ) ) )
 
-    gradc = [ 0.0D0, -0.5D0 * c * c * c * REAL( SSP%n2z( iSegz ) ) ]
+    gradc = [ 0.0D0, -0.5D0 * c * c * c * REAL( n2z( iSegz ) ) ]
     crr   = 0.0d0
     crz   = 0.0d0
     czz   = 3.0d0 * gradc( 2 ) * gradc( 2 ) / c
@@ -351,22 +357,22 @@ CONTAINS
     END IF
 
     xt = x( 2 ) - SSP%z( iSegz )
-    c_cmplx = SSP%cCoef( 1, iSegz ) &
-          + ( SSP%cCoef( 2, iSegz ) &
-          + ( SSP%cCoef( 3, iSegz ) &
-          +   SSP%cCoef( 4, iSegz ) * xt ) * xt ) * xt
+    c_cmplx = cCoef( 1, iSegz ) &
+          + ( cCoef( 2, iSegz ) &
+          + ( cCoef( 3, iSegz ) &
+          +   cCoef( 4, iSegz ) * xt ) * xt ) * xt
 
     c     = REAL(  c_cmplx )
     cimag = AIMAG( c_cmplx )
 
     gradc = [ 0.0D0, &
-              REAL( SSP%cCoef( 2, iSegz ) + ( 2.0D0 * SSP%cCoef( 3, iSegz ) &
-                    + 3.0D0 * SSP%cCoef( 4, iSegz ) * xt ) * xt ) ]
+              REAL( cCoef( 2, iSegz ) + ( 2.0D0 * cCoef( 3, iSegz ) &
+                    + 3.0D0 * cCoef( 4, iSegz ) * xt ) * xt ) ]
 
     crr   = 0.0D0
     crz   = 0.0D0
-    czz   = REAL( 2.0D0 * SSP%cCoef( 3, iSegz ) + &
-                  6.0D0 * SSP%cCoef( 4, iSegz ) * xt )   ! dgradc(2)/dxt
+    czz   = REAL( 2.0D0 * cCoef( 3, iSegz ) + &
+                  6.0D0 * cCoef( 4, iSegz ) * xt )   ! dgradc(2)/dxt
 
     W     = ( x( 2 ) - SSP%z( iSegz ) ) / &
             ( SSP%z( iSegz+1 ) - SSP%z( iSegz ) )
@@ -412,8 +418,7 @@ CONTAINS
 
     hSpline = x( 2 ) - SSP%z( iSegz )
 
-    CALL SplineALL( SSP%cSpline( 1, iSegz ), hSpline, &
-                    c_cmplx, cz_cmplx, czz_cmplx )
+    CALL SplineALL( cSpln( 1, iSegz ), hSpline, c_cmplx, cz_cmplx, czz_cmplx )
 
     c     = DBLE(  c_cmplx )
     cimag = AIMAG( c_cmplx )

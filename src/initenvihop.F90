@@ -822,6 +822,7 @@ CONTAINS
     ENDIF ! no output on adjoint runs
 
     SELECT CASE ( HS%BC )
+    CASE ( 'V','R','F','W','P')
     CASE ( 'A' )                  ! *** Half-space properties ***
        ! IEsco23: MISSING IF BOTTOM BC CHECK
        zTemp    = HS%Depth

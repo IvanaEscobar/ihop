@@ -70,11 +70,12 @@ SUBROUTINE CSPLINE (TAU, C, N, IBCBEG, IBCEND, NDIM)
 
   ! **********************************************************************
 
-  IMPLICIT INTEGER            (I-N) 
+  IMPLICIT INTEGER            (I-M) 
   IMPLICIT REAL (KIND=_RL90)  (A-H,O-Z)
-  INTEGER              :: NDIM, IBCBEG, IBCEND
-  REAL    (KIND=_RL90) :: TAU(N)
-  COMPLEX (KIND=_RL90) :: C(4,NDIM), G, DTAU, DIVDF1, DIVDF3
+  INTEGER,              INTENT(IN) :: N, NDIM, IBCBEG, IBCEND
+  REAL    (KIND=_RL90), INTENT(IN) :: TAU(N)
+  COMPLEX (KIND=_RL90), INTENT(INOUT) :: C(4,NDIM)
+  COMPLEX (KIND=_RL90) :: G, DTAU, DIVDF1, DIVDF3
 
   L = N - 1
 
@@ -182,90 +183,25 @@ SUBROUTINE CSPLINE (TAU, C, N, IBCBEG, IBCEND, NDIM)
   RETURN
 END SUBROUTINE CSPLINE
 
-
-
-!SUBROUTINE VSPLINE (TAU, C, M, MDIM, F, N)
-!
-!  !     VSPLINE CALCULATES THE CUBIC SPLINE VALUES FOR A SET OF N POINTS  
-!  !     IN F FROM THE M-POINT CUBI! SPLINE FIT IN ! AND THE NODES IN TAU.
-!  !     THE POINTS ARE RETURNED IN F.  ALL OF THE POINTS IN F MUST LIE 
-!  !     BETWEEN TAU(1) AND TAU(M).
-!
-!  !     * * * * * * * * * * * * *   WARNINGS   * * * * * * * * * * * * *
-!
-!  !     POINTS OUTSIDE OF THE SPLINE FIT REGION ARE EXTRAPOLATED FROM THE END
-!  !     INTERVALS.  THIS CAN RESULT IN WILD VALUES IF EXTRAPOLATED TOO FAR.
-!  !     ALSO THE POINTS MUST BE IN STRICTLY ASCENDING ORDER, IF NOT THE 
-!  !     POINTS WHICH ARE OUT OF ORDER WILL BE EXTRAPOLATED FROM THE CURRENT
-!  !     INTERVAL AGAIN RESULTING IN WILD VALUES.
-!
-!  IMPLICIT REAL (KIND=_RL90) (A-H,O-Z)
-!  REAL    (KIND=_RL90) :: TAU(M)
-!  COMPLEX (KIND=_RL90) :: C(4,MDIM), F(N), SPLINE
-!
-!  J = 1
-!  DO I = 1,N
-!10   J1 = J + 1
-!     IF (TAU(J1) < REAL(F(I)) .AND. J1 < M) THEN ! CHECK TO MAKE SURE
-!        J = J + 1                                ! THIS POINT IS NOT
-!        GO TO 10                                 ! IN THE NEXT INTERVAL.
-!     END IF
-!     H = DBLE (F(I)) - TAU(J)              ! DISTANCE FROM START OF INTERVAL
-!     F(I) = SPLINE (C(1,J), H)
-!  END DO
-!  RETURN
-!END SUBROUTINE VSPLINE
-
-
-!!**********************************************************************C
-!      FUNCTION SPLINE ( C, H )
-!
-!!     THIS FUNCTION EVALUATES THE SPLINE AT THE POINT H
-!
-!      IMPLICIT REAL (KIND=_RL90) ( A-H, O-Z )
-!      COMPLEX (KIND=_RL90) C(4), SPLINE
-!
-!      SPLINE = C(1) + H * ( C(2) + H * ( C(3) / 2.0 + H * C(4) / 6.0 ) )
-!      RETURN
-!      END FUNCTION SPLINE
-!
-!      FUNCTION SPLINEX ( C, H )
-!
-!!     THIS FUNCTION EVALUATES THE SPLINE DERIVATIVE AT THE POINT H
-!
-!      IMPLICIT REAL (KIND=_RL90) ( A-H, O-Z )
-!      COMPLEX (KIND=_RL90) :: C(4), SPLINEX
-!
-!      SPLINEX = C(2) + H * ( C(3) + H * C(4) / 2.0 )
-!      RETURN
-!      END FUNCTION SPLINEX
-!
-!      FUNCTION SPLINEXX ( C, H )
-!
-!!     THIS FUNCTION EVALUATES THE SPLINE 2ND DERIVATIVE AT THE POINT H
-!
-!      IMPLICIT REAL (KIND=_RL90) ( A-H, O-Z )
-!      COMPLEX (KIND=_RL90) :: C(4), SPLINEXX
-!
-!      SPLINEXX = C(3) + H * C(4)
-!      RETURN
-!      END FUNCTION SPLINEXX
-!!**********************************************************************C
-      SUBROUTINE SPLINEALL ( C, H, F, FX, FXX )
+!**********************************************************************C
+SUBROUTINE SPLINEALL ( C, H, F, FX, FXX )
 
 !     THIS ROUTINE EVALUATES THE
 !        SPLINE,
 !        SPLINE DERIVATIVE, AND
 !        SPLINE 2ND DERIVATIVE AT THE POINT H
 
-      IMPLICIT REAL (KIND=_RL90) ( A-H, O-Z )
-      PARAMETER ( HALF = 0.5, SIXTH = 1.0 / 6.0 )
-      COMPLEX (KIND=_RL90) :: C(4), F, FX, FXX
+  IMPLICIT REAL (KIND=_RL90) ( A-G, O-Z )
+  REAL (KIND=_RL90), PARAMETER ::  HALF = 0.5, SIXTH = 1.0 / 6.0
+  REAL (KIND=_RL90),    INTENT(IN)  :: H
+  COMPLEX (KIND=_RL90), INTENT(IN)  :: C(4)
+  COMPLEX (KIND=_RL90), INTENT(OUT) :: F, FX, FXX
 
-      F   = C(1) + H * ( C(2) + H * ( HALF * C(3) + SIXTH * H * C(4) ) )
-      FX  = C(2) + H * ( C(3) + H * HALF * C(4) )
-      FXX = C(3) + H * C(4)
+  F   = C(1) + H * ( C(2) + H * ( HALF * C(3) + SIXTH * H * C(4) ) )
+  FX  = C(2) + H * ( C(3) + H * HALF * C(4) )
+  FXX = C(3) + H * C(4)
 
-      RETURN
-      END SUBROUTINE SPLINEALL
+  RETURN
+END SUBROUTINE SPLINEALL
+
 END MODULE splinec_mod
