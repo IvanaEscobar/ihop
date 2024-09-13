@@ -134,6 +134,12 @@ C Only do I/O if in the main thread
       _END_MASTER( myThid )
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
+      DO k = 1,Nr
+        DO i=1,IHOP_npts_range
+          ihop_sumweights(i,k) = -1.0
+        END DO
+      END DO
+C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 
 #ifdef ALLOW_MNC
       IF (useMNC) THEN
