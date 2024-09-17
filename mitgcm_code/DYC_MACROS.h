@@ -5,11 +5,11 @@
 !C    include DYC_MACROS.h
 !C    !DESCRIPTION: \bv
 !C     *==========================================================*
-!C     | DYC_MACROS.h                                              
+!C     | DYC_MACROS.h
 !C     *==========================================================*
-!C     | These macros are used to reduce memory requirement and/or 
-!C     | memory references when variables are fixed along a given  
-!C     | axis or axes.                                             
+!C     | These macros are used to reduce memory requirement and/or
+!C     | memory references when variables are fixed along a given
+!C     | axis or axes.
 !C     *==========================================================*
 !C     \ev
 !CEOP

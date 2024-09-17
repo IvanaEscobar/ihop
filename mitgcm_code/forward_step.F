@@ -207,7 +207,7 @@ C       |-- LONGSTEP_THERMODYNAMICS
 C       |
 C       |-- GCHEM_FORCING_SEP
 C       |
-C       ?IHOP HERE FOR NOW?   
+C       ?IHOP HERE FOR NOW?
 C       |
 C       |-- DO_FIELDS_BLOCKING_EXCHANGES
 C       |

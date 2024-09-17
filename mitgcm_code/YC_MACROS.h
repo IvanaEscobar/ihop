@@ -5,11 +5,11 @@
 !C    include YC_MACROS.h
 !C    !DESCRIPTION: \bv
 !C     *==========================================================*
-!C     | YC_MACROS.h                                               
+!C     | YC_MACROS.h
 !C     *==========================================================*
-!C     | These macros are used to reduce memory requirement and/or 
-!C     | memory references when variables are fixed along a given  
-!C     | axis or axes.                                             
+!C     | These macros are used to reduce memory requirement and/or
+!C     | memory references when variables are fixed along a given
+!C     | axis or axes.
 !C     *==========================================================*
 !C     \ev
 !CEOP

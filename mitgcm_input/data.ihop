@@ -1,7 +1,7 @@
 # ***********************
 # IHOP package parameters
 # ***********************
- &IHOP_PARM01 
+ &IHOP_PARM01
  IHOP_fileroot='baroA',
  IHOP_title='baroclinic_gyre+ihop',
  &
@@ -9,7 +9,7 @@
  &IHOP_PARM02
  IHOP_freq=550.0,
  IHOP_topopt='QVF',
- 
+
  IHOP_botopt='A*',
  IHOP_bcsound=1650.0,
  IHOP_brho=1.80,

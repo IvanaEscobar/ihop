@@ -698,7 +698,7 @@ C--   Reset the model iteration counter and the model time.
 #ifdef ALLOW_DEBUG
         IF (debugMode) CALL DEBUG_CALL('ihop_cost_inloop',myThid)
 #endif
-c--     Accumulate in-situ acoutsic travel times. 
+c--     Accumulate in-situ acoutsic travel times.
 #ifdef ALLOW_AUTODIFF
 C--   Reset the model iteration counter and the model time.
         myIter = nIter0 + (iloop-1)
