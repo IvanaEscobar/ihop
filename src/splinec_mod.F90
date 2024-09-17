@@ -106,6 +106,8 @@ SUBROUTINE CSPLINE (TAU, C, N, IBCBEG, IBCEND, NDIM)
      C(4,1) = (2.0,0.0)
      C(3,1) = (1.0,0.0)
      C(2,1) = 3.0*C(4,2) - C(2,1)*C(3,2)/2.0
+  ELSE
+     ! do nothing
   END IF
 
   !   * RUNNING CALCULATIONS TO N-1 - LOOP IS NOT EXECUTED IF N = 2 *
@@ -138,6 +140,8 @@ SUBROUTINE CSPLINE (TAU, C, N, IBCBEG, IBCEND, NDIM)
         C(2,N) = 3.0 * C(4,N) + C(2,N)*C(3,N)/2.0
         C(4,N) = (2.0,0.0)
         G = -1.0 / C(4,N-1)
+     ELSE
+        ! do nothing
      END IF
 
      IF ( IBCBEG.GT.0 .OR. N.GT.2)  THEN

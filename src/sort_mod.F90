@@ -62,6 +62,8 @@ CONTAINS
           x( IRight + 1 : I ) = x( IRight : I - 1 )
           x( IRight ) = xTemp
 
+       ELSE
+        ! do nothing
        ENDIF
 
     END DO
@@ -101,6 +103,8 @@ CONTAINS
           x( IRight + 1 : I ) = x( IRight : I - 1 )
           x( IRight ) = xTemp
 
+       ELSE
+        ! do nothing
        ENDIF
 
     END DO
@@ -145,6 +149,8 @@ CONTAINS
           x( IRight + 1 : I ) = x( IRight : I - 1 )
           x( IRight ) = xTemp
 
+       ELSE
+        ! do nothing
        END IF
 
     END DO

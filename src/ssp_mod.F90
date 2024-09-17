@@ -787,7 +787,7 @@ SUBROUTINE ExtractSSP( Depth, myThid )
         ihop_idw_weights(ii, jj) / ihop_sumweights(ii, iz)
     ELSE ! 2:(SSP%Nz-1)
       ! Middle depth layers, only when not already underground
-      IF (ihop_sumweights(ii, iz - 1) .GT. 0.0) THEN
+      IF (ihop_sumweights(ii, iz-1) .GT. 0.0) THEN
 !$TAF store njj(ii) = tape_ssp2                    !RG
 
         ! Exactly on a cell center, ignore interpolation
@@ -798,8 +798,14 @@ SUBROUTINE ExtractSSP( Depth, myThid )
         ! Apply IDW interpolation
         ELSE IF (njj(ii) .LE. IHOP_npts_idw) THEN
           tmpSSP(iz, ii, bi, bj) = tmpSSP(iz, ii, bi, bj) + &
-            ihop_ssp(i, j, iz - 1, bi, bj) * &
+            ihop_ssp(i, j, iz-1, bi, bj) * &
             ihop_idw_weights(ii, jj) / ihop_sumweights(ii, iz-1)
+          ! Do nothing to njj
+          njj(ii) = njj(ii)
+        ELSE
+          ! do nothing
+          tmpSSP(iz, ii, bi, bj) = tmpSSP(iz, ii, bi, bj) 
+          njj(ii) = njj(ii)
         END IF
       END IF
 

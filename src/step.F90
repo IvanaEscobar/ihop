@@ -186,6 +186,9 @@ CONTAINS
           hInt = ( SSP%z( iSegz0   ) - x0( 2 ) ) / urayt( 2 )
        ELSE IF   ( SSP%z( iSegz0+1 ) < x(  2 ) ) THEN
           hInt = ( SSP%z( iSegz0+1 ) - x0( 2 ) ) / urayt( 2 )
+       ELSE
+          ! Do nothing
+          hInt = hInt
        END IF
     END IF
 
@@ -225,6 +228,9 @@ CONTAINS
           hSeg = -( x0( 1 ) - rSeg( 1 ) ) / urayt( 1 )
        ELSE IF    ( x(  1 ) > rSeg( 2 ) ) THEN
           hSeg = -( x0( 1 ) - rSeg( 2 ) ) / urayt( 1 )
+       ELSE
+          ! Do nothing
+          hSeg = hSeg
        END IF
     END IF
 

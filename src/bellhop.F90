@@ -269,6 +269,8 @@ CONTAINS
            CLOSE( RAYFile )
            CLOSE( ARRFile )
            IF ( writeDelay ) CLOSE( DELFile )
+        CASE DEFAULT
+           STOP "ABNORMAL END: S/R IHOP_MAIN"
         END SELECT
 
         if (numberOfProcs.gt.1) then
@@ -336,11 +338,18 @@ CONTAINS
 
        xs = [ zeroRL, Pos%Sz( is ) ]   ! source coordinate, assuming source @ r=0
 
+       ! Reset U and Narr for each new source depth
        SELECT CASE ( Beam%RunType( 1:1 ) )
        CASE ( 'C','S','I' ) ! TL calculation, zero out pressure matrix
           U = 0.0
-       CASE ( 'A','a','e' )   ! Arrivals calculation, zero out arrival matrix
           NArr = 0
+       CASE ( 'A','a','e' )   ! Arrivals calculation, zero out arrival matrix
+          U = 0.0
+          NArr = 0
+       CASE DEFAULT
+          U = 0.0
+          NArr = 0
+          STOP 'ABNORMAL END: S/R BellhopCore'
        END SELECT
 
        CALL evalSSP(  xs, c, cimag, gradc, crr, crz, czz, rho, myThid  )
@@ -473,6 +482,10 @@ CONTAINS
        CASE ( 'a' )             ! arrivals calculation, binary
           CALL WriteArrivalsBinary( Pos%Rr, NRz_per_range, Pos%NRr, &
                                     Beam%RunType( 4:4 ) )
+       CASE DEFAULT 
+          STOP 'ABNORMAL END: S/R BellhopCore'
+          CALL WriteArrivalsASCII(  Pos%Rr, NRz_per_range, Pos%NRr, &
+                                    Beam%RunType( 4:4 ) )
        END SELECT
 
     END DO SourceDepth
@@ -505,7 +518,7 @@ CONTAINS
     ! Distances from ray beginning, end to top and bottom
     REAL (KIND=_RL90) :: DistBegTop, DistEndTop, DistBegBot, DistEndBot
     REAL (KIND=_RL90) :: sss, declAlpha, declAlphaOld
-    LOGICAL           :: RayTurn = .FALSE., continue_steps
+    LOGICAL           :: RayTurn = .FALSE., continue_steps, relfect
 
 !$TAF init TraceRay2D = static, MaxN-1
 !$TAF init TraceRay2D1 = 'bellhop_traceray2d'
@@ -575,6 +588,8 @@ CONTAINS
     ! Trace the beam (Reflect2D increments the step index, is)
     is = 0
     continue_steps = .true.
+    relfect=.false.
+
     Stepping: DO istep = 1, MaxN - 1
 
 !$TAF store is,beam,continue_steps,distbegbot,distbegtop = TraceRay2D
@@ -648,6 +663,7 @@ CONTAINS
 
          ! IESCO22: Did new ray point cross top boundary? Then reflect
          IF ( DistBegTop > 0.0d0 .AND. DistEndTop <= 0.0d0 ) THEN
+             relfect=.true.
 
 !$TAF store isegtop = TraceRay2D
 
@@ -676,6 +692,7 @@ CONTAINS
 
          ! IESCO22: Did ray cross bottom boundary? Then reflect
          ELSE IF ( DistBegBot > 0.0d0 .AND. DistEndBot <= 0.0d0 ) THEN
+             reflect=.true.
 
 !$TAF store isegbot = TraceRay2D
 
@@ -701,6 +718,9 @@ CONTAINS
             CALL Distances2D( ray2D( is+1 )%x, &
                 Top( IsegTop )%x, Bot( IsegBot )%x, dEndTop,    dEndBot, &
                 Top( IsegTop )%n, Bot( IsegBot )%n, DistEndTop, DistEndBot )
+         ELSE
+             ! Do not relfect
+             reflect=.false.
          END IF
 
          ! Has the ray left the box, lost its energy, escaped the boundaries,
@@ -722,6 +742,8 @@ CONTAINS
          ELSE IF ( is >= MaxN - 3 ) THEN
             WRITE(msgBuf,'(2A)') 'WARNING: TraceRay2D: Check storage ',&
                                  'for ray trajectory'
+         ELSE
+            WRITE(msgBuf,'(A)')
          END IF
 
 #ifdef IHOP_WRITE_OUT
@@ -742,6 +764,8 @@ CONTAINS
          ELSE IF (INDEX(msgBuf, 'WARNING: TraceRay2D').eq.1) THEN
              Beam%Nsteps = is
              continue_steps = .false.
+         ELSE
+             continue_steps = .true.
          END IF
 
          DistBegTop = DistEndTop
@@ -861,6 +885,9 @@ CONTAINS
        RN = 2.0 * RN
     CASE ( 'Z' )
        RN = 0.0
+    CASE DEFAULT
+       RN = 0.0
+       STOP "ABNORMAL END: S/R Reflect2D"
     END SELECT
 
     ray2D( is1 )%c   = c

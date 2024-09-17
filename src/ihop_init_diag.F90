@@ -695,8 +695,8 @@ CONTAINS
           PlotType = 'rectilin  '
        END SELECT
 
-       CALL WriteSHDHeader( TRIM( fullName ) // '.shd', Title, REAL( IHOP_freq ), &
-                         atten, PlotType )
+       CALL WriteSHDHeader( TRIM( fullName ) // '.shd', Title, &
+                            REAL( IHOP_freq ), atten, PlotType )
     END SELECT
 
   RETURN

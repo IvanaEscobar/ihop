@@ -250,6 +250,8 @@ CONTAINS
               .AND. ( ABS( fprime ) > ABS( 3.0D0 * del1 ) ) ) THEN
        ! adjust derivative value to enforce monotonicity
        fprime_left_end = 3.0D0 * del1;
+    ELSE
+       ! do nothing
     END IF
 
   RETURN
@@ -274,6 +276,8 @@ CONTAINS
               .AND. ( ABS( fprime ) > ABS( 3.0D0 * del2 ) ) ) THEN
        ! adjust derivative value to enforce monotonicity
        fprime_right_end = 3.0D0 * del2;
+    ELSE
+       ! do nothing
     END IF
 
   RETURN
