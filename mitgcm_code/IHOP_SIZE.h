@@ -55,7 +55,7 @@
 !     Number of interpolation points:
 !     ================================
       INTEGER IHOP_MAX_NC_SIZE
-      PARAMETER ( IHOP_MAX_NC_SIZE = 10 )
+      PARAMETER ( IHOP_MAX_NC_SIZE = 15 )
 !      INTEGER IHOP_NPTS_RANGE 
 !      PARAMETER( IHOP_NPTS_RANGE = 6 )
 !      INTEGER IHOP_IDW_NPTS

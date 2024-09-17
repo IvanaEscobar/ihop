@@ -14,7 +14,7 @@ CONTAINS
   ! USES
     USE bdry_mod,  only: Bdry, HSInfo
     USE srpos_mod, only: Pos, ReadSxSy, ReadSzRz, ReadRcvrRanges, ReadFreqVec
-    USE ssp_mod,   only: SSP, initSSP
+    USE ssp_mod,   only: SSP, initSSP, alphar
     USE ihop_mod,  only: Beam, rxyz
     USE angle_mod, only: Angles, ReadRayElevationAngles
 
@@ -37,14 +37,10 @@ CONTAINS
 
 !!  ! ===========================================================================
 !!  !     == Local Variables ==
-!!    INTEGER             :: iAllocStat, ierr
-!!    INTEGER             :: jj 
     REAL (KIND=_RL90), PARAMETER :: c0 = 1500.0
     CHARACTER (LEN=2) :: AttenUnit
     CHARACTER (LEN=10) :: PlotType
     REAL (KIND=_RL90) :: x(2), Depth
-!!    INTEGER              :: iSeg
-!!    INTEGER, PARAMETER   :: ArrivalsStorage = 2000, MinNArr = 10
 !!
 !!  ! ===========================================================================
  
@@ -90,11 +86,6 @@ CONTAINS
     SSP%z = -1.
     SSP%rho = -1.
     SSP%c = -1.
-    SSP%n2 = -1.
-    SSP%n2z = -1.
-    SSP%cSpline = -1.
-    SSP%cCoef = (-1.,-1.)
-    SSP%cSWork = (-1.,-1.)
     SSP%Type = ''
     SSP%AttenUnit = ''
 
@@ -136,8 +127,7 @@ CONTAINS
     CALL TopBot( AttenUnit, Bdry%Bot%HS, myThid )
     
     SELECT CASE ( Bdry%Bot%HS%Opt( 2:2 ) )
-      CASE( '~', '*' )
-      CASE( ' ' )
+      CASE( '~', '*', ' ' )
       CASE DEFAULT
 #ifdef IHOP_WRITE_OUT
         WRITE(msgBuf,'(A)') 'INITENVIHOP initEnv: Unknown Bdry%Bot%HS%Opt(2)'
@@ -172,6 +162,9 @@ CONTAINS
     Pos%NRr = IHOP_nrr
     CALL AllocatePos( Pos%NRr, Pos%Rr, IHOP_rr )
     CALL ReadRcvrRanges( myThid )
+#ifdef IHOP_THREED
+    CALL ReadRcvrBearings( myThid )
+#endif /* IHOP_THREED */
 
 
     ! *** Broadband frequencies ***
@@ -182,6 +175,9 @@ CONTAINS
     Beam%RunType = IHOP_runopt
     CALL ReadRunType( Beam%RunType, PlotType, myThid )
     CALL ReadRayElevationAngles( Depth, Bdry%Top%HS%Opt, Beam%RunType, myThid )
+#ifdef IHOP_THREED
+    CALL ReadRayBearingAngles( Bdry%Top%HS%Opt, Beam%RunType, myThid )
+#endif /* IHOP_THREED */
 
 
     ! *** Acoustic grid ***
@@ -359,7 +355,6 @@ CONTAINS
 !! Alternitavely, we can broadcast relevant info to all mpi processes Ask P. 
 !!#ifdef ALLOW_COST
 !!            ! Broadcast info to all MPI procs for COST function accumulation
-!!            print *, "escobar: broacasting from pid ", myProcId
 !!            CALL MPI_BCAST(i, 1, MPI_COMPLEX, myProcId, MPI_COMM_MODEL, ierr)
 !!
 !!#endif /* ALLOW_COST */
@@ -415,7 +410,7 @@ CONTAINS
 !#endif /* IHOP_WRITE_OUT */
   
   RETURN
-  END !SUBROUTINE IHOP_INIT
+  END !SUBROUTINE 
   
   ! **********************************************************************!
   SUBROUTINE ReadTopOpt( BC, AttenUnit, myThid )
@@ -517,6 +512,7 @@ CONTAINS
     ! Handles top and bottom boundary conditions
     USE atten_mod, only: CRCI
     USE bdry_mod,  only: HSInfo
+    USE ssp_mod,   only: alphaR, betaR, alphaI, betaI, rhoR
     
   ! ===========================================================================
   !     == Global Variables ==
@@ -538,9 +534,6 @@ CONTAINS
     TYPE ( HSInfo ),   INTENT( INOUT ) :: HS
     REAL (KIND=_RL90) :: Mz, vr, alpha2_f     ! values related to grain size
     REAL (KIND=_RL90) :: ztemp, bPower, fT
-    ! FROM SSP_MOD.F90
-    REAL (KIND=_RL90)          :: alphaR = 1500., betaR = 0., alphaI = 0., &
-                                betaI = 0., rhoR = 1.
 
 !    ! ****** Read in BC parameters depending on particular choice ******
 !    HS%cp  = 0.0
@@ -680,6 +673,5 @@ CONTAINS
 
   RETURN
   END !SUBROUTINE ReadRunType
-
-  !**********************************************************************!
+!**********************************************************************!
 END MODULE init_mod

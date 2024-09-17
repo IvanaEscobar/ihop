@@ -105,7 +105,7 @@
       _RS ihop_xc ( IHOP_MAX_NC_SIZE, IHOP_MAX_NC_SIZE )
       _RS ihop_yc ( IHOP_MAX_NC_SIZE, IHOP_MAX_NC_SIZE )
       _RL ihop_ranges ( IHOP_MAX_NC_SIZE )
-      _RL ihop_sumweights ( IHOP_NPTS_RANGE, NR ) 
+      _RL ihop_sumweights ( IHOP_MAX_NC_SIZE, IHOP_MAX_NC_SIZE ) 
 
       COMMON /IHOP_PARAMS_R/                                                                                                            &
      &      IHOP_dumpfreq,                                                                                                              &
