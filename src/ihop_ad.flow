@@ -13,7 +13,7 @@
 !     *==========================================================*
 !     | SUBROUTINE WRITEARRIVALSACSII  is passive                |
 !     | SUBROUTINE WRITEARRVIALSBINARY is passive                |
-!     | SUBROUTINE OPENOUTPUTFILS      is passive                |
+!     | SUBROUTINE OPENOUTPUTFILES     is passive                |
 !     *==========================================================*
 !$TAF SUBROUTINE arr_mod::writearrivalsascii INPUT   = 1, 2, 3, 4
 !$TAF SUBROUTINE arr_mod::writearrivalsascii OUTPUT  =
@@ -21,8 +21,8 @@
 !$TAF SUBROUTINE arr_mod::writearrivalsbinary INPUT   = 1, 2, 3, 4
 !$TAF SUBROUTINE arr_mod::writearrivalsbinary OUTPUT  =
 
-!$TAF SUBROUTINE initenvihop::OpenOutputFiles  INPUT  = 1, 2, 3, 4
-!$TAF SUBROUTINE initenvihop::OpenOutputFiles OUTPUT  = 
+!$TAF SUBROUTINE ihop_init_diag::openOutputFiles  INPUT  = 1, 2, 3, 4
+!$TAF SUBROUTINE ihop_init_diag::openOutputFiles OUTPUT  = 
 
 !     *==========================================================*
 !     | SUBROUTINE READSSP  is passive                           |
