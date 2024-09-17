@@ -972,7 +972,7 @@ CONTAINS
     ! From bdry_mod
     IF (ALLOCATED(Top))         DEALLOCATE(Top)
     IF (ALLOCATED(Bot))         DEALLOCATE(Bot)
-    ! From bellhop
+    ! From ihop
     IF (ALLOCATED(Pos%theta))   DEALLOCATE(Pos%theta)
     IF (ALLOCATED(U))           DEALLOCATE(U)
     IF (ALLOCATED(Arr))         DEALLOCATE(Arr)

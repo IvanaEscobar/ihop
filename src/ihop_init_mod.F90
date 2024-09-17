@@ -130,10 +130,11 @@ CONTAINS
       CASE( '~', '*', ' ' )
       CASE DEFAULT
 #ifdef IHOP_WRITE_OUT
-        WRITE(msgBuf,'(A)') 'INITENVIHOP initEnv: Unknown Bdry%Bot%HS%Opt(2)'
+        WRITE(msgBuf,'(2A)') 'IHOP_INIT_MOD init_fixed_env: ',&
+            'Unknown Bdry%Bot%HS%Opt(2)'
         CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
-        STOP 'ABNORMAL END: S/R initEnv'
+        STOP 'ABNORMAL END: S/R init_fixed_env'
     END SELECT
 
 
@@ -232,27 +233,25 @@ CONTAINS
 #ifdef IHOP_WRITE_OUT
         !   Only do I/O if in the main thread
         _BEGIN_MASTER(myThid)
-        WRITE(msgBuf,'(2A)') 'INITENVIHOP initEnv: ', &
+        WRITE(msgBuf,'(2A)') 'IHOP_INIT_MOD init_fixed_env: ', &
             'Unknown beam type (second letter of Beam%Type)'
         CALL PRINT_ERROR( msgBuf,myThid )
         !   Only do I/O in the main thread
         _END_MASTER(myThid)
 #endif /* IHOP_WRITE_OUT */
-          STOP 'ABNORMAL END: S/R initEnv'
+          STOP 'ABNORMAL END: S/R init_fixed_env'
       END SELECT
 
     END IF ! Beam%RunType( 1:1 ) /= 'R' ...
 
 
 ! =================
-! ================= Below from BELLHOP.F90:IHOP_INIT
+! ================= Below from IHOP.F90: S/R IHOP_MAIN
 ! =================
 !
 !
 !
 !
-!    ! save data.ihop, gcm SSP: REQUIRED
-!    CALL initEnv( myTime, myIter, myThid )
 !    ! AlTImetry: OPTIONAL, default is no ATIFile
 !    CALL initATI( Bdry%Top%HS%Opt( 5:5 ), Bdry%Top%HS%Depth, myThid )
 !    ! BaThYmetry: OPTIONAL, default is BTYFile
@@ -267,7 +266,7 @@ CONTAINS
 !    ALLOCATE( Pos%theta( Pos%Ntheta ), Stat = IAllocStat )
 !    IF ( IAllocStat/=0 ) THEN
 !#ifdef IHOP_WRITE_OUT
-!        WRITE(msgBuf,'(2A)') 'BELLHOP IHOP_INIT: failed allocation Pos%theta'
+!        WRITE(msgBuf,'(2A)') 'IHOP IHOP_INIT: failed allocation Pos%theta'
 !        CALL PRINT_ERROR( msgBuf, myThid )
 !#endif /* IHOP_WRITE_OUT */
 !        STOP 'ABNORMAL END: S/R  IHOP_INIT'
@@ -290,7 +289,7 @@ CONTAINS
 !          ALLOCATE ( U( NRz_per_range, Pos%NRr ), Stat = iAllocStat )
 !          IF ( iAllocStat/=0 ) THEN
 !#ifdef IHOP_WRITE_OUT
-!              WRITE(msgBuf,'(2A)') 'BELLHOP IHOP_INIT: ', &
+!              WRITE(msgBuf,'(2A)') 'IHOP IHOP_INIT: ', &
 !                             'Insufficient memory for TL matrix: reduce Nr*NRz'
 !              CALL PRINT_ERROR( msgBuf,myThid )
 !#endif /* IHOP_WRITE_OUT */
@@ -315,7 +314,7 @@ CONTAINS
 !                     NArr( Pos%NRr, NRz_per_range ), Stat = iAllocStat )
 !          IF ( iAllocStat /= 0 ) THEN
 !#ifdef IHOP_WRITE_OUT
-!              WRITE(msgBuf,'(2A)') 'BELLHOP IHOP_INIT: ', &
+!              WRITE(msgBuf,'(2A)') 'IHOP IHOP_INIT: ', &
 !               'Not enough allocation for Arr; reduce ArrivalsStorage'
 !              CALL PRINT_ERROR( msgBuf,myThid )
 !#endif /* IHOP_WRITE_OUT */
@@ -344,13 +343,13 @@ CONTAINS
 !    IF ( IHOP_dumpfreq .GE. 0 ) &
 !     CALL OpenOutputFiles( IHOP_fileroot, myTime, myIter, myThid )
 !
-!    ! Run Bellhop solver on a single processor
+!    ! Run ihop solver on a single processor
 !    if (numberOfProcs.gt.1) then
 !! Use same single processID as IHOP COST package
 !!        if(myProcId.eq.(numberOfProcs-1)) then
 !        if(myProcId.eq.0) then
 !            CALL CPU_TIME( Tstart )
-!            CALL BellhopCore(myThid)
+!            CALL ihopCore(myThid)
 !            CALL CPU_TIME( Tstop )
 !! Alternitavely, we can broadcast relevant info to all mpi processes Ask P.
 !!#ifdef ALLOW_COST
@@ -361,7 +360,7 @@ CONTAINS
 !        endif
 !    else
 !        CALL CPU_TIME( Tstart )
-!        CALL BellhopCore(myThid)
+!        CALL ihopCore(myThid)
 !        CALL CPU_TIME( Tstop )
 !    endif
 !
@@ -449,7 +448,7 @@ CONTAINS
       CASE ( 'N','C','P','S','Q','A' )
       CASE DEFAULT
 #ifdef IHOP_WRITE_OUT
-        WRITE(msgBuf,'(2A)') 'INITENVIHOP ReadTopOpt: ', &
+        WRITE(msgBuf,'(2A)') 'INIT_FIXED_ENV ReadTopOpt: ', &
                              'Unknown option for SSP approximation'
         CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
@@ -461,7 +460,7 @@ CONTAINS
       CASE ( 'N','F','M','W','Q','L' )
       CASE DEFAULT
 #ifdef IHOP_WRITE_OUT
-        WRITE(msgBuf,'(2A)') 'INITENVIHOP ReadTopOpt: ', &
+        WRITE(msgBuf,'(2A)') 'INIT_FIXED_ENV ReadTopOpt: ', &
                              'Unknown attenuation units'
         CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
@@ -473,7 +472,7 @@ CONTAINS
       CASE ( 'T','F','B',' ' )
       CASE DEFAULT
 #ifdef IHOP_WRITE_OUT
-        WRITE(msgBuf,'(2A)') 'INITENVIHOP ReadTopOpt: ', &
+        WRITE(msgBuf,'(2A)') 'INIT_FIXED_ENV ReadTopOpt: ', &
                              'Unknown top option letter in fourth position'
         CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
@@ -485,7 +484,7 @@ CONTAINS
       CASE ( '-', '_', ' ' )
       CASE DEFAULT
 #ifdef IHOP_WRITE_OUT
-        WRITE(msgBuf,'(2A)') 'INITENVIHOP ReadTopOpt: ', &
+        WRITE(msgBuf,'(2A)') 'INIT_FIXED_ENV ReadTopOpt: ', &
                              'Unknown top option letter in fifth position'
         CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
@@ -497,7 +496,7 @@ CONTAINS
       CASE ( ' ' )
       CASE DEFAULT
 #ifdef IHOP_WRITE_OUT
-        WRITE(msgBuf,'(2A)') 'INITENVIHOP ReadTopOpt: ', &
+        WRITE(msgBuf,'(2A)') 'INIT_FIXED_ENV ReadTopOpt: ', &
                              'Unknown top option letter in sixth position'
         CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
@@ -549,7 +548,7 @@ CONTAINS
       CASE ( 'V','R','A','G','F','W','P' )
       CASE DEFAULT
 #ifdef IHOP_WRITE_OUT
-        WRITE(msgBuf,'(2A)') 'INITENVIHOP TopBot: ', &
+        WRITE(msgBuf,'(2A)') 'INIT_FIXED_ENV TopBot: ', &
                              'Unknown boundary condition type'
         CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
@@ -628,7 +627,7 @@ CONTAINS
       CASE ( 'R','E','I','S','C','A','a','e' )
       CASE DEFAULT
 #ifdef IHOP_WRITE_OUT
-        WRITE(msgBuf,'(2A)') 'INITENVIHOP ReadRunType: ', &
+        WRITE(msgBuf,'(2A)') 'INIT_FIXED_ENV ReadRunType: ', &
             'Unknown RunType selected'
         CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
@@ -653,7 +652,7 @@ CONTAINS
       CASE ( 'I' )
         IF ( Pos%NRz /= Pos%NRr ) THEN
 #ifdef IHOP_WRITE_OUT
-          WRITE(msgBuf,'(2A)') 'INITENVIHOP ReadRunType: ', &
+          WRITE(msgBuf,'(2A)') 'INIT_FIXED_ENV ReadRunType: ', &
                   'Irregular grid option selected with NRz not equal to Nr'
           CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */

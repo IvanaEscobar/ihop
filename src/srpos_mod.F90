@@ -236,7 +236,7 @@ CONTAINS
   !********************************************************************!
 
 #ifdef IHOP_THREED
-  SUBROUTINE ReadRcvrBearings( myThid )   ! for 3D bellhop
+  SUBROUTINE ReadRcvrBearings( myThid )   ! for 3D models
 
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO
@@ -486,7 +486,7 @@ CONTAINS
   !********************************************************************!
 
 #ifdef IHOP_THREED
-  SUBROUTINE WriteRcvrBearings( myThid )   ! for 3D bellhop
+  SUBROUTINE WriteRcvrBearings( myThid )   ! for 3D models
 
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO

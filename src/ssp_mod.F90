@@ -12,7 +12,7 @@ MODULE ssp_mod
   ! Acoustics Toolbox. However, it returns the SSP *and* its derivatives
 
   ! Also, a greater premium has been placed on returning this info quickly,
-  ! since BELLHOP calls it at every step so more information is pre-computed
+  ! since IHOP calls it at every step so more information is pre-computed
 
   USE ihop_mod,     only: PRTFile
 
@@ -58,7 +58,7 @@ MODULE ssp_mod
   INTEGER                :: iostat, iallocstat
   INTEGER,           PRIVATE :: iz
   REAL (KIND=_RL90), PRIVATE :: Depth, W
-  ! DEFAULT values, BELLHOP only modifies alphaR
+  ! DEFAULT values, IHOP only modifies alphaR
   REAL (KIND=_RL90)          :: alphaR = 1500, betaR = 0, alphaI = 0, &
                                 betaI = 0, rhoR = 1
   ! SSP interpolation parameters, only used in ssp_mod
@@ -804,7 +804,7 @@ SUBROUTINE ExtractSSP( Depth, myThid )
           njj(ii) = njj(ii)
         ELSE
           ! do nothing
-          tmpSSP(iz, ii, bi, bj) = tmpSSP(iz, ii, bi, bj) 
+          tmpSSP(iz, ii, bi, bj) = tmpSSP(iz, ii, bi, bj)
           njj(ii) = njj(ii)
         END IF
       END IF

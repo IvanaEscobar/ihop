@@ -1,26 +1,26 @@
 #include "IHOP_OPTIONS.h"
 !BOP
-! !ROUTINE: BELLHOP
+! !ROUTINE: IHOP
 ! !INTERFACE:
-MODULE BELLHOP
+MODULE IHOP
   ! Written as a module to be used in ihop_*.F parts of the MITgcm package
-  ! BELLHOP Beam tracing for ocean acoustics
-
-  ! Copyright (C) 2009 Michael B. Porter
-
+  ! IHOP Beam tracing for ocean acoustics
+  !
   ! This program is free software: you can redistribute it and/or modify
   ! it under the terms of the GNU General Public License as published by
   ! the Free Software Foundation, either version 3 of the License, or
   ! (at your option) any later version.
-
+  !
   ! This program is distributed in the hope that it will be useful,
   ! but WITHOUT ANY WARRANTY; without even the implied warranty of
   ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   ! GNU General Public License for more details.
-
+  !
   ! You should have received a copy of the GNU General Public License
   ! along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
+  !
+  ! Second version BELLHOP Copyright (C) 2009 Michael B. Porter
+  !
   ! First version (1983) originally developed with Homer Bucker, Naval Ocean
   ! Systems Center
 
@@ -58,12 +58,19 @@ MODULE BELLHOP
 # include "CTRL_FIELDS.h"
 #endif
 
+  PRIVATE
+
+!   == Public Interfaces ==
+!=======================================================================
+  public ihop_main
+!=======================================================================
+
 !   == External Functions ==
     INTEGER  ILNBLNK
     EXTERNAL ILNBLNK
 
 CONTAINS
-  SUBROUTINE IHOP_INIT ( myTime, myIter, myThid )
+  SUBROUTINE IHOP_MAIN ( myTime, myIter, myThid )
     USE ihop_init_diag, only: initPRTFile, openOutputFiles, resetMemory
     USE ssp_mod,        only: setSSP
 
@@ -83,19 +90,19 @@ CONTAINS
     INTEGER, PARAMETER   :: ArrivalsStorage = 2000, MinNArr = 10
   ! ===========================================================================
 
-!!$TAF init ihop_init1 = 'BellhopIhop_init'
+!!$TAF init IHOP_MAIN1 = 'IHOPIHOP_MAIN'
 !
 !! IESCO24: Write derived type with allocatable memory by type: Pos from srpos_mod
 !! Scalar components
 !! Allocatable arrays
-!!$TAF store pos%wr,pos%ws = ihop_init1
+!!$TAF store pos%wr,pos%ws = IHOP_MAIN1
 !
 !! IESCO24: Write derived type with allocatable memory by type: SSP from ssp_mod
 !! Scalar components
 !! Fixed arrays
-!!$TAF store ssp%z = ihop_init1
+!!$TAF store ssp%z = IHOP_MAIN1
 !! Allocatable arrays
-!!$TAF store ssp%czmat,ssp%seg%r,ssp%seg%x,ssp%seg%y,ssp%seg%z = ihop_init1
+!!$TAF store ssp%czmat,ssp%seg%r,ssp%seg%x,ssp%seg%y,ssp%seg%z = IHOP_MAIN1
 
     ! Reset memory
     CALL resetMemory()
@@ -107,7 +114,7 @@ CONTAINS
 !! Scalar components
 !!$TAF store bdry%top%hs%depth,bdry%top%hs%bc = initEnv1
 !
-!!$TAF init initEnv1 = 'initenvihop_initenv'
+!!$TAF init initEnv1 = 'initenvIHOP_MAINenv'
 !
 !! IESCO24: Write derived type with allocatable memory by type: SSP from ssp_mod
 !! Scalar components
@@ -140,10 +147,10 @@ CONTAINS
     ALLOCATE( Pos%theta( Pos%Ntheta ), Stat = IAllocStat )
     IF ( IAllocStat/=0 ) THEN
 #ifdef IHOP_WRITE_OUT
-        WRITE(msgBuf,'(2A)') 'BELLHOP IHOP_INIT: failed allocation Pos%theta'
+        WRITE(msgBuf,'(2A)') 'IHOP IHOP_MAIN: failed allocation Pos%theta'
         CALL PRINT_ERROR( msgBuf, myThid )
 #endif /* IHOP_WRITE_OUT */
-        STOP 'ABNORMAL END: S/R IHOP_INIT'
+        STOP 'ABNORMAL END: S/R IHOP_MAIN'
     ENDIF
     Pos%theta( 1 ) = 0.
 
@@ -161,11 +168,11 @@ CONTAINS
          ALLOCATE( U( NRz_per_range, Pos%NRr ), Stat = iAllocStat )
          IF ( iAllocStat/=0 ) THEN
 #ifdef IHOP_WRITE_OUT
-              WRITE(msgBuf,'(2A)') 'BELLHOP IHOP_INIT: ', &
+              WRITE(msgBuf,'(2A)') 'IHOP IHOP_MAIN: ', &
                              'Insufficient memory for TL matrix: reduce Nr*NRz'
               CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
-             STOP 'ABNORMAL END: S/R IHOP_INIT'
+             STOP 'ABNORMAL END: S/R IHOP_MAIN'
          END IF
          U = 0.0                       ! init default value
     CASE ( 'A', 'a', 'R', 'E', 'e' )   ! Arrivals calculation
@@ -191,11 +198,11 @@ CONTAINS
               NArr(Pos%NRr, NRz_per_range), STAT = iAllocStat )
     IF ( iAllocStat /= 0 ) THEN
 #ifdef IHOP_WRITE_OUT
-        WRITE(msgBuf,'(2A)') 'BELLHOP IHOP_INIT: ', &
+        WRITE(msgBuf,'(2A)') 'IHOP IHOP_MAIN: ', &
             'Not enough allocation for Arr; reduce ArrivalsStorage'
         CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
-        STOP 'ABNORMAL END: S/R IHOP_INIT'
+        STOP 'ABNORMAL END: S/R IHOP_MAIN'
     END IF
 
     NArr                      = 0
@@ -220,13 +227,13 @@ CONTAINS
     IF ( IHOP_dumpfreq .GE. 0 ) &
      CALL OpenOutputFiles( IHOP_fileroot, myTime, myIter, myThid )
 
-    ! Run Bellhop solver on a single processor
+    ! Run IHOP solver on a single processor
     if (numberOfProcs.gt.1) then
 ! Use same single processID as IHOP COST package
 !        if(myProcId.eq.(numberOfProcs-1)) then
         if(myProcId.eq.0) then
             CALL CPU_TIME( Tstart )
-            CALL BellhopCore(myThid)
+            CALL IHOPCore(myThid)
             CALL CPU_TIME( Tstop )
 ! Alternitavely, we can broadcast relevant info to all mpi processes Ask P.
 !#ifdef ALLOW_COST
@@ -237,7 +244,7 @@ CONTAINS
         endif
     else
         CALL CPU_TIME( Tstart )
-        CALL BellhopCore(myThid)
+        CALL IHOPCore(myThid)
         CALL CPU_TIME( Tstop )
     endif
 
@@ -288,10 +295,10 @@ CONTAINS
 #endif /* IHOP_WRITE_OUT */
 
   RETURN
-  END !SUBROUTINE IHOP_INIT
+  END !SUBROUTINE IHOP_MAIN
 
   ! **********************************************************************!
-  SUBROUTINE BellhopCore( myThid )
+  SUBROUTINE IHOPCore( myThid )
     USE ssp_mod,  only: iSegr           !RG
 !    USE influence,  only: ratio1, rB    !RG
   !     == Routine Arguments ==
@@ -306,8 +313,8 @@ CONTAINS
     REAL (KIND=_RL90) :: Amp0, DalphaOpt, xs(2), RadMax, s, &
                          c, cimag, gradc(2), crr, crz, czz, rho
 
-!$TAF init BellhopCore1 = static, Pos%NSz
-!$TAF init BellhopCore2 = static, Pos%NSz*Angles%Nalpha
+!$TAF init IHOPCore1 = static, Pos%NSz
+!$TAF init IHOPCore2 = static, Pos%NSz*Angles%Nalpha
 
     afreq = 2.0 * PI * IHOP_freq
 
@@ -318,11 +325,11 @@ CONTAINS
                          / ( Angles%Nalpha - 1 )  ! angular spacing between beams
     ELSE
 #ifdef IHOP_WRITE_OUT
-        WRITE(msgBuf,'(2A)') 'BELLHOP BellhopCore: ', &
+        WRITE(msgBuf,'(2A)') 'IHOP IHOPCore: ', &
                       'Required: Nalpha>1, else add iSingle_alpha(see angleMod)'
         CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
-        STOP 'ABNORMAL END: S/R BellhopCore'
+        STOP 'ABNORMAL END: S/R IHOPCore'
     END IF
 
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -334,7 +341,7 @@ CONTAINS
 ! Scalar components
 ! Fixed arrays
 ! Allocatable arrays
-!$TAF store ssp%cmat,ssp%czmat = BellhopCore1
+!$TAF store ssp%cmat,ssp%czmat = IHOPCore1
 
        xs = [ zeroRL, Pos%Sz( is ) ]   ! source coordinate, assuming source @ r=0
 
@@ -349,7 +356,7 @@ CONTAINS
        CASE DEFAULT
           U = 0.0
           NArr = 0
-          STOP 'ABNORMAL END: S/R BellhopCore'
+          STOP 'ABNORMAL END: S/R IHOPCore'
        END SELECT
 
        CALL evalSSP(  xs, c, cimag, gradc, crr, crz, czz, rho, myThid  )
@@ -376,8 +383,8 @@ CONTAINS
        ! Trace successive beams
        DeclinationAngle: DO ialpha = 1, Angles%Nalpha
 
-!$TAF store arr,narr,u = BellhopCore2
-!!$TAF store beam%nsteps,beam%runtype = BellhopCore2
+!$TAF store arr,narr,u = IHOPCore2
+!!$TAF store beam%nsteps,beam%runtype = IHOPCore2
 
 ! IESCO24: Write derived type with allocatable memory by type: SSP from ssp_mod
 ! Scalar components
@@ -386,10 +393,10 @@ CONTAINS
 
 ! IESCO24: Write derived type with allocatable memory by type: Bdry from bdry_mod
 ! Scalar components
-!!$TAF store bdry%bot%hs%cp,bdry%bot%hs%cs,bdry%bot%hs%rho = BellhopCore2
+!!$TAF store bdry%bot%hs%cp,bdry%bot%hs%cs,bdry%bot%hs%rho = IHOPCore2
 ! Fixed arrays
 ! Allocatable arrays
-!$TAF store ssp%cmat,ssp%czmat = BellhopCore2
+!$TAF store ssp%cmat,ssp%czmat = IHOPCore2
 
 
           ! take-off declination angle in degrees
@@ -412,11 +419,11 @@ CONTAINS
              Amp0 = ( 1 - s ) * SrcBmPat( IBP, 2 ) + s * SrcBmPat( IBP + 1, 2 )
              ! IEsco22: When a beam pattern isn't specified, Amp0 = 0
 
-!$TAF store amp0,beam%runtype,beam%nsteps = BellhopCore2
+!$TAF store amp0,beam%runtype,beam%nsteps = IHOPCore2
 ! IESCO24: Write derived type with allocatable memory by type: Bdry from bdry_mod
 ! Scalar components
-!!$TAF store bdry%bot%hs%cp,bdry%bot%hs%cs,bdry%bot%hs%rho = BellhopCore2
-!$TAF store bdry%top%hs%cp,bdry%top%hs%cs,bdry%top%hs%rho = BellhopCore2
+!!$TAF store bdry%bot%hs%cp,bdry%bot%hs%cs,bdry%bot%hs%rho = IHOPCore2
+!$TAF store bdry%top%hs%cp,bdry%top%hs%cs,bdry%top%hs%rho = IHOPCore2
 ! Fixed arrays
 ! Allocatable arrays
 
@@ -482,8 +489,8 @@ CONTAINS
        CASE ( 'a' )             ! arrivals calculation, binary
           CALL WriteArrivalsBinary( Pos%Rr, NRz_per_range, Pos%NRr, &
                                     Beam%RunType( 4:4 ) )
-       CASE DEFAULT 
-          STOP 'ABNORMAL END: S/R BellhopCore'
+       CASE DEFAULT
+          STOP 'ABNORMAL END: S/R IHOPCore'
           CALL WriteArrivalsASCII(  Pos%Rr, NRz_per_range, Pos%NRr, &
                                     Beam%RunType( 4:4 ) )
        END SELECT
@@ -491,7 +498,7 @@ CONTAINS
     END DO SourceDepth
 
   RETURN
-  END !SUBROUTINE BellhopCore
+  END !SUBROUTINE IHOPCore
 
   ! **********************************************************************!
 
@@ -521,7 +528,7 @@ CONTAINS
     LOGICAL           :: RayTurn = .FALSE., continue_steps, reflect
 
 !$TAF init TraceRay2D = static, MaxN-1
-!$TAF init TraceRay2D1 = 'bellhop_traceray2d'
+!$TAF init TraceRay2D1 = 'IHOP_traceray2d'
 
 ! IESCO24: Write derived type with allocatable memory by type: Bdry from bdry_mod
 ! Scalar components
@@ -831,7 +838,7 @@ CONTAINS
     COMPLEX (KIND=_RL90) :: ch, a, b, d, sb, delta, ddelta ! for beam shift
     TYPE(ReflectionCoef) :: RInt
 
-!$TAF init reflect2d1 = 'bellhopreflectray2d'
+!$TAF init reflect2d1 = 'IHOPreflectray2d'
 
     ! Init default values for local derived type Rint
     Rint%R = 0.0
@@ -886,8 +893,7 @@ CONTAINS
     CASE ( 'Z' )
        RN = 0.0
     CASE DEFAULT
-       RN = 0.0
-       STOP "ABNORMAL END: S/R Reflect2D"
+       RN = RN
     END SELECT
 
     ray2D( is1 )%c   = c
@@ -1002,7 +1008,7 @@ CONTAINS
        ! In adjoint mode we do not write output besides on the first run
        IF (IHOP_dumpfreq.GE.0) &
         CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
-       WRITE(msgBuf,'(A)') 'BELLHOP Reflect2D: Unknown boundary condition type'
+       WRITE(msgBuf,'(A)') 'IHOP Reflect2D: Unknown boundary condition type'
        CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
        STOP 'ABNORMAL END: S/R Reflect2D'
@@ -1015,7 +1021,7 @@ CONTAINS
        ray2D( is+1 )%NumBotBnc = ray2D( is )%NumBotBnc + 1
     ELSE
 #ifdef IHOP_WRITE_OUT
-       WRITE(msgBuf,'(2A)') 'BELLHOP Reflect2D: ', &
+       WRITE(msgBuf,'(2A)') 'IHOP Reflect2D: ', &
                             'no reflection bounce, but in reflect2d somehow'
        CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
@@ -1025,4 +1031,4 @@ CONTAINS
   RETURN
   END !SUBROUTINE Reflect2D
 
-END MODULE BELLHOP
+END MODULE IHOP
