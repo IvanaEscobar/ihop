@@ -13,6 +13,7 @@ C     Check consistency with model configuration
 C     !USES:
       IMPLICIT NONE
 #include "SIZE.h"
+#include "GRID.h"
 #include "EEPARAMS.h"
 #include "PARAMS.h"
 #include "IHOP_SIZE.h"

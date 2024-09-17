@@ -21,11 +21,11 @@ C     !INTERFACE:
      I                               myThid,
      I                               dummy )
 
-C     !DESCRIPTION: 
+C     !DESCRIPTION:
 C     ==================================================================
 C     | SUBROUTINE ACTIVE_READ_IHOP_TILE
 C     | Read an active record from an ihop cost .equi. tiled file
-C     | (can be netcdf or binary)  
+C     | (can be netcdf or binary)
 C     ==================================================================
 
 C !USES:
@@ -34,7 +34,9 @@ C !USES:
 #include "SIZE.h"
 #ifdef ALLOW_IHOP
 # include "IHOP_SIZE.h"
-# include "IHOP_COST.h"
+# ifdef ALLOW_COST
+#  include "IHOP_COST.h"
+# endif
 #endif
 
 C !INPUT PARAMETERS:
@@ -54,7 +56,7 @@ c                      variable and write to active file
       _RL      dummy
 CEOP
 
-#ifdef ALLOW_IHOP
+#if (defined ALLOW_IHOP) && (defined ALLOW_COST)
 
       CALL active_read_ihop_tile_rl( fidfwd_obs(active_num_file,bi,bj),
      &     active_num_file,
@@ -82,10 +84,10 @@ C     !INTERFACE:
      I                           myThid,
      I                           dummy )
 
-C     !DESCRIPTION: 
+C     !DESCRIPTION:
 C     ==================================================================
 C     | SUBROUTINE ACTIVE_WRITE_IHOP_TILE
-C     | Write to a file the model-equivalent value to an  
+C     | Write to a file the model-equivalent value to an
 c     | observation sample during the model run
 C     ==================================================================
 
@@ -95,7 +97,9 @@ C !USES:
 #include "SIZE.h"
 #ifdef ALLOW_IHOP
 # include "IHOP_SIZE.h"
-# include "IHOP_COST.h"
+# ifdef ALLOW_COST
+#  include "IHOP_COST.h"
+# endif
 #endif
 
 C !INPUT PARAMETERS:
@@ -112,11 +116,11 @@ c     myThid:          thread number for this instance
       _RL      dummy
 CEOP
 
-#ifdef ALLOW_IHOP
+#if (defined ALLOW_IHOP) && (defined ALLOW_COST)
 
       CALL active_write_ihop_tile_rl( fidfwd_obs(active_num_file,bi,bj),
      &     active_num_file,
-     &     active_var, 
+     &     active_var,
      &     irec, ihopObs_ind_glob_tiled(active_num_file,irec,bi,bj),
      &     FORWARD_SIMULATION, myOptimIter, bi, bj, myThid)
 
@@ -140,11 +144,11 @@ C     !INTERFACE:
      I                               myThid,
      I                               dummy )
 
-C     !DESCRIPTION: 
+C     !DESCRIPTION:
 C     ==================================================================
 C     | SUBROUTINE ACTIVE_READ_IHOP_GLOB
 C     | Read an active record from an ihop cost .equi. tiled file
-C     | (can be netcdf or binary)  
+C     | (can be netcdf or binary)
 C     ==================================================================
 
 C !USES:
@@ -153,7 +157,9 @@ C !USES:
 #include "SIZE.h"
 #ifdef ALLOW_IHOP
 # include "IHOP_SIZE.h"
-# include "IHOP_COST.h"
+# ifdef ALLOW_COST
+#  include "IHOP_COST.h"
+# endif
 #endif
 
 C !INPUT PARAMETERS:
@@ -173,9 +179,9 @@ c                      variable and write to active file
       _RL      dummy
 CEOP
 
-#ifdef ALLOW_IHOP
+#if (defined ALLOW_IHOP) && (defined ALLOW_COST)
 
-      CALL active_read_ihop_glob_rl( 
+      CALL active_read_ihop_glob_rl(
      &     fidglobal(active_num_file),
      &     active_num_file,
      &     active_var, lAdInit,
@@ -200,10 +206,10 @@ C     !INTERFACE:
      I                           myThid,
      I                           dummy )
 
-C     !DESCRIPTION: 
+C     !DESCRIPTION:
 C     ==================================================================
 C     | SUBROUTINE ACTIVE_WRITE_IHOP_GLOB
-C     | Write to a file the model-equivalent value to an  
+C     | Write to a file the model-equivalent value to an
 c     | observation sample during the model run
 C     ==================================================================
 
@@ -213,7 +219,9 @@ C !USES:
 #include "SIZE.h"
 #ifdef ALLOW_IHOP
 # include "IHOP_SIZE.h"
-# include "IHOP_COST.h"
+# ifdef ALLOW_COST
+#  include "IHOP_COST.h"
+# endif
 #endif
 
 C !INPUT PARAMETERS:
@@ -230,12 +238,12 @@ c     myThid:          thread number for this instance
       _RL      dummy
 CEOP
 
-#ifdef ALLOW_IHOP
+#if (defined ALLOW_IHOP) && (defined ALLOW_COST)
 
-      CALL active_write_ihop_glob_rl( 
+      CALL active_write_ihop_glob_rl(
      &     fidglobal(active_num_file),
      &     active_num_file,
-     &     active_var, 
+     &     active_var,
      &     irec, ihopObs_ind_glob(active_num_file,irec),
      &     FORWARD_SIMULATION, myOptimIter, myThid)
 

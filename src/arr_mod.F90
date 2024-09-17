@@ -57,9 +57,9 @@ CONTAINS
 
     ! ADDs the amplitude and delay for an ARRival into a matrix of same.
     ! Extra logic included to keep only the strongest arrivals.
-    
+
     ! arrivals with essentially the same phase are grouped into one
-    REAL,   PARAMETER                  :: PhaseTol = 0.05 
+    REAL,   PARAMETER                  :: PhaseTol = 0.05
     INTEGER,              INTENT( IN ) :: NumTopBnc, NumBotBnc, iz, ir
     REAL    (KIND=_RL90), INTENT( IN ) :: afreq, Amp, Phase, SrcDeclAngle, &
                                           RcvrDeclAngle
@@ -67,14 +67,14 @@ CONTAINS
     LOGICAL              :: NewRay
     INTEGER              :: iArr( 1 ), Nt
     REAL                 :: AmpTot, w1, w2
-    
+
     Nt     = NArr( ir, iz )    ! # of arrivals
     NewRay = .TRUE.
 
     ! Is this the second bracketting ray of a pair?
     ! If so, we want to combine the arrivals to conserve space.
     ! (test this by seeing if the arrival time is close to the previous one)
-    ! (also need that the phase is about the same to make sure surface and 
+    ! (also need that the phase is about the same to make sure surface and
     ! direct paths are not joined)
 
     IF ( Nt >= 1 ) THEN
@@ -105,18 +105,18 @@ CONTAINS
           Arr( Nt + 1, ir, iz)%NBotBnc       = NumBotBnc           ! # bottom bounces
        ENDIF
     ELSE      ! not a new ray
-       ! calculate weightings of old ray information vs. new, based on 
+       ! calculate weightings of old ray information vs. new, based on
        ! amplitude of the arrival
        AmpTot = Arr( Nt, ir, iz )%A + SNGL( Amp )
        w1     = Arr( Nt, ir, iz )%A / AmpTot
        w2     = REAL( Amp ) / AmpTot
 
-       Arr( Nt, ir, iz)%delay         =  w1 * Arr( Nt, ir, iz )%delay &        
+       Arr( Nt, ir, iz)%delay         =  w1 * Arr( Nt, ir, iz )%delay &
                                        + w2 * CMPLX( delay ) ! weighted sum
        Arr( Nt, ir, iz)%A             =  AmpTot
-       Arr( Nt, ir, iz)%SrcDeclAngle  =  w1 * Arr( Nt, ir, iz )%SrcDeclAngle & 
+       Arr( Nt, ir, iz)%SrcDeclAngle  =  w1 * Arr( Nt, ir, iz )%SrcDeclAngle &
                                        + w2 * SNGL( SrcDeclAngle  )
-       Arr( Nt, ir, iz)%RcvrDeclAngle =  w1 * Arr( Nt, ir, iz )%RcvrDeclAngle & 
+       Arr( Nt, ir, iz)%RcvrDeclAngle =  w1 * Arr( Nt, ir, iz )%RcvrDeclAngle &
                                         + w2 * SNGL( RcvrDeclAngle )
     ENDIF
 
@@ -157,7 +157,7 @@ CONTAINS
 #ifdef IHOP_WRITE_OUT
           WRITE( ARRFile, * ) NArr( ir, iz )
           DO iArr = 1, NArr( ir, iz )
-             ! You can compress the output file a lot by putting in an explicit 
+             ! You can compress the output file a lot by putting in an explicit
              ! format statement here ...
              ! However, you'll need to make sure you keep adequate precision
              WRITE( ARRFile, * ) &

@@ -21,11 +21,11 @@ C     !INTERFACE:
      I                                  bj,
      I                                  myThid )
 
-C     !DESCRIPTION: 
+C     !DESCRIPTION:
 C     ==================================================================
 C     | SUBROUTINE ACTIVE_READ_IHOP_TILE_RL
 C     | Read an active record from an IHOP .equi. tiled file
-C     | (can be netcdf or binary)  
+C     | (can be netcdf or binary)
 C     ==================================================================
 
 C !USES:
@@ -36,7 +36,9 @@ C !USES:
 #ifdef ALLOW_IHOP
 # include "netcdf.inc"
 # include "IHOP_SIZE.h"
-# include "IHOP_COST.h"
+# ifdef ALLOW_COST
+#  include "IHOP_COST.h"
+# endif
 #endif
 
 C !INPUT PARAMETERS:
@@ -51,7 +53,7 @@ C !INPUT PARAMETERS:
 
 CEOP
 
-#ifdef ALLOW_IHOP
+#if (defined ALLOW_IHOP) && (defined ALLOW_COST)
 C !LOCAL VARIABLES:
       integer  err, varid1, varid2
       integer  vec_start, vec_count
@@ -68,7 +70,7 @@ c     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
         _BEGIN_MASTER( myThid )
 
       if (ihopDoNcOutput) then
-      
+
       vec_start=irec
       vec_count=1
 
@@ -210,11 +212,11 @@ C     !INTERFACE:
      I                                 bj,
      I                                 myThid )
 
-C     !DESCRIPTION: 
+C     !DESCRIPTION:
 C     ==========================================================
 C     | SUBROUTINE ACTIVE_WRITE_IHOP_TILE_RL
 C     | Write an active record to an ihop .equi. tiled file
-C     | (can be netcdf or binary)  
+C     | (can be netcdf or binary)
 C     ==========================================================
 
 C !USES:
@@ -225,7 +227,9 @@ C !USES:
 #ifdef ALLOW_IHOP
 # include "netcdf.inc"
 # include "IHOP_SIZE.h"
-# include "IHOP_COST.h"
+# ifdef ALLOW_COST
+#  include "IHOP_COST.h"
+# endif
 #endif
 
 C !INPUT PARAMETERS:
@@ -238,7 +242,7 @@ C !INPUT PARAMETERS:
       _RL      active_var
 CEOP
 
-#ifdef ALLOW_IHOP
+#if (defined ALLOW_IHOP) && (defined ALLOW_COST)
 C !LOCAL VARIABLES:
       integer  err, varid1, varid2, varid3
       integer  vec_start, vec_count
@@ -355,7 +359,7 @@ C     !INTERFACE:
      I                                  myOptimIter,
      I                                  myThid )
 
-C     !DESCRIPTION: 
+C     !DESCRIPTION:
 C     ==================================================================
 C     | SUBROUTINE ACTIVE_READ_IHOP_GLOB_RL
 C     | Read an active record from an IHOP .equi. global file
@@ -369,7 +373,9 @@ C !USES:
 #ifdef ALLOW_IHOP
 # include "netcdf.inc"
 # include "IHOP_SIZE.h"
-# include "IHOP_COST.h"
+# ifdef ALLOW_COST
+#  include "IHOP_COST.h"
+# endif
 #endif
 
 C !INPUT PARAMETERS:
@@ -384,7 +390,7 @@ C !INPUT PARAMETERS:
 
 CEOP
 
-#ifdef ALLOW_IHOP
+#if (defined ALLOW_IHOP) && (defined ALLOW_COST)
 C !LOCAL VARIABLES:
       integer  err, varid1, varid2
       integer  vec_start, vec_count
@@ -399,7 +405,7 @@ c     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
       if (theSimulationMode .eq. FORWARD_SIMULATION) then
 
         _BEGIN_MASTER( myThid )
-      
+
       vec_start=irecglob
       vec_count=1
 
@@ -482,7 +488,7 @@ C     !INTERFACE:
      I                                 myOptimIter,
      I                                 myThid )
 
-C     !DESCRIPTION: 
+C     !DESCRIPTION:
 C     ==========================================================
 C     | SUBROUTINE ACTIVE_WRITE_IHOP_GLOB_RL
 C     | Write an active record to an ihop .equi. global file
@@ -496,7 +502,9 @@ C !USES:
 #ifdef ALLOW_IHOP
 # include "netcdf.inc"
 # include "IHOP_SIZE.h"
-# include "IHOP_COST.h"
+# ifdef ALLOW_COST
+#  include "IHOP_COST.h"
+# endif
 #endif
 
 C !INPUT PARAMETERS:
@@ -509,7 +517,7 @@ C !INPUT PARAMETERS:
       _RL      active_var
 CEOP
 
-#ifdef ALLOW_IHOP
+#if (defined ALLOW_IHOP) && (defined ALLOW_COST)
 C !LOCAL VARIABLES:
       integer  err, varid1, varid2
       integer  vec_start, vec_count

@@ -3,8 +3,8 @@
 CBOP
 C !ROUTINE: IHOP_COST_INIT_EQUIFILES
 
-C !INTERFACE: 
-      SUBROUTINE IHOP_COST_INIT_EQUIFILES( 
+C !INTERFACE:
+      SUBROUTINE IHOP_COST_INIT_EQUIFILES(
      I                               num_file,
      I                               fid1,
      I                               file2,
@@ -15,8 +15,8 @@ C !INTERFACE:
      I                               myThid )
 
 C !DESCRIPTION:
-C Initialization of model counterparts files             
-C for ihop obs data 
+C Initialization of model counterparts files
+C for ihop obs data
 
 C !USES:
       IMPLICIT NONE
@@ -27,8 +27,10 @@ C     == Global variables ===
 #include "DYNVARS.h"
 #ifdef ALLOW_IHOP
 # include "IHOP_SIZE.h"
-# include "IHOP_COST.h"
 # include "netcdf.inc"
+# ifdef ALLOW_COST
+# include "IHOP_COST.h"
+# endif
 #endif
 CEOP
 

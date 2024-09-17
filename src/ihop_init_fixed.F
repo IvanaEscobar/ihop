@@ -13,6 +13,7 @@ C     !INTERFACE:
       SUBROUTINE IHOP_INIT_FIXED( myThid )
 
 C     !USES:
+      use ihop_init_mod, only: init_fixed_env
       IMPLICIT NONE
 C ==================== Global Variables ===========================
 #include "EEPARAMS.h"
@@ -52,7 +53,7 @@ C ==================== External Functions ==========================
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 C Only do I/O if in the main thread
        _BEGIN_MASTER( myThid )
- 
+
 C Read NetCDF input: setting the acoustic domain
       IL  = ILNBLNK( IHOP_interpfile )
       IF (IL.NE.0) THEN
@@ -75,7 +76,7 @@ C Get dimension IDs and lengths
       err = NF_INQ_DIMID( ncid, 'nidw', dimid2 )
       err = NF_INQ_DIMLEN( ncid, dimid2, IHOP_npts_idw )
 
-      IF ( IHOP_npts_range>IHOP_MAX_NC_SIZE .OR. 
+      IF ( IHOP_npts_range>IHOP_MAX_NC_SIZE .OR.
      &     IHOP_npts_idw>IHOP_MAX_NC_SIZE ) THEN
         WRITE(msgBuf, '(2A)') 'S/R IHOP_INIT_FIXED: reading dims',
      &  'NetCDF Dimensions exceed maximum allowable size'
@@ -133,6 +134,13 @@ C Close NetCDF file
 C Only do I/O if in the main thread
       _END_MASTER( myThid )
 
+C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
+      DO k = 1,IHOP_MAX_NC_SIZE !Nr
+        DO i=1,IHOP_MAX_NC_SIZE !IHOP_npts_range
+          ihop_sumweights(i,k) = -1.0
+        END DO
+      END DO
+      CALL init_fixed_env( myThid )
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 
 #ifdef ALLOW_MNC

@@ -47,7 +47,7 @@ C == Global variables ===
 # include "tamc.h"
 #endif
 
-C !INPUT PARAMETERS: 
+C !INPUT PARAMETERS:
 C myTime    :: Current time in simulation
 C myIter    :: Current time-step number
 C myThid    :: my Thread Id number
@@ -73,16 +73,18 @@ C bi,bj     :: Tile indices
       logical exst
       _RL  objf_ihop_glo
       _RL  num_ihop_glo
-      _RL  ihopObs_buff(NOBSMAX_IHOP)
-      _RL  samples_mask_buff(NOBSMAX_IHOP)
-      _RL  ihopObs_modval_glob(NOBSMAX_IHOP)
-      _RL  samples_mask_glob(NOBSMAX_IHOP)
       _RL  tmpgs
       INTEGER tmpgsi
       INTEGER ObsNo2,fid,dimid
       INTEGER nmodmean, nobsmean
       _RL offset, mod_mean, ihop_mean
- 
+#ifdef ALLOW_COST
+      _RL  ihopObs_buff(NOBSMAX_IHOP)
+      _RL  samples_mask_buff(NOBSMAX_IHOP)
+      _RL  ihopObs_modval_glob(NOBSMAX_IHOP)
+      _RL  samples_mask_glob(NOBSMAX_IHOP)
+#endif
+
 C !FUNCTIONS
       INTEGER  ILNBLNK
       EXTERNAL ILNBLNK
@@ -104,7 +106,7 @@ C ==================================================================
 
 #ifdef ALLOW_COST
       JL  = ILNBLNK( ihopObsDir )
-      
+
       DO num_file=1,NFILESMAX_IHOP
 ! Init default buffer values
        DO m=1,NOBSMAX_IHOP
@@ -137,7 +139,7 @@ c
 
         ENDDO !bi
        ENDDO !bj
- 
+
        DO bj=1,nSy
         DO bi=1,nSx
 
@@ -160,16 +162,16 @@ C Combine all threads here
 
           ENDIF !if (m.LE.ObsNo_tiled(num_file,bi,bj)) then
          ENDDO !do m=..
-              
+
         ENDDO !bj
        ENDDO !bi
 
 C Combine MPI processes
        DO ii=1,NOBSMAX_IHOP
         tmpgs = ihopObs_buff(ii)
-        _GLOBAL_SUM_RL(tmpgs, myThid) 
+        _GLOBAL_SUM_RL(tmpgs, myThid)
         ihopObs_modval_glob(ii) = tmpgs
-       ENDDO     
+       ENDDO
 
        IF ( myProcId .eq. 0 ) THEN
 C Loop over global obs
@@ -181,7 +183,7 @@ C Loop over global obs
 
 C Extract model equi: Keep in case you want NP avg in future dev
           ihop_modval = ihop_modval + ihopObs_modval_glob(m)
-           
+
 c Write to global netcdf file
           CALL active_write_ihop_glob(num_file,
      &     ihop_modval,
@@ -201,7 +203,7 @@ cc       IF ( myProcId .eq. 0 ) THEN
      &   ihopObsDir(1:JL),ihopObsFile(1:IL),'.equi.nc'
         err = NF_OPEN(fnameequinc,NF_NOWRITE,fidglobal(num_file))
 cc       ENDIF
-         
+
 C Loop over global obs
         DO m=1,NOBSMAX_IHOP
          IF (m.LE.ObsNo(num_file)) THEN
@@ -243,7 +245,7 @@ cc        ENDIF
 
         ENDIF !if myprocid = 0
       ENDDO !do num_file=1,NFILESMAX_IHOP
-  
+
 #endif /* ALLOW_COST */
         _END_MASTER( myThid )
 

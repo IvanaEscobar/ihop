@@ -65,7 +65,7 @@ C     == global variables ==
       INTEGER :: varid1a, varid1b, varid2, varid3
       INTEGER :: varid4a, varid4b, varid4c
       integeR :: varid5a, varid5b, varidEquiv(2)
-      INTEGER :: weighIhopObs, obsIsInRunTime 
+      INTEGER :: weighIhopObs, obsIsInRunTime
       INTEGER :: ObsNo_valid, ihopObsInTile
       INTEGER :: tmpdate(4), tmpdiff(4)
       INTEGER :: num_file, hh, obsno_hh
@@ -133,7 +133,7 @@ C     == end of interface ==
        IF (IL.NE.0) THEN
 
 !===========================================================
-!       READ IHOP OBS NETCDF IDs 
+!       READ IHOP OBS NETCDF IDs
 !===========================================================
 
         WRITE(fnamedatanc,'(2A)') ihopObsFile(1:IL),'.nc'
@@ -143,7 +143,7 @@ C     == end of interface ==
         ncid = fiddata_obs(num_file)
         err = NF_INQ_DIMID(ncid,'iOBS', dimid1 )
         err = NF_INQ_DIMLEN(ncid, dimid1, obsNo(num_file) )
-      
+
         WRITE(msgbuf,'(A,I9)')
      &     '  # of observations in file                   =',
      &     obsNo(num_file)
@@ -211,7 +211,7 @@ C     == end of interface ==
         ihop_nameval  = 'ihop_val'
         ihop_nameuncert = 'ihop_uncert'
 
-! Create netcdf global file for ihop model equivalent 
+! Create netcdf global file for ihop model equivalent
         IF ( myProcId .eq. 0 ) THEN
          JL  = ILNBLNK( ihopObsDir )
 
@@ -279,11 +279,11 @@ C     == end of interface ==
 
           err = NF_ENDDEF(fidadglobal(num_file))
           err = NF_CLOSE(fidadglobal(num_file))
-          err = NF_OPEN(adfnameequincglo, NF_WRITE, 
+          err = NF_OPEN(adfnameequincglo, NF_WRITE,
      &         fidadglobal(num_file))
 
          ELSE
-          err = NF_OPEN(adfnameequincglo, NF_WRITE, 
+          err = NF_OPEN(adfnameequincglo, NF_WRITE,
      &         fidadglobal(num_file))
          ENDIF
 #endif
@@ -317,8 +317,8 @@ C     == end of interface ==
 ! loop through number of observations, in obsfit this is a 'chunk'
         DO m=1,ObsNo(num_file)
 
-!AV if obs starts before model run, will be ignored even if it ends after 
-!AV model starts - ok for now      
+!AV if obs starts before model run, will be ignored even if it ends after
+!AV model starts - ok for now
          IF (( ( tmpyymmdd(m).GT.yymmddMin ).OR.(( tmpyymmdd(m).EQ.
      &     yymmddMin ).AND.( tmphhmmss(m).GE.hhmmssMin ))).AND.
      &   ( ( tmpyymmdd(m).LT.yymmddMax ).OR.(( tmpyymmdd(m).EQ.
@@ -352,7 +352,7 @@ C     == end of interface ==
 
          ENDIF !if (obsIsInRunTime.EQ.1) then
 
-! regardless of whether obs is in run time or not, 
+! regardless of whether obs is in run time or not,
 ! keep track of ihop obs index position
 ! and assign time to ihop obs
          tmp_ihopObs_time(m)=diffsecs
@@ -400,7 +400,7 @@ C     == end of interface ==
           ENDDO !k
 
 ! Read ALL info using respective varid and save to tmp, NO CHUNKS!
-          IF (weighIhopObs.EQ.1) THEN  
+          IF (weighIhopObs.EQ.1) THEN
            err = NF_GET_VARA_DOUBLE(ncid,varid3,1,
      &      ObsNo_tiled(num_file,bi,bj), tmp_uncert2)
           ENDIF
@@ -422,7 +422,7 @@ C     == end of interface ==
 ! loop through observations, NOTE: in obsfit this is a 'chunk'
           DO m=1,ObsNo_tiled(num_file,bi,bj)
            ihopObsInTile=1
-      
+
 ! in a valid time?
            IF ((tmp_ihopObs_time(m).LT.0. _d 0) .OR.
      &        (tmp_ihopObs_time(m).GT. modelend-modelstart)) THEN
@@ -445,19 +445,19 @@ C     == end of interface ==
      &       (tmp_lon.GT.lon_cur).AND.
      &       (yC(1,1,bi,bj).LE.lat_cur).AND.
      &       (yC(1,sNy+1,bi,bj).GT.lat_cur) ) THEN
-!  do nothing 
+!  do nothing
             ELSEIF ((xC(sNx+1,1,bi,bj).LT.xC(1,1,bi,bj)).AND.
      &       (xC(1,1,bi,bj).LE.lon_cur+360. _d 0).AND.
      &       (tmp_lon.GT.lon_cur+360. _d 0).AND.
      &       (yC(1,1,bi,bj).LE.lat_cur).AND.
      &       (yC(1,sNy+1,bi,bj).GT.lat_cur)
      &       ) THEN
-             lon_cur=lon_cur+360. _d 0         
+             lon_cur=lon_cur+360. _d 0
             ELSE
 !  not in this tile
              ihopObsInTile=0
             ENDIF
- 
+
 ! Determine i,j,k to the south-west-down of obs datum
 ! set default values
             ihopObs_i=-10
@@ -504,7 +504,7 @@ C     == end of interface ==
                lon_tmp2=xC(i+1,j,bi,bj)
                lat_tmp1=yC(i,j,bi,bj)
                lat_tmp2=yC(i,j+1,bi,bj)
-          
+
 ! value of j, south of the obs datum:
                IF ((lat_tmp1.LE.lat_cur).AND.
      &          (lat_tmp2.GT.lat_cur)) THEN
@@ -544,7 +544,7 @@ C     == end of interface ==
 
              ihopObs_time(num_file,ObsNo_valid,bi,bj) =
      &                                          tmp_ihopObs_time(m)
-             IF (weighIhopObs.EQ.1) THEN  
+             IF (weighIhopObs.EQ.1) THEN
               ihopObs_uncert(num_file,ObsNo_valid,bi,bj)=tmp_uncert2(m)
              ENDIF
              ihopObs_lon(num_file,ObsNo_valid,bi,bj)=lon_cur
@@ -572,7 +572,7 @@ C     == end of interface ==
 
 ! Number of valid ihop obs in the file
           ObsNo_tiled(num_file,bi,bj) = ObsNo_valid
-       
+
           WRITE(msgbuf,'(A,I4,A,I4)')
      &       '  current tile is bi,bj                      =',
      &       bi,',',bj
@@ -653,7 +653,7 @@ C     == end of interface ==
 
        ENDIF !if (IL.NE.0) then
       ENDDO !      do num_file=1,NFILESMAX_IHOP
-      
+
       _END_MASTER( myThid )
       _BARRIER
 
@@ -676,7 +676,7 @@ C     == end of interface ==
       WRITE(msgbuf,'(A)') ' '
       CALL print_message( msgbuf, standardmessageunit,
      &                    SQUEEZE_RIGHT, myThid)
-      
+
 #endif /* ALLOW_COST && ALLOW_IHOP*/
 
       RETURN

@@ -6,9 +6,8 @@ MODULE angle_mod
     !   Ivana Escobar
     ! </CONTACT>
 
-  USE ihop_mod,     only: PRTFile
   USE subTab_mod,   only: SubTab
-  USE srPos_mod,    only: Pos, Number_to_Echo
+  USE srPos_mod,    only: Pos
   USE sort_mod,     only: Sort
 
 ! ! USES
@@ -32,6 +31,7 @@ MODULE angle_mod
 
 !=======================================================================
 
+  INTEGER, PARAMETER :: Number_to_Echo = 10
   INTEGER          :: ialpha
 #ifdef IHOP_THREED
   INTEGER          :: ibeta
@@ -61,7 +61,7 @@ CONTAINS
   !     msgBuf :: Used to build messages for printing.
     INTEGER, INTENT( IN )   :: myThid
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
-  
+
   !     == Local Variables ==
     REAL (KIND=_RL90),  INTENT( IN  ) :: Depth
     CHARACTER (LEN= 6), INTENT( IN  ) :: TopOpt, RunType
@@ -69,7 +69,7 @@ CONTAINS
 
     IF ( TopOpt( 6:6 ) == 'I' ) THEN ! option to trace a single beam
        Angles%Nalpha = 0
-       !READ( ENVFile, * ) Angles%Nalpha, Angles%iSingle_alpha 
+       !READ( ENVFile, * ) Angles%Nalpha, Angles%iSingle_alpha
     ELSE
        Angles%Nalpha = IHOP_nalpha
     END IF
@@ -77,15 +77,15 @@ CONTAINS
     IF ( Angles%Nalpha == 0 ) THEN   ! automatically estimate Nalpha to use
        IF ( RunType( 1:1 ) == 'R' ) THEN
           ! For a ray trace plot, we don't want too many rays ...
-          Angles%Nalpha = 50         
+          Angles%Nalpha = 50
        ELSE
           ! you're letting ME choose? OK: ideas based on an isospeed ocean
           ! limit based on phase of adjacent beams at maximum range
           Angles%Nalpha = MAX( INT( 0.3*Pos%Rr( Pos%NRr )*IHOP_freq/c0 ), 300 )
 
-          ! limit based on having beams that are thin with respect to the water 
-          ! depth assumes also a full 360 degree angular spread of rays should 
-          ! check which Depth is used here, in case where there is a variable 
+          ! limit based on having beams that are thin with respect to the water
+          ! depth assumes also a full 360 degree angular spread of rays should
+          ! check which Depth is used here, in case where there is a variable
           ! bathymetry
           d_theta_recommended = ATAN( Depth / ( 10.0*Pos%Rr( Pos%NRr ) ) )
           Angles%Nalpha = MAX( INT( PI / d_theta_recommended ), Angles%Nalpha )
@@ -117,37 +117,6 @@ CONTAINS
                    Angles%alpha(1), 360.0 ) ) < 10.0*TINY(1.0D0) ) &
       Angles%Nalpha = Angles%Nalpha - 1
 
-#ifdef IHOP_WRITE_OUT
-    ! In adjoint mode we do not write output besides on the first run
-    IF (IHOP_dumpfreq.GE.0) THEN
-        WRITE(msgBuf,'(2A)')'_____________________________________________', &
-                            '______________'
-        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-        WRITE(msgBuf,'(A)')
-        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-        WRITE(msgBuf,'(A,I10)') 'Number of beams in elevation   = ', &
-                                Angles%Nalpha
-        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-        IF ( Angles%iSingle_alpha > 0 ) THEN
-            WRITE(msgBuf,'(A,I10)') 'Trace only beam number ', &
-                                    Angles%iSingle_alpha
-            CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-        END IF
-        WRITE(msgBuf,'(A)') 'Beam take-off angles (degrees)'
-        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-
-        IF ( Angles%Nalpha >= 1 ) THEN
-            WRITE(msgBuf,'(10F12.3)') &
-                Angles%alpha( 1:MIN(Angles%Nalpha,Number_to_Echo) )
-            CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-        END IF
-        IF ( Angles%Nalpha > Number_to_Echo ) THEN
-            WRITE(msgBuf,'(A,F12.6)') ' ... ', Angles%alpha( Angles%Nalpha )
-            CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-        END IF
-    ENDIF
-#endif /* IHOP_WRITE_OUT */
-
     IF ( Angles%Nalpha>1 .AND. &
          Angles%alpha(Angles%Nalpha) == Angles%alpha(1) ) THEN
 #ifdef IHOP_WRITE_OUT
@@ -169,20 +138,21 @@ CONTAINS
             STOP 'ABNORMAL END: S/R ReadRayElevationAngles'
         END IF
     END IF
-  
+
   RETURN
   END !SUBROUTINE ReadRayElevationAngles
 
   !**********************************************************************!
 #ifdef IHOP_THREED
   SUBROUTINE ReadRayBearingAngles( TopOpt, RunType, myThid )
+    USE ihop_mod,     only: PRTFile
 
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO
   !     msgBuf :: Used to build messages for printing.
     INTEGER, INTENT( IN )   :: myThid
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
-  
+
   !     == Local Variables ==
     CHARACTER (LEN= 6), INTENT( IN ) :: TopOpt, RunType
 
@@ -195,7 +165,7 @@ CONTAINS
 
     IF ( TopOpt( 6 : 6 ) == 'I' ) THEN
        ! option to trace a single beam
-       !READ( ENVFile, * ) Angles%Nbeta, Angles%iSingle_beta 
+       !READ( ENVFile, * ) Angles%Nbeta, Angles%iSingle_beta
     ELSE
        !READ( ENVFile, * ) Angles%Nbeta
     END IF
@@ -203,7 +173,7 @@ CONTAINS
     IF ( Angles%Nbeta == 0 ) THEN   ! automatically estimate Nbeta to use
        IF ( RunType( 1 : 1 ) == 'R' ) THEN
           ! For a ray trace plot, we don't want too many rays ...
-          Angles%Nbeta = 50         
+          Angles%Nbeta = 50
        ELSE
           Angles%Nbeta = MAX( INT( 0.1*Pos%rr( Pos%NRr )*IHOP_freq / c0 ), 300 )
        END IF
@@ -257,7 +227,7 @@ CONTAINS
         END IF
 
        ! Nbeta should = Ntheta
-       Angles%beta( 1 : Angles%Nbeta ) = Pos%theta( 1 : Pos%Ntheta )  
+       Angles%beta( 1 : Angles%Nbeta ) = Pos%theta( 1 : Pos%Ntheta )
     END IF
 
 #ifdef IHOP_WRITE_OUT

@@ -32,14 +32,16 @@ C     == Global variables ===
 #endif
 #ifdef ALLOW_IHOP
 # include "IHOP_SIZE.h"
-# include "IHOP_COST.h"
 # include "netcdf.inc"
+# ifdef ALLOW_COST
+#  include "IHOP_COST.h"
+# endif
 #endif
 #ifdef ALLOW_AUTODIFF
 # include "tamc.h"
 #endif
 
-C !INPUT PARAMETERS: 
+C !INPUT PARAMETERS:
 C myTime    :: Current time in simulation
 C myThid    :: my Thread Id number
       _RL     myTime
@@ -47,7 +49,7 @@ C myThid    :: my Thread Id number
 CEOP
 
 #ifdef ALLOW_IHOP
-C !LOCAL VARIABLES: 
+C !LOCAL VARIABLES:
       INTEGER m,k,bi,bj,num_file,varid1,err
       INTEGER maxindex(Nrr, Nrd)
       _RL     ihop_modval
@@ -71,6 +73,7 @@ C !LOCAL VARIABLES:
 !      itdkey = bi + (bj - 1)*nSx + (ikey_dynamics - 1)*nSx*nSy
 #endif
 
+#ifdef ALLOW_COST
         _BEGIN_MASTER( myThid )
 
       DO bj=1,nSy
@@ -81,7 +84,7 @@ C !LOCAL VARIABLES:
           IF (m.LE.ObsNo_tiled(num_file,bi,bj)) THEN
 
            IF ((ihopObs_time(num_file,m,bi,bj).GE.myTime)
-     &      .AND.(ihopObs_time(num_file,m,bi,bj).LT. 
+     &      .AND.(ihopObs_time(num_file,m,bi,bj).LT.
      &      (myTime+deltaTclock))) THEN
 
 !!ADJ STORE ihop_modval  = comlev1_bibj, key=itdkey, kind=isbyte
@@ -90,8 +93,8 @@ C !LOCAL VARIABLES:
 
             CALL ihop_cost_modval(ihop_modval, num_file,
      &          1, 1, myTime, myThid)
-            
-!            err = NF_INQ_VARID(fidfwd_obs(num_file,bi,bj),ihop_nameequi, 
+
+!            err = NF_INQ_VARID(fidfwd_obs(num_file,bi,bj),ihop_nameequi,
 !     &              varid1)
 !            err = NF_PUT_VARA_DOUBLE(fidfwd_obs(num_file,bi,bj), varid1,
 !     &              m, 1, ihop_modval)
@@ -103,12 +106,13 @@ C !LOCAL VARIABLES:
           ENDIF !if (ObsNo_tiled(num_file,bi,bj).NE.0) then
          ENDDO !do m...
         ENDDO !do num_file=1,NFILESMAX_OBS
-      
+
        ENDDO
       ENDDO
 
         _END_MASTER( myThid )
 
+#endif /* ALLOW_COST */
 #endif
 
       RETURN

@@ -18,7 +18,7 @@
       INTEGER nts
 #ifdef IHOP_MULTIPLE_TIMES
       PARAMETER ( nts=10 )
-#else 
+#else
       PARAMETER ( nts=1 )
 #endif
 
@@ -32,23 +32,23 @@
       INTEGER nsd
 #ifdef IHOP_MULTIPLE_SOURCES
       PARAMETER ( nsd=10 )
-#else 
+#else
       PARAMETER ( nsd=1 )
 #endif
-    
+
 !     Number of Receivers:
 !     ================================
       INTEGER nrd
       INTEGER nrr
 #ifdef IHOP_MULTIPLE_RECEIVER_DEPTHS
       PARAMETER ( nrd=30 )
-#else 
+#else
       PARAMETER ( nrd=1 )
 #endif
 
 #ifdef IHOP_MULTIPLE_RECEIVER_RANGES
       PARAMETER ( nrr=30 )
-#else 
+#else
       PARAMETER ( nrr=1 )
 #endif
 
@@ -56,14 +56,14 @@
 !     ================================
       INTEGER IHOP_MAX_NC_SIZE
       PARAMETER ( IHOP_MAX_NC_SIZE = 10 )
-!      INTEGER IHOP_NPTS_RANGE 
+!      INTEGER IHOP_NPTS_RANGE
 !      PARAMETER( IHOP_NPTS_RANGE = 6 )
 !      INTEGER IHOP_IDW_NPTS
 !      PARAMETER( IHOP_IDW_NPTS = 4 )
 
 
 
-!     Cost function sizes 
+!     Cost function sizes
 !     ================================
 ! NFILESMAX_ihop      :: maximum number of input files
 ! NOBSMAX_ihop        :: maximum number of observations per file per tile

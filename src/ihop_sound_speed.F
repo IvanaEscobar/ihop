@@ -17,7 +17,7 @@ C     |   the equation of state (EOS). It is independent of
 C     |   the model setup specific EOS.
 C     |
 C     | o Reference:
-C     | C. Chen and F. J. Millero, "Speed of sound in seawater at 
+C     | C. Chen and F. J. Millero, "Speed of sound in seawater at
 C     | high pressures,"
 C     | J. Acoust. Soc. Am. 672.5, 1129-1135 (1977).
 C     *==========================================================*
@@ -40,7 +40,7 @@ C     == Routine Arguments ==
 C     myThid :: Thread number for this instance of the routine.
       INTEGER myThid
 
-#ifdef ALLOW_IHOP 
+#ifdef ALLOW_IHOP
 C     !FUNCTIONS:
 C      _RL CHEN_MILLERO
 C      EXTERNAL CHEN_MILLERO
@@ -103,7 +103,7 @@ c#endif
 C-    end-if calc_soundSpeed
       ENDIF
 
-#endif /* ALLOW_IHOP */ 
+#endif /* ALLOW_IHOP */
 
       RETURN
       END

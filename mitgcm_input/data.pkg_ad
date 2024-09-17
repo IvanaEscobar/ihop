@@ -4,7 +4,7 @@
  useIHOP=.true.,
  useDiagnostics=.true.,
  useCal=.true.,
-# AD packages 
+# AD packages
  useGrdChk=.true.,
  useProfiles=.true.,
  useEcco=.true.,

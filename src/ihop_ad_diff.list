@@ -14,12 +14,13 @@ atten_mod.f90
 bdry_mod.f90
 beampattern.f90
 bellhop.f90
+ihop_init_diag.f90
+ihop_init_mod.f90
 ihop_mod.f90
 influence.f90
 monotonic_mod.f90
 pchip_mod.f90
 poly_mod.f90
-initenvihop.f90
 refcoef.f90
 sort_mod.f90
 splinec_mod.f90

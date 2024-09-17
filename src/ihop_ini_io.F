@@ -3,13 +3,13 @@
 CBOP
 C !ROUTINE: IHOP_INI_IO
 
-C !INTERFACE: 
+C !INTERFACE:
       SUBROUTINE IHOP_INI_IO( myThid )
 
 C !DESCRIPTION:
 C Create directory for ihop output if needed
 
-C !USES: 
+C !USES:
       IMPLICIT NONE
 C     == Global variables ===
 #include "SIZE.h"
@@ -23,7 +23,7 @@ C     == Global variables ===
 #endif
 
 
-C !INPUT PARAMETERS: 
+C !INPUT PARAMETERS:
 C myThid    :: my Thread Id number
       INTEGER myThid
 
@@ -33,7 +33,7 @@ C !FUNCTIONS
 CEOP
 
 #if (defined ALLOW_IHOP) && (defined ALLOW_COST)
-C !LOCAL VARIABLES: 
+C !LOCAL VARIABLES:
 #ifndef HAVE_SYSTEM
       CHARACTER*(MAX_LEN_MBUF) msgBuf
 #endif

@@ -6,7 +6,7 @@ MODULE influence
     !   Ivana Escobar
     ! </CONTACT>
 
-  ! Compute the beam influence, i.e. the contribution of a single beam to the 
+  ! Compute the beam influence, i.e. the contribution of a single beam to the
   ! complex pressure
   ! mbp 12/2018, based on much older subroutines
 
@@ -46,7 +46,7 @@ CONTAINS
   SUBROUTINE InfluenceGeoHatRayCen( U, alpha, dalpha, myThid )
     use arr_mod, only: NArr, Arr         !RG
 
-    ! Geometrically-spreading beams with a hat-shaped beam in ray-centered 
+    ! Geometrically-spreading beams with a hat-shaped beam in ray-centered
     ! coordinates
 
   !     == Routine Arguments ==
@@ -54,7 +54,7 @@ CONTAINS
   !     msgBuf :: Used to build messages for printing.
     INTEGER, INTENT( IN )   :: myThid
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
-  
+
   !     == Local Variables ==
     REAL (KIND=_RL90), INTENT( IN    ) :: alpha, dalpha ! take-off angle radians
     COMPLEX,           INTENT( INOUT ) :: U( NRz_per_range, Pos%NRr )   ! complex pressure field
@@ -87,12 +87,12 @@ CONTAINS
     RcvrDeclAngleV( 1:Beam%Nsteps ) = rad2deg * &
         ATAN2( ray2D( 1:Beam%Nsteps )%t( 2 ), ray2D( 1:Beam%Nsteps )%t( 1 ) )
 
-    ! During reflection imag(q) is constant and adjacent normals cannot bracket 
+    ! During reflection imag(q) is constant and adjacent normals cannot bracket
     ! a segment of the TL line, so no special treatment is necessary
- 
+
     ! point source (cylindrical coordinates): default behavior
     Ratio1 = 1.0d0          !RG
-    IF ( Beam%RunType( 4:4 ) == 'R' ) Ratio1 = SQRT( ABS( COS( alpha ) ) ) 
+    IF ( Beam%RunType( 4:4 ) == 'R' ) Ratio1 = SQRT( ABS( COS( alpha ) ) )
 
     ray2D( 1:Beam%Nsteps )%Amp = Ratio1 * SQRT( ray2D( 1:Beam%Nsteps )%c ) &
                         * ray2D( 1:Beam%Nsteps )%Amp   ! pre-apply some scaling
@@ -102,9 +102,9 @@ CONTAINS
 
        phase = 0.0
        qOld  = ray2D( 1 )%q( 1 ) ! used to track KMAH index
-       
+
        ! If normal is parallel to horizontal receiver line
-       IF ( ABS( znV( 1 ) ) < 1D-6 ) THEN   
+       IF ( ABS( znV( 1 ) ) < 1D-6 ) THEN
           nA  = 1D10
           rA  = 1D10
           irA = 1
@@ -120,9 +120,9 @@ CONTAINS
        Stepping: DO iS = 2, Beam%Nsteps
 !$TAF store ira,irb,na,nb,phase,qold,ra = iRayCen1
          skip_step = .FALSE.
-       
+
          ! Compute ray-centered coordinates, (znV, rnV)
-       
+
          ! If normal is parallel to TL-line, skip to the next step on ray
          IF (ABS(znV(iS)) < 1D-10) THEN
            skip_step = .TRUE.
@@ -130,12 +130,12 @@ CONTAINS
          ELSE
            nB = (zR - ray2D(iS)%x(2)) / znV(iS)
            rB = ray2D(iS)%x(1) + nB * rnV(iS)
-       
+
            ! Find index of receiver: assumes uniform spacing in Pos%Rr
            irB = MAX(MIN(INT((rB - Pos%Rr(1)) / Pos%Delta_r) + 1, &
                           Pos%NRr), &
                      1)
-       
+
            ! Detect and skip duplicate points (happens at boundary reflection)
            IF (ABS(ray2D(iS)%x(1) - ray2D(iS - 1)%x(1)) < &
                1.0D3 * SPACING(ray2D(iS)%x(1)) &
@@ -146,7 +146,7 @@ CONTAINS
              skip_step = .TRUE.
            END IF
          END IF
-       
+
          IF (.NOT. skip_step) THEN
            !!! this should be pre-computed
            q = ray2D(iS - 1)%q(1)
@@ -155,13 +155,13 @@ CONTAINS
                (q >= 0.0D0 .AND. qOld < 0.0D0)) &
                phase = phase + PI / 2.0D0
            qOld = q
-       
+
            RcvrDeclAngle = RcvrDeclAngleV(iS)
-       
+
            ! *** Compute contributions to bracketted receivers ***
            II = 0
            IF (irB <= irA) II = 1   ! going backwards in range
-       
+
            ! Compute influence for each receiver
            DO ir = irA + 1 - II, irB + II, SIGN(1, irB - irA)
 !$TAF store Arr(:,ir,iz),NArr(ir,iz) = iRayCen2
@@ -169,7 +169,7 @@ CONTAINS
              n = ABS(nA + W * (nB - nA))
              q = ray2D(iS - 1)%q(1) + W * dq(iS - 1)  ! interpolated amplitude
              L = ABS(q) / q0   ! beam radius
-       
+
              IF (n < L) THEN  ! in beam window: update delay, Amp, phase
 !$TAF store w = iRayCen2
                delay = ray2D(iS - 1)%tau + W * dtau(iS - 1)
@@ -181,12 +181,12 @@ CONTAINS
                IF ((q <= 0.0D0 .AND. qOld > 0.0D0) .OR. &
                    (q >= 0.0D0 .AND. qOld < 0.0D0)) &
                    phaseInt = phase + PI / 2.0D0  ! phase shifts at caustics
-       
+
                CALL ApplyContribution(U(iz, ir))
              END IF
            END DO
          END IF
-       
+
          rA = rB
          nA = nB
          irA = irB
@@ -207,7 +207,7 @@ CONTAINS
   !     msgBuf :: Used to build messages for printing.
     INTEGER, INTENT( IN )   :: myThid
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
-  
+
   !     == Local Variables ==
     REAL (KIND=_RL90), INTENT( IN    ) :: alpha, & ! take-off angle, radians
                                           Dalpha   ! angular spacing
@@ -230,14 +230,14 @@ CONTAINS
     rA           = ray2D( 1 )%x( 1 )       ! range at start of ray, typically 0
 
     ! find index of first receiver to the right of rA
-    irT = MINLOC( Pos%Rr( 1 : Pos%NRr ), MASK = Pos%Rr( 1 : Pos%NRr ) > rA )   
+    irT = MINLOC( Pos%Rr( 1 : Pos%NRr ), MASK = Pos%Rr( 1 : Pos%NRr ) > rA )
     ir  = irT( 1 )
     ! if ray is left-traveling, get the first receiver to the left of rA
-    IF ( ray2D( 1 )%t( 1 ) < 0.0d0 .AND. ir > 1 ) ir = ir - 1  
+    IF ( ray2D( 1 )%t( 1 ) < 0.0d0 .AND. ir > 1 ) ir = ir - 1
 
     ! point source: the default option
     Ratio1 = 1.0d0          !RG
-    IF ( Beam%RunType( 4 : 4 ) == 'R' ) Ratio1 = SQRT( ABS( COS( alpha ) ) )  
+    IF ( Beam%RunType( 4 : 4 ) == 'R' ) Ratio1 = SQRT( ABS( COS( alpha ) ) )
 
     Stepping: DO iS = 2, Beam%Nsteps
 
@@ -247,10 +247,10 @@ CONTAINS
        x_ray  = ray2D( iS-1 )%x
 
        ! compute normalized tangent (we need to measure the step length)
-       rayt = ray2D( iS )%x - x_ray 
+       rayt = ray2D( iS )%x - x_ray
        rlen = NORM2( rayt )
        ! if duplicate point in ray, skip to next step along the ray
-       IF ( rlen .GE. 1.0D3 * SPACING( ray2D( iS )%x( 1 ) ) ) THEN 
+       IF ( rlen .GE. 1.0D3 * SPACING( ray2D( iS )%x( 1 ) ) ) THEN
 
 !$TAF store rlen,rayt= iiitape1
 
@@ -266,10 +266,10 @@ CONTAINS
         IF( q <= 0.0 .AND. qOld > 0.0 .OR. q >= 0.0 .AND. qOld < 0.0 )&
             phase = phase + PI / 2.   ! phase shifts at caustics
         qOld = q
-        
+
         ! Radius calc from beam radius projected onto vertical line
         RadiusMax = MAX( ABS( q ), ABS( ray2D( iS )%q( 1 ) ) ) &
-                    / q0 / ABS( rayt( 1 ) ) ! IESCO24: AKA rayn( 2 ) 
+                    / q0 / ABS( rayt( 1 ) ) ! IESCO24: AKA rayn( 2 )
 
         ! depth limits of beam; IESCO22: a large range of about 1/2 box depth
         IF ( ABS( rayt( 1 ) ) > 0.5 ) THEN   ! shallow angle ray
@@ -293,7 +293,7 @@ CONTAINS
               IF ( Beam%RunType( 5 : 5 ) == 'I' ) THEN ! irregular grid
                  x_rcvr( 2, 1 ) = Pos%Rz( ir )
               ELSE ! default: rectilinear grid
-                 x_rcvr( 2, 1:NRz_per_range ) = Pos%Rz( 1:NRz_per_range )  
+                 x_rcvr( 2, 1:NRz_per_range ) = Pos%Rz( 1:NRz_per_range )
               END IF
 
               RcvrDepths: DO iz = 1, NRz_per_range
@@ -302,13 +302,13 @@ CONTAINS
                  IF (       x_rcvr( 2, iz ) .GE. zmin &
                       .AND. x_rcvr( 2, iz ) .LE. zmax ) THEN
                     ! normalized proportional distance along ray
-                    s = DOT_PRODUCT( x_rcvr( :, iz ) - x_ray, rayt ) / rlen 
+                    s = DOT_PRODUCT( x_rcvr( :, iz ) - x_ray, rayt ) / rlen
                     ! normal distance to ray
-                    n = ABS( DOT_PRODUCT( x_rcvr( :, iz ) - x_ray, rayn ) )      
+                    n = ABS( DOT_PRODUCT( x_rcvr( :, iz ) - x_ray, rayn ) )
                     ! interpolated amplitude in [meters]
-                    q = q + s*dqds               
+                    q = q + s*dqds
                     ! beam radius; IESCO22 smaller then previous RadiusMax
-                    RadiusMax = ABS( q / q0 )                                   
+                    RadiusMax = ABS( q / q0 )
 
                     IF ( n < RadiusMax ) THEN
 #ifdef IHOP_WRITE_OUT
@@ -319,13 +319,13 @@ CONTAINS
                                              SQUEEZE_RIGHT, myThid )
 #endif /* IHOP_WRITE_OUT */
                        ! interpolated delay
-                       delay    = ray2D( iS-1 )%tau + s*dtauds              
+                       delay    = ray2D( iS-1 )%tau + s*dtauds
                        Amp      = Ratio1 * SQRT( ray2D( iS )%c / ABS( q ) ) &
                                   * ray2D( iS )%Amp
                        ! hat function: 1 on center, 0 on edge
-                       W        = ( RadiusMax - n ) / RadiusMax   
+                       W        = ( RadiusMax - n ) / RadiusMax
                        Amp      = Amp*W
-                       
+
                        IF (      q <= 0.0d0 .AND. qOld > 0.0d0 &
                             .OR. q >= 0.0d0 .AND. qOld < 0.0d0 ) THEN
                         phaseInt = phase + PI / 2.   ! phase shifts at caustics
@@ -365,14 +365,14 @@ CONTAINS
     use arr_mod, only: NArr, Arr         !RG
 
     ! Geometric, Gaussian beams in Cartesian coordintes
-    
+
     ! beam window: kills beams outside e**(-0.5 * ibwin**2 )
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO
   !     msgBuf :: Used to build messages for printing.
     INTEGER, INTENT( IN )   :: myThid
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
-  
+
   !     == Local Variables ==
     INTEGER,           PARAMETER       :: BeamWindow = 2
     REAL (KIND=_RL90), INTENT( IN    ) :: alpha, dalpha ! take-off angle, angular spacing
@@ -397,11 +397,11 @@ CONTAINS
     ! what if there is a single receiver (ir = 0 possible)
 
     ! irT: find index of first receiver to the right of rA
-    irT = MINLOC( Pos%Rr( 1 : Pos%NRr ), MASK = Pos%Rr( 1 : Pos%NRr ) > rA )     
+    irT = MINLOC( Pos%Rr( 1 : Pos%NRr ), MASK = Pos%Rr( 1 : Pos%NRr ) > rA )
     ir  = irT( 1 )
 
     ! if ray is left-traveling, get the first receiver to the left of rA
-    IF ( ray2D( 1 )%t( 1 ) < 0.0d0 .AND. ir > 1 ) ir = ir - 1  
+    IF ( ray2D( 1 )%t( 1 ) < 0.0d0 .AND. ir > 1 ) ir = ir - 1
 
     ! sqrt( 2 * PI ) represents a sum of Gaussians in free space
     IF ( Beam%RunType( 4 : 4 ) == 'R' ) THEN
@@ -415,7 +415,7 @@ CONTAINS
        rB    = ray2D( iS     )%x( 1 )
        x_ray = ray2D( iS - 1 )%x
 
-       ! compute normalized tangent (compute it because we need to measure the 
+       ! compute normalized tangent (compute it because we need to measure the
        ! step length)
        rayt = ray2D( iS )%x - ray2D( iS - 1 )%x
        rlen = NORM2( rayt )
@@ -440,11 +440,11 @@ CONTAINS
         ! calculate beam width beam radius projected onto vertical line
         lambda    = ray2D( iS-1 )%c / IHOP_freq
         sigma     = MAX( ABS( q ), ABS( ray2D( iS )%q( 1 ) ) ) &
-                    / q0 / ABS( rayt( 1 ) ) ! IESCO24: AKA rayn( 2 ) 
+                    / q0 / ABS( rayt( 1 ) ) ! IESCO24: AKA rayn( 2 )
         sigma     = MAX( sigma, &
                          MIN( 0.2*IHOP_freq*REAL( ray2D( iS )%tau ), &
                               PI*lambda ) )
-        ! Note on min: "Weinberg and Keenan suggest limiting a beam to a 
+        ! Note on min: "Weinberg and Keenan suggest limiting a beam to a
         !               point, by imposing a minimum beam width of pilambda."
         !               - Jensen, Comp OA 2011
         ! default is 2 standard deviations of coverage of the Gaussian curve
@@ -480,13 +480,13 @@ CONTAINS
                       .AND. x_rcvr( 2 ) .LE. zmax ) THEN
 
                     ! proportional distance along ray
-                    s = DOT_PRODUCT( x_rcvr - x_ray, rayt ) / rlen  
+                    s = DOT_PRODUCT( x_rcvr - x_ray, rayt ) / rlen
                     ! normal distance to ray
-                    n = ABS( DOT_PRODUCT( x_rcvr - x_ray, rayn ) )       
+                    n = ABS( DOT_PRODUCT( x_rcvr - x_ray, rayn ) )
                     ! interpolated amplitude in [meters]
-                    q = q + s*dqds               
+                    q = q + s*dqds
                     ! beam radius; IESCO22 smaller then previous RadiusMax
-                    sigma = ABS( q / q0 )                                    
+                    sigma = ABS( q / q0 )
                     sigma = MAX( sigma, &
                                  MIN( 0.2*IHOP_freq*REAL( ray2D( iS )%tau ), &
                                       PI*lambda ) )
@@ -501,11 +501,11 @@ CONTAINS
 #endif /* IHOP_WRITE_OUT */
                        ! interpolated delay
                        A        = ABS( q0 / q )
-                       delay    = ray2D( iS-1 )%tau + s*dtauds 
+                       delay    = ray2D( iS-1 )%tau + s*dtauds
                        Amp      = Ratio1 * SQRT( ray2D( iS )%c / ABS( q ) ) &
                                   * ray2D( iS )%Amp
                        ! W : Gaussian decay
-                       W        = EXP( -0.5*( n / sigma )**2 ) / ( sigma*A )   
+                       W        = EXP( -0.5*( n / sigma )**2 ) / ( sigma*A )
                        Amp      = Amp*W
                        phaseInt = ray2D( iS )%Phase + phase
                        IF ( q <= 0.0d0 .AND. qOld > 0.0d0 &
@@ -539,7 +539,7 @@ CONTAINS
   END !SUBROUTINE InfluenceGeoGaussianCart
 
   ! **********************************************************************!
-  
+
   SUBROUTINE ApplyContribution( U )
     USE ihop_mod, only: afreq
 
@@ -581,7 +581,7 @@ CONTAINS
 
   RETURN
   END !SUBROUTINE ApplyContribution
-                 
+
 ! **********************************************************************!
 
   SUBROUTINE ScalePressure( Dalpha, c, r, U, NRz, Nr, RunType, freq )
@@ -606,7 +606,7 @@ CONTAINS
     END SELECT
 
     ! If incoherent run, convert intensity to pressure
-    IF ( RunType( 1 : 1 ) /= 'C' ) U = SQRT( REAL( U ) ) 
+    IF ( RunType( 1 : 1 ) /= 'C' ) U = SQRT( REAL( U ) )
 
     ! scale and/or incorporate cylindrical spreading
     Ranges: DO ir = 1, Nr
