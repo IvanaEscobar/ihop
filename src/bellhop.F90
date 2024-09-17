@@ -518,7 +518,7 @@ CONTAINS
     ! Distances from ray beginning, end to top and bottom
     REAL (KIND=_RL90) :: DistBegTop, DistEndTop, DistBegBot, DistEndBot
     REAL (KIND=_RL90) :: sss, declAlpha, declAlphaOld
-    LOGICAL           :: RayTurn = .FALSE., continue_steps, relfect
+    LOGICAL           :: RayTurn = .FALSE., continue_steps, reflect
 
 !$TAF init TraceRay2D = static, MaxN-1
 !$TAF init TraceRay2D1 = 'bellhop_traceray2d'
@@ -588,7 +588,7 @@ CONTAINS
     ! Trace the beam (Reflect2D increments the step index, is)
     is = 0
     continue_steps = .true.
-    relfect=.false.
+    reflect=.false.
 
     Stepping: DO istep = 1, MaxN - 1
 
@@ -663,7 +663,7 @@ CONTAINS
 
          ! IESCO22: Did new ray point cross top boundary? Then reflect
          IF ( DistBegTop > 0.0d0 .AND. DistEndTop <= 0.0d0 ) THEN
-             relfect=.true.
+             reflect=.true.
 
 !$TAF store isegtop = TraceRay2D
 
@@ -719,7 +719,7 @@ CONTAINS
                 Top( IsegTop )%x, Bot( IsegBot )%x, dEndTop,    dEndBot, &
                 Top( IsegTop )%n, Bot( IsegBot )%n, DistEndTop, DistEndBot )
          ELSE
-             ! Do not relfect
+             ! Do not reflect
              reflect=.false.
          END IF
 
@@ -1016,7 +1016,7 @@ CONTAINS
     ELSE
 #ifdef IHOP_WRITE_OUT
        WRITE(msgBuf,'(2A)') 'BELLHOP Reflect2D: ', &
-                            'no reflection bounce, but in relfect2d somehow'
+                            'no reflection bounce, but in reflect2d somehow'
        CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
        STOP 'ABNORMAL END: S/R Reflect2D'

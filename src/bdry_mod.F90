@@ -677,7 +677,8 @@ CONTAINS
             Bdry( : )%Noden( 2 ) = -Bdry( : )%Nodet( 1 )
          CASE DEFAULT
             ! Do nothing
-            Bdry( : )%noden = 0
+            Bdry( : )%Noden(1) = 0
+            Bdry( : )%Noden(2) = 0
             STOP 'ABNORMAL END: S/R computetangentnormal'
        END SELECT
 
