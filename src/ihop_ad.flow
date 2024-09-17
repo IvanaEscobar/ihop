@@ -22,7 +22,7 @@
 !$TAF SUBROUTINE arr_mod::writearrivalsbinary OUTPUT  =
 
 !$TAF SUBROUTINE ihop_init_diag::openOutputFiles  INPUT  = 1, 2, 3, 4
-!$TAF SUBROUTINE ihop_init_diag::openOutputFiles OUTPUT  = 
+!$TAF SUBROUTINE ihop_init_diag::openOutputFiles OUTPUT  =
 
 !     *==========================================================*
 !     | SUBROUTINE READSSP  is passive                           |
@@ -60,7 +60,7 @@
 !     | SUBROUTINE COMPUTEBDRYTANGENTNORMAL  is passive          |
 !     *==========================================================*
 !$TAF SUBROUTINE bdry_mod::initati INPUT   = 1, 2, 3
-!$TAF SUBROUTINE bdry_mod::initati OUTPUT  = 
+!$TAF SUBROUTINE bdry_mod::initati OUTPUT  =
 !$TAF SUBROUTINE bdry_mod::initati MODULE bdry_mod OUTPUT  = top
 
 !$TAF SUBROUTINE bdry_mod::initbty INPUT   = 1, 2, 3
@@ -91,12 +91,12 @@
 !     *==========================================================*
 !$TAF SUBROUTINE srpos_mod::readvector INPUT   = 1, 2, 3, 4, 5
 !$TAF SUBROUTINE srpos_mod::readvector OUTPUT  =    2
-!$TAF SUBROUTINE srpos_mod::readvector DEPEND  = 1  
+!$TAF SUBROUTINE srpos_mod::readvector DEPEND  = 1
 !$TAF SUBROUTINE srpos_mod::readvector MODULE sort_mod INPUT = sort
 !$TAF SUBROUTINE srpos_mod::readvector MODULE subtab_mod INPUT = subtab
 
 !$TAF SUBROUTINE srpos_mod::readfreqvec INPUT   = 1, 2
-!$TAF SUBROUTINE srpos_mod::readfreqvec OUTPUT  = 
+!$TAF SUBROUTINE srpos_mod::readfreqvec OUTPUT  =
 !$TAF SUBROUTINE srpos_mod::readfreqvec MODULE subtab_mod INPUT = subtab
 
 !================================================================*
@@ -107,8 +107,8 @@
 !     | SUBROUTINE IHOP_COST_READ_OBS  is passive                |
 !     *==========================================================*
 !$TAF SUBROUTINE  ihop_cost_read_obs   INPUT  =  1,2,3, 5
-!$TAF SUBROUTINE  ihop_cost_read_obs   DEPEND =  1,2,3 
-!$TAF SUBROUTINE  ihop_cost_read_obs   OUTPUT =        4 
+!$TAF SUBROUTINE  ihop_cost_read_obs   DEPEND =  1,2,3
+!$TAF SUBROUTINE  ihop_cost_read_obs   OUTPUT =        4
 
-!$TAF SUBROUTINE  NF_OPEN              INPUT = 
+!$TAF SUBROUTINE  NF_OPEN              INPUT =
 !$TAF SUBROUTINE  NF_CLOSE             INPUT =

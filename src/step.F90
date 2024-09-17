@@ -51,12 +51,12 @@ CONTAINS
                            c2, cimag2, crr2, crz2, czz2, &
                            urayt0( 2 ), urayt1( 2 ), &
                            h, halfh, hw0, hw1, ray2n( 2 ), RM, RN, &
-                           gradcjump( 2 ), cnjump, csjump, w0, w1, rho 
+                           gradcjump( 2 ), cnjump, csjump, w0, w1, rho
 
-    ! The numerical integrator used here is a version of the polygon (a.k.a. 
+    ! The numerical integrator used here is a version of the polygon (a.k.a.
     ! midpoint, leapfrog, or Box) method, and similar
     ! to the Heun (second order Runge-Kutta method).
-    ! However, it's modified to allow for a dynamic step change, while 
+    ! However, it's modified to allow for a dynamic step change, while
     !  preserving the second-order accuracy.
 
     ! *** Phase 1 (an Euler step)
@@ -74,7 +74,7 @@ CONTAINS
 
     ! reduce h to land on boundary
     CALL ReduceStep2D( ray0%x, urayt0, iSegz0, iSegr0, Topx, Topn, Botx, &
-                       Botn, h ) 
+                       Botn, h )
     halfh = 0.5 * h   ! first step of the modified polygon method is a half step
 
     ! Euler march forward
@@ -83,7 +83,7 @@ CONTAINS
     ray1%p = ray0%p - halfh * cnn0_csq0 * ray0%q
     ray1%q = ray0%q + halfh * c0        * ray0%p !IESCO22: q /= 0 for 'G' beam
 
-    ! *** Phase 2 (update step size, and Polygon march forward) 
+    ! *** Phase 2 (update step size, and Polygon march forward)
 
     CALL evalSSP( ray1%x, c1, cimag1, gradc1, crr1, crz1, czz1, rho, myThid )
     csq1      = c1 * c1
@@ -92,7 +92,7 @@ CONTAINS
 
     ! BUG: The Munk test case with a horizontally launched ray caused problems.
     ! The ray vertexes on an interface and can ping-pong around that interface.
-    ! Have to be careful in that case about big changes to the stepsize (that 
+    ! Have to be careful in that case about big changes to the stepsize (that
     ! invalidate the leap-frog scheme) in phase II.
     ! A modified Heun or Box method could also work.
 
@@ -151,7 +151,7 @@ CONTAINS
 
   SUBROUTINE ReduceStep2D( x0, urayt, iSegz0, iSegr0, Topx, Topn, Botx, Botn, h )
 
-    ! calculate a reduced step size, h, that lands on any points where the 
+    ! calculate a reduced step size, h, that lands on any points where the
     ! environment leaves water
     USE ihop_mod, only: iSmallStepCtr
     USE bdry_mod, only: rTopSeg, rBotSeg
@@ -161,19 +161,19 @@ CONTAINS
     REAL (KIND=_RL90), INTENT( IN    ) :: x0( 2 ), urayt( 2 )
     ! Top, bottom coordinate and normal
     REAL (KIND=_RL90), INTENT( IN    ) :: Topx( 2 ), Topn( 2 )
-    REAL (KIND=_RL90), INTENT( IN    ) :: Botx( 2 ), Botn( 2 ) 
-    REAL (KIND=_RL90), INTENT( INOUT ) :: h ! reduced step size 
+    REAL (KIND=_RL90), INTENT( IN    ) :: Botx( 2 ), Botn( 2 )
+    REAL (KIND=_RL90), INTENT( INOUT ) :: h ! reduced step size
     REAL (KIND=_RL90)                  :: hInt, hTop, hBot, hSeg, &
                                           hBoxr, hBoxz ! trial step sizes
     REAL (KIND=_RL90)                  :: x( 2 ), d( 2 ), d0( 2 ), rSeg( 2 )
 
-    ! Detect interface or boundary crossing and reduce step, if necessary, to 
+    ! Detect interface or boundary crossing and reduce step, if necessary, to
     ! land on that crossing.
     ! Keep in mind possibility that user put source right on an interface
-    ! and that multiple events can occur (crossing interface, top, and bottom 
+    ! and that multiple events can occur (crossing interface, top, and bottom
     ! in a single step).
 
-!$TAF init reducestep2d = static, 50 
+!$TAF init reducestep2d = static, 50
 
 !$TAF store h = reducestep2d
 
@@ -231,10 +231,10 @@ CONTAINS
     ! ray mask using a box centered at ( 0, 0 )
     hBoxr    = huge( hBoxr )
     hBoxz    = huge( hBoxz )
-    
+
     IF ( ABS( x( 1 ) ) > Beam%Box%r ) hBoxr = ( Beam%Box%r - ABS( x0( 1 ) ) ) / ABS( urayt( 1 ) )
     IF ( ABS( x( 2 ) ) > Beam%Box%z ) hBoxz = ( Beam%Box%z - ABS( x0( 2 ) ) ) / ABS( urayt( 2 ) )
-    
+
     h = MIN( h, hInt, hTop, hBot, hSeg, hBoxr, hBoxz )  ! take limit set by shortest distance to a crossing
     IF ( h < 1.0d-4 * Beam%deltas ) THEN   ! is it taking an infinitesimal step?
        h = 1.0d-4 * Beam%deltas            ! make sure we make some motion

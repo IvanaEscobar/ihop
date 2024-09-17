@@ -38,7 +38,7 @@ CONTAINS
   !     msgBuf :: Used to build messages for printing.
     INTEGER, INTENT( IN )   :: myThid
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
-  
+
   !     == Local Variables ==
     INTEGER                          :: I, IAllocStat, IOStat
 

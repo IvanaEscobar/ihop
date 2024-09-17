@@ -6,7 +6,7 @@ MODULE writeRay
     !   Ivana Escobar
     ! </CONTACT>
 
-  ! Compress the ray data keeping every iSkip point, points near surface or 
+  ! Compress the ray data keeping every iSkip point, points near surface or
   ! bottom, and last point.
   ! Write to RAYFile.
 
@@ -35,7 +35,7 @@ MODULE writeRay
 
 !=======================================================================
 
-  INTEGER, PRIVATE :: MaxNRayPoints = 50000   ! this is the maximum length of 
+  INTEGER, PRIVATE :: MaxNRayPoints = 50000   ! this is the maximum length of
   ! the ray vector that is written out
   INTEGER, PRIVATE :: is, N2, iSkip
 
@@ -49,14 +49,14 @@ CONTAINS
 
     ! In adjoint mode we do not write output besides on the first run
     IF (IHOP_dumpfreq.LT.0) RETURN
-    
+
     ! compression
 
     N2    = 1
     iSkip = MAX( Nsteps1 / MaxNRayPoints, 1 )
 
     Stepping: DO is = 2, Nsteps1
-       ! ensure that we always write ray points near bdry reflections (works 
+       ! ensure that we always write ray points near bdry reflections (works
        ! only for flat bdry)
        IF ( MIN( Bdry%Bot%HS%Depth - ray2D( is )%x( 2 ),  &
                  ray2D( is )%x( 2 ) - Bdry%Top%HS%Depth ) < 0.2 .OR. &
@@ -98,7 +98,7 @@ CONTAINS
     iSkip = MAX( Nsteps1 / MaxNRayPoints, 1 )
 
     Stepping: DO is = 2, Nsteps1
-       ! ensure that we always write ray points near bdry reflections (works 
+       ! ensure that we always write ray points near bdry reflections (works
        ! only for flat bdry)
        IF ( MIN( Bdry%Bot%HS%Depth - ray2D( is )%x( 2 ),  &
                  ray2D( is )%x( 2 ) - Bdry%Top%HS%Depth ) < 0.2 .OR. &

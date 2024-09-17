@@ -7,14 +7,14 @@ C !ROUTINE: IHOP_COST_READ_OBS
 
 C !INTERFACE:
       SUBROUTINE IHOP_COST_READ_OBS(
-     I                      fNb, 
-     I                      vNb, 
+     I                      fNb,
+     I                      vNb,
      I                      irec,
      O                      vec_loc,
      I                      myThid )
 
 C !DESCRIPTION:
-C Reads an observation and its uncertainty from a netcdf ihop 
+C Reads an observation and its uncertainty from a netcdf ihop
 C input file
 
 C !USES:
@@ -35,10 +35,10 @@ C == Global variables ===
 #endif
 
 C !INPUT/OUTPUT PARAMETERS:
-C fNb, vNb  :: 
-C irec      :: 
+C fNb, vNb  ::
+C irec      ::
 C myThid    :: my Thread Id number
-C vec_loc   :: 
+C vec_loc   ::
       INTEGER fNb, vNb
       INTEGER irec, myThid
       _RL     vec_loc

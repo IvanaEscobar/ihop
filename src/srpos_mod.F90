@@ -28,8 +28,8 @@ MODULE srpos_mod
 !=======================================================================
 
     public Pos, Nfreq, freqVec, &
-           ReadSxSy, ReadSzRz, ReadRcvrRanges, ReadFreqVec, & 
-           WriteSxSy, WriteSzRz, WriteRcvrRanges, WriteFreqVec 
+           ReadSxSy, ReadSzRz, ReadRcvrRanges, ReadFreqVec, &
+           WriteSxSy, WriteSzRz, WriteRcvrRanges, WriteFreqVec
 #ifdef IHOP_THREED
     public ReadRcvrBearings, WriteRcvrBearings
 #endif /* IHOP_THREED */
@@ -57,7 +57,7 @@ CONTAINS
   SUBROUTINE ReadfreqVec( BroadbandOption, myThid )
 
     ! Optionally reads a vector of source frequencies for a broadband run
-    ! If the broadband option is not selected, then the input freq (a scalar) 
+    ! If the broadband option is not selected, then the input freq (a scalar)
     ! is stored in the frequency vector
     ! IHOP_freq is source frequency
 
@@ -66,7 +66,7 @@ CONTAINS
   !     msgBuf :: Used to build messages for printing.
     INTEGER, INTENT( IN )   :: myThid
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
-  
+
   !     == Local Variables ==
     CHARACTER,          INTENT( IN ) :: BroadbandOption*( 1 )
     INTEGER :: ifreq
@@ -99,7 +99,7 @@ CONTAINS
     END IF
 
     ! set default values
-    freqVec = 0.0 
+    freqVec = 0.0
 
     IF ( BroadbandOption == 'B' ) THEN
        freqVec(3) = -999.9
@@ -107,7 +107,7 @@ CONTAINS
        CALL SubTab( freqVec, Nfreq )
 
     ELSE
-       freqVec(1) = IHOP_freq 
+       freqVec(1) = IHOP_freq
     END IF
 
   RETURN
@@ -118,13 +118,13 @@ CONTAINS
   SUBROUTINE ReadSxSy( myThid )
 
     ! Reads source x-y coordinates
-    
+
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO
   !     msgBuf :: Used to build messages for printing.
     INTEGER, INTENT( IN )   :: myThid
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
-  
+
   !     == Local Variables ==
 
 #ifdef IHOP_THREED
@@ -153,7 +153,7 @@ CONTAINS
   SUBROUTINE ReadSzRz( zMin, zMax, myThid )
 
     ! Reads source and receiver z-coordinates (depths)
-    ! zMin and zMax are limits for those depths; sources and receivers are 
+    ! zMin and zMax are limits for those depths; sources and receivers are
     ! shifted to be within those limits
 
   !     == Routine Arguments ==
@@ -191,7 +191,7 @@ CONTAINS
 #endif /* IHOP_WRITE_OUT */
         STOP 'ABNORMAL END: S/R ReadSzRz'
     END IF
- 
+
     ! Set default values
     Pos%ws = 0
     Pos%isz = 0
@@ -210,7 +210,7 @@ CONTAINS
   !     msgBuf :: Used to build messages for printing.
     INTEGER, INTENT( IN )   :: myThid
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
-  
+
   !     == Local Variables ==
 
     ! IESCO22: assuming receiver positions are equally spaced
@@ -228,13 +228,13 @@ CONTAINS
         CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
         STOP 'ABNORMAL END: S/R ReadRcvrRanges'
-    END IF 
- 
+    END IF
+
     RETURN
   END !SUBROUTINE ReadRcvrRanges
 
   !********************************************************************!
-  
+
 #ifdef IHOP_THREED
   SUBROUTINE ReadRcvrBearings( myThid )   ! for 3D bellhop
 
@@ -243,7 +243,7 @@ CONTAINS
   !     msgBuf :: Used to build messages for printing.
     INTEGER, INTENT( IN )   :: myThid
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
-  
+
   !     == Local Variables ==
 
 ! IEsco23: NOT SUPPORTED IN ihop
@@ -269,8 +269,8 @@ CONTAINS
         CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
         STOP 'ABNORMAL END: S/R ReadRcvrBearings'
-    END IF 
- 
+    END IF
+
     RETURN
   END !SUBROUTINE ReadRcvrBearings
 #endif /* IHOP_THREED */
@@ -289,14 +289,14 @@ CONTAINS
   !     msgBuf :: Used to build messages for printing.
     INTEGER, INTENT( IN )   :: myThid
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
-  
+
   !     == Local Variables ==
     INTEGER,                        INTENT( IN )    :: Nx
     REAL (KIND=_RL90), ALLOCATABLE, INTENT( INOUT ) :: x( : )
     CHARACTER,                      INTENT( IN )    :: Description*( * ), &
                                                        Units*( * )
     INTEGER :: ix
-   
+
     IF ( Nx <= 0 ) THEN
 #ifdef IHOP_WRITE_OUT
         WRITE(msgBuf,'(2A)') 'SRPOS_MOD ReadVector: ', &
@@ -306,7 +306,7 @@ CONTAINS
         STOP 'ABNORMAL END: S/R ReadVector'
     END IF
 
-    IF ( .NOT. ALLOCATED( x ) ) THEN 
+    IF ( .NOT. ALLOCATED( x ) ) THEN
         ALLOCATE( x( MAX( 3, Nx ) ), Stat = IAllocStat )
         IF ( IAllocStat /= 0 ) THEN
 #ifdef IHOP_WRITE_OUT
@@ -340,7 +340,7 @@ CONTAINS
   !     msgBuf :: Used to build messages for printing.
     INTEGER, INTENT( IN )   :: myThid
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
-  
+
   !     == Local Variables ==
     CHARACTER*(1), INTENT( IN ) :: BroadbandOption
     INTEGER :: ifreq
@@ -354,9 +354,9 @@ CONTAINS
         WRITE(msgBuf,'(2A)')'___________________________________________',&
                             '________________'
         CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-        WRITE(msgBuf,'(A)') 
+        WRITE(msgBuf,'(A)')
         CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-        WRITE(msgBuf,'(A)') 
+        WRITE(msgBuf,'(A)')
         CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
         WRITE(msgBuf,'(A,I10)') 'Number of frequencies =', Nfreq
         CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
@@ -383,13 +383,13 @@ CONTAINS
   SUBROUTINE WriteSxSy( myThid )
 
     ! Writes source x-y coordinates
-    
+
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO
   !     msgBuf :: Used to build messages for printing.
     INTEGER, INTENT( IN )   :: myThid
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
-  
+
   !     == Local Variables ==
 
 #ifdef IHOP_THREED
@@ -474,17 +474,17 @@ CONTAINS
     REAL(KIND=_RL90) :: x(SIZE(Pos%Rr))
 
     x = Pos%Rr / 1000.0
-  
+
 #ifdef IHOP_WRITE_OUT
     ! IESCO22: assuming receiver positions are equally spaced
     CALL WriteVector( Pos%NRr, x, 'Receiver ranges, Rr', 'km', myThid )
 #endif
- 
+
     RETURN
   END !SUBROUTINE WriteRcvrRanges
 
   !********************************************************************!
-  
+
 #ifdef IHOP_THREED
   SUBROUTINE WriteRcvrBearings( myThid )   ! for 3D bellhop
 
@@ -493,7 +493,7 @@ CONTAINS
   !     msgBuf :: Used to build messages for printing.
     INTEGER, INTENT( IN )   :: myThid
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
-  
+
   !     == Local Variables ==
 
 ! IEsco23: NOT SUPPORTED IN ihop
@@ -516,22 +516,22 @@ CONTAINS
   !     msgBuf :: Used to build messages for printing.
     INTEGER, INTENT( IN )   :: myThid
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
-  
+
   !     == Local Variables ==
     INTEGER,           INTENT( IN )    :: Nx
     REAL (KIND=_RL90), INTENT( INOUT ) :: x( : )
     CHARACTER,         INTENT( IN )    :: Description*( * ), Units*( * )
     INTEGER :: ix
-   
+
 #ifdef IHOP_WRITE_OUT
     ! In adjoint mode we do not write output besides on the first run
     IF (IHOP_dumpfreq.GE.0) THEN
-      WRITE(msgBuf,'(A)') 
+      WRITE(msgBuf,'(A)')
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
       WRITE(msgBuf,'(2A)')'______________________________________________', &
                           '_____________'
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(A)') 
+      WRITE(msgBuf,'(A)')
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
       WRITE(msgBuf,'(A,I10)') 'Number of ' // Description // ' = ', Nx
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
@@ -547,7 +547,7 @@ CONTAINS
           CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
       END IF
 
-      WRITE(msgBuf,'(A)') 
+      WRITE(msgBuf,'(A)')
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
     ENDIF
 #endif /* IHOP_WRITE_OUT */

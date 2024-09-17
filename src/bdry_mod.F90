@@ -41,13 +41,13 @@ MODULE bdry_mod
    INTEGER            :: IOStat, IAllocStat
 
    ! range intervals defining the current active segment
-   REAL (KIND=_RL90)  :: rTopseg( 2 ), rBotseg( 2 )  
+   REAL (KIND=_RL90)  :: rTopseg( 2 ), rBotseg( 2 )
    CHARACTER  (LEN=2) :: atiType= 'LS', btyType = 'LS'
 
    ! ***Halfspace properties***
    TYPE HSInfo
       ! compressional and shear wave speeds/attenuations in user units
-      REAL     (KIND=_RL90)   :: alphaR, alphaI, betaR, betaI  
+      REAL     (KIND=_RL90)   :: alphaR, alphaI, betaR, betaI
       REAL     (KIND=_RL90)   :: rho, Depth  ! density, depth
       COMPLEX  (KIND=_RL90)   :: cP, cS      ! P-wave, S-wave speeds
       CHARACTER(LEN=1)        :: BC          ! Boundary condition type
@@ -62,7 +62,7 @@ MODULE bdry_mod
       REAL (KIND=_RL90) :: Len, Kappa    ! length and curvature of a segement
       ! For the curvilinear grid option
       REAL (KIND=_RL90) :: Nodet( 2 ), & ! tangent at the node
-                           Noden( 2 )    ! normal at the node 
+                           Noden( 2 )    ! normal at the node
       REAL (KIND=_RL90) :: Dx, Dxx, &    ! 1st, 2nd derivatives wrt depth
                            Dss           ! derivative along tangent
       TYPE( HSInfo )    :: HS
@@ -81,7 +81,7 @@ MODULE bdry_mod
    TYPE(BdryType) :: Bdry
 
 CONTAINS
-  SUBROUTINE initATI( TopATI, DepthT, myThid ) 
+  SUBROUTINE initATI( TopATI, DepthT, myThid )
     ! Reads in the top altimetry
   ! IESCO24
   ! fT = 1000 ONLY for acousto-elastic halfspaces, I will have to pass this
@@ -93,13 +93,13 @@ CONTAINS
   !     msgBuf :: Used to build messages for printing.
     INTEGER, INTENT( IN )   :: myThid
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
-  
+
   !     == Local Variables ==
     CHARACTER (LEN= 1), INTENT( IN ) :: TopATI
     INTEGER :: ii
     REAL (KIND=_RL90),  INTENT( IN ) :: DepthT
     REAL (KIND=_RL90),  ALLOCATABLE  :: phi(:)
-    REAL (KIND=_RL90),  ALLOCATABLE  :: x(:) 
+    REAL (KIND=_RL90),  ALLOCATABLE  :: x(:)
     REAL (KIND=_RL90)   :: bPower, fT
 
     ! IESCO24 fT init
@@ -115,7 +115,7 @@ CONTAINS
       WRITE(msgBuf,'(2A)') '______________________________________________', &
                           '_____________'
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(A)') 
+      WRITE(msgBuf,'(A)')
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
       WRITE(msgBuf,'(A)') 'Using top-altimetry file'
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
@@ -173,7 +173,7 @@ CONTAINS
 #endif /* IHOP_WRITE_OUT */
 
        ! we'll be extending the altimetry to infinity to the left and right
-       NAtiPts = NAtiPts + 2  
+       NAtiPts = NAtiPts + 2
 
        IF (ALLOCATED(Top)) DEALLOCATE(Top)
        ALLOCATE( Top( NAtiPts ), Stat = IAllocStat )
@@ -189,7 +189,7 @@ CONTAINS
 #ifdef IHOP_WRITE_OUT
         ! In adjoint mode we do not write output besides on the first run
         IF (IHOP_dumpfreq.GE.0) THEN
-         WRITE(msgBuf,'(A)') 
+         WRITE(msgBuf,'(A)')
          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
          WRITE(msgBuf,'(A)') ' Range (km)  Depth (m)'
          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
@@ -203,8 +203,8 @@ CONTAINS
           CASE ( 'S', '' )
             READ( ATIFile, * ) Top( ii )%x
 #ifdef IHOP_WRITE_OUT
-            IF ( ii < Number_to_Echo .OR. ii == NAtiPts ) THEN   
-                WRITE( msgBuf,"(2G11.3)" ) Top( ii )%x 
+            IF ( ii < Number_to_Echo .OR. ii == NAtiPts ) THEN
+                WRITE( msgBuf,"(2G11.3)" ) Top( ii )%x
                 CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
             END IF
 #endif /* IHOP_WRITE_OUT */
@@ -213,7 +213,7 @@ CONTAINS
                                  Top( ii )%HS%betaR, Top( ii )%HS%rho, &
                                  Top( ii )%HS%alphaI, Top( ii )%HS%betaI
 #ifdef IHOP_WRITE_OUT
-             IF ( ii < Number_to_Echo .OR. ii == NAtiPts ) THEN   
+             IF ( ii < Number_to_Echo .OR. ii == NAtiPts ) THEN
               WRITE( msgBuf,"(7G11.3)" ) &
                   Top( ii )%x, Top( ii )%HS%alphaR, Top( ii )%HS%betaR, &
                   Top( ii )%HS%rho, Top( ii )%HS%alphaI, Top( ii )%HS%betaI
@@ -271,7 +271,7 @@ CONTAINS
      CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
      STOP 'ABNORMAL END: S/R initATI'
-    END IF 
+    END IF
 
     ! Initiate Top
     DO ii = 1, NAtiPts
@@ -287,7 +287,7 @@ CONTAINS
           ! compressional wave speed
           Top( ii )%HS%cP = CRCI( 1D20, Top( ii )%HS%alphaR, &
                                     Top( ii )%HS%alphaI, 'W ', bPower, fT, &
-                                    myThid ) 
+                                    myThid )
           ! shear wave speed
           Top( ii )%HS%cS = CRCI( 1D20, Top( ii )%HS%betaR,  &
                                     Top( ii )%HS%betaI, 'W ', bPower, fT, &
@@ -295,7 +295,7 @@ CONTAINS
        END DO
     END IF
 
- 
+
   RETURN
   END !SUBROUTINE initATI
 
@@ -313,13 +313,13 @@ CONTAINS
    !     msgBuf :: Used to build messages for printing.
       INTEGER, INTENT( IN )   :: myThid
       CHARACTER*(MAX_LEN_MBUF):: msgBuf
-  
+
    !     == Local Variables ==
       CHARACTER (LEN= 1), INTENT( IN ) :: BotBTY
       INTEGER :: i,j,bi,bj,ii
       REAL (KIND=_RL90),  INTENT( IN ) :: DepthB
       REAL (KIND=_RL90) :: gcmbathy(sNx,sNy), gcmmin, gcmmax
-      REAL (KIND=_RL90), ALLOCATABLE :: x(:) 
+      REAL (KIND=_RL90), ALLOCATABLE :: x(:)
       LOGICAL :: firstnonzero
       REAL (KIND=_RL90)   :: bPower, fT
 
@@ -335,7 +335,7 @@ CONTAINS
          WRITE(msgBuf,'(2A)')'____________________________________________', &
                              '_______________'
          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-         WRITE(msgBuf,'(A)') 
+         WRITE(msgBuf,'(A)')
          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
          WRITE(msgBuf,'(A)') 'Using bottom-bathymetry file'
          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
@@ -356,9 +356,9 @@ CONTAINS
 # endif /* IHOP_WRITE_OUT */
             STOP 'ABNORMAL END: S/R initBTY'
          END IF
- 
+
          READ( BTYFile, * ) btyType
- 
+
          ! In adjoint mode we do not write output besides on the first run
          IF (IHOP_dumpfreq.GE.0) THEN
          SELECT CASE ( btyType( 1:1 ) )
@@ -393,8 +393,8 @@ CONTAINS
 #endif /* IHOP_WRITE_OUT */
 
       ! we'll be extending the bathymetry to infinity on both sides
-      NBtyPts = NBtyPts + 2  
-     
+      NBtyPts = NBtyPts + 2
+
       ALLOCATE( Bot( NBtyPts ), Stat = IAllocStat )
       IF ( IAllocStat /= 0 ) THEN
 # ifdef IHOP_WRITE_OUT
@@ -404,12 +404,12 @@ CONTAINS
 # endif /* IHOP_WRITE_OUT */
          STOP 'ABNORMAL END: S/R initBTY'
       END IF
-        
+
 
     ! In adjoint mode we do not write output besides on the first run
     IF (IHOP_dumpfreq.GE.0) THEN
 #ifdef IHOP_WRITE_OUT
-      WRITE(msgBuf,'(A)') 
+      WRITE(msgBuf,'(A)')
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 #endif /* IHOP_WRITE_OUT */
       SELECT CASE ( btyType( 2:2 ) )
@@ -427,7 +427,7 @@ CONTAINS
          WRITE(msgBuf,'(A)') &
             ' Range (km)  Depth (m)  alphaR (m/s)  betaR  rho (g/cm^3)  alphaI     betaI'
          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-         WRITE(msgBuf,'(A)') 
+         WRITE(msgBuf,'(A)')
          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 # endif /* IHOP_WRITE_OUT */
         CASE DEFAULT
@@ -476,7 +476,7 @@ CONTAINS
               'gcm:', gcmmax
              CALL PRINT_MESSAGE(msgBuf, errorMessageUnit, SQUEEZE_RIGHT, myThid)
             END IF
-            IF ( ii < Number_to_Echo .OR. ii == NBtyPts ) THEN  
+            IF ( ii < Number_to_Echo .OR. ii == NBtyPts ) THEN
                WRITE(msgBuf,'(2G11.3)' ) Bot( ii )%x
                ! In adjoint mode we do not write output besides on the first run
                IF (IHOP_dumpfreq.GE.0) &
@@ -488,7 +488,7 @@ CONTAINS
                                 Bot( ii )%HS%betaR, Bot( ii )%HS%rho, &
                                 Bot( ii )%HS%alphaI, Bot( ii )%HS%betaI
 # ifdef IHOP_WRITE_OUT
-            IF ( ii < Number_to_Echo .OR. ii == NBtyPts ) THEN   
+            IF ( ii < Number_to_Echo .OR. ii == NBtyPts ) THEN
                WRITE( msgBuf,'(2F10.2,3X,2F10.2,3X,F6.2,3X,2F10.4)' ) &
                   Bot( ii )%x, Bot( ii )%HS%alphaR, Bot( ii )%HS%betaR, &
                   Bot( ii )%HS%rho, Bot( ii )%HS%alphaI, Bot( ii )%HS%betaI
@@ -560,7 +560,7 @@ CONTAINS
     CALL PRINT_ERROR( msgBuf,myThid )
 # endif /* IHOP_WRITE_OUT */
     STOP 'ABNORMAL END: S/R initBTY'
-   END IF 
+   END IF
 
 
     ! Initiate Bot
@@ -598,7 +598,7 @@ CONTAINS
     ! normals  (%n, %noden), and
     ! curvatures (%kappa)
     !
-    ! The boundary is also extended with a constant depth to infinity to cover 
+    ! The boundary is also extended with a constant depth to infinity to cover
     ! cases where the ray leaves the domain defined by the user
 
     INTEGER, INTENT(IN)              :: NPts
@@ -649,10 +649,10 @@ CONTAINS
 
     END DO BoundaryPt
 
-    ! curvilinear option: compute tangent and normal at node by averaging 
+    ! curvilinear option: compute tangent and normal at node by averaging
     ! normals on adjacent segments
-    IF ( CurvilinearFlag( 1 : 1 ) == 'C' ) THEN 
-       ! averaging two centered differences is equivalent to forming a single 
+    IF ( CurvilinearFlag( 1 : 1 ) == 'C' ) THEN
+       ! averaging two centered differences is equivalent to forming a single
        ! centered difference of two steps ...
        DO ii = 2, NPts - 1
           sss = Bdry( ii - 1 )%Len / ( Bdry( ii - 1 )%Len + Bdry( ii )%Len )
@@ -682,10 +682,10 @@ CONTAINS
           ! this is curvature = dphi/ds
           Bdry( ii )%kappa = ( phi( ii+1 ) - phi( ii ) ) / Bdry( ii )%Len
           ! second derivative
-          Bdry( ii )%Dxx   = ( Bdry( ii+1 )%Dx     - Bdry( ii )%Dx     ) / &   
+          Bdry( ii )%Dxx   = ( Bdry( ii+1 )%Dx     - Bdry( ii )%Dx     ) / &
                              ( Bdry( ii+1 )%x( 1 ) - Bdry( ii )%x( 1 ) )
           ! derivative in direction of tangent
-          Bdry( ii )%Dss   = Bdry( ii )%Dxx * Bdry( ii )%t( 1 )**3   
+          Bdry( ii )%Dss   = Bdry( ii )%Dxx * Bdry( ii )%t( 1 )**3
 
           Bdry( ii )%kappa = Bdry( ii )%Dss   !over-ride kappa !!!!!
        END DO
@@ -707,7 +707,7 @@ CONTAINS
   !     msgBuf :: Used to build messages for printing.
     INTEGER, INTENT( IN )   :: myThid
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
-  
+
   !     == Local Variables ==
     INTEGER IsegTopT( 1 )
     REAL (KIND=_RL90), INTENT( IN ) :: r
@@ -715,10 +715,10 @@ CONTAINS
     IsegTopT = MAXLOC( Top( : )%x( 1 ), Top( : )%x( 1 ) < r )
 
     ! IsegTop MUST LIE IN [ 1, NAtiPts-1 ]
-    IF ( IsegTopT( 1 ) > 0 .AND. IsegTopT( 1 ) < NAtiPts ) THEN  
+    IF ( IsegTopT( 1 ) > 0 .AND. IsegTopT( 1 ) < NAtiPts ) THEN
        IsegTop = IsegTopT( 1 )
        ! segment limits in range
-       rTopSeg = [ Top( IsegTop )%x( 1 ), Top( IsegTop+1 )%x( 1 ) ]   
+       rTopSeg = [ Top( IsegTop )%x( 1 ), Top( IsegTop+1 )%x( 1 ) ]
     ELSE
 #ifdef IHOP_WRITE_OUT
         ! In adjoint mode we do not write output besides on the first run
@@ -750,7 +750,7 @@ CONTAINS
   !     msgBuf :: Used to build messages for printing.
     INTEGER, INTENT( IN )   :: myThid
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
-  
+
   !     == Local Variables ==
     INTEGER IsegBotT( 1 )
     REAL (KIND=_RL90), INTENT( IN ) :: r
@@ -758,7 +758,7 @@ CONTAINS
     IsegBotT = MAXLOC( Bot( : )%x( 1 ), Bot( : )%x( 1 ) < r )
     ! IsegBot MUST LIE IN [ 1, NBtyPts-1 ]
     IF ( IsegBotT( 1 ) > 0 .AND. IsegBotT( 1 ) < NBtyPts ) THEN
-       IsegBot = IsegBotT( 1 )   
+       IsegBot = IsegBotT( 1 )
        ! segment limits in range
        rBotSeg = [ Bot( IsegBot )%x( 1 ), Bot( IsegBot + 1 )%x( 1 ) ]
     ELSE

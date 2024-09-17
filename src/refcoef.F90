@@ -41,7 +41,7 @@ MODULE refCoef
   TYPE(ReflectionCoef), ALLOCATABLE :: RBot( : ), RTop( : )
 
 CONTAINS
-! NOTE: To be able to read using direct access, we assume a fixed pad of 
+! NOTE: To be able to read using direct access, we assume a fixed pad of
 ! characters per line. So each line in BRCFile/TRCFile will have a fixed length
 ! of 100 characters. Helps TAF create the adjoint model. IESCO24
   SUBROUTINE ReadReflectionCoefficient( BotRC, TopRC, myThid )
@@ -53,7 +53,7 @@ CONTAINS
   !     msgBuf :: Used to build messages for printing.
     INTEGER, INTENT( IN )   :: myThid
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
-  
+
   !     == Local Variables ==
 ! flag set to 'F' if refl. coef. is to be read from a File
     CHARACTER (LEN=1), INTENT( IN ) :: BotRC, TopRC
@@ -104,7 +104,7 @@ CONTAINS
 
        DO itheta=1,NBotPts
         rec = itheta+1
-        READ( BRCFile,REC=rec,IOSTAT=IOStat,FMT='(A)' ) line 
+        READ( BRCFile,REC=rec,IOSTAT=IOStat,FMT='(A)' ) line
         READ( line,'(3F5.3)' ) RBot(itheta)%theta, RBot(itheta)%R, &
                                RBot(itheta)%phi
        ENDDO
@@ -146,7 +146,7 @@ CONTAINS
 #ifdef IHOP_WRITE_OUT
        ! In adjoint mode we do not write output besides on the first run
        IF (IHOP_dumpfreq.GE.0) &
-        WRITE( PRTFile,'(2A,I10)' ) 'Number of points in top reflection ', & 
+        WRITE( PRTFile,'(2A,I10)' ) 'Number of points in top reflection ', &
                            'coefficient = ', NTopPts
 #endif /* IHOP_WRITE_OUT */
 
@@ -163,7 +163,7 @@ CONTAINS
 
        DO itheta=1,NTopPts
         rec = itheta+1
-        READ( TRCFile,REC=rec,IOSTAT=IOStat,FMT='(A)' ) line 
+        READ( TRCFile,REC=rec,IOSTAT=IOStat,FMT='(A)' ) line
         READ( line,'(3F5.3)' ) RTop(itheta)%theta, RTop(itheta)%R, &
                                RTop(itheta)%phi
        ENDDO
@@ -246,7 +246,7 @@ CONTAINS
     iLeft  = 1
     iRight = NPts
  ! thetaIntr should be unnecessary? probably used when I was doing complex angles
-    thetaIntr = REAL( RInt%Theta )  
+    thetaIntr = REAL( RInt%Theta )
 
     ! Three cases: ThetaInt left, in, or right of tabulated interval
 
@@ -270,7 +270,7 @@ CONTAINS
        RInt%phi = 0.0     ! R( iRight )%phi
 
     ELSE
-       ! Search for bracketting abscissas: Log2( NPts ) stabs required for a 
+       ! Search for bracketting abscissas: Log2( NPts ) stabs required for a
        ! bracket
 
        DO iLR = 1, NPts
@@ -300,7 +300,7 @@ CONTAINS
 
     ! Internal reflection coefficient interpolator.
     ! Returns f, g, iPower for given x using tabulated values.
-    ! Uses polynomial interpolation to approximate the function between the 
+    ! Uses polynomial interpolation to approximate the function between the
     ! tabulated values
 
     USE poly_mod, only: Poly

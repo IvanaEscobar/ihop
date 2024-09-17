@@ -1,7 +1,7 @@
 #include "IHOP_OPTIONS.h"
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
-CBOP 
+CBOP
 C     !ROUTINE: IHOP_READPARMS
 
 C     !INTERFACE:
@@ -34,7 +34,7 @@ C     msgBuf     :: Informational/error message buffer
 C     iUnit      :: Work variable for IO unit number
       CHARACTER*(MAX_LEN_MBUF) msgBuf
       INTEGER iUnit, IL, num_file
-      INTEGER i, j 
+      INTEGER i, j
       LOGICAL exst
       CHARACTER*(128) fname
 
@@ -78,7 +78,7 @@ C    !FUNCTIONS:
      &      IHOP_step
 
       NAMELIST /IHOP_PARM03/
-     &      writeDelay, 
+     &      writeDelay,
      &      useSSPFile,
      &      IHOP_interpfile,
      &      ihop_iter,
@@ -138,13 +138,13 @@ C     Read parameters from open data file: IHOP_PARM01
 C     Check paramters of IHOP_PARM01
       IF ( IHOP_fileroot.EQ.'' ) THEN
        WRITE(msgBuf, '(2A)') 'S/R IHOP_READPARMS: "IHOP_fileroot" ',
-     &  'Provide fileroot for ihop package'  
+     &  'Provide fileroot for ihop package'
        CALL PRINT_ERROR( msgBuf, myThid )
        STOP 'ABNORMAL END: S/R IHOP_READPARMS'
       ENDIF
       IF ( IHOP_title.EQ.'ihop' ) THEN
        WRITE(msgBuf, '(2A)') '**WARNING** IHOP_READPARMS: "IHOP_title"',
-     &  ' using default title name'  
+     &  ' using default title name'
        CALL PRINT_MESSAGE( msgBuf, errorMessageUnit,
      &                     SQUEEZE_RIGHT, myThid )
       ENDIF
@@ -194,7 +194,7 @@ C     Check paramters of IHOP_PARM02
      &     IHOP_topopt(1:1) .NE. 'A'      ) THEN
 
        WRITE(msgBuf, '(2A)') 'S/R IHOP_READPARMS: "IHOP_topopt(1:1)" ',
-     &  'unknown option for SSP approximation' 
+     &  'unknown option for SSP approximation'
        CALL PRINT_ERROR( msgBuf, myThid )
        STOP 'ABNORMAL END: S/R IHOP_READPARMS'
       ENDIF
@@ -208,7 +208,7 @@ C     Check paramters of IHOP_PARM02
      &     IHOP_topopt(2:2) .NE. 'P'      ) THEN
 
        WRITE(msgBuf, '(2A)') 'S/R IHOP_READPARMS: "IHOP_topopt(2:2)" ',
-     &  'unknown top boundary condition type' 
+     &  'unknown top boundary condition type'
        CALL PRINT_ERROR( msgBuf, myThid )
        STOP 'ABNORMAL END: S/R IHOP_READPARMS'
       ENDIF
@@ -235,7 +235,7 @@ C     Check paramters of IHOP_PARM02
      &     IHOP_botopt(1:1) .NE. 'P'      ) THEN
 
        WRITE(msgBuf, '(2A)') 'S/R IHOP_READPARMS: "IHOP_botopt(1:1)" ',
-     &  'unknown bottom boundary condition type' 
+     &  'unknown bottom boundary condition type'
        CALL PRINT_ERROR( msgBuf, myThid )
        STOP 'ABNORMAL END: S/R IHOP_READPARMS'
       ENDIF
@@ -245,7 +245,7 @@ C     Check paramters of IHOP_PARM02
      &     IHOP_botopt(2:2) .NE. '~'      ) THEN
 
        WRITE(msgBuf, '(2A)') 'S/R IHOP_READPARMS: "IHOP_botopt(2:2)" ',
-     &  'either select or deselect bathymetry file' 
+     &  'either select or deselect bathymetry file'
        CALL PRINT_ERROR( msgBuf, myThid )
        STOP 'ABNORMAL END: S/R IHOP_READPARMS'
       ENDIF
@@ -281,14 +281,14 @@ C     Read parameters from open data file: IHOP_PARM03
 C     Check paramters of IHOP_PARM03
       IF ( IHOP_interpfile.EQ.'' ) THEN
        WRITE(msgBuf, '(2A)') 'S/R IHOP_READPARMS: "IHOP_interpfile" ',
-     &  'Provide interpolation file name for ihop package'  
+     &  'Provide interpolation file name for ihop package'
        CALL PRINT_ERROR( msgBuf, myThid )
        STOP 'ABNORMAL END: S/R IHOP_READPARMS'
       ENDIF
 
 #ifdef ALLOW_COST
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
-C--   Default values for IHOP_COST_NML 
+C--   Default values for IHOP_COST_NML
       ihopdoncoutput = .true.
       ihopObsDir     = ' '
       DO num_file=1,NFILESMAX_IHOP
@@ -312,7 +312,7 @@ C     Check paramters of IHOP_COST_NML
         INQUIRE( FILE=fname, EXIST=exst )
         IF ( .NOT.exst ) THEN
          WRITE(msgBuf, '(2A)') 'S/R IHOP_READPARMS: "ihopObsFiles " ',
-     &    'Provide observations file name for ihop package'  
+     &    'Provide observations file name for ihop package'
          CALL PRINT_ERROR( msgBuf, myThid )
          STOP 'ABNORMAL END: S/R IHOP_READPARMS'
         ENDIF

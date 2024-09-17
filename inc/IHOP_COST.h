@@ -8,7 +8,7 @@
 
       COMMON /ihop_cost_l/ ihopDoNcOutput
 
-!    IHOP cost integer parameters 
+!    IHOP cost integer parameters
 !     ObsNo* :: No. of observations in a single ihop obs file, iOBS
 !     ihopObs_ind_glob* :: MITgcm global index of each obs datum
 
@@ -28,25 +28,25 @@
       COMMON /ihop_cost_i/                                                                                                          &
      &                  ObsNo, ObsNo_tiled,                                                                                         &
      &                  ihopObs_ind_glob, ihopObs_ind_glob_tiled,                                                                   &
-     &                  fidfwd_obs, fidadj_obs, fidglobal, fidadglobal, 
+     &                  fidfwd_obs, fidadj_obs, fidglobal, fidadglobal,
      &                  fiddata_obs,                                                                                                &
      &                  ihopObs_i_tiled, ihopObs_j_tiled, ihopObs_k_tiled,                                                          &
      &                  ihopObs_sample1_ind
-      
+
 !    IHOP buffers
       _RL ihop_data_buff(1000)
       _RL ihop_uncert_buff(1000)
       INTEGER ihop_minind_buff
       INTEGER ihop_maxind_buff
       INTEGER ihop_curfile_buff
-      
+
       COMMON /IHOP_BUFF_R/ ihop_data_buff, ihop_uncert_buff
       COMMON /IHOP_BUFF_I/                                                                                                          &
      & ihop_minind_buff, ihop_maxind_buff, ihop_curfile_buff
-     
+
 !    IHOP cost real parameters
 !     objf_ihop     :: ihop travel times
-!     num_ihop      :: number of observations 
+!     num_ihop      :: number of observations
 !     mult_ihop     :: multiplier applied to all cost terms
 !     ihopObs_time  :: obs. start time
 
@@ -58,7 +58,7 @@
       _RL  ihopObs_lat(NFILESMAX_IHOP,NOBSMAX_IHOP,nsx,nsy)
       _RL  ihopObs_depth(NFILESMAX_IHOP,NOBSMAX_IHOP,nsx,nsy)
       _RL  ihopObs_uncert(NFILESMAX_IHOP,NOBSMAX_IHOP,nsx,nsy)
-      _RL  ihopObs_modmask 
+      _RL  ihopObs_modmask
       _RL  ihopObs_modmask_tiled(nsx,nsy)
       COMMON /IHOP_COST_R/                                                                                                          &
      &                objf_ihop,                                                                                                    &
@@ -70,7 +70,7 @@
 
 !    IHOP cost filenames
 !     ihopObsDir    :: directory where ihop observations are found
-!     ihopObsFile   :: file name for ihop observations 
+!     ihopObsFile   :: file name for ihop observations
 
       CHARACTER*(MAX_LEN_FNAM) ihopObsDir
       CHARACTER*(MAX_LEN_FNAM) ihopObsFiles(NFILESMAX_IHOP)

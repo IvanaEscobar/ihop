@@ -53,7 +53,7 @@ C ==================== External Functions ==========================
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 C Only do I/O if in the main thread
        _BEGIN_MASTER( myThid )
- 
+
 C Read NetCDF input: setting the acoustic domain
       IL  = ILNBLNK( IHOP_interpfile )
       IF (IL.NE.0) THEN
@@ -76,7 +76,7 @@ C Get dimension IDs and lengths
       err = NF_INQ_DIMID( ncid, 'nidw', dimid2 )
       err = NF_INQ_DIMLEN( ncid, dimid2, IHOP_npts_idw )
 
-      IF ( IHOP_npts_range>IHOP_MAX_NC_SIZE .OR. 
+      IF ( IHOP_npts_range>IHOP_MAX_NC_SIZE .OR.
      &     IHOP_npts_idw>IHOP_MAX_NC_SIZE ) THEN
         WRITE(msgBuf, '(2A)') 'S/R IHOP_INIT_FIXED: reading dims',
      &  'NetCDF Dimensions exceed maximum allowable size'

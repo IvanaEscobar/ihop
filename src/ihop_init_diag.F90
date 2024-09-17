@@ -43,7 +43,7 @@ CONTAINS
   SUBROUTINE initPRTFile( myTime, myIter, myThid )
     USE ihop_mod,  only: PRTFile, Beam
     USE angle_mod, only: Angles
-    USE srpos_mod, only: WriteSxSy, WriteSzRz, WriteRcvrRanges, WriteFreqVec 
+    USE srpos_mod, only: WriteSxSy, WriteSzRz, WriteRcvrRanges, WriteFreqVec
 
     ! I/O routine for acoustic fixed inputS
 
@@ -55,14 +55,14 @@ CONTAINS
     _RL, INTENT(IN)     ::  myTime
     INTEGER, INTENT(IN) ::  myIter, myThid
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
-  
+
   ! == Local Variables ==
-    INTEGER, PARAMETER :: Number_to_Echo = 10 
+    INTEGER, PARAMETER :: Number_to_Echo = 10
 !    REAL (KIND=_RL90),  PARAMETER :: c0 = 1500.0
 !    REAL (KIND=_RL90)  :: x(2), c, cimag, gradc(2), crz, czz, rho, Depth
-    REAL (KIND=_RL90)  :: ranges 
+    REAL (KIND=_RL90)  :: ranges
 !    CHARACTER (LEN=10) :: PlotType
-    
+
     ! *** ihop info to PRTFile ***
     CALL openPRTFile( myTime, myIter, myThid )
 
@@ -73,21 +73,21 @@ CONTAINS
     ! In adjoint mode we do not write output besides on the first run
     IF (IHOP_dumpfreq.GE.0) THEN
       CALL WriteRunType( Beam%RunType, myThid )
-      
+
       CALL WriteTopOpt( myThid )
 
-      WRITE(msgBuf,'(A)') 
+      WRITE(msgBuf,'(A)')
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
       WRITE(msgBuf,'(A,F10.2,A)' ) 'Depth = ',Bdry%Bot%HS%Depth,' m'
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(A)') 
+      WRITE(msgBuf,'(A)')
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
       WRITE(msgBuf,'(2A)') 'Top options: ', Bdry%Top%HS%Opt
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 
       CALL WriteTopBot( Bdry%Top%HS, myThid )
 
-      WRITE(msgBuf,'(A)') 
+      WRITE(msgBuf,'(A)')
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
       WRITE(msgBuf,'(2A)') 'Bottom options: ', Bdry%Bot%HS%Opt
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
@@ -139,17 +139,17 @@ CONTAINS
         CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
       END IF
 
-      WRITE(msgBuf,'(A)') 
+      WRITE(msgBuf,'(A)')
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
       WRITE(msgBuf,'(2A)')'______________________________________________', &
                           '_____________'
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(A)') 
+      WRITE(msgBuf,'(A)')
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
       WRITE(msgBuf,'(A,G11.4,A)') &
           ' Step length, deltas = ', Beam%deltas, ' m'
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(A)') 
+      WRITE(msgBuf,'(A)')
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 
 #ifdef IHOP_THREED
@@ -204,7 +204,7 @@ CONTAINS
   !     msgBuf :: Used to build messages for printing.
     INTEGER, INTENT( IN )   :: myThid
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
-  
+
   !     == Local Variables ==
     CHARACTER (LEN= 1) :: BC ! Boundary condition type
 
@@ -214,7 +214,7 @@ CONTAINS
     IF (IHOP_dumpfreq.LT.0) RETURN
 
 #ifdef IHOP_WRITE_OUT
-    WRITE(msgBuf,'(A)') 
+    WRITE(msgBuf,'(A)')
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
     WRITE(msgBuf,'(A)') 'Interior options: '
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
@@ -333,7 +333,7 @@ CONTAINS
   !     msgBuf :: Used to build messages for printing.
     INTEGER, INTENT( IN )   :: myThid
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
-  
+
   !     == Local Variables ==
     CHARACTER*(7), INTENT( IN ) :: RunType
 
@@ -341,7 +341,7 @@ CONTAINS
     IF (IHOP_dumpfreq.LT.0) RETURN
 
 #ifdef IHOP_WRITE_OUT
-    WRITE(msgBuf,'(A)') 
+    WRITE(msgBuf,'(A)')
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 
     SELECT CASE ( RunType( 1:1 ) )
@@ -448,7 +448,7 @@ CONTAINS
   !     msgBuf :: Used to build messages for printing.
     INTEGER, INTENT( IN )   :: myThid
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
-  
+
   !     == Local Variables ==
     TYPE ( HSInfo ),   INTENT( IN ) :: HS
     REAL (KIND=_RL90) :: Mz ! values related to grain size
@@ -468,7 +468,7 @@ CONTAINS
       CASE ( 'A' )
         WRITE(msgBuf,'(A)') '    ACOUSTO-ELASTIC half-space'
         CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-        WRITE(msgBuf,'(A)') 
+        WRITE(msgBuf,'(A)')
         CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
         WRITE(msgBuf,'(A)') &
          '   z [m]     alphaR [m/s]   betaR  rho [g/cm^3]  alphaI     betaI'
@@ -479,7 +479,7 @@ CONTAINS
       CASE ( 'G' )  ! *** Grain size (formulas from UW-APL HF Handbook)
         WRITE(msgBuf,'(A)') '    Grain size to define half-space'
         CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-        WRITE(msgBuf,'(A)') 
+        WRITE(msgBuf,'(A)')
         CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
         WRITE(msgBuf,'( F10.2, 3X, F10.2 )' ) HS%Depth, Mz
         CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
@@ -684,7 +684,7 @@ CONTAINS
     CASE DEFAULT
        atten = 0.0
 
-       ! following to set PlotType has alread been done in READIN if that was 
+       ! following to set PlotType has alread been done in READIN if that was
        ! used for input
        SELECT CASE ( Beam%RunType( 5 : 5 ) )
        CASE ( 'R' )
@@ -714,7 +714,7 @@ CONTAINS
     REAL,      INTENT( IN ) :: freq0, Atten      ! Nominal frequency, stabilizing attenuation (for wavenumber integration only)
     CHARACTER, INTENT( IN ) :: FileName*( * )    ! Name of the file (could be a shade file or a Green's function file)
     CHARACTER, INTENT( IN ) :: Title*( * )       ! Arbitrary title
-    CHARACTER, INTENT( IN ) :: PlotType*( 10 )   ! 
+    CHARACTER, INTENT( IN ) :: PlotType*( 10 )   !
     INTEGER :: LRecl
 
     ! receiver bearing angles
@@ -742,13 +742,13 @@ CONTAINS
        ! MAX( 41, ... ) below because Title is already 40 words (or 80 bytes)
  ! words/record (NRr doubled for complex pressure storage)
        LRecl = MAX( 41, 2 * Nfreq, Pos%Ntheta, Pos%NSx, Pos%NSy, Pos%NSz, &
-                    Pos%NRz, 2 * Pos%NRr )  
+                    Pos%NRz, 2 * Pos%NRr )
 
        OPEN ( FILE = FileName, UNIT = SHDFile, STATUS = 'REPLACE', &
               ACCESS = 'DIRECT', RECL = 4 * LRecl, FORM = 'UNFORMATTED')
        WRITE( SHDFile, REC = 1  ) LRecl, Title( 1 : 80 )
        WRITE( SHDFile, REC = 2  ) PlotType
-       WRITE( SHDFile, REC = 3  ) Nfreq, Pos%Ntheta, Pos%NSx, Pos%NSy, Pos%NSz,& 
+       WRITE( SHDFile, REC = 3  ) Nfreq, Pos%Ntheta, Pos%NSx, Pos%NSy, Pos%NSz,&
                                   Pos%NRz, Pos%NRr, freq0, atten
        WRITE( SHDFile, REC = 4  ) freqVec(   1 : Nfreq )
        WRITE( SHDFile, REC = 5  ) Pos%theta( 1 : Pos%Ntheta )
@@ -762,13 +762,13 @@ CONTAINS
 
     ELSE   ! compressed format for TL from FIELD3D
   ! words/record (NR doubled for complex pressure storage)
-       LRecl = MAX( 41, 2 * Nfreq, Pos%Ntheta, Pos%NSz, Pos%NRz, 2 * Pos%NRr ) 
+       LRecl = MAX( 41, 2 * Nfreq, Pos%Ntheta, Pos%NSz, Pos%NRz, 2 * Pos%NRr )
 
        OPEN ( FILE = FileName, UNIT = SHDFile, STATUS = 'REPLACE', &
               ACCESS = 'DIRECT', RECL = 4 * LRecl, FORM = 'UNFORMATTED')
        WRITE( SHDFile, REC = 1  ) LRecl, Title( 1 : 80 )
        WRITE( SHDFile, REC = 2  ) PlotType
-       WRITE( SHDFile, REC = 3  ) Nfreq, Pos%Ntheta, Pos%NSx, Pos%NSy, Pos%NSz,& 
+       WRITE( SHDFile, REC = 3  ) Nfreq, Pos%Ntheta, Pos%NSx, Pos%NSy, Pos%NSz,&
                                   Pos%NRz, Pos%NRr, freq0, atten
        WRITE( SHDFile, REC = 4  ) freqVec(   1 : Nfreq )
        WRITE( SHDFile, REC = 5  ) Pos%theta( 1 : Pos%Ntheta )
@@ -810,7 +810,7 @@ CONTAINS
 
     ! Allocate and populate Pos structure from data.ihop
 
-    INTEGER,          INTENT( IN  ) :: Nx    
+    INTEGER,          INTENT( IN  ) :: Nx
     REAL(KIND=_RL90), INTENT( IN  ) :: x_in(:)
     REAL(KIND=_RL90), ALLOCATABLE, INTENT( OUT ) :: x_out(:)
     INTEGER                         :: i
@@ -911,13 +911,13 @@ CONTAINS
 #ifdef IHOP_WRITE_OUT
     WRITE(msgbuf,'(A)') 'iHOP Print File'
     CALL PRINT_MESSAGE( msgBuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgbuf,'(A)') 
+    WRITE(msgbuf,'(A)')
     CALL PRINT_MESSAGE( msgBuf, PRTFile, SQUEEZE_RIGHT, myThid )
 #endif /* IHOP_WRITE_OUT */
 
     ! *** TITLE ***
 #ifdef IHOP_THREED
-    WRITE(msgBuf,'(2A)') 'IHOP_INIT_DIAG openPRTFile: ', & 
+    WRITE(msgBuf,'(2A)') 'IHOP_INIT_DIAG openPRTFile: ', &
                          '3D not supported in ihop'
     CALL PRINT_ERROR( msgBuf,myThid )
     STOP 'ABNORMAL END: S/R openPRTFile'
@@ -968,7 +968,7 @@ CONTAINS
     USE angle_mod,  only: Angles
     USE arr_mod,    only: Narr, Arr, U
     USE ihop_mod,   only: ray2D, MaxN, iStep
-    
+
     ! From bdry_mod
     IF (ALLOCATED(Top))         DEALLOCATE(Top)
     IF (ALLOCATED(Bot))         DEALLOCATE(Bot)

@@ -7,7 +7,7 @@ MODULE atten_mod
   ! </CONTACT>
 
   ! Attenuation module
-  !  Routines to convert a sound speed and attenuation in user units to a 
+  !  Routines to convert a sound speed and attenuation in user units to a
   !  complex sound speed
   !  Includes a formula for volume attenuation
 
@@ -31,11 +31,11 @@ MODULE atten_mod
     public CRCI, T, Salinity, pH, z_bar, iBio, NBioLayers, bio
 
 !=======================================================================
-  
+
   INTEGER, PARAMETER               :: MaxBioLayers = 200
   INTEGER                          :: iBio, NBioLayers
   ! Francois-Garrison volume attenuation; temperature, salinity, ...
-  REAL (KIND=_RL90) :: T = 20, Salinity = 35, pH = 8, z_bar = 0, FG   
+  REAL (KIND=_RL90) :: T = 20, Salinity = 35, pH = 8, z_bar = 0, FG
 
   TYPE bioStructure
      REAL (KIND=_RL90) :: Z1, Z2, f0, Q, a0
@@ -64,7 +64,7 @@ CONTAINS
     !             B for biological
     !
     ! freq is the current frequency
-    ! freq0 is the reference frequency for which the dB/meter was specified 
+    ! freq0 is the reference frequency for which the dB/meter was specified
     !  (used only for 'm')
 
     ! Returns
@@ -79,7 +79,7 @@ CONTAINS
 
     afreq = 2.0 * PI * IHOP_freq
 
-    !  Convert to Nepers/m 
+    !  Convert to Nepers/m
     alphaT = 0.0
     SELECT CASE ( AttenUnit( 1 : 1 ) )
     CASE ( 'N' )
@@ -139,7 +139,7 @@ CONTAINS
        END DO
     END SELECT
 
-    ! Convert Nepers/m to equivalent imaginary sound speed 
+    ! Convert Nepers/m to equivalent imaginary sound speed
     alphaT = alphaT * c * c / afreq
     CRCI   = CMPLX( c, alphaT, KIND=_RL90 )
 

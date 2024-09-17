@@ -12,14 +12,14 @@ MODULE monotonic_mod
 
   IMPLICIT NONE
   PRIVATE
-  
+
 ! public interfaces
 !=======================================================================
 
   public monotonic
 
 !=======================================================================
-  
+
   INTERFACE monotonic
      MODULE PROCEDURE monotonic_sngl, monotonic_dble
   END INTERFACE monotonic
@@ -32,7 +32,7 @@ CONTAINS
 
     monotonic_sngl = .TRUE.
     IF ( N == 1 ) RETURN
-    IF ( ANY( x( 2 : N ) <= x( 1 : N - 1 ) ) ) monotonic_sngl = .FALSE.   
+    IF ( ANY( x( 2 : N ) <= x( 1 : N - 1 ) ) ) monotonic_sngl = .FALSE.
   RETURN
   END !FUNCTION monotonic_sngl
 
@@ -43,8 +43,8 @@ CONTAINS
 
     monotonic_dble = .TRUE.
     IF ( N == 1 ) RETURN
-    IF ( ANY( x( 2 : N ) <= x( 1 : N - 1 ) ) ) monotonic_dble = .FALSE.   
+    IF ( ANY( x( 2 : N ) <= x( 1 : N - 1 ) ) ) monotonic_dble = .FALSE.
   RETURN
   END !FUNCTION monotonic_dble
-  
+
 END !MODULE monotonic_mod

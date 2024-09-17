@@ -21,7 +21,7 @@
 !     IHOP parameters
 !     ===============
 !--   COMMON /IHOP_PARAMS_L/ IHOP logical-type parameters:
-!     writeDelay    :: true if delay is a desired output 
+!     writeDelay    :: true if delay is a desired output
 !     useSSPFile    :: true if *.ssp is used instead MITgcm SSP
 
       LOGICAL writeDelay
@@ -32,7 +32,7 @@
 
 !-- COMMON /IHOP_PARAMS_C/ IHOP Character-type parameters:
 !   IHOP_fileroot   :: File name for reading in an environment
-!   IHOP_title      :: Title name for writing into output files 
+!   IHOP_title      :: Title name for writing into output files
 !   IHOP_interpfile :: File name for reading NetCDF inputs
 !   IHOP_topopt     :: SSP interpolation, top boundary type
 !   IHOP_botopt     :: bottom boundary type
@@ -77,10 +77,10 @@
 !   IHOP_dumpfreq       :: frequency of output dump to run directory
 !   IHOP_freq           :: frequency (Hz)
 !   IHOP_depth          :: depth of bottom (m)
-!   IHOP_bcsound        :: bottom sound speed (m/s) 
-!   IHOP_bcsoundshear   :: shear bottom sound speed (m/s) 
-!   IHOP_bcsoundI       :: IMAG bottom sound speed (m/s) 
-!   IHOP_bcsoundshearI  :: IMAG shear bottom sound speed (m/s) 
+!   IHOP_bcsound        :: bottom sound speed (m/s)
+!   IHOP_bcsoundshear   :: shear bottom sound speed (m/s)
+!   IHOP_bcsoundI       :: IMAG bottom sound speed (m/s)
+!   IHOP_bcsoundshearI  :: IMAG shear bottom sound speed (m/s)
 !   IHOP_brho           :: bottom density (kg/m^3)
 !   IHOP_sd             :: source depth (m)
 !   IHOP_rd             :: receiver depth (m)
@@ -92,9 +92,9 @@
       _RL IHOP_freq
       _RL IHOP_depth
       _RL IHOP_bcsound
-      _RL IHOP_bcsoundshear 
+      _RL IHOP_bcsoundshear
       _RL IHOP_bcsoundI
-      _RL IHOP_bcsoundshearI 
+      _RL IHOP_bcsoundshearI
       _RL IHOP_brho
       _RL IHOP_sd (nsd)
       _RL IHOP_rd (nrd)
@@ -105,7 +105,7 @@
       _RS ihop_xc ( IHOP_MAX_NC_SIZE, IHOP_MAX_NC_SIZE )
       _RS ihop_yc ( IHOP_MAX_NC_SIZE, IHOP_MAX_NC_SIZE )
       _RL ihop_ranges ( IHOP_MAX_NC_SIZE )
-      _RL ihop_sumweights ( IHOP_MAX_NC_SIZE, IHOP_MAX_NC_SIZE ) 
+      _RL ihop_sumweights ( IHOP_MAX_NC_SIZE, IHOP_MAX_NC_SIZE )
 
       COMMON /IHOP_PARAMS_R/                                                                                                            &
      &      IHOP_dumpfreq,                                                                                                              &
@@ -119,7 +119,7 @@
 !C     IHOP 3-dim. fields
       _RL ihop_ssp(1-OLx:sNx+OLx,1-OLy:sNy+OLy,Nr,nSx,nSy)
       COMMON /IHOP_STATE_3D/                                                                                                             &
-     &    ihop_ssp 
+     &    ihop_ssp
 #endif /* IHOP_3D_STATE */
 
 #ifdef IHOP_2D_STATE

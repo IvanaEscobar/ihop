@@ -31,7 +31,7 @@ MODULE angle_mod
 
 !=======================================================================
 
-  INTEGER, PARAMETER :: Number_to_Echo = 10 
+  INTEGER, PARAMETER :: Number_to_Echo = 10
   INTEGER          :: ialpha
 #ifdef IHOP_THREED
   INTEGER          :: ibeta
@@ -61,7 +61,7 @@ CONTAINS
   !     msgBuf :: Used to build messages for printing.
     INTEGER, INTENT( IN )   :: myThid
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
-  
+
   !     == Local Variables ==
     REAL (KIND=_RL90),  INTENT( IN  ) :: Depth
     CHARACTER (LEN= 6), INTENT( IN  ) :: TopOpt, RunType
@@ -69,7 +69,7 @@ CONTAINS
 
     IF ( TopOpt( 6:6 ) == 'I' ) THEN ! option to trace a single beam
        Angles%Nalpha = 0
-       !READ( ENVFile, * ) Angles%Nalpha, Angles%iSingle_alpha 
+       !READ( ENVFile, * ) Angles%Nalpha, Angles%iSingle_alpha
     ELSE
        Angles%Nalpha = IHOP_nalpha
     END IF
@@ -77,15 +77,15 @@ CONTAINS
     IF ( Angles%Nalpha == 0 ) THEN   ! automatically estimate Nalpha to use
        IF ( RunType( 1:1 ) == 'R' ) THEN
           ! For a ray trace plot, we don't want too many rays ...
-          Angles%Nalpha = 50         
+          Angles%Nalpha = 50
        ELSE
           ! you're letting ME choose? OK: ideas based on an isospeed ocean
           ! limit based on phase of adjacent beams at maximum range
           Angles%Nalpha = MAX( INT( 0.3*Pos%Rr( Pos%NRr )*IHOP_freq/c0 ), 300 )
 
-          ! limit based on having beams that are thin with respect to the water 
-          ! depth assumes also a full 360 degree angular spread of rays should 
-          ! check which Depth is used here, in case where there is a variable 
+          ! limit based on having beams that are thin with respect to the water
+          ! depth assumes also a full 360 degree angular spread of rays should
+          ! check which Depth is used here, in case where there is a variable
           ! bathymetry
           d_theta_recommended = ATAN( Depth / ( 10.0*Pos%Rr( Pos%NRr ) ) )
           Angles%Nalpha = MAX( INT( PI / d_theta_recommended ), Angles%Nalpha )
@@ -138,7 +138,7 @@ CONTAINS
             STOP 'ABNORMAL END: S/R ReadRayElevationAngles'
         END IF
     END IF
-  
+
   RETURN
   END !SUBROUTINE ReadRayElevationAngles
 
@@ -152,7 +152,7 @@ CONTAINS
   !     msgBuf :: Used to build messages for printing.
     INTEGER, INTENT( IN )   :: myThid
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
-  
+
   !     == Local Variables ==
     CHARACTER (LEN= 6), INTENT( IN ) :: TopOpt, RunType
 
@@ -165,7 +165,7 @@ CONTAINS
 
     IF ( TopOpt( 6 : 6 ) == 'I' ) THEN
        ! option to trace a single beam
-       !READ( ENVFile, * ) Angles%Nbeta, Angles%iSingle_beta 
+       !READ( ENVFile, * ) Angles%Nbeta, Angles%iSingle_beta
     ELSE
        !READ( ENVFile, * ) Angles%Nbeta
     END IF
@@ -173,7 +173,7 @@ CONTAINS
     IF ( Angles%Nbeta == 0 ) THEN   ! automatically estimate Nbeta to use
        IF ( RunType( 1 : 1 ) == 'R' ) THEN
           ! For a ray trace plot, we don't want too many rays ...
-          Angles%Nbeta = 50         
+          Angles%Nbeta = 50
        ELSE
           Angles%Nbeta = MAX( INT( 0.1*Pos%rr( Pos%NRr )*IHOP_freq / c0 ), 300 )
        END IF
@@ -227,7 +227,7 @@ CONTAINS
         END IF
 
        ! Nbeta should = Ntheta
-       Angles%beta( 1 : Angles%Nbeta ) = Pos%theta( 1 : Pos%Ntheta )  
+       Angles%beta( 1 : Angles%Nbeta ) = Pos%theta( 1 : Pos%Ntheta )
     END IF
 
 #ifdef IHOP_WRITE_OUT

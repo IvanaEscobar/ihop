@@ -8,10 +8,10 @@ MODULE ssp_mod
 
   ! Holds SSP input by user and associated variables
 
-  ! This module is very similar to the one used by the other programs in the 
+  ! This module is very similar to the one used by the other programs in the
   ! Acoustics Toolbox. However, it returns the SSP *and* its derivatives
 
-  ! Also, a greater premium has been placed on returning this info quickly, 
+  ! Also, a greater premium has been placed on returning this info quickly,
   ! since BELLHOP calls it at every step so more information is pre-computed
 
   USE ihop_mod,     only: PRTFile
@@ -63,8 +63,8 @@ MODULE ssp_mod
                                 betaI = 0, rhoR = 1
   ! SSP interpolation parameters, only used in ssp_mod
   COMPLEX (KIND=_RL90) :: n2(MaxSSP), n2z(MaxSSP)
-  COMPLEX (KIND=_RL90) :: cSpln( 4, MaxSSP ), cCoef( 4, MaxSSP )   
-                            
+  COMPLEX (KIND=_RL90) :: cSpln( 4, MaxSSP ), cCoef( 4, MaxSSP )
+
 ! TYPE STRUCTURES
 ! == Type Structures ==
   TYPE rxyz_vector
@@ -95,8 +95,8 @@ CONTAINS
 !**********************************************************************!
   SUBROUTINE initSSP( x, myThid )
 
-    ! Call the particular profile routine indicated by the SSP%Type and 
-    ! perform initialize SSP structures 
+    ! Call the particular profile routine indicated by the SSP%Type and
+    ! perform initialize SSP structures
 !    USE ihop_mod,   only: SSPFile
 !    USE pchip_mod,  only: PCHIP
 !    USE splinec_mod,only: cspline
@@ -105,7 +105,7 @@ CONTAINS
   !     myThid :: Thread number. Unused by IESCO
     INTEGER, INTENT( IN )   :: myThid
 !    CHARACTER*(MAX_LEN_MBUF):: msgBuf
-  
+
   !     == Local Variables ==
     REAL (KIND=_RL90), INTENT( IN  ) :: x( 2 )  ! r-z SSP evaluation point
 !    INTEGER :: ir, iz
@@ -129,12 +129,12 @@ CONTAINS
 
   RETURN
   END !SUBROUTINE initSSP
-  
+
 !**********************************************************************!
   SUBROUTINE setSSP( x, myThid )
 
-    ! Call the particular profile routine indicated by the SSP%Type and 
-    ! set SSP structures 
+    ! Call the particular profile routine indicated by the SSP%Type and
+    ! set SSP structures
 
     USE pchip_mod,  only: PCHIP
     USE splinec_mod,only: cspline
@@ -144,7 +144,7 @@ CONTAINS
   !     msgBuf :: Used to build messages for printing.
     INTEGER, INTENT( IN )   :: myThid
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
-  
+
   !     == Local Variables ==
     REAL (KIND=_RL90), INTENT( IN  ) :: x(2)  ! r-z SSP evaluation point
     INTEGER :: ir, iz
@@ -189,17 +189,17 @@ CONTAINS
        ! compute coefficients of std cubic polynomial: c0 + c1*x + c2*x + c3*x
        !
        CALL PCHIP( SSP%z, SSP%c, SSP%NPts, cCoef, cSpln )
-!IEsco23 Test this: 
+!IEsco23 Test this:
 !       CALL PCHIP( SSP%z, SSP%c, SSP%Nz, cCoef, cSpln )
 
     CASE ( 'S' )  !  Cubic spline profile option
        cSpln( 1, 1:SSP%NPts ) = SSP%c( 1:SSP%NPts )
-!IEsco23 Test this: 
+!IEsco23 Test this:
 !       cSpln( 1, 1 : SSP%Nz ) = SSP%c( 1 : SSP%Nz )
-       
+
        ! Compute spline coefs
        CALL cSpline( SSP%z, cSpln( 1, 1 ), SSP%NPts, 0, 0, SSP%NPts )
-!IEsco23 Test this: 
+!IEsco23 Test this:
 !      CALL CSpline( SSP%z, cSpln( 1,1 ), SSP%Nz,iBCBeg, iBCEnd, SSP%Nz )
 
     CASE ( 'Q' )
@@ -223,19 +223,19 @@ CONTAINS
 
   RETURN
   END !SUBROUTINE setSSP
-  
+
 !**********************************************************************!
   SUBROUTINE evalSSP( x, c, cimag, gradc, crr, crz, czz, rho, myThid )
 
-    ! Call the particular profile routine indicated by the SSP%Type and 
-    ! tabulate cp, cs, rhoT 
+    ! Call the particular profile routine indicated by the SSP%Type and
+    ! tabulate cp, cs, rhoT
 
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO
   !     msgBuf :: Used to build messages for printing.
     INTEGER, INTENT( IN )   :: myThid
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
-  
+
   !     == Local Variables ==
     REAL (KIND=_RL90), INTENT( IN  ) :: x( 2 )  ! r-z SSP evaluation point
     REAL (KIND=_RL90), INTENT( OUT ) :: c, cimag, gradc( 2 ), crr, crz, czz, rho
@@ -272,7 +272,7 @@ CONTAINS
 
   RETURN
   END !SUBROUTINE evalSSP
-  
+
 !**********************************************************************!
   SUBROUTINE n2Linear( x, c, cimag, gradc, crr, crz, czz, rho, myThid )
 
@@ -282,17 +282,17 @@ CONTAINS
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO
     INTEGER, INTENT( IN )   :: myThid
-  
+
   !     == Local Variables ==
     REAL (KIND=_RL90), INTENT( IN  ) :: x( 2 )  ! r-z SSP evaluation point
     REAL (KIND=_RL90), INTENT( OUT ) :: c, cimag, gradc( 2 ), crr, crz, czz, &
                                         rho ! sound speed and its derivatives
-    
-    
+
+
     iSegz = 1                   !RG
     IF ( x( 2 ) < SSP%z( iSegz ) .OR. x( 2 ) > SSP%z( iSegz+1 ) ) THEN
       foundz=.false.
-!IEsco23 Test this: 
+!IEsco23 Test this:
 !     DO iz = 2, SSP%Nz   ! Search for bracketting Depths
       DO iz = 2, SSP%NPts   ! Search for bracketting Depths
         IF ( x( 2 ) < SSP%z( iz ) .and. .not. foundz ) THEN
@@ -326,16 +326,16 @@ CONTAINS
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO
     INTEGER, INTENT( IN )   :: myThid
-  
+
   !     == Local Variables ==
     REAL (KIND=_RL90), INTENT( IN  ) :: x(2)  ! r-z SSP evaluation point
     ! sound speed and its derivatives
     REAL (KIND=_RL90), INTENT( OUT ) :: c, cimag, gradc(2), crr, crz, czz, rho
-    
+
     iSegz = 1                   !RG
     IF ( x(2) < SSP%z( iSegz ) .OR. x(2) > SSP%z( iSegz+1 ) ) THEN
        foundz=.false.
-!IEsco23 Test this: 
+!IEsco23 Test this:
 !      DO iz = 2, SSP%Nz   ! Search for bracketting Depths
        DO iz = 2, SSP%NPts   ! Search for bracketting Depths
           IF ( x(2) < SSP%z( iz ) .and. .not. foundz ) THEN
@@ -368,7 +368,7 @@ CONTAINS
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO
     INTEGER, INTENT( IN )   :: myThid
-  
+
   !     == Local Variables ==
     REAL (KIND=_RL90), INTENT( IN  ) :: x(2)  ! r-z SSP evaluation point
     REAL (KIND=_RL90), INTENT( OUT ) :: c, cimag, gradc(2), crr, crz, czz, &
@@ -380,7 +380,7 @@ CONTAINS
     iSegz = 1                   !RG
     IF ( x(2) < SSP%z( iSegz ) .OR. x(2) > SSP%z( iSegz+1 ) ) THEN
        foundz=.false.
-!IEsco23 Test this: 
+!IEsco23 Test this:
 !      DO iz = 2, SSP%Nz   ! Search for bracketting Depths
        DO iz = 2, SSP%NPts   ! Search for bracketting Depths
           IF ( x(2) < SSP%z( iz ) .and. .not. foundz ) THEN
@@ -410,7 +410,7 @@ CONTAINS
 
     W     = ( x(2) - SSP%z( iSegz ) ) / ( SSP%z( iSegz+1 ) - SSP%z( iSegz ) )
     ! linear interp of density
-    rho   = ( 1.0D0-W ) * SSP%rho( iSegz ) + W * SSP%rho( iSegz+1 )  
+    rho   = ( 1.0D0-W ) * SSP%rho( iSegz ) + W * SSP%rho( iSegz+1 )
 
   RETURN
   END !SUBROUTINE cPCHIP
@@ -425,7 +425,7 @@ CONTAINS
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO
     INTEGER, INTENT( IN )   :: myThid
-  
+
   !     == Local Variables ==
     REAL (KIND=_RL90), INTENT( IN  ) :: x(2)  ! r-z SSP evaluation point
     REAL (KIND=_RL90), INTENT( OUT ) :: c, cimag, gradc(2), crr, crz, czz, &
@@ -438,7 +438,7 @@ CONTAINS
     iSegz = 1                   !RG
      IF ( x(2) < SSP%z( iSegz ) .OR. x(2) > SSP%z( iSegz+1 ) ) THEN
         foundz=.false.
-!IEsco23 Test this: 
+!IEsco23 Test this:
 !       DO iz = 2, SSP%Nz   ! Search for bracketting Depths
         DO iz = 2, SSP%NPts   ! Search for bracketting Depths
            IF ( x(2) < SSP%z( iz ) .and. .not. foundz ) THEN
@@ -469,13 +469,13 @@ CONTAINS
 !**********************************************************************!
   SUBROUTINE Quad( x, c, cimag, gradc, crr, crz, czz, rho, myThid )
     ! Bilinear quadrilatteral interpolation of SSP data in 2D, SSP%Type = 'Q'
-  
+
     !     == Routine Arguments ==
     !     myThid :: Thread number. Unused by IESCO
     !     msgBuf :: Used to build messages for printing.
     INTEGER, INTENT( IN )   :: myThid
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
-  
+
     !     == Local Variables ==
     REAL (KIND=_RL90), INTENT( IN  ) :: x(2)  ! r-z SSP evaluation point
     REAL (KIND=_RL90), INTENT( OUT ) :: c, cimag, gradc(2), crr, crz, czz, &
@@ -483,9 +483,9 @@ CONTAINS
     INTEGER             :: irT, iz2
     INTEGER             :: isegzold
     REAL (KIND=_RL90)   :: c1, c2, cz1, cz2, cr, cz, s1, s2, delta_r, delta_z
-    
+
     ! *** Section to return SSP info ***
-  
+
     ! IESCO22: iSegz is the depth index containing x depth
     ! find depth-layer where x(2) in ( SSP%z( iSegz ), SSP%z( iSegz+1 ) )
     iSegz = 1                   !RG
@@ -498,7 +498,7 @@ CONTAINS
           END IF
        END DO
     END IF
-  
+
     ! Check that x is inside the box where the sound speed is defined
     IF ( x(1) < SSP%Seg%r( 1 ) .OR. x(1) > SSP%Seg%r( SSP%Nr ) ) THEN
 #ifdef IHOP_WRITE_OUT
@@ -516,7 +516,7 @@ CONTAINS
 #endif /* IHOP_WRITE_OUT */
       STOP 'ABNORMAL END: S/R Quad'
     END IF
-  
+
     ! find range-segment where x(1) in [ SSP%Seg%r( iSegr ), SSP%Seg%r( iSegr+1 ) )
     iSegr = 1           !RG
     IF ( x(1) < SSP%Seg%r( iSegr ) .OR. x(1) >= SSP%Seg%r( iSegr+1 ) ) THEN
@@ -528,13 +528,13 @@ CONTAINS
         END IF
       END DO
     END IF
-  
+
     ! for depth, x(2), get the sound speed at both ends of range segment
     cz1 = SSP%czMat( iSegz, iSegr   )
     cz2 = SSP%czMat( iSegz, iSegr+1 )
-  
+
     !IESCO22: s2 is distance btwn field point, x(2), and ssp depth @ iSegz
-    s2      = x(2)             - SSP%z( iSegz )            
+    s2      = x(2)             - SSP%z( iSegz )
     delta_z = SSP%z( iSegz+1 ) - SSP%z( iSegz )
     IF (delta_z <= 0 .OR. s2 > delta_z) THEN
 #ifdef IHOP_WRITE_OUT
@@ -546,37 +546,37 @@ CONTAINS
 #endif /* IHOP_WRITE_OUT */
       STOP 'ABNORMAL END: S/R Quad'
     END IF
-    
+
     c1 = SSP%cMat( iSegz, iSegr   ) + s2*cz1
     c2 = SSP%cMat( iSegz, iSegr+1 ) + s2*cz2
-  
+
     ! s1 = proportional distance of x(1) in range
     delta_r = SSP%Seg%r( iSegr+1 ) - SSP%Seg%r( iSegr )
     s1 = ( x(1) - SSP%Seg%r( iSegr ) ) / delta_r
     ! piecewise constant extrapolation for ranges outside SSP box
     s1 = MIN( s1, 1.0D0 )
     s1 = MAX( s1, 0.0D0 )
-  
+
     c = ( 1.0D0-s1 )*c1 + s1*c2 ! c @ x
-  
+
     ! interpolate the attenuation !!!! SSP in ENVFile needs to match first column of SSPFile
     s2    = s2 / delta_z   ! normalize depth layer
     ! volume attenuation is taken from the single c(z) profile
-    cimag = AIMAG( ( 1.0D0-s2 )*SSP%c( iSegz ) + s2*SSP%c( iSegz+1 ) )   
-  
+    cimag = AIMAG( ( 1.0D0-s2 )*SSP%c( iSegz ) + s2*SSP%c( iSegz+1 ) )
+
     cz  = ( 1.0D0-s1 )*cz1 + s1*cz2 ! cz @ x
-  
+
     cr  = ( c2  - c1  ) / delta_r ! SSP grid cr
     crz = ( cz2 - cz1 ) / delta_r ! SSP grid crz
-  
+
     gradc = [ cr, cz ]
     crr   = 0.0
     czz   = 0.0
-  
+
     ! linear interpolation for density
     W   = ( x(2) - SSP%z( iSegz ) ) / ( SSP%z( iSegz+1 ) - SSP%z( iSegz ) )
     rho = ( 1.0D0-W ) * SSP%rho( iSegz ) + W * SSP%rho( iSegz+1 )
-  
+
     !IESCO22: for thesis, czz=crr=0, and rho=1 at all times
   RETURN
   END !SUBROUTINE Quad
@@ -598,7 +598,7 @@ CONTAINS
   !     msgBuf :: Used to build messages for printing.
     INTEGER, INTENT( IN )   :: myThid
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
-  
+
   !     == Local Variables ==
     REAL (KIND=_RL90), INTENT(IN) :: Depth
     REAL (KIND=_RL90) :: bPower, fT
@@ -650,7 +650,7 @@ CONTAINS
     CLOSE( SSPFile )
 
     SSP%NPts = 1
-    DO iz = 1, MaxSSP 
+    DO iz = 1, MaxSSP
        alphaR = SSP%cMat( iz, 1 )
 
        SSP%c(iz) = CRCI( SSP%z(iz), alphaR, alphaI, SSP%AttenUnit, bPower, fT, &
@@ -687,13 +687,13 @@ CONTAINS
 
           ! Write to PRTFile
           CALL writeSSP( myThid )
-          
+
           RETURN
        ENDIF
 
        SSP%NPts = SSP%NPts + 1
     END DO
- 
+
     ! Fall through means too many points in the profile
 #ifdef IHOP_WRITE_OUT
     WRITE(msgBuf,'(2A)') 'SSPMOD ReadSSP: ', &
@@ -758,7 +758,7 @@ SUBROUTINE ExtractSSP( Depth, myThid )
   ! Initiate to ceros
   tmpSSP    = 0.0 _d 0
 
-  ! interpolate SSP with adaptive IDW from gcm grid to ihop grid 
+  ! interpolate SSP with adaptive IDW from gcm grid to ihop grid
   DO bj=myByLo(myThid),myByHi(myThid)
     DO bi=myBxLo(myThid),myBxHi(myThid)
 !$TAF INIT tape_ssp1 = static, 100                  !RG
@@ -828,7 +828,7 @@ SUBROUTINE ExtractSSP( Depth, myThid )
             END DO !jj
           END DO !ii
         END DO !i
-      END DO !j 
+      END DO !j
     END DO !bi
   END DO !bj
 
@@ -902,16 +902,16 @@ SUBROUTINE writeSSP( myThid )
     WRITE(msgBuf,'(2A)')'________________________________________________', &
       '___________'
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(A)') 
+    WRITE(msgBuf,'(A)')
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(A)') "Sound Speed Field" 
+    WRITE(msgBuf,'(A)') "Sound Speed Field"
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(A)') 
+    WRITE(msgBuf,'(A)')
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 
     WRITE(msgBuf,'(2A)') 'Profile option: ', SSP%Type
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(A)') 
+    WRITE(msgBuf,'(A)')
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 
     IF (SSP%Nr .GT. 1) THEN
@@ -928,16 +928,16 @@ SUBROUTINE writeSSP( myThid )
     WRITE(msgBuf,'(A,I10)') 'Number of SSP depths = ', SSP%Nz
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 
-    WRITE(msgBuf,'(A)') 
+    WRITE(msgBuf,'(A)')
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
     WRITE(msgBuf,'(A)') 'Profile ranges [km]:'
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
     WRITE(fmtStr,'(A,I10,A)') '(T11,',SSP%Nr, 'F10.2)'
     ssptmp = SSP%Seg%R( 1:SSP%Nr ) / 1000.0
-    WRITE(msgBuf,fmtStr) ssptmp 
+    WRITE(msgBuf,fmtStr) ssptmp
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 
-    WRITE(msgBuf,'(A)') 
+    WRITE(msgBuf,'(A)')
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
     WRITE(msgBuf,'(A)') 'Sound speed matrix:'
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
@@ -952,7 +952,7 @@ SUBROUTINE writeSSP( myThid )
     END DO
 
     IF (useSSPFile) THEN
-      WRITE(msgBuf,'(A)') 
+      WRITE(msgBuf,'(A)')
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
       WRITE(msgBuf,'(A)') 'Sound speed profile:'
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
@@ -962,11 +962,11 @@ SUBROUTINE writeSSP( myThid )
       WRITE(msgBuf,'(2A)')'     [m]         [m/s]      [m/s]   [g/cm^3]   ', &
                           '   [m/s]     [m/s]'
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      
+
       WRITE(msgBuf,'(2A)')'_______________________________________________', &
                           '____________'
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(A)') 
+      WRITE(msgBuf,'(A)')
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 
       DO iz = 1, SSP%NPts
@@ -1018,7 +1018,7 @@ SUBROUTINE init_fixed_ssp( myThid )
   SSP%cz   = (-999.0, 0.0)
 
   ! set ihop SSP grid size
-  SSP%Nz = Nr+2 ! add z=0 z=Depth layers to GCM Nr 
+  SSP%Nz = Nr+2 ! add z=0 z=Depth layers to GCM Nr
   SSP%Nr = IHOP_NPTS_RANGE
   SSP%NPts = SSP%Nz
 
@@ -1038,7 +1038,7 @@ SUBROUTINE init_fixed_ssp( myThid )
 # endif /* IHOP_WRITE_OUT */
       STOP 'ABNORMAL END: S/R init_fixed_SSP'
   END IF
-  
+
   SSP%Seg%r( 1:SSP%Nr ) = ihop_ranges( 1:SSP%Nr )
   ! Modify from [m] to [km]
   SSP%Seg%r = 1000.0 * SSP%Seg%r
@@ -1065,7 +1065,7 @@ SUBROUTINE init_fixed_ssp( myThid )
   ! Sum IDW weights
   DO ii = 1, SSP%Nr
     ihop_sumweights(ii,:) = sum(ihop_idw_weights(ii,:))
-  END DO 
+  END DO
 
   ! Adapt IDW interpolation by bathymetry
   DO bj=myByLo(myThid),myByHi(myThid)
@@ -1074,7 +1074,7 @@ SUBROUTINE init_fixed_ssp( myThid )
         DO i=1,sNx
           DO ii=1, SSP%Nr
             skip_range = .FALSE.
-      
+
             DO jj=1,IHOP_npts_idw
               IF (ABS(xC(i, j, bi, bj) - ihop_xc(ii, jj)) .LE. tolerance .AND. &
                   ABS(yC(i, j, bi, bj) - ihop_yc(ii, jj)) .LE. tolerance) THEN
@@ -1083,12 +1083,12 @@ SUBROUTINE init_fixed_ssp( myThid )
     IF (nii(ii) .EQ. 1 .AND. k .GT. njj(ii)) THEN
       skip_range = .TRUE.
     END IF
-    
+
     IF (.NOT. skip_range) THEN
       IF (hFacC(i, j, k, bi, bj) .EQ. 0.0) THEN
         ihop_sumweights(ii, k) = &
             ihop_sumweights(ii, k) - ihop_idw_weights(ii, jj)
-    
+
         ! No interpolation on xc, yc centered ranges
         IF (ihop_idw_weights(ii, jj) .EQ. 0.0) THEN
           ihop_sumweights(ii, k:Nr) = 0.0
@@ -1096,7 +1096,7 @@ SUBROUTINE init_fixed_ssp( myThid )
           njj(ii) = k
         END IF
       END IF
-    
+
       ! Set TINY and negative values to 0.0
       IF (ihop_sumweights(ii, k) .LT. 1D-13) ihop_sumweights(ii, k) = 0.0
     END IF

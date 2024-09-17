@@ -43,13 +43,13 @@ CONTAINS
     REAL (KIND=_RL90) :: x(2), Depth
 !!
 !!  ! ===========================================================================
- 
+
   !IESCO24: some notes while I noodle
-    ! Use data.ihop, set time series invariant parameters. These are fixed 
+    ! Use data.ihop, set time series invariant parameters. These are fixed
     ! parameters that do not depend on which time step you run ihop in.
     ! Primarily, the parameters are related to the acoustic grid:
     ! - From initenvihop.F90:initEnv
-    !   - Bdry%Top, Bdry%Bot, 
+    !   - Bdry%Top, Bdry%Bot,
     !     SSP%AttenUnit,Type,Nr,Nz,z,SSP%Seg%r,
     !     Pos%Sx,Sy,Nsz,Nrz,Sz,Rz,Ws,Isz,Wr,Irz,Nrr,Rr,Delta_r,
     !     Beam%RunType,Deltas,Nimage,iBeamWindow,Component,Multiplier,rloop,
@@ -59,7 +59,7 @@ CONTAINS
     !   - Top%Natipts,x,
     ! - From bdry_mod.F90:initBTY
     !   - Bot%Natipts,x,
-    ! This subroutine will set parameters that shouldn't need to be modified 
+    ! This subroutine will set parameters that shouldn't need to be modified
     ! throughout the MITgcm model run
 
     ! === Set local parameters ===
@@ -73,8 +73,8 @@ CONTAINS
     Pos%NSy = -1
     Pos%NSz = -1
     Pos%NRz = -1
-    Pos%NRr = -1 
-    Pos%Ntheta = -1 
+    Pos%NRr = -1
+    Pos%Ntheta = -1
     Pos%Delta_r = -999.
     Pos%Delta_theta = -999.
 
@@ -115,17 +115,17 @@ CONTAINS
 
 
     ! *** Bottom Boundary ***
-    Bdry%Bot%HS%Opt = IHOP_botopt 
+    Bdry%Bot%HS%Opt = IHOP_botopt
     IF ( IHOP_depth.NE.0 ) THEN
       Bdry%Bot%HS%Depth = IHOP_depth
     ELSE
       ! Extend by 5 wavelengths
-      Bdry%Bot%HS%Depth = rkSign*rF( Nr+1 ) + 5*c0/IHOP_freq 
+      Bdry%Bot%HS%Depth = rkSign*rF( Nr+1 ) + 5*c0/IHOP_freq
     END IF
 
     Bdry%Bot%HS%BC = Bdry%Bot%HS%Opt( 1:1 )
     CALL TopBot( AttenUnit, Bdry%Bot%HS, myThid )
-    
+
     SELECT CASE ( Bdry%Bot%HS%Opt( 2:2 ) )
       CASE( '~', '*', ' ' )
       CASE DEFAULT
@@ -183,10 +183,10 @@ CONTAINS
     ! *** Acoustic grid ***
     ! Step size in meters [m]
     Beam%deltas = IHOP_step
-    
+
     ! Automatic step size option
-    IF ( Beam%deltas == 0.0 ) THEN 
-        Beam%deltas = ( Depth ) / 10.   
+    IF ( Beam%deltas == 0.0 ) THEN
+        Beam%deltas = ( Depth ) / 10.
     END IF
 
     ! Domain size
@@ -200,7 +200,7 @@ CONTAINS
 
     ! don't worry about the beam type if this is a ray trace run
     ! IESCO23: using 'e' requires Beam%Type to be set
-    IF ( Beam%RunType( 1:1 ) /= 'R' .OR. Beam%RunType( 1:1 ) /= 'E' ) THEN 
+    IF ( Beam%RunType( 1:1 ) /= 'R' .OR. Beam%RunType( 1:1 ) /= 'E' ) THEN
 
       ! Beam%Type( 1 : 1 ) is
       !   'G' or '^' Geometric hat beams in Cartesian coordinates
@@ -216,7 +216,7 @@ CONTAINS
       !   'D' Double
       !   'S' Single
       !   'Z' Zero
-      ! Beam%Type( 4 : 4 ) selects whether beam shifts are implemented on 
+      ! Beam%Type( 4 : 4 ) selects whether beam shifts are implemented on
       ! boundary reflection
       !   'S' yes
       !   'N' no
@@ -227,12 +227,12 @@ CONTAINS
       Beam%Type( 1:1 ) = Beam%RunType( 2:2 )
 
       SELECT CASE ( Beam%Type( 1:1 ) )
-      CASE ( 'G', 'g' , '^', 'B', 'b', 'S' )   
+      CASE ( 'G', 'g' , '^', 'B', 'b', 'S' )
       CASE DEFAULT
 #ifdef IHOP_WRITE_OUT
         !   Only do I/O if in the main thread
         _BEGIN_MASTER(myThid)
-        WRITE(msgBuf,'(2A)') 'INITENVIHOP initEnv: ', & 
+        WRITE(msgBuf,'(2A)') 'INITENVIHOP initEnv: ', &
             'Unknown beam type (second letter of Beam%Type)'
         CALL PRINT_ERROR( msgBuf,myThid )
         !   Only do I/O in the main thread
@@ -240,7 +240,7 @@ CONTAINS
 #endif /* IHOP_WRITE_OUT */
           STOP 'ABNORMAL END: S/R initEnv'
       END SELECT
-        
+
     END IF ! Beam%RunType( 1:1 ) /= 'R' ...
 
 
@@ -259,7 +259,7 @@ CONTAINS
 !    CALL initBTY( Bdry%Bot%HS%Opt( 2:2 ), Bdry%Bot%HS%Depth, myThid )
 !    ! (top and bottom): OPTIONAL
 !    CALL readReflectionCoefficient( Bdry%Bot%HS%Opt( 1:1 ), &
-!                                    Bdry%Top%HS%Opt( 2:2 ), myThid ) 
+!                                    Bdry%Top%HS%Opt( 2:2 ), myThid )
 !    ! Source Beam Pattern: OPTIONAL, default is omni source pattern
 !    SBPFlag = Beam%RunType( 3:3 )
 !    CALL readPat( myThid )
@@ -273,16 +273,16 @@ CONTAINS
 !        STOP 'ABNORMAL END: S/R  IHOP_INIT'
 !    ENDIF
 !    Pos%theta( 1 ) = 0.
-!  
 !
-!! Allocate arrival and U variables on all MPI processes 
+!
+!! Allocate arrival and U variables on all MPI processes
 !    SELECT CASE ( Beam%RunType( 5:5 ) )
 !    CASE ( 'I' )
 !       NRz_per_range = 1         ! irregular grid
 !    CASE DEFAULT
 !       NRz_per_range = Pos%NRz   ! rectilinear grid
 !    END SELECT
-!  
+!
 !    IF ( ALLOCATED( U ) ) DEALLOCATE( U )
 !     SELECT CASE ( Beam%RunType( 1:1 ) )
 !     ! for a TL calculation, allocate space for the pressure matrix
@@ -290,7 +290,7 @@ CONTAINS
 !          ALLOCATE ( U( NRz_per_range, Pos%NRr ), Stat = iAllocStat )
 !          IF ( iAllocStat/=0 ) THEN
 !#ifdef IHOP_WRITE_OUT
-!              WRITE(msgBuf,'(2A)') 'BELLHOP IHOP_INIT: ', & 
+!              WRITE(msgBuf,'(2A)') 'BELLHOP IHOP_INIT: ', &
 !                             'Insufficient memory for TL matrix: reduce Nr*NRz'
 !              CALL PRINT_ERROR( msgBuf,myThid )
 !#endif /* IHOP_WRITE_OUT */
@@ -304,18 +304,18 @@ CONTAINS
 !          ALLOCATE ( U( 1,1 ), Stat = iAllocStat )   ! open a dummy variable
 !          U( 1,1 ) = 0.                              ! init default value
 !     END SELECT
-!  
+!
 !     ! for an arrivals run, allocate space for arrivals matrices
 !     SELECT CASE ( Beam%RunType( 1:1 ) )
 !     CASE ( 'A', 'a', 'e' )
 !          ! allow space for at least MinNArr arrivals
-!          MaxNArr = MAX( ArrivalsStorage / ( NRz_per_range * Pos%NRr ), & 
+!          MaxNArr = MAX( ArrivalsStorage / ( NRz_per_range * Pos%NRr ), &
 !                         MinNArr )
 !          ALLOCATE ( Arr( MaxNArr, Pos%NRr, NRz_per_range ), &
 !                     NArr( Pos%NRr, NRz_per_range ), Stat = iAllocStat )
 !          IF ( iAllocStat /= 0 ) THEN
 !#ifdef IHOP_WRITE_OUT
-!              WRITE(msgBuf,'(2A)') 'BELLHOP IHOP_INIT: ', & 
+!              WRITE(msgBuf,'(2A)') 'BELLHOP IHOP_INIT: ', &
 !               'Not enough allocation for Arr; reduce ArrivalsStorage'
 !              CALL PRINT_ERROR( msgBuf,myThid )
 !#endif /* IHOP_WRITE_OUT */
@@ -326,13 +326,13 @@ CONTAINS
 !          ALLOCATE ( Arr( 1, NRz_per_range, Pos%NRr ), &
 !                     NArr( Pos%NRr, NRz_per_range ), Stat = iAllocStat )
 !     END SELECT
-!  
+!
 !     ! init Arr, Narr
 !     ! Arr = something
 !     NArr( 1:Pos%NRr, 1:NRz_per_range ) = 0 ! IEsco22 unnecessary? NArr = 0 below
-!  
+!
 !#ifdef IHOP_WRITE_OUT
-!     WRITE(msgBuf,'(A)') 
+!     WRITE(msgBuf,'(A)')
 !     ! In adjoint mode we do not write output besides on the first run
 !     IF (IHOP_dumpfreq.GE.0) &
 !       CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
@@ -343,7 +343,7 @@ CONTAINS
 !! open all output files
 !    IF ( IHOP_dumpfreq .GE. 0 ) &
 !     CALL OpenOutputFiles( IHOP_fileroot, myTime, myIter, myThid )
-!  
+!
 !    ! Run Bellhop solver on a single processor
 !    if (numberOfProcs.gt.1) then
 !! Use same single processID as IHOP COST package
@@ -352,7 +352,7 @@ CONTAINS
 !            CALL CPU_TIME( Tstart )
 !            CALL BellhopCore(myThid)
 !            CALL CPU_TIME( Tstop )
-!! Alternitavely, we can broadcast relevant info to all mpi processes Ask P. 
+!! Alternitavely, we can broadcast relevant info to all mpi processes Ask P.
 !!#ifdef ALLOW_COST
 !!            ! Broadcast info to all MPI procs for COST function accumulation
 !!            CALL MPI_BCAST(i, 1, MPI_COMPLEX, myProcId, MPI_COMM_MODEL, ierr)
@@ -364,7 +364,7 @@ CONTAINS
 !        CALL BellhopCore(myThid)
 !        CALL CPU_TIME( Tstop )
 !    endif
-!  
+!
 !#ifdef IHOP_WRITE_OUT
 !    IF ( IHOP_dumpfreq.GE.0 ) THEN
 !        ! print run time
@@ -379,7 +379,7 @@ CONTAINS
 !        CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
 !        WRITE(msgBuf, '(A,G15.3,A)' ) 'CPU Time = ', Tstop-Tstart, 's'
 !        CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
-!  
+!
 !        ! close all files
 !        IF ( IHOP_dumpfreq .GE. 0) THEN
 !            SELECT CASE ( Beam%RunType( 1:1 ) )
@@ -390,11 +390,11 @@ CONTAINS
 !            CASE ( 'R', 'E' )       ! ray and eigen ray trace
 !               CLOSE( RAYFile )
 !            CASE ( 'e' )
-!               CLOSE( RAYFile ) 
+!               CLOSE( RAYFile )
 !               CLOSE( ARRFile )
 !               IF ( writeDelay ) CLOSE( DELFile )
 !            END SELECT
-!  
+!
 !            if (numberOfProcs.gt.1) then
 !                ! Erase prtfiles that aren't on procid = 0
 !                if(myProcId.ne.0) then
@@ -408,10 +408,10 @@ CONTAINS
 !        ENDIF
 !    ENDIF
 !#endif /* IHOP_WRITE_OUT */
-  
+
   RETURN
-  END !SUBROUTINE 
-  
+  END !SUBROUTINE
+
   ! **********************************************************************!
   SUBROUTINE ReadTopOpt( BC, AttenUnit, myThid )
     USE atten_mod, only: T, Salinity, pH, z_bar, iBio, NBioLayers, bio
@@ -431,7 +431,7 @@ CONTAINS
   !     msgBuf :: Used to build messages for printing.
     INTEGER, INTENT( IN )   :: myThid
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
-  
+
   !     == Local Variables ==
     CHARACTER (LEN= 1), INTENT( OUT )   :: BC ! Boundary condition type
     CHARACTER (LEN= 2), INTENT( INOUT ) :: AttenUnit
@@ -449,7 +449,7 @@ CONTAINS
       CASE ( 'N','C','P','S','Q','A' )
       CASE DEFAULT
 #ifdef IHOP_WRITE_OUT
-        WRITE(msgBuf,'(2A)') 'INITENVIHOP ReadTopOpt: ', & 
+        WRITE(msgBuf,'(2A)') 'INITENVIHOP ReadTopOpt: ', &
                              'Unknown option for SSP approximation'
         CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
@@ -461,7 +461,7 @@ CONTAINS
       CASE ( 'N','F','M','W','Q','L' )
       CASE DEFAULT
 #ifdef IHOP_WRITE_OUT
-        WRITE(msgBuf,'(2A)') 'INITENVIHOP ReadTopOpt: ', & 
+        WRITE(msgBuf,'(2A)') 'INITENVIHOP ReadTopOpt: ', &
                              'Unknown attenuation units'
         CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
@@ -473,7 +473,7 @@ CONTAINS
       CASE ( 'T','F','B',' ' )
       CASE DEFAULT
 #ifdef IHOP_WRITE_OUT
-        WRITE(msgBuf,'(2A)') 'INITENVIHOP ReadTopOpt: ', & 
+        WRITE(msgBuf,'(2A)') 'INITENVIHOP ReadTopOpt: ', &
                              'Unknown top option letter in fourth position'
         CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
@@ -485,7 +485,7 @@ CONTAINS
       CASE ( '-', '_', ' ' )
       CASE DEFAULT
 #ifdef IHOP_WRITE_OUT
-        WRITE(msgBuf,'(2A)') 'INITENVIHOP ReadTopOpt: ', & 
+        WRITE(msgBuf,'(2A)') 'INITENVIHOP ReadTopOpt: ', &
                              'Unknown top option letter in fifth position'
         CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
@@ -497,7 +497,7 @@ CONTAINS
       CASE ( ' ' )
       CASE DEFAULT
 #ifdef IHOP_WRITE_OUT
-        WRITE(msgBuf,'(2A)') 'INITENVIHOP ReadTopOpt: ', & 
+        WRITE(msgBuf,'(2A)') 'INITENVIHOP ReadTopOpt: ', &
                              'Unknown top option letter in sixth position'
         CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
@@ -513,7 +513,7 @@ CONTAINS
     USE atten_mod, only: CRCI
     USE bdry_mod,  only: HSInfo
     USE ssp_mod,   only: alphaR, betaR, alphaI, betaI, rhoR
-    
+
   ! ===========================================================================
   !     == Global Variables ==
 #include "SIZE.h"
@@ -528,7 +528,7 @@ CONTAINS
   !     msgBuf :: Used to build messages for printing.
     INTEGER, INTENT( IN )   :: myThid
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
-  
+
   !     == Local Variables ==
     CHARACTER (LEN=2), INTENT( IN    ) :: AttenUnit
     TYPE ( HSInfo ),   INTENT( INOUT ) :: HS
@@ -544,12 +544,12 @@ CONTAINS
     bPower = 1.0
     fT     = 1D20
     rhoR   = 1.0
-    
+
     SELECT CASE ( HS%BC )
       CASE ( 'V','R','A','G','F','W','P' )
       CASE DEFAULT
 #ifdef IHOP_WRITE_OUT
-        WRITE(msgBuf,'(2A)') 'INITENVIHOP TopBot: ', & 
+        WRITE(msgBuf,'(2A)') 'INITENVIHOP TopBot: ', &
                              'Unknown boundary condition type'
         CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
@@ -585,7 +585,7 @@ CONTAINS
 
     ! Allocate and populate Pos structure from data.ihop
 
-    INTEGER,          INTENT( IN  ) :: Nx    
+    INTEGER,          INTENT( IN  ) :: Nx
     REAL(KIND=_RL90), INTENT( IN  ) :: x_in(:)
     REAL(KIND=_RL90), ALLOCATABLE, INTENT( OUT ) :: x_out(:)
     INTEGER                         :: i
@@ -609,7 +609,7 @@ CONTAINS
 
     ! Read the RunType variable and print to .prt file
     USE srPos_mod, only: Pos
-    
+
   ! ===========================================================================
   !     == Global Variables ==
 #include "EEPARAMS.h"
@@ -619,7 +619,7 @@ CONTAINS
   !     msgBuf :: Used to build messages for printing.
     INTEGER, INTENT( IN )   :: myThid
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
-  
+
   !     == Local Variables ==
     CHARACTER (LEN= 7), INTENT( INOUT ) :: RunType
     CHARACTER (LEN=10), INTENT( INOUT ) :: PlotType
@@ -628,7 +628,7 @@ CONTAINS
       CASE ( 'R','E','I','S','C','A','a','e' )
       CASE DEFAULT
 #ifdef IHOP_WRITE_OUT
-        WRITE(msgBuf,'(2A)') 'INITENVIHOP ReadRunType: ', & 
+        WRITE(msgBuf,'(2A)') 'INITENVIHOP ReadRunType: ', &
             'Unknown RunType selected'
         CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
@@ -653,7 +653,7 @@ CONTAINS
       CASE ( 'I' )
         IF ( Pos%NRz /= Pos%NRr ) THEN
 #ifdef IHOP_WRITE_OUT
-          WRITE(msgBuf,'(2A)') 'INITENVIHOP ReadRunType: ', & 
+          WRITE(msgBuf,'(2A)') 'INITENVIHOP ReadRunType: ', &
                   'Irregular grid option selected with NRz not equal to Nr'
           CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */

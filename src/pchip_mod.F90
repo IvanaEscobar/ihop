@@ -35,7 +35,7 @@ CONTAINS
     ! Computing, 5(2):300-304, (1984) https://doi.org/10.1137/0905021
     !
     ! F. N. Fritsch and R. E. Carlson. "Monotone Piecewise Cubic Interpolation",
-    ! SIAM Journal on Numerical Analysis, 17(2):238-246, (1980) 
+    ! SIAM Journal on Numerical Analysis, 17(2):238-246, (1980)
     ! https://doi.org/10.1137/0717021
     !
     ! N is the number of nodes
@@ -275,7 +275,7 @@ CONTAINS
        ! adjust derivative value to enforce monotonicity
        fprime_right_end = 3.0D0 * del2;
     END IF
-    
+
   RETURN
   END !FUNCTION fprime_right_end
 
