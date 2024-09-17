@@ -1,13 +1,13 @@
 #include "IHOP_OPTIONS.h"
-MODULE init_mod
+MODULE ihop_init_mod
 
 IMPLICIT NONE
 PRIVATE
 
-public ihop_init_fixed_env
+public init_fixed_env
 
 CONTAINS
-  SUBROUTINE IHOP_INIT_FIXED_ENV ( myThid )
+  SUBROUTINE INIT_FIXED_ENV ( myThid )
   ! Initiate fixed variable for ihop time series. Note: NO IHOP_THREED here
   ! ===========================================================================
 
@@ -674,4 +674,4 @@ CONTAINS
   RETURN
   END !SUBROUTINE ReadRunType
 !**********************************************************************!
-END MODULE init_mod
+END MODULE ihop_init_mod

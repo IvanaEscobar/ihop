@@ -13,7 +13,7 @@ C     !INTERFACE:
       SUBROUTINE IHOP_INIT_FIXED( myThid )
 
 C     !USES:
-      use init_mod, only: ihop_init_fixed_env
+      use ihop_init_mod, only: init_fixed_env
       IMPLICIT NONE
 C ==================== Global Variables ===========================
 #include "EEPARAMS.h"
@@ -140,7 +140,7 @@ C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
           ihop_sumweights(i,k) = -1.0
         END DO
       END DO
-      CALL ihop_init_fixed_env( myThid )
+      CALL init_fixed_env( myThid )
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 
 #ifdef ALLOW_MNC
