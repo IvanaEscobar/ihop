@@ -520,6 +520,14 @@ CONTAINS
 
       Bot(:)%x(1) = 1000.0 * Bot(:)%x(1)   ! Convert ranges in km to m
 
+# ifdef IHOP_WRITE_OUT
+      WRITE(msgBuf,'(2A)')'_____________________________________________', &
+                          '______________'
+      ! In adjoint mode we do not write output besides on the first run
+      IF (IHOP_dumpfreq.GE.0) &
+       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+# endif /* IHOP_WRITE_OUT */
+
    CASE DEFAULT   ! no bathymetry given, use SSP depth for flat bottom
 # ifdef IHOP_WRITE_OUT
       WRITE(msgBuf,'(A)') 'No BTYFile; assuming flat bottom'

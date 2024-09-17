@@ -6,7 +6,6 @@ MODULE angle_mod
     !   Ivana Escobar
     ! </CONTACT>
 
-  USE ihop_mod,     only: PRTFile
   USE subTab_mod,   only: SubTab
   USE srPos_mod,    only: Pos
   USE sort_mod,     only: Sort
@@ -118,37 +117,6 @@ CONTAINS
                    Angles%alpha(1), 360.0 ) ) < 10.0*TINY(1.0D0) ) &
       Angles%Nalpha = Angles%Nalpha - 1
 
-#ifdef IHOP_WRITE_OUT
-    ! In adjoint mode we do not write output besides on the first run
-    IF (IHOP_dumpfreq.GE.0) THEN
-        WRITE(msgBuf,'(2A)')'_____________________________________________', &
-                            '______________'
-        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-        WRITE(msgBuf,'(A)')
-        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-        WRITE(msgBuf,'(A,I10)') 'Number of beams in elevation   = ', &
-                                Angles%Nalpha
-        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-        IF ( Angles%iSingle_alpha > 0 ) THEN
-            WRITE(msgBuf,'(A,I10)') 'Trace only beam number ', &
-                                    Angles%iSingle_alpha
-            CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-        END IF
-        WRITE(msgBuf,'(A)') 'Beam take-off angles (degrees)'
-        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-
-        IF ( Angles%Nalpha >= 1 ) THEN
-            WRITE(msgBuf,'(10F12.3)') &
-                Angles%alpha( 1:MIN(Angles%Nalpha,Number_to_Echo) )
-            CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-        END IF
-        IF ( Angles%Nalpha > Number_to_Echo ) THEN
-            WRITE(msgBuf,'(A,F12.6)') ' ... ', Angles%alpha( Angles%Nalpha )
-            CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-        END IF
-    ENDIF
-#endif /* IHOP_WRITE_OUT */
-
     IF ( Angles%Nalpha>1 .AND. &
          Angles%alpha(Angles%Nalpha) == Angles%alpha(1) ) THEN
 #ifdef IHOP_WRITE_OUT
@@ -177,6 +145,7 @@ CONTAINS
   !**********************************************************************!
 #ifdef IHOP_THREED
   SUBROUTINE ReadRayBearingAngles( TopOpt, RunType, myThid )
+    USE ihop_mod,     only: PRTFile
 
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO

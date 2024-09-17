@@ -125,7 +125,7 @@ CONTAINS
     ! All methods require Depth
     Depth = x( 2 )
     ! Check if SSPFile exists
-    IF (useSSPFile .EQV. .TRUE.) THEN
+    IF (useSSPFile) THEN
       CALL ReadSSP( Depth, myThid )
     ELSE
       CALL ExtractSSP(Depth, myThid )

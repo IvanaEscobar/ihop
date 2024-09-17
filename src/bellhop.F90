@@ -32,7 +32,6 @@ MODULE BELLHOP
   USE angle_mod,    only:   Angles, ialpha
   USE srPos_mod,    only:   Pos
   USE ssp_mod,      only:   evalSSP, SSP
-  !HSInfo, Bdry, 
   USE bdry_mod,     only:   initATI, initBTY, GetTopSeg, GetBotSeg, Bot, Top,  &
                             atiType, btyType, IsegTop, IsegBot,                &
                             rTopSeg, rBotSeg, Bdry
@@ -174,7 +173,7 @@ CONTAINS
         WRITE(msgBuf,'(2A)') 'BELLHOP IHOP_INIT: failed allocation Pos%theta'
         CALL PRINT_ERROR( msgBuf, myThid )
 #endif /* IHOP_WRITE_OUT */
-        STOP 'ABNORMAL END: S/R  IHOP_INIT'
+        STOP 'ABNORMAL END: S/R IHOP_INIT'
     ENDIF
     Pos%theta( 1 ) = 0.
   
@@ -259,7 +258,6 @@ CONTAINS
 ! Alternitavely, we can broadcast relevant info to all mpi processes Ask P. 
 !#ifdef ALLOW_COST
 !            ! Broadcast info to all MPI procs for COST function accumulation
-!            print *, "escobar: broacasting from pid ", myProcId
 !            CALL MPI_BCAST(i, 1, MPI_COMPLEX, myProcId, MPI_COMM_MODEL, ierr)
 !
 !#endif /* ALLOW_COST */

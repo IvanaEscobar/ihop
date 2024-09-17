@@ -16,6 +16,7 @@ MODULE srpos_mod
   IMPLICIT NONE
 !  == Global variables ==
 #include "SIZE.h"
+#include "GRID.h"
 #include "EEPARAMS.h"
 #include "PARAMS.h"
 #include "IHOP_SIZE.h"
