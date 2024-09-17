@@ -28,7 +28,6 @@ MODULE BELLHOP
   USE ihop_mod,     only:   rad2deg, i, Beam, ray2D, NRz_per_range, afreq,     &
                             SrcDeclAngle, iSmallStepCtr,                       &
                             PRTFile, SHDFile, ARRFile, RAYFile, DELFile   
-  USE initenvihop,  only:   initEnv, openOutputFiles, resetMemory
   USE angle_mod,    only:   Angles, ialpha
   USE srPos_mod,    only:   Pos
   USE ssp_mod,      only:   evalSSP, SSP
@@ -52,7 +51,6 @@ MODULE BELLHOP
 #include "SIZE.h"
 #include "GRID.h"
 #include "EEPARAMS.h"
-#include "EESUPPORT.h"
 #include "PARAMS.h"
 #include "IHOP_SIZE.h"
 #include "IHOP.h"
@@ -66,7 +64,9 @@ MODULE BELLHOP
 
 CONTAINS
   SUBROUTINE IHOP_INIT ( myTime, myIter, myThid )
-  !     !INPUT/OUTPUT PARAMETERS:
+    USE ihop_init_diag, only: initPRTFile, openOutputFiles, resetMemory
+    USE ssp_mod,        only: setSSP
+
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO
   !     msgBuf :: Used to build messages for printing.
@@ -76,86 +76,55 @@ CONTAINS
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
   
   !     == Local Variables ==
-    INTEGER             :: iostat, iAllocStat, ierr
-    INTEGER             :: jj 
+    INTEGER             :: iAllocStat
     REAL                :: Tstart, Tstop
-  ! added locally previously read in from unknown mod ... IEsco22
-    CHARACTER ( LEN=2 ) :: AttenUnit
-  ! For MPI writing: inspo from eeboot_minimal.F
-    CHARACTER*(MAX_LEN_FNAM)    :: fNam
-    CHARACTER*(6)               :: fmtStr
-    INTEGER                     :: mpiRC, IL
+    REAL (KIND=_RL90)   :: x(2)
   ! ===========================================================================
-    INTEGER              :: iSeg
     INTEGER, PARAMETER   :: ArrivalsStorage = 2000, MinNArr = 10
   ! ===========================================================================
  
-!$TAF init ihop_init1 = 'BellhopIhop_init'
-
-    ! Open the print file: template from eeboot_minimal.F
-#ifdef IHOP_WRITE_OUT
-    IF ( .NOT.usingMPI ) THEN
-        WRITE(myProcessStr, '(I10.10)') myIter
-        IL=ILNBLNK( myProcessStr )
-        WRITE(fNam,'(4A)') TRIM(IHOP_fileroot),'.',myProcessStr(1:IL),'.prt'
-        IF ( IHOP_dumpfreq.GE.0 ) &
-         OPEN( PRTFile, FILE = fNam, STATUS = 'UNKNOWN', IOSTAT = iostat )
-#ifdef ALLOW_USE_MPI
-    ELSE ! using MPI
-        CALL MPI_COMM_RANK( MPI_COMM_MODEL, mpiMyId, mpiRC )
-        myProcId = mpiMyId
-        IL = MAX(4,1+INT(LOG10(DFLOAT(nPx*nPy))))
-        WRITE(fmtStr,'(2(A,I1),A)') '(I',IL,'.',IL,')'
-        WRITE(myProcessStr,fmtStr) myProcId
-        IL = ILNBLNK( myProcessStr )
-        mpiPidIo = myProcId
-        pidIO    = mpiPidIo
-
-        IF( mpiPidIo.EQ.myProcId ) THEN
-#  ifdef SINGLE_DISK_IO
-         IF( myProcId.eq.0 ) THEN
-#  endif
-            IF (myIter.GE.0) THEN
-                WRITE(fNam,'(4A,I10.10,A)') &
-                    TRIM(IHOP_fileroot),'.',myProcessStr(1:IL),'.',myIter,'.prt'
-            ELSE
-                WRITE(fNam,'(4A)') &
-                    TRIM(IHOP_fileroot),'.',myProcessStr(1:IL),'.prt'
-            ENDIF
-
-            IF ( IHOP_dumpfreq .GE. 0) &
-             OPEN(PRTFile, FILE=fNam, STATUS='UNKNOWN', IOSTAT=iostat )
-            IF ( iostat /= 0 ) THEN
-                WRITE(*,*) 'ihop: IHOP_fileroot not recognized, ', &
-                    TRIM(IHOP_fileroot)
-                WRITE(msgBuf,'(A)') 'IHOP_INIT: Unable to recognize file'
-                CALL PRINT_ERROR( msgBuf, myThid )
-                STOP 'ABNORMAL END: S/R IHOP_INIT'
-            END IF
-#  ifdef SINGLE_DISK_IO
-         END IF
-#  endif
-        END IF
-# endif /* ALLOW_USE_MPI */
-    END IF
-#endif /* IHOP_WRITE_OUT */
-
-! IESCO24: Write derived type with allocatable memory by type: Pos from srpos_mod
-! Scalar components
-! Allocatable arrays
-!$TAF store pos%wr,pos%ws = ihop_init1
-
-! IESCO24: Write derived type with allocatable memory by type: SSP from ssp_mod
-! Scalar components
-! Fixed arrays
-!$TAF store ssp%z = ihop_init1
-! Allocatable arrays
-!$TAF store ssp%czmat,ssp%seg%r,ssp%seg%x,ssp%seg%y,ssp%seg%z = ihop_init1
+!!$TAF init ihop_init1 = 'BellhopIhop_init'
+!
+!! IESCO24: Write derived type with allocatable memory by type: Pos from srpos_mod
+!! Scalar components
+!! Allocatable arrays
+!!$TAF store pos%wr,pos%ws = ihop_init1
+!
+!! IESCO24: Write derived type with allocatable memory by type: SSP from ssp_mod
+!! Scalar components
+!! Fixed arrays
+!!$TAF store ssp%z = ihop_init1
+!! Allocatable arrays
+!!$TAF store ssp%czmat,ssp%seg%r,ssp%seg%x,ssp%seg%y,ssp%seg%z = ihop_init1
 
     ! Reset memory
     CALL resetMemory() 
-    ! save data.ihop, gcm SSP: REQUIRED
-    CALL initEnv( myTime, myIter, myThid )
+    ! save data.ihop, open PRTFile: REQUIRED
+    CALL initPRTFile( myTime, myIter, myThid )
+
+!!! FROM old initenvihop.F90:initEnv
+!! IESCO24: Write derived type with allocatable memory by type: Bdry from bdry_mod
+!! Scalar components
+!!$TAF store bdry%top%hs%depth,bdry%top%hs%bc = initEnv1
+!
+!!$TAF init initEnv1 = 'initenvihop_initenv'
+!
+!! IESCO24: Write derived type with allocatable memory by type: SSP from ssp_mod
+!! Scalar components
+!! Fixed arrays
+!! Allocatable arrays
+!!$TAF store ssp%czmat,ssp%seg%r,ssp%seg%x,ssp%seg%y,ssp%seg%z = initEnv1
+!
+!! IESCO24: Write derived type with allocatable memory by type: Pos from srpos_mod
+!! Scalar components
+!! Allocatable arrays
+!!$TAF store pos%rr = initEnv1
+!!$TAF store pos%theta,pos%wr,pos%ws = initEnv1
+
+    ! set SSP%cmat from gcm SSP: REQUIRED
+    x = [ 0.0 _d 0, Bdry%Bot%HS%Depth ]
+    CALL setSSP( x, myThid )
+
     ! AlTImetry: OPTIONAL, default is no ATIFile
     CALL initATI( Bdry%Top%HS%Opt( 5:5 ), Bdry%Top%HS%Depth, myThid )
     ! BaThYmetry: OPTIONAL, default is BTYFile
@@ -166,6 +135,7 @@ CONTAINS
     ! Source Beam Pattern: OPTIONAL, default is omni source pattern
     SBPFlag = Beam%RunType( 3:3 )
     CALL readPat( myThid )
+
     Pos%Ntheta = 1
     ALLOCATE( Pos%theta( Pos%Ntheta ), Stat = IAllocStat )
     IF ( IAllocStat/=0 ) THEN
@@ -177,8 +147,7 @@ CONTAINS
     ENDIF
     Pos%theta( 1 ) = 0.
   
-
-! Allocate arrival and U variables on all MPI processes 
+    ! Allocate arrival and U variables on all MPI processes 
     SELECT CASE ( Beam%RunType( 5:5 ) )
     CASE ( 'I' )
        NRz_per_range = 1         ! irregular grid
@@ -186,59 +155,63 @@ CONTAINS
        NRz_per_range = Pos%NRz   ! rectilinear grid
     END SELECT
   
-    IF ( ALLOCATED( U ) ) DEALLOCATE( U )
-     SELECT CASE ( Beam%RunType( 1:1 ) )
-     ! for a TL calculation, allocate space for the pressure matrix
-     CASE ( 'C', 'S', 'I' )        ! TL calculation
-          ALLOCATE ( U( NRz_per_range, Pos%NRr ), Stat = iAllocStat )
-          IF ( iAllocStat/=0 ) THEN
+    SELECT CASE ( Beam%RunType( 1:1 ) )
+    ! for a TL calculation, allocate space for the pressure matrix
+    CASE ( 'C', 'S', 'I' )        ! TL calculation
+         ALLOCATE( U( NRz_per_range, Pos%NRr ), Stat = iAllocStat )
+         IF ( iAllocStat/=0 ) THEN
 #ifdef IHOP_WRITE_OUT
               WRITE(msgBuf,'(2A)') 'BELLHOP IHOP_INIT: ', & 
                              'Insufficient memory for TL matrix: reduce Nr*NRz'
               CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
-              STOP 'ABNORMAL END: S/R IHOP_INIT'
-          END IF
-          U = 0.0                                    ! init default value
-     CASE ( 'A', 'a', 'R', 'E', 'e' )   ! Arrivals calculation
-          ALLOCATE ( U( 1,1 ), Stat = iAllocStat )   ! open a dummy variable
-          U( 1,1 ) = 0.                              ! init default value
-     CASE DEFAULT
-          ALLOCATE ( U( 1,1 ), Stat = iAllocStat )   ! open a dummy variable
-          U( 1,1 ) = 0.                              ! init default value
-     END SELECT
+             STOP 'ABNORMAL END: S/R IHOP_INIT'
+         END IF
+         U = 0.0                       ! init default value
+    CASE ( 'A', 'a', 'R', 'E', 'e' )   ! Arrivals calculation
+         ALLOCATE( U( 1,1 ) )          ! open a dummy variable
+         U( 1,1 ) = 0.                 ! init default value
+    CASE DEFAULT
+         ALLOCATE( U( 1,1 ) )          ! open a dummy variable
+         U( 1,1 ) = 0.                 ! init default value
+    END SELECT
   
-     ! for an arrivals run, allocate space for arrivals matrices
-     SELECT CASE ( Beam%RunType( 1:1 ) )
-     CASE ( 'A', 'a', 'e' )
-          ! allow space for at least MinNArr arrivals
-          MaxNArr = MAX( ArrivalsStorage / ( NRz_per_range * Pos%NRr ), & 
-                         MinNArr )
-          ALLOCATE ( Arr( MaxNArr, Pos%NRr, NRz_per_range ), &
-                     NArr( Pos%NRr, NRz_per_range ), Stat = iAllocStat )
-          IF ( iAllocStat /= 0 ) THEN
+    ! for an arrivals run, allocate space for arrivals matrices
+    SELECT CASE ( Beam%RunType( 1:1 ) )
+    CASE ( 'A', 'a', 'e' )
+         ! allow space for at least MinNArr arrivals
+         MaxNArr = MAX( ArrivalsStorage / ( NRz_per_range * Pos%NRr ), & 
+                        MinNArr )
+    CASE DEFAULT
+         MaxNArr = 1
+    END SELECT
+
+    ! init Arr, Narr
+    ALLOCATE( Arr( MaxNArr, Pos%NRr, NRz_per_range ), &
+              NArr(Pos%NRr, NRz_per_range), STAT = iAllocStat )
+    IF ( iAllocStat /= 0 ) THEN
 #ifdef IHOP_WRITE_OUT
-              WRITE(msgBuf,'(2A)') 'BELLHOP IHOP_INIT: ', & 
-               'Not enough allocation for Arr; reduce ArrivalsStorage'
-              CALL PRINT_ERROR( msgBuf,myThid )
+        WRITE(msgBuf,'(2A)') 'BELLHOP IHOP_INIT: ', & 
+            'Not enough allocation for Arr; reduce ArrivalsStorage'
+        CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
-              STOP 'ABNORMAL END: S/R IHOP_INIT'
-          END IF
-     CASE DEFAULT
-          MaxNArr = 1
-          ALLOCATE ( Arr( 1, NRz_per_range, Pos%NRr ), &
-                     NArr( Pos%NRr, NRz_per_range ), Stat = iAllocStat )
-     END SELECT
-  
-     ! init Arr, Narr
-     ! Arr = something
-     NArr( 1:Pos%NRr, 1:NRz_per_range ) = 0 ! IEsco22 unnecessary? NArr = 0 below
+        STOP 'ABNORMAL END: S/R IHOP_INIT'
+    END IF
+
+    NArr                      = 0
+    Arr(:,:,:)%NTopBnc        = -1
+    Arr(:,:,:)%NBotBnc        = -1
+    Arr(:,:,:)%SrcDeclAngle   = -999.
+    Arr(:,:,:)%RcvrDeclAngle  = -999.
+    Arr(:,:,:)%A              = -999.
+    Arr(:,:,:)%Phase          = -999.
+    Arr(:,:,:)%delay          = -999.
   
 #ifdef IHOP_WRITE_OUT
-     WRITE(msgBuf,'(A)') 
-     ! In adjoint mode we do not write output besides on the first run
-     IF (IHOP_dumpfreq.GE.0) &
-       CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
+    WRITE(msgBuf,'(A)') 
+    ! In adjoint mode we do not write output besides on the first run
+    IF (IHOP_dumpfreq.GE.0) &
+      CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
 #endif /* IHOP_WRITE_OUT */
 
 
@@ -284,31 +257,31 @@ CONTAINS
         CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
   
         ! close all files
-        IF ( IHOP_dumpfreq .GE. 0) THEN
-            SELECT CASE ( Beam%RunType( 1:1 ) )
-            CASE ( 'C', 'S', 'I' )  ! TL calculation
-               CLOSE( SHDFile )
-            CASE ( 'A', 'a' )       ! arrivals calculation
-               CLOSE( ARRFile )
-            CASE ( 'R', 'E' )       ! ray and eigen ray trace
-               CLOSE( RAYFile )
-            CASE ( 'e' )
-               CLOSE( RAYFile ) 
-               CLOSE( ARRFile )
-               IF ( writeDelay ) CLOSE( DELFile )
-            END SELECT
+        SELECT CASE ( Beam%RunType( 1:1 ) )
+        CASE ( 'C', 'S', 'I' )  ! TL calculation
+           CLOSE( SHDFile )
+        CASE ( 'A', 'a' )       ! arrivals calculation
+           CLOSE( ARRFile )
+        CASE ( 'R', 'E' )       ! ray and eigen ray trace
+           CLOSE( RAYFile )
+           IF ( writeDelay ) CLOSE( DELFile )
+        CASE ( 'e' )
+           CLOSE( RAYFile ) 
+           CLOSE( ARRFile )
+           IF ( writeDelay ) CLOSE( DELFile )
+        END SELECT
   
-            if (numberOfProcs.gt.1) then
-                ! Erase prtfiles that aren't on procid = 0
-                if(myProcId.ne.0) then
-                    CLOSE(PRTFile, STATUS='DELETE')
-                else
-                    CLOSE(PRTFile)
-                endif
+        if (numberOfProcs.gt.1) then
+            ! Erase prtfiles that aren't on procid = 0
+            if(myProcId.ne.0) then
+                CLOSE(PRTFile, STATUS='DELETE')
             else
                 CLOSE(PRTFile)
             endif
-        ENDIF
+        else
+            CLOSE(PRTFile)
+        endif
+
     ENDIF
 #endif /* IHOP_WRITE_OUT */
   
@@ -317,8 +290,8 @@ CONTAINS
   
   ! **********************************************************************!
   SUBROUTINE BellhopCore( myThid )
-  USE ssp_mod,  only: iSegr           !RG
-!  USE influence,  only: ratio1, rB    !RG
+    USE ssp_mod,  only: iSegr           !RG
+!    USE influence,  only: ratio1, rB    !RG
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO
   !     msgBuf :: Used to build messages for printing.
@@ -326,10 +299,10 @@ CONTAINS
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
   
   !     == Local Variables ==
-    INTEGER              :: IBPvec( 1 ), ibp, is, iBeamWindow2, Irz1, Irec, &
-                            NalphaOpt
-    REAL    (KIND=_RL90) :: Amp0, DalphaOpt, xs( 2 ), RadMax, s, &
-                            c, cimag, gradc( 2 ), crr, crz, czz, rho
+    INTEGER           :: IBPvec(1), ibp, is, iBeamWindow2, Irz1, Irec, &
+                         NalphaOpt
+    REAL (KIND=_RL90) :: Amp0, DalphaOpt, xs(2), RadMax, s, &
+                         c, cimag, gradc(2), crr, crz, czz, rho
 
 !$TAF init BellhopCore1 = static, Pos%NSz
 !$TAF init BellhopCore2 = static, Pos%NSz*Angles%Nalpha

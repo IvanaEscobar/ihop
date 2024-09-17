@@ -13,6 +13,7 @@ C     !INTERFACE:
       SUBROUTINE IHOP_INIT_FIXED( myThid )
 
 C     !USES:
+      use init_mod, only: ihop_init_fixed_env
       IMPLICIT NONE
 C ==================== Global Variables ===========================
 #include "EEPARAMS.h"
@@ -134,11 +135,12 @@ C Only do I/O if in the main thread
       _END_MASTER( myThid )
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
-      DO k = 1,Nr
-        DO i=1,IHOP_npts_range
+      DO k = 1,IHOP_MAX_NC_SIZE !Nr
+        DO i=1,IHOP_MAX_NC_SIZE !IHOP_npts_range
           ihop_sumweights(i,k) = -1.0
         END DO
       END DO
+      CALL ihop_init_fixed_env( myThid )
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 
 #ifdef ALLOW_MNC
