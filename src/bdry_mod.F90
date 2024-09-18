@@ -10,10 +10,6 @@ MODULE bdry_mod
   ! IEsco22: want to rname this for clarity to readTopBot since it takes user
   ! input and populates various structures used in the code
 
-   USE monotonic_mod,   only: monotonic
-   USE ihop_mod,        only: PRTFile, ATIFile, BTYFile
-   USE atten_mod,       only: CRCI
-
   IMPLICIT NONE
 ! == Global variables ==
 #include "EEPARAMS.h"
@@ -36,13 +32,12 @@ MODULE bdry_mod
 !=======================================================================
 
    INTEGER, PARAMETER :: Number_to_Echo = 21
-   INTEGER            :: IsegTop, IsegBot ! indices to current active segment
    INTEGER, PROTECTED :: NBtyPts = 2, NAtiPts = 2
-   INTEGER            :: IOStat, IAllocStat
+   INTEGER            :: IsegTop, IsegBot ! indices to current active segment
 
    ! range intervals defining the current active segment
-   REAL (KIND=_RL90)  :: rTopseg( 2 ), rBotseg( 2 )
-   CHARACTER  (LEN=2) :: atiType= 'LS', btyType = 'LS'
+   REAL (KIND=_RL90) :: rTopSeg( 2 ), rBotSeg( 2 )
+   CHARACTER*(2)     :: atiType = 'LS', btyType = 'LS'
 
    ! ***Halfspace properties***
    TYPE HSInfo
@@ -82,6 +77,9 @@ MODULE bdry_mod
 
 CONTAINS
   SUBROUTINE initATI( TopATI, DepthT, myThid )
+    USE ihop_mod,        only: ATIFile
+    USE monotonic_mod,   only: monotonic
+    USE atten_mod,       only: CRCI
     ! Reads in the top altimetry
   ! IESCO24
   ! fT = 1000 ONLY for acousto-elastic halfspaces, I will have to pass this
@@ -97,103 +95,61 @@ CONTAINS
   !     == Local Variables ==
     CHARACTER (LEN= 1), INTENT( IN ) :: TopATI
     INTEGER :: ii
+    INTEGER :: IOStat, IAllocStat
     REAL (KIND=_RL90),  INTENT( IN ) :: DepthT
-    REAL (KIND=_RL90),  ALLOCATABLE  :: phi(:)
     REAL (KIND=_RL90),  ALLOCATABLE  :: x(:)
     REAL (KIND=_RL90)   :: bPower, fT
 
     ! IESCO24 fT init
     bPower = 1.0
     fT     = 1000.0
+    IF (ALLOCATED(Top)) DEALLOCATE(Top)
 
 
+    ! Either read from an ATIFile or set +/- infty
     SELECT CASE ( TopATI )
       CASE ( '~', '*' )
-#ifdef IHOP_WRITE_OUT
-        ! In adjoint mode we do not write output besides on the first run
-        IF (IHOP_dumpfreq.GE.0) THEN
-         WRITE(msgBuf,'(2A)') '____________________________________________', &
-                             '_______________'
-         CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-         WRITE(msgBuf,'(A)')
-         CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-         WRITE(msgBuf,'(A)') 'Using top-altimetry file'
-         CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-        ENDIF
-#endif /* IHOP_WRITE_OUT */
-
         OPEN( UNIT = ATIFile,   FILE = TRIM( IHOP_fileroot ) // '.ati', &
               STATUS = 'OLD', IOSTAT = IOStat, ACTION = 'READ' )
         IF ( IOSTAT /= 0 ) THEN
 #ifdef IHOP_WRITE_OUT
-          WRITE(msgBuf,'(A)') 'ATIFile = ', TRIM( IHOP_fileroot ) // '.ati'
-          ! In adjoint mode we do not write output besides on the first run
-          IF (IHOP_dumpfreq.GE.0) &
-           CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
           WRITE(msgBuf,'(2A)') 'BDRYMOD initATI', &
                                'Unable to open altimetry file'
-          CALL PRINT_ERROR( msgBuf,myThid )
+          ! In adjoint mode we do not write output besides on the first run
+          IF (IHOP_dumpfreq.GE.0) CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
           STOP 'ABNORMAL END: S/R initATI'
         END IF
 
         READ(  ATIFile, * ) atiType
 
-        ! In adjoint mode we do not write output besides on the first run
-        IF (IHOP_dumpfreq.GE.0) THEN
         SELECT CASE ( atiType( 1:1 ) )
-          CASE ( 'C' )
-#ifdef IHOP_WRITE_OUT
-            WRITE(msgBuf,'(A)') 'Curvilinear Interpolation'
-            CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-#endif /* IHOP_WRITE_OUT */
-          CASE ( 'L' )
-#ifdef IHOP_WRITE_OUT
-            WRITE(msgBuf,'(A)') 'Piecewise linear interpolation'
-            CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-#endif /* IHOP_WRITE_OUT */
+          CASE ( 'C', 'L' )
           CASE DEFAULT
 #ifdef IHOP_WRITE_OUT
             WRITE(msgBuf,'(2A)') 'BDRYMOD initATI', &
                        'Unknown option for selecting altimetry interpolation'
-            CALL PRINT_ERROR( msgBuf,myThid )
+            ! In adjoint mode we do not write output besides on the first run
+            IF (IHOP_dumpfreq.GE.0) CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
             STOP 'ABNORMAL END: S/R initATI'
         END SELECT
-        ENDIF
 
 
         READ(  ATIFile, * ) NAtiPts
-#ifdef IHOP_WRITE_OUT
-        WRITE(msgBuf,'(A,I10)') 'Number of altimetry points = ', NAtiPts
-        ! In adjoint mode we do not write output besides on the first run
-        IF (IHOP_dumpfreq.GE.0) &
-          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-#endif /* IHOP_WRITE_OUT */
-
-        ! we'll be extending the altimetry to infinity to the left and right
+        ! Extending altimetry to infinity to the left and right
         NAtiPts = NAtiPts + 2
 
-        IF (ALLOCATED(Top)) DEALLOCATE(Top)
         ALLOCATE( Top( NAtiPts ), Stat = IAllocStat )
         IF ( IAllocStat /= 0 ) THEN
 #ifdef IHOP_WRITE_OUT
           WRITE(msgBuf,'(2A)') 'BDRYMOD initATI', &
               'Insufficient memory for altimetry data: reduce # ati points'
-          CALL PRINT_ERROR( msgBuf,myThid )
+          ! In adjoint mode we do not write output besides on the first run
+          IF (IHOP_dumpfreq.GE.0) CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
           STOP 'ABNORMAL END: S/R initATI'
         END IF
-
-#ifdef IHOP_WRITE_OUT
-        ! In adjoint mode we do not write output besides on the first run
-        IF (IHOP_dumpfreq.GE.0) THEN
-          WRITE(msgBuf,'(A)')
-          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-          WRITE(msgBuf,'(A)') ' Range (km)  Depth (m)'
-          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-        ENDIF
-#endif /* IHOP_WRITE_OUT */
 
         ! Read in the altimetry
         atiPt: DO ii = 2, NAtiPts - 1
@@ -201,31 +157,24 @@ CONTAINS
           SELECT CASE ( atiType( 2:2 ) )
             CASE ( 'S', '' )
               READ( ATIFile, * ) Top( ii )%x
-#ifdef IHOP_WRITE_OUT
-              IF ( ii < Number_to_Echo .OR. ii == NAtiPts ) THEN
-                WRITE( msgBuf,"(2G11.3)" ) Top( ii )%x
-                CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-              END IF
-#endif /* IHOP_WRITE_OUT */
+              ! init to default variables
+              Top( ii )%HS%alphaR = -1.
+              Top( ii )%HS%alphaI = -1.
+              Top( ii )%HS%betaR = -1.
+              Top( ii )%HS%betaI = -1.
+              Top( ii )%HS%rho = -1.
+
             CASE ( 'L' )
               READ(  ATIFile, * ) Top( ii )%x, Top( ii )%HS%alphaR, &
                                   Top( ii )%HS%betaR, Top( ii )%HS%rho, &
                                   Top( ii )%HS%alphaI, Top( ii )%HS%betaI
-#ifdef IHOP_WRITE_OUT
-              IF ( ii < Number_to_Echo .OR. ii == NAtiPts ) THEN
-                WRITE( msgBuf,"(7G11.3)" ) &
-                    Top( ii )%x, Top( ii )%HS%alphaR, Top( ii )%HS%betaR, &
-                    Top( ii )%HS%rho, Top( ii )%HS%alphaI, Top( ii )%HS%betaI
-                ! In adjoint mode we do not write output besides on first run
-                IF (IHOP_dumpfreq.GE.0) &
-                 CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-              END IF
-#endif /* IHOP_WRITE_OUT */
+
             CASE DEFAULT
 #ifdef IHOP_WRITE_OUT
               WRITE(msgBuf,'(2A)') 'BDRYMOD initATI', &
                             'Unknown option for selecting altimetry option'
-              CALL PRINT_ERROR( msgBuf,myThid )
+              ! In adjoint mode we do not write output besides on the first run
+              IF (IHOP_dumpfreq.GE.0) CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
               STOP 'ABNORMAL END: S/R initATI'
           END SELECT
@@ -234,7 +183,8 @@ CONTAINS
 #ifdef IHOP_WRITE_OUT
             WRITE(msgBuf,'(2A)') 'BDRYMOD initATI', &
                 'Altimetry rises above highest point in the sound speed profile'
-            CALL PRINT_ERROR( msgBuf,myThid )
+            ! In adjoint mode we do not write output besides on the first run
+            IF (IHOP_dumpfreq.GE.0) CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
             STOP 'ABNORMAL END: S/R initATI'
           END IF
@@ -245,21 +195,35 @@ CONTAINS
         Top(:)%x(1) = 1000.0 * Top(:)%x(1)   ! Convert ranges in km to m
 
       CASE DEFAULT   ! no altimetry given, use SSP depth for flat top
-        ALLOCATE( Top( 2 ), Stat = IAllocStat )
+        NAtiPts = 2
+        ALLOCATE( Top( NAtiPts ), Stat = IAllocStat )
         IF ( IAllocStat /= 0 ) THEN
 #ifdef IHOP_WRITE_OUT
           WRITE(msgBuf,'(2A)') 'BDRYMOD initATI', &
                                'Insufficient memory for altimetry data'
-          CALL PRINT_ERROR( msgBuf,myThid )
+          ! In adjoint mode we do not write output besides on the first run
+          IF (IHOP_dumpfreq.GE.0) CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
           STOP 'ABNORMAL END: S/R initATI'
         END IF
-        Top( 1 )%x = [ -sqrt( huge( Top( 1 )%x( 1 ) ) ) / 1.0d5, DepthT ]
-        Top( 2 )%x = [  sqrt( huge( Top( 1 )%x( 1 ) ) ) / 1.0d5, DepthT ]
+
+        DO ii=1, NAtiPts
+          Top( ii )%x = [ -sqrt( huge( Top( 1 )%x( 1 ) ) ) / 1.0d5, DepthT ]
+          ! init to default variables
+          Top( ii )%HS%alphaR = -1.
+          Top( ii )%HS%alphaI = -1.
+          Top( ii )%HS%betaR = -1.
+          Top( ii )%HS%betaI = -1.
+          Top( ii )%HS%rho = -1.
+        END DO
+        Top(NAtiPts)%x(1) = -1 * Top(1)%x(1)
+
     END SELECT
 
+    ! Set Top(1:NAtiPts)%t,n,Len,Nodet,Noden,kappa,Dx,Dxx,Dss
     CALL ComputeBdryTangentNormal( Top, 'Top', NAtiPts )
 
+    ! Check if monotonic
     IF ( ALLOCATED(x) ) DEALLOCATE(x)
     ALLOCATE( x(NAtiPts) )
     x = Top%x(1)
@@ -267,12 +231,13 @@ CONTAINS
 #ifdef IHOP_WRITE_OUT
      WRITE(msgBuf,'(2A)') 'BDRYMOD initATI', &
         'Altimetry ranges are not monotonically increasing'
-     CALL PRINT_ERROR( msgBuf,myThid )
+     ! In adjoint mode we do not write output besides on the first run
+     IF (IHOP_dumpfreq.GE.0) CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
      STOP 'ABNORMAL END: S/R initATI'
     END IF
 
-    ! Initiate Top
+    ! Set Top%HS%cP,cS
     DO ii = 1, NAtiPts
        ! compressional wave speed
        Top( ii )%HS%cP = -999.
@@ -292,6 +257,13 @@ CONTAINS
       END DO
     END IF
 
+    ! Set defaults for rest of Top derived type
+    Top%HS%Depth = -999.
+    Top%HS%BC  = ''
+    Top%HS%Opt = ''
+
+    ! Write to PRTFile
+    CALL WriteTopBot( Top, 'Top', NAtiPts, myThid ) 
 
   RETURN
   END !SUBROUTINE initATI
@@ -299,6 +271,10 @@ CONTAINS
 ! **********************************************************************!
 
   SUBROUTINE initBTY( BotBTY, DepthB, myThid )
+    USE ihop_mod, only: BTYFile
+    USE monotonic_mod,   only: monotonic
+    USE atten_mod,       only: CRCI
+
     ! Reads in the bottom bathymetry
   ! IESCO24
   ! fT = 1000 ONLY for acousto-elastic halfspaces, I will have to pass this
@@ -312,84 +288,53 @@ CONTAINS
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
 
    !     == Local Variables ==
+    LOGICAL :: firstnonzero
     CHARACTER (LEN= 1), INTENT( IN ) :: BotBTY
     INTEGER :: i,j,bi,bj,ii
+    INTEGER :: IOStat, IAllocStat
     REAL (KIND=_RL90),  INTENT( IN ) :: DepthB
     REAL (KIND=_RL90) :: gcmbathy(sNx,sNy), gcmmin, gcmmax
     REAL (KIND=_RL90), ALLOCATABLE :: x(:)
-    LOGICAL :: firstnonzero
     REAL (KIND=_RL90)   :: bPower, fT
 
     ! IESCO24 fT init
     bPower = 1.0
     fT     = 1000.0
+    IF (ALLOCATED(Bot)) DEALLOCATE(Bot)
 
+
+    ! Either read from an BTYFile or set +/- infty
     SELECT CASE ( BotBTY )
       CASE ( '~', '*' )
-# ifdef IHOP_WRITE_OUT
-        ! In adjoint mode we do not write output besides on the first run
-        IF (IHOP_dumpfreq.GE.0) THEN
-          WRITE(msgBuf,'(2A)')'____________________________________________', &
-                              '_______________'
-          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-          WRITE(msgBuf,'(A)')
-          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-          WRITE(msgBuf,'(A)') 'Using bottom-bathymetry file'
-          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-        ENDIF
-# endif /* IHOP_WRITE_OUT */
-
         OPEN( UNIT = BTYFile, FILE = TRIM( IHOP_fileroot ) // '.bty', &
               STATUS = 'OLD', IOSTAT = IOStat, ACTION = 'READ' )
         IF ( IOSTAT /= 0 ) THEN
 # ifdef IHOP_WRITE_OUT
-          WRITE(msgBuf,'(A)') 'BTYFile = ', TRIM( IHOP_fileroot ) // '.bty'
-          ! In adjoint mode we do not write output besides on the first run
-          IF (IHOP_dumpfreq.GE.0) &
-              CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
           WRITE(msgBuf,'(2A)') 'BDRYMOD initBTY: ', &
                                'Unable to open bathymetry file'
-          CALL PRINT_ERROR( msgBuf,myThid )
+          ! In adjoint mode we do not write output besides on the first run
+          IF (IHOP_dumpfreq.GE.0) CALL PRINT_ERROR( msgBuf,myThid )
 # endif /* IHOP_WRITE_OUT */
           STOP 'ABNORMAL END: S/R initBTY'
         END IF
 
         READ( BTYFile, * ) btyType
 
-        ! In adjoint mode we do not write output besides on the first run
-        IF (IHOP_dumpfreq.GE.0) THEN
         SELECT CASE ( btyType( 1:1 ) )
-
-          CASE ( 'C' )
-# ifdef IHOP_WRITE_OUT
-            WRITE(msgBuf,'(A)') 'Curvilinear Interpolation'
-            CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-# endif /* IHOP_WRITE_OUT */
-          CASE ( 'L' )
-# ifdef IHOP_WRITE_OUT
-            WRITE(msgBuf,'(A)') 'Piecewise linear interpolation'
-            CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-# endif /* IHOP_WRITE_OUT */
+          CASE ( 'C','L' )
           CASE DEFAULT
 # ifdef IHOP_WRITE_OUT
-             WRITE(msgBuf,'(2A)') 'BDRYMOD initBTY: ', &
-                'Unknown option for selecting bathymetry interpolation'
-             CALL PRINT_ERROR( msgBuf,myThid )
+            WRITE(msgBuf,'(2A)') 'BDRYMOD initBTY: ', &
+               'Unknown option for selecting bathymetry interpolation'
+            ! In adjoint mode we do not write output besides on the first run
+            IF (IHOP_dumpfreq.GE.0) CALL PRINT_ERROR( msgBuf,myThid )
 # endif /* IHOP_WRITE_OUT */
-             STOP 'ABNORMAL END: S/R initBTY'
+            STOP 'ABNORMAL END: S/R initBTY'
         END SELECT
-        ENDIF
 
 
         READ( BTYFile, * ) NBtyPts
-#ifdef IHOP_WRITE_OUT
-        WRITE(msgBuf,'(A,I10)') 'Number of bathymetry points = ', NBtyPts
-        ! In adjoint mode we do not write output besides on the first run
-        IF (IHOP_dumpfreq.GE.0) &
-          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-#endif /* IHOP_WRITE_OUT */
-
-        ! we'll be extending the bathymetry to infinity on both sides
+        ! Extend bathymetry to infinity on both sides
         NBtyPts = NBtyPts + 2
 
         ALLOCATE( Bot( NBtyPts ), Stat = IAllocStat )
@@ -397,46 +342,24 @@ CONTAINS
 # ifdef IHOP_WRITE_OUT
           WRITE(msgBuf,'(2A)') 'BDRYMOD initBTY: ', &
              'Insufficient memory for bathymetry data: reduce # bty points'
-          CALL PRINT_ERROR( msgBuf,myThid )
+          ! In adjoint mode we do not write output besides on the first run
+          IF (IHOP_dumpfreq.GE.0) CALL PRINT_ERROR( msgBuf,myThid )
 # endif /* IHOP_WRITE_OUT */
           STOP 'ABNORMAL END: S/R initBTY'
         END IF
 
 
-        ! In adjoint mode we do not write output besides on the first run
-        IF (IHOP_dumpfreq.GE.0) THEN
-#ifdef IHOP_WRITE_OUT
-          WRITE(msgBuf,'(A)')
-          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-#endif /* IHOP_WRITE_OUT */
-          SELECT CASE ( btyType( 2:2 ) )
-            CASE ( 'S', '' )
+        SELECT CASE ( btyType( 2:2 ) )
+          CASE ( 'S', '','L' )
+          CASE DEFAULT
 # ifdef IHOP_WRITE_OUT
-              WRITE(msgBuf,'(A)') 'Short format (bathymetry only)'
-              CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-              WRITE(msgBuf,'(A)') ' Range (km)  Depth (m)'
-              CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+            WRITE(msgBuf,'(2A)') 'BDRYMOD initBTY: ', &
+               'Unknown option for selecting bathymetry interpolation'
+            ! In adjoint mode we do not write output besides on the first run
+            IF (IHOP_dumpfreq.GE.0) CALL PRINT_ERROR( msgBuf,myThid )
 # endif /* IHOP_WRITE_OUT */
-            CASE ( 'L' )
-# ifdef IHOP_WRITE_OUT
-              WRITE(msgBuf,'(A)') 'Long format (bathymetry and geoacoustics)'
-              CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-              WRITE(msgBuf,'(2A)') &
-                 ' Range (km)  Depth (m)  alphaR (m/s)  betaR  rho (g/cm^3)',&
-                 'alphaI     betaI'
-              CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-              WRITE(msgBuf,'(A)')
-              CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-# endif /* IHOP_WRITE_OUT */
-            CASE DEFAULT
-# ifdef IHOP_WRITE_OUT
-              WRITE(msgBuf,'(2A)') 'BDRYMOD initBTY: ', &
-                 'Unknown option for selecting bathymetry interpolation'
-              CALL PRINT_ERROR( msgBuf,myThid )
-# endif /* IHOP_WRITE_OUT */
-              STOP 'ABNORMAL END: S/R initBTY'
-          END SELECT
-        ENDIF
+            STOP 'ABNORMAL END: S/R initBTY'
+        END SELECT
 
         ! R_low check of gcm depths, change to positive values
         firstnonzero=.true.
@@ -466,41 +389,36 @@ CONTAINS
           SELECT CASE ( btyType( 2:2 ) )
             CASE ( 'S', '' )   ! short format
               READ( BTYFile, * ) Bot( ii )%x
+              ! init to default variables
+              Bot( ii )%HS%alphaR = -1.
+              Bot( ii )%HS%alphaI = -1.
+              Bot( ii )%HS%betaR = -1.
+              Bot( ii )%HS%betaI = -1.
+              Bot( ii )%HS%rho = -1.
 # ifdef IHOP_WRITE_OUT
               IF (Bot(ii)%x(2) .lt. gcmmin .or. Bot(ii)%x(2) .gt. gcmmax) THEN
                 WRITE(msgBuf,'(2A,F10.2,A,F10.2)') &
                  '** Warning ** BDRYMOD initBTY: ', &
                  'ihop and gcm bathymetry vary, ihop:', Bot(ii)%x(2), &
                  'gcm:', gcmmax
-                CALL PRINT_MESSAGE(msgBuf, errorMessageUnit, &
-                                   SQUEEZE_RIGHT, myThid)
-              END IF
-              IF ( ii < Number_to_Echo .OR. ii == NBtyPts ) THEN
-                WRITE(msgBuf,'(2G11.3)' ) Bot( ii )%x
                 ! In adjoint mode we do not write output besides on first run
                 IF (IHOP_dumpfreq.GE.0) &
-                  CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+                  CALL PRINT_MESSAGE(msgBuf, errorMessageUnit, &
+                                     SQUEEZE_RIGHT, myThid)
               END IF
 # endif /* IHOP_WRITE_OUT */
+
             CASE ( 'L' )       ! long format
               READ(  BTYFile, * ) Bot( ii )%x, Bot( ii )%HS%alphaR, &
                                   Bot( ii )%HS%betaR, Bot( ii )%HS%rho, &
                                   Bot( ii )%HS%alphaI, Bot( ii )%HS%betaI
-# ifdef IHOP_WRITE_OUT
-              IF ( ii < Number_to_Echo .OR. ii == NBtyPts ) THEN
-                WRITE( msgBuf,'(2F10.2,3X,2F10.2,3X,F6.2,3X,2F10.4)' ) &
-                   Bot( ii )%x, Bot( ii )%HS%alphaR, Bot( ii )%HS%betaR, &
-                   Bot( ii )%HS%rho, Bot( ii )%HS%alphaI, Bot( ii )%HS%betaI
-                ! In adjoint mode we do not write output besides on first run
-                IF (IHOP_dumpfreq.GE.0) &
-                  CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-              END IF
-# endif /* IHOP_WRITE_OUT */
+
             CASE DEFAULT
 # ifdef IHOP_WRITE_OUT
               WRITE(msgBuf,'(2A)') 'BDRYMOD initBTY: ', &
                  'Unknown option for selecting bathymetry interpolation'
-              CALL PRINT_ERROR( msgBuf,myThid )
+              ! In adjoint mode we do not write output besides on first run
+              IF (IHOP_dumpfreq.GE.0) CALL PRINT_ERROR( msgBuf,myThid )
 # endif /* IHOP_WRITE_OUT */
               STOP 'ABNORMAL END: S/R initBTY'
           END SELECT
@@ -509,7 +427,8 @@ CONTAINS
 # ifdef IHOP_WRITE_OUT
             WRITE(msgBuf,'(2A)') 'BDRYMOD initBTY: ', &
                'Bathymetry drops below lowest point in the sound speed profile'
-            CALL PRINT_ERROR( msgBuf,myThid )
+            ! In adjoint mode we do not write output besides on first run
+            IF (IHOP_dumpfreq.GE.0) CALL PRINT_ERROR( msgBuf,myThid )
 # endif /* IHOP_WRITE_OUT */
             STOP 'ABNORMAL END: S/R initBTY'
           END IF
@@ -519,34 +438,33 @@ CONTAINS
 
         Bot(:)%x(1) = 1000.0 * Bot(:)%x(1)   ! Convert ranges in km to m
 
-# ifdef IHOP_WRITE_OUT
-        WRITE(msgBuf,'(2A)')'_____________________________________________', &
-                            '______________'
-        ! In adjoint mode we do not write output besides on the first run
-        IF (IHOP_dumpfreq.GE.0) &
-          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-# endif /* IHOP_WRITE_OUT */
-
     CASE DEFAULT   ! no bathymetry given, use SSP depth for flat bottom
-# ifdef IHOP_WRITE_OUT
-      WRITE(msgBuf,'(A)') 'No BTYFile; assuming flat bottom'
-      ! In adjoint mode we do not write output besides on the first run
-      IF (IHOP_dumpfreq.GE.0) &
-        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-# endif /* IHOP_WRITE_OUT */
-      ALLOCATE( Bot( 2 ), Stat = IAllocStat )
+      NBtyPts = 2
+      ALLOCATE( Bot( NBtyPts ), Stat = IAllocStat )
       IF ( IAllocStat /= 0 ) THEN
 #  ifdef IHOP_WRITE_OUT
         WRITE(msgBuf,'(2A)') 'BDRYMOD initBTY: ', &
-           'Insufficient memory for bathymetry data'
-        CALL PRINT_ERROR( msgBuf,myThid )
+                             'Insufficient memory for bathymetry data'
+        ! In adjoint mode we do not write output besides on first run
+        IF (IHOP_dumpfreq.GE.0) CALL PRINT_ERROR( msgBuf,myThid )
 #  endif /* IHOP_WRITE_OUT */
         STOP 'ABNORMAL END: S/R initBTY'
       END IF
-      Bot( 1 )%x = [ -sqrt( huge( Bot( 1 )%x( 1 ) ) ) / 1.0d5, DepthB ]
-      Bot( 2 )%x = [  sqrt( huge( Bot( 1 )%x( 1 ) ) ) / 1.0d5, DepthB ]
+
+      DO ii=1, NBtyPts
+        Bot( ii )%x = [ -sqrt( huge( Bot( 1 )%x( 1 ) ) ) / 1.0d5, DepthB ]
+        ! init to default variables
+        Bot( ii )%HS%alphaR = -1.
+        Bot( ii )%HS%alphaI = -1.
+        Bot( ii )%HS%betaR = -1.
+        Bot( ii )%HS%betaI = -1.
+        Bot( ii )%HS%rho = -1.
+      END DO
+      Bot(NBtyPts)%x(1) = -1 * Bot(1)%x(1)
+
     END SELECT
 
+    ! Set Bot(1:NBtyPts)%t,n,Len,Nodet,Noden,kappa,Dx,Dxx,Dss
     CALL ComputeBdryTangentNormal( Bot, 'Bot', NBtyPts )
 
     IF ( ALLOCATED(x) ) DEALLOCATE(x)
@@ -556,7 +474,8 @@ CONTAINS
 # ifdef IHOP_WRITE_OUT
       WRITE(msgBuf,'(2A)') 'BDRYMOD initBTY: ', &
           'Bathymetry ranges are not monotonically increasing'
-      CALL PRINT_ERROR( msgBuf,myThid )
+      ! In adjoint mode we do not write output besides on first run
+      IF (IHOP_dumpfreq.GE.0) CALL PRINT_ERROR( msgBuf,myThid )
 # endif /* IHOP_WRITE_OUT */
       STOP 'ABNORMAL END: S/R initBTY'
     END IF
@@ -582,6 +501,14 @@ CONTAINS
      END DO
    END IF
 
+    ! Set defaults for rest of Bot derived type
+    Bot%HS%Depth = -999.
+    Bot%HS%BC  = ''
+    Bot%HS%Opt = ''
+
+    ! Write to PRTFile
+    CALL WriteTopBot( Bot, 'Bot', NBtyPts, myThid )
+
    RETURN
   END !SUBROUTINE initBTY
 
@@ -603,8 +530,9 @@ CONTAINS
     REAL (KIND=_RL90)                :: sss
     TYPE(BdryPt)                     :: Bdry( : )
     CHARACTER (LEN=3),  INTENT( IN ) :: BotTop ! Flag indicating bottom or top reflection
-    CHARACTER (LEN=2)                :: CurvilinearFlag = '-'
+    CHARACTER (LEN=2)                :: CurvilinearFlag
     INTEGER :: ii
+    INTEGER :: IAllocStat
 
     SELECT CASE ( BotTop )
       CASE ( 'Bot' )
@@ -656,7 +584,7 @@ CONTAINS
 
     ! curvilinear option: compute tangent and normal at node by averaging
     ! normals on adjacent segments
-    IF ( CurvilinearFlag( 1 : 1 ) == 'C' ) THEN
+    IF ( CurvilinearFlag( 1:1 ) == 'C' ) THEN
        ! averaging two centered differences is equivalent to forming a single
        ! centered difference of two steps ...
        DO ii = 2, NPts - 1
@@ -699,8 +627,18 @@ CONTAINS
 
           Bdry( ii )%kappa = Bdry( ii )%Dss   !over-ride kappa !!!!!
        END DO
-    ELSE
-       Bdry%kappa = 0
+    ELSE ! not 'C'
+       ! set derived types to dummy variables
+       DO ii = 1, NPts - 1
+         Bdry(ii)%Nodet = -1.
+         Bdry(ii)%Noden = -1.
+         Bdry(ii)%kappa = 0
+         Bdry(ii)%Dxx = -999.
+         Bdry(ii)%Dss = -999.
+       END DO
+       Bdry( 1    )%Nodet = [ 1.0, 0.0 ]   ! tangent left-end node
+       Bdry( NPts )%Nodet = [ 1.0, 0.0 ]   ! tangent right-end node
+
     END IF
 
   RETURN
@@ -709,6 +647,7 @@ CONTAINS
   ! **********************************************************************!
 
   SUBROUTINE GetTopSeg( r, myThid )
+    USE ihop_mod, only: PRTFile
 
     ! Get the Top segment info (index and range interval) for range, r
 
@@ -753,6 +692,7 @@ CONTAINS
   ! **********************************************************************!
 
   SUBROUTINE GetBotSeg( r, myThid )
+    USE ihop_mod, only: PRTFile
 
     ! Get the Bottom segment info (index and range interval) for range, r
   !     == Routine Arguments ==
@@ -791,5 +731,164 @@ CONTAINS
 
   RETURN
   END !SUBROUTINE GetBotSeg
+
+  ! **********************************************************************!
+
+  SUBROUTINE WriteTopBot( locBdry, BotTop, NPts, myThid )
+    USE ihop_mod, only: PRTFile
+
+  ! Write initATI, initBTY to PRTFile
+
+  !     == Routine Arguments ==
+  !     myThid :: Thread number. Unused by IESCO
+  !     msgBuf :: Used to build messages for printing.
+    INTEGER, INTENT( IN )   :: myThid
+    CHARACTER*(MAX_LEN_MBUF):: msgBuf
+
+  !     == Local Variables ==
+    INTEGER, INTENT(IN)              :: NPts
+    REAL(KIND=_RL90)                 :: ranges
+    TYPE(BdryPt)                     :: locBdry( : )
+    CHARACTER (LEN=3),  INTENT( IN ) :: BotTop
+    CHARACTER (LEN=2)                :: BdryType
+    CHARACTER (LEN=1)                :: ReadFile 
+    INTEGER                          :: ii
+
+    SELECT CASE ( BotTop )
+      CASE ( 'Bot' )
+         BdryType = btyType
+         ReadFile = Bdry%Bot%HS%Opt(2:2)
+      CASE ( 'Top' )
+         BdryType = atiType
+         ReadFile = Bdry%Top%HS%Opt(5:5)
+      CASE DEFAULT
+         ! Do nothing
+         BdryType = '-'
+         STOP 'ABNORMAL END: S/R WrtieTopBot'
+    END SELECT
+
+    !   Only do I/O in the main thread
+    _BARRIER
+    _BEGIN_MASTER(myThid)
+
+#ifdef IHOP_WRITE_OUT
+    ! In adjoint mode we do not write output besides on the first run
+    IF (IHOP_dumpfreq.GE.0) THEN
+      WRITE(msgBuf,'(2A)') '____________________________________________', &
+                           '_______________'
+      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+      WRITE(msgBuf,'(A)')
+      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+
+
+      SELECT CASE ( ReadFile )
+        CASE ( '~', '*' ) ! read from a file
+          IF (BotTop.eq.'Top') THEN
+            WRITE(msgBuf,'(2A)') BotTop, ': Using top-altimetry file'
+          ELSE ! 'Bot'
+            WRITE(msgBuf,'(2A)') BotTop, ': Using bottom-bathymetry file'
+          ENDIF
+          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+  
+          IF (BotTop.eq.'Top') THEN
+            WRITE(msgBuf,'(3A)') '  ATIFile = ', TRIM( IHOP_fileroot ), '.ati'
+          ELSE ! 'Bot'
+            WRITE(msgBuf,'(3A)') '  BTYFile = ', TRIM( IHOP_fileroot ), '.bty'
+          ENDIF
+          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+
+          SELECT CASE ( BdryType( 1:1 ) )
+            CASE ( 'C' )
+              WRITE(msgBuf,'(A)') '  Curvilinear Interpolation'
+            CASE ( 'L' )
+              WRITE(msgBuf,'(A)') '  Piecewise linear interpolation'
+            CASE DEFAULT
+              STOP 'ABNORMAL END: S/R writeTopBot'
+          END SELECT
+          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+
+          IF (BotTop.eq.'Top') THEN
+            WRITE(msgBuf,'(A,I10)') '  Number of altimetry points = ', NPts-2
+          ELSE ! 'Bot'
+            WRITE(msgBuf,'(A,I10)') '  Number of bathymetry points = ', NPts-2
+          ENDIF
+          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+          WRITE(msgBuf,'(A)')
+          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+
+          IF (BotTop.eq.'Top') THEN
+            WRITE(msgBuf,'(A)') ' Range (km)  Depth (m)'
+          ELSE ! 'Bot'
+            SELECT CASE ( BdryType( 2:2 ) )
+              CASE ( 'S', '' )
+                WRITE(msgBuf,'(A)') 'Short format (bathymetry only)'
+                CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+                WRITE(msgBuf,'(A)') ' Range (km)  Depth (m)'
+              CASE ( 'L' )
+                WRITE(msgBuf,'(A)') 'Long format (bathymetry and geoacoustics)'
+                CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+                WRITE(msgBuf,'(2A)') &
+                   ' Range (km)  Depth (m)  alphaR (m/s)  betaR  rho (g/cm^3)',&
+                   'alphaI     betaI'
+                CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+                WRITE(msgBuf,'(A)')
+              CASE DEFAULT
+                STOP 'ABNORMAL END: S/R WriteTopBot'
+            END SELECT
+          ENDIF
+          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+
+
+          ! Write through all NPts
+          boundaryPt: DO ii = 2, NPts - 1
+            ! Print ranges in km
+            ranges = locBdry( ii )%x(1) / 1000.
+
+            SELECT CASE ( BdryType( 2:2 ) )
+              CASE ( 'S', '' )
+                IF ( ii < Number_to_Echo .OR. ii == NPts ) THEN
+
+                  WRITE( msgBuf,"(2G11.3)" ) ranges, locBdry( ii )%x(2)
+                  CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+                END IF
+
+              CASE ( 'L' )
+                IF ( ii < Number_to_Echo .OR. ii == NPts ) THEN
+                  WRITE( msgBuf,'(2F10.2,3X,2F10.2,3X,F6.2,3X,2F10.4)' ) &
+                      ranges, locBdry(ii)%x(2), &
+                      locBdry(ii)%HS%alphaR, locBdry(ii)%HS%betaR, &
+                      locBdry(ii)%HS%rho, &
+                      locBdry(ii)%HS%alphaI, locBdry(ii)%HS%betaI
+                   CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+                END IF
+              CASE DEFAULT
+                STOP 'ABNORMAL END: S/R writeTopBot'
+            END SELECT
+
+          END DO boundaryPt
+
+        CASE DEFAULT ! not reading from file
+          IF (BotTop.eq.'Top') THEN
+            WRITE(msgBuf,'(3A)') BotTop, ': No ATIFile. Assume flat top.',&
+                                         ' Set +/- infty.'
+          ELSE ! 'Bot'
+            WRITE(msgBuf,'(3A)') BotTop, ': No BTYFile. Assume flat bottom.',&
+                                         ' Set +/- infty.'
+          END IF
+          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+      END SELECT
+
+      WRITE(msgBuf,'(2A)')'_____________________________________________', &
+                          '______________'
+      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+
+    END IF ! IHOP_dumpfreq.GE.0
+# endif /* IHOP_WRITE_OUT */
+
+    !   Only do I/O in the main thread
+    _END_MASTER(myThid)
+
+  RETURN
+  END !SUBROUTINE WriteTopBot
 
 END !MODULE bdry_mod

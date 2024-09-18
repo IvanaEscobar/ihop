@@ -964,14 +964,10 @@ CONTAINS
 
   SUBROUTINE resetMemory()
     USE srpos_mod,  only: Pos
-    USE bdry_mod,   only: Top,Bot
     USE angle_mod,  only: Angles
     USE arr_mod,    only: Narr, Arr, U
     USE ihop_mod,   only: ray2D, MaxN, iStep
 
-    ! From bdry_mod
-    IF (ALLOCATED(Top))         DEALLOCATE(Top)
-    IF (ALLOCATED(Bot))         DEALLOCATE(Bot)
     ! From ihop
     IF (ALLOCATED(Pos%theta))   DEALLOCATE(Pos%theta)
     IF (ALLOCATED(U))           DEALLOCATE(U)
