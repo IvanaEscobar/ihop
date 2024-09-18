@@ -633,8 +633,8 @@ CONTAINS
          Bdry(ii)%Nodet = -1.
          Bdry(ii)%Noden = -1.
          Bdry(ii)%kappa = 0
-         Bdry(ii)%Dxx = -999.
-         Bdry(ii)%Dss = -999.
+         Bdry(ii)%Dxx   = -999.
+         Bdry(ii)%Dss   = -999.
        END DO
        Bdry( 1    )%Nodet = [ 1.0, 0.0 ]   ! tangent left-end node
        Bdry( NPts )%Nodet = [ 1.0, 0.0 ]   ! tangent right-end node

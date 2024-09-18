@@ -562,13 +562,14 @@ CONTAINS
 
     ! IESCO22: 'L' is long format. See BeadBTY s/r in bdrymod.f90. Default is to
     ! calculate cp, cs, and rho instead of reading them in
-    IF ( atiType( 2 : 2 ) == 'L' ) THEN
+    IF ( atiType( 2:2 ) == 'L' ) THEN
        ! grab the geoacoustic info for the new segment
        Bdry%Top%HS%cp  = Top( IsegTop )%HS%cp
        Bdry%Top%HS%cs  = Top( IsegTop )%HS%cs
        Bdry%Top%HS%rho = Top( IsegTop )%HS%rho
     END IF
-    IF ( btyType( 2 : 2 ) == 'L' ) THEN
+    IF ( btyType( 2:2 ) == 'L' ) THEN
+       ! grab the geoacoustic info for the new segment
        Bdry%Bot%HS%cp  = Bot( IsegBot )%HS%cp
        Bdry%Bot%HS%cs  = Bot( IsegBot )%HS%cs
        Bdry%Bot%HS%rho = Bot( IsegBot )%HS%rho
@@ -639,7 +640,7 @@ CONTAINS
          IF ( ray2D( is1 )%x( 1 ) < rTopSeg( 1 ) .OR. &
               ray2D( is1 )%x( 1 ) > rTopSeg( 2 ) ) THEN
             CALL GetTopSeg( ray2D( is1 )%x( 1 ), myThid )
-            IF ( atiType( 2 : 2 ) == 'L' ) THEN
+            IF ( atiType( 2:2 ) == 'L' ) THEN
                ! ATIFile geoacoustic info from new segment, cp
                Bdry%Top%HS%cp  = Top( IsegTop )%HS%cp
                Bdry%Top%HS%cs  = Top( IsegTop )%HS%cs
@@ -651,7 +652,7 @@ CONTAINS
          IF ( ray2D( is1 )%x( 1 ) < rBotSeg( 1 ) .OR. &
               ray2D( is1 )%x( 1 ) > rBotSeg( 2 ) ) THEN
             CALL GetBotSeg( ray2D( is1 )%x( 1 ), myThid )
-            IF ( btyType( 2 : 2 ) == 'L' ) THEN
+            IF ( btyType( 2:2 ) == 'L' ) THEN
                ! BTYFile geoacoustic info from new segment, cp
                Bdry%Bot%HS%cp  = Bot( IsegBot )%HS%cp
                Bdry%Bot%HS%cs  = Bot( IsegBot )%HS%cs
@@ -711,7 +712,7 @@ CONTAINS
                          + sss     * Bot( 1+IsegBot )%Noden
                BottInt = ( 1-sss ) * Bot( IsegBot   )%Nodet &
                          + sss     * Bot( 1+IsegBot )%Nodet
-            ELSE
+            ELSE ! btyType not 'C'
                BotnInt = Bot( IsegBot )%n   ! normal is constant in a segment
                BottInt = Bot( IsegBot )%t
             END IF
