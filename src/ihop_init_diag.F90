@@ -8,7 +8,7 @@ MODULE IHOP_INIT_DIAG
 
   ! mbp 12/2018, based on much older subroutine
 
-  USE ssp_mod,   only: initSSP, SSP
+  USE ssp_mod,   only: SSP
   USE bdry_mod,  only: Bdry, HSInfo
   USE atten_mod, only: CRCI
 

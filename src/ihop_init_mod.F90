@@ -38,9 +38,9 @@ CONTAINS
 !!  ! ===========================================================================
 !!  !     == Local Variables ==
     REAL (KIND=_RL90), PARAMETER :: c0 = 1500.0
-    CHARACTER (LEN=2) :: AttenUnit
+    CHARACTER (LEN=2)  :: AttenUnit
     CHARACTER (LEN=10) :: PlotType
-    REAL (KIND=_RL90) :: x(2), Depth
+    REAL (KIND=_RL90)  :: Depth
 !!
 !!  ! ===========================================================================
 
@@ -139,8 +139,7 @@ CONTAINS
 
 
     ! *** SSP parameters ***
-    x = [ 0.0 _d 0, Bdry%Bot%HS%Depth ]
-    CALL initSSP( x, myThid )
+    CALL initSSP( myThid )
 
     ! set Bdry%Top%HS%Depth from first SSP%z
     Bdry%Top%HS%Depth = SSP%z(1)

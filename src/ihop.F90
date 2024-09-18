@@ -28,22 +28,6 @@ MODULE IHOP
   USE ihop_mod,     only:   rad2deg, i, Beam, ray2D, NRz_per_range, afreq,     &
                             SrcDeclAngle, iSmallStepCtr,                       &
                             PRTFile, SHDFile, ARRFile, RAYFile, DELFile
-  USE angle_mod,    only:   Angles, ialpha
-  USE srPos_mod,    only:   Pos
-  USE ssp_mod,      only:   evalSSP, SSP
-  USE bdry_mod,     only:   initATI, initBTY, GetTopSeg, GetBotSeg, Bot, Top,  &
-                            atiType, btyType, IsegTop, IsegBot,                &
-                            rTopSeg, rBotSeg, Bdry
-  USE refCoef,      only:   readReflectionCoefficient,                         &
-                            InterpolateReflectionCoefficient,  &
-                            RTop, RBot, NBotPts, NTopPts
-  USE influence,    only:   InfluenceGeoHatRayCen,                             &
-                            InfluenceGeoGaussianCart, InfluenceGeoHatCart,     &
-                            ScalePressure
-  USE beamPattern
-  USE writeRay,     only:   WriteRay2D, WriteDel2D
-  USE arr_mod,      only:   WriteArrivalsASCII,WriteArrivalsBinary,MaxNArr,    &
-                            Arr, NArr, U
 
 !   !USES:
   IMPLICIT NONE
@@ -72,7 +56,12 @@ MODULE IHOP
 CONTAINS
   SUBROUTINE IHOP_MAIN ( myTime, myIter, myThid )
     USE ihop_init_diag, only: initPRTFile, openOutputFiles, resetMemory
+    USE bdry_mod,       only: initATI, initBTY, Bdry
     USE ssp_mod,        only: setSSP
+    USE refCoef,        only: readReflectionCoefficient
+    USE beampattern,    only: SBPFlag, ReadPat
+    USE srPos_mod,      only: Pos
+    USE arr_mod,        only: MaxNArr, Arr, NArr, U
 
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO
@@ -85,7 +74,6 @@ CONTAINS
   !     == Local Variables ==
     INTEGER             :: iAllocStat
     REAL                :: Tstart, Tstop
-    REAL (KIND=_RL90)   :: x(2)
   ! ===========================================================================
     INTEGER, PARAMETER   :: ArrivalsStorage = 2000, MinNArr = 10
   ! ===========================================================================
@@ -129,8 +117,7 @@ CONTAINS
 !!$TAF store pos%theta,pos%wr,pos%ws = initEnv1
 
     ! set SSP%cmat from gcm SSP: REQUIRED
-    x = [ 0.0 _d 0, Bdry%Bot%HS%Depth ]
-    CALL setSSP( x, myThid )
+    CALL setSSP( myThid )
 
     ! AlTImetry: OPTIONAL, default is no ATIFile
     CALL initATI( Bdry%Top%HS%Opt( 5:5 ), Bdry%Top%HS%Depth, myThid )
@@ -299,8 +286,16 @@ CONTAINS
 
   ! **********************************************************************!
   SUBROUTINE IHOPCore( myThid )
-    USE ssp_mod,  only: iSegr           !RG
+    USE ssp_mod,   only: evalSSP, iSegr  !RG
+    USE angle_mod, only: Angles, ialpha
+    USE srPos_mod, only: Pos
+    USE arr_mod,   only: WriteArrivalsASCII, WriteArrivalsBinary, NArr, U
+    USE writeRay,  only: WriteRay2D, WriteDel2D
+    USE influence, only: InfluenceGeoHatRayCen, InfluenceGeoGaussianCart, &
+                         InfluenceGeoHatCart, ScalePressure
+    USE beampattern,only: NSBPPts, SrcBmPat
 !    USE influence,  only: ratio1, rB    !RG
+
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO
   !     msgBuf :: Used to build messages for printing.
@@ -503,12 +498,15 @@ CONTAINS
   ! **********************************************************************!
 
   SUBROUTINE TraceRay2D( xs, alpha, Amp0, myThid )
+    USE ihop_mod, only: MaxN, istep
+    USE bdry_mod, only: GetTopSeg, GetBotSeg, atiType, btyType, Bdry, &
+                        IsegTop, IsegBot, rTopSeg, rBotSeg, Top, Bot
+    USE refCoef,  only: RTop, RBot, NBotPts, NTopPts
+    USE step,     only: Step2D
+    USE ssp_mod,  only: evalSSP, iSegr           !RG
 
   ! Traces the beam corresponding to a particular take-off angle, alpha [rad]
 
-    USE ihop_mod, only: MaxN, istep
-    USE step,     only: Step2D
-    USE ssp_mod,  only: iSegr           !RG
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO
   !     msgBuf :: Used to build messages for printing.
@@ -809,8 +807,9 @@ CONTAINS
   ! **********************************************************************!
 
   SUBROUTINE Reflect2D( is, HS, BotTop, tBdry, nBdry, kappa, RefC, Npts, myThid )
+    USE ssp_mod,  only: evalSSP
     USE bdry_mod, only: HSInfo
-    USE refCoef,  only: ReflectionCoef
+    USE refCoef,  only: ReflectionCoef, InterpolateReflectionCoefficient
 
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO
