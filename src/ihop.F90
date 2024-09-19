@@ -25,9 +25,7 @@ MODULE IHOP
   ! Systems Center
 
 
-  USE ihop_mod,     only:   rad2deg, i, Beam, ray2D, NRz_per_range, afreq,     &
-                            SrcDeclAngle, iSmallStepCtr,                       &
-                            PRTFile, SHDFile, ARRFile, RAYFile, DELFile
+  USE ihop_mod,     only: i, PRTFile, SHDFile, ARRFile, RAYFile, DELFile
 
 !   !USES:
   IMPLICIT NONE
@@ -61,6 +59,7 @@ CONTAINS
     USE refCoef,        only: readReflectionCoefficient
     USE beampattern,    only: SBPFlag, ReadPat
     USE srPos_mod,      only: Pos
+    USE ihop_mod,       only: Beam, Nrz_per_range
     USE arr_mod,        only: MaxNArr, Arr, NArr, U
 
   !     == Routine Arguments ==
@@ -261,6 +260,7 @@ CONTAINS
     USE influence, only: InfluenceGeoHatRayCen, InfluenceGeoGaussianCart, &
                          InfluenceGeoHatCart, ScalePressure
     USE beampattern,only: NSBPPts, SrcBmPat
+    USE ihop_mod,   only: Beam, ray2D, rad2deg, SrcDeclAngle, afreq, NRz_per_range
 !    USE influence,  only: ratio1, rB    !RG
 ! FOR TAF
     USE bdry_mod, only: bdry
@@ -451,6 +451,7 @@ CONTAINS
                         IsegTop, IsegBot, rTopSeg, rBotSeg, Top, Bot
     USE refCoef,  only: RTop, RBot, NBotPts, NTopPts
     USE step,     only: Step2D
+    USE ihop_mod, only: Beam, ray2D, iSmallStepCtr
     USE ssp_mod,  only: evalSSP, iSegr           !RG
 
   ! Traces the beam corresponding to a particular take-off angle, alpha [rad]
@@ -741,6 +742,7 @@ CONTAINS
     USE ssp_mod,  only: evalSSP
     USE bdry_mod, only: HSInfo
     USE refCoef,  only: ReflectionCoef, InterpolateReflectionCoefficient
+    USE ihop_mod, only: Beam, ray2D, rad2deg, afreq
 
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO
@@ -819,7 +821,7 @@ CONTAINS
     RM = Tg / Th   ! this is tan( alpha ) where alpha is the angle of incidence
     RN = RN + RM * ( 2 * cnjump - RM * csjump ) / c ** 2
 
-    SELECT CASE ( Beam%Type( 3 : 3 ) )
+    SELECT CASE ( Beam%Type( 3:3 ) )
     CASE ( 'D' )
        RN = 2.0 * RN
     CASE ( 'Z' )

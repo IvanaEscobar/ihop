@@ -814,10 +814,6 @@ SUBROUTINE gcmSSP( myThid )
 
   USE atten_mod, only: CRCI
   USE bdry_mod, only: Bdry
-  ! IESCO24
-  ! fT = 1000 ONLY for acousto-elastic halfspaces, I will have to pass this
-  ! parameter in a different way after ssp_mod is split btwn fixed and varia
-  !USE initenvihop, only: fT
 
   ! == Routine Arguments ==
   ! myThid :: Thread number. Unused by IESCO
@@ -833,6 +829,9 @@ SUBROUTINE gcmSSP( myThid )
   INTEGER :: njj(IHOP_NPTS_RANGE)
   REAL (KIND=_RL90)             :: dcdz, tolerance
   REAL (KIND=_RL90), ALLOCATABLE:: tmpSSP(:,:,:,:)
+  ! IESCO24
+  ! fT = 1000 ONLY for acousto-elastic halfspaces, I will have to pass this
+  ! parameter in a different way after ssp_mod is split btwn fixed and varia
   REAL (KIND=_RL90)             :: bPower, fT
 
   ! IESCO24 fT init
