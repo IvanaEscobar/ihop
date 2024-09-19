@@ -79,6 +79,8 @@ SUBROUTINE CSPLINE (TAU, C, N, IBCBEG, IBCEND, NDIM)
 
   L = N - 1
 
+!$TAF init cspline1 = static, 4*ndim*L
+
   DO M = 2,N
      C(3,M) = TAU(M) - TAU(M-1)
      C(4,M) = (C(1,M) - C(1,M-1)) / C(3,M)
@@ -86,7 +88,9 @@ SUBROUTINE CSPLINE (TAU, C, N, IBCBEG, IBCEND, NDIM)
 
   !   * BEGINNING BOUNDARY CONDITION SECTION *
 
+!$TAF store C = cspline1
   IF (IBCBEG==0)  THEN                           ! IBCBEG = 0
+!$TAF store C = cspline1
      IF (N.GT.2)  THEN                           !     N > 2
         C(4,1) = C(3,3)
         C(3,1) = C(3,2) + C(3,3)
@@ -101,6 +105,7 @@ SUBROUTINE CSPLINE (TAU, C, N, IBCBEG, IBCEND, NDIM)
   ELSE IF (IBCBEG==1)  THEN                      ! IBCBEG = 1
      C(4,1) = (1.0,0.0)
      C(3,1) = (0.0,0.0)
+     C(2,1) = C(2,1)
 
   ELSE IF (IBCBEG==2)  THEN                      ! IBCBEG = 2
      C(4,1) = (2.0,0.0)
@@ -108,11 +113,15 @@ SUBROUTINE CSPLINE (TAU, C, N, IBCBEG, IBCEND, NDIM)
      C(2,1) = 3.0*C(4,2) - C(2,1)*C(3,2)/2.0
   ELSE
      ! do nothing
+     C(4,1) = C(4,1)
+     C(3,1) = C(3,1)
+     C(2,1) = C(2,1)
   END IF
 
   !   * RUNNING CALCULATIONS TO N-1 - LOOP IS NOT EXECUTED IF N = 2 *
 
   DO M = 2,L
+!$TAF store C = cspline1
      G = -C(3,M+1) / C(4,M-1)
      C(2,M) = G*C(2,M-1) + 3.0*(C(3,M)*C(4,M+1) + C(3,M+1)*C(4,M))
      C(4,M) = G*C(3,M-1) + 2.0*(C(3,M) + C(3,M+1))
@@ -121,6 +130,7 @@ SUBROUTINE CSPLINE (TAU, C, N, IBCBEG, IBCEND, NDIM)
   !   * ENDING BOUNDARY CONDITION SECTION *
 
   IF (IBCEND /= 1)  THEN
+!$TAF store C = cspline1
      IF (IBCEND==0)  THEN
         IF (N==2 .AND. IBCBEG==0)  THEN
            C(2,N) = C(4,N)
@@ -129,6 +139,7 @@ SUBROUTINE CSPLINE (TAU, C, N, IBCBEG, IBCEND, NDIM)
            C(4,N) = (1.,0.)
            G = -1.0 / C(4,N-1)
         ELSE
+!$TAF store C = cspline1
            G = C(3,N-1) + C(3,N)
            C(2,N) = ((C(3,N) + 2.0*G) * C(4,N)*C(3,N-1) + &
                 C(3,N)**2 * (C(1,N-1)-C(1,N-2)) / C(3,N-1)) / G
@@ -137,14 +148,19 @@ SUBROUTINE CSPLINE (TAU, C, N, IBCBEG, IBCEND, NDIM)
         END IF
 
      ELSE IF (IBCEND==2)  THEN
+!$TAF store C = cspline1
         C(2,N) = 3.0 * C(4,N) + C(2,N)*C(3,N)/2.0
         C(4,N) = (2.0,0.0)
         G = -1.0 / C(4,N-1)
      ELSE
         ! do nothing
+        C(2,N) = C(2,N) 
+        C(4,N) = C(4,N) 
+        G = G
      END IF
 
      IF ( IBCBEG.GT.0 .OR. N.GT.2)  THEN
+!$TAF store C = cspline1
         C(4,N) = G*C(3,N-1) + C(4,N)
         C(2,N) = (G*C(2,N-1) + C(2,N)) / C(4,N)
      END IF
@@ -178,6 +194,7 @@ SUBROUTINE CSPLINE (TAU, C, N, IBCBEG, IBCEND, NDIM)
 
   C(4,N) = (0.0,0.0)
   DO I = 1,L                            ! INTEGRATE OVER THE INTERVAL
+!$TAF store C = cspline1
      DTAU = TAU(I+1) - TAU(I)
      C(4,N) = C(4,N) + DTAU*(C(1,I) + DTAU*(C(2,I)/2.0 + &
           DTAU*(C(3,I)/6.0 + DTAU*C(4,I)/24.0)))

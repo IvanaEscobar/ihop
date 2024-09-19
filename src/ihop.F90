@@ -78,43 +78,10 @@ CONTAINS
     INTEGER, PARAMETER   :: ArrivalsStorage = 2000, MinNArr = 10
   ! ===========================================================================
 
-!!$TAF init IHOP_MAIN1 = 'IHOPIHOP_MAIN'
-!
-!! IESCO24: Write derived type with allocatable memory by type: Pos from srpos_mod
-!! Scalar components
-!! Allocatable arrays
-!!$TAF store pos%wr,pos%ws = IHOP_MAIN1
-!
-!! IESCO24: Write derived type with allocatable memory by type: SSP from ssp_mod
-!! Scalar components
-!! Fixed arrays
-!!$TAF store ssp%z = IHOP_MAIN1
-!! Allocatable arrays
-!!$TAF store ssp%czmat,ssp%seg%r,ssp%seg%x,ssp%seg%y,ssp%seg%z = IHOP_MAIN1
-
     ! Reset memory
     CALL resetMemory()
     ! save data.ihop, open PRTFile: REQUIRED
     CALL initPRTFile( myTime, myIter, myThid )
-
-!!! FROM old initenvihop.F90:initEnv
-!! IESCO24: Write derived type with allocatable memory by type: Bdry from bdry_mod
-!! Scalar components
-!!$TAF store bdry%top%hs%depth,bdry%top%hs%bc = initEnv1
-!
-!!$TAF init initEnv1 = 'initenvIHOP_MAINenv'
-!
-!! IESCO24: Write derived type with allocatable memory by type: SSP from ssp_mod
-!! Scalar components
-!! Fixed arrays
-!! Allocatable arrays
-!!$TAF store ssp%czmat,ssp%seg%r,ssp%seg%x,ssp%seg%y,ssp%seg%z = initEnv1
-!
-!! IESCO24: Write derived type with allocatable memory by type: Pos from srpos_mod
-!! Scalar components
-!! Allocatable arrays
-!!$TAF store pos%rr = initEnv1
-!!$TAF store pos%theta,pos%wr,pos%ws = initEnv1
 
     ! set SSP%cmat from gcm SSP: REQUIRED
     CALL setSSP( myThid )
@@ -295,6 +262,9 @@ CONTAINS
                          InfluenceGeoHatCart, ScalePressure
     USE beampattern,only: NSBPPts, SrcBmPat
 !    USE influence,  only: ratio1, rB    !RG
+! FOR TAF
+    USE bdry_mod, only: bdry
+    USE arr_mod,  only: Arr
 
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO
@@ -308,7 +278,6 @@ CONTAINS
     REAL (KIND=_RL90) :: Amp0, DalphaOpt, xs(2), RadMax, s, &
                          c, cimag, gradc(2), crr, crz, czz, rho
 
-!$TAF init IHOPCore1 = static, Pos%NSz
 !$TAF init IHOPCore2 = static, Pos%NSz*Angles%Nalpha
 
     afreq = 2.0 * PI * IHOP_freq
@@ -331,12 +300,6 @@ CONTAINS
     !         begin solve         !
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     SourceDepth: DO is = 1, Pos%NSz
-
-! IESCO24: Write derived type with allocatable memory by type: SSP from ssp_mod
-! Scalar components
-! Fixed arrays
-! Allocatable arrays
-!$TAF store ssp%cmat,ssp%czmat = IHOPCore1
 
        xs = [ zeroRL, Pos%Sz( is ) ]   ! source coordinate, assuming source @ r=0
 
@@ -377,22 +340,7 @@ CONTAINS
 
        ! Trace successive beams
        DeclinationAngle: DO ialpha = 1, Angles%Nalpha
-
-!$TAF store arr,narr,u = IHOPCore2
-!!$TAF store beam%nsteps,beam%runtype = IHOPCore2
-
-! IESCO24: Write derived type with allocatable memory by type: SSP from ssp_mod
-! Scalar components
-! Fixed arrays
-! Allocatable arrays
-
-! IESCO24: Write derived type with allocatable memory by type: Bdry from bdry_mod
-! Scalar components
-!!$TAF store bdry%bot%hs%cp,bdry%bot%hs%cs,bdry%bot%hs%rho = IHOPCore2
-! Fixed arrays
-! Allocatable arrays
-!$TAF store ssp%cmat,ssp%czmat = IHOPCore2
-
+!$TAF store ray2d,arr,narr,u = IHOPCore2
 
           ! take-off declination angle in degrees
           SrcDeclAngle = rad2deg * Angles%alpha( ialpha )
@@ -415,15 +363,15 @@ CONTAINS
              ! IEsco22: When a beam pattern isn't specified, Amp0 = 0
 
 !$TAF store amp0,beam%runtype,beam%nsteps = IHOPCore2
-! IESCO24: Write derived type with allocatable memory by type: Bdry from bdry_mod
+! IESCO24: Store derived type by data type: Bdry from bdry_mod
 ! Scalar components
-!!$TAF store bdry%bot%hs%cp,bdry%bot%hs%cs,bdry%bot%hs%rho = IHOPCore2
 !$TAF store bdry%top%hs%cp,bdry%top%hs%cs,bdry%top%hs%rho = IHOPCore2
 ! Fixed arrays
 ! Allocatable arrays
 
              ! Lloyd mirror pattern for semi-coherent option
              IF ( Beam%RunType( 1:1 ) == 'S' ) &
+!$TAF store amp0,beam%runtype = IHOPCore2
                 Amp0 = Amp0 * SQRT( 2.0 ) * ABS( SIN( afreq / c * xs( 2 ) &
                        * SIN( Angles%alpha( ialpha ) ) ) )
              !!IESCO22: end BEAM stuff !!
@@ -526,12 +474,6 @@ CONTAINS
     LOGICAL           :: RayTurn = .FALSE., continue_steps, reflect
 
 !$TAF init TraceRay2D = static, MaxN-1
-!$TAF init TraceRay2D1 = 'IHOP_traceray2d'
-
-! IESCO24: Write derived type with allocatable memory by type: Bdry from bdry_mod
-! Scalar components
-!$TAF store ssp = TraceRay2D1
-!$TAF store beam = TraceRay2D1
 
     ! Initial conditions (IC)
     iSmallStepCtr = 0
@@ -542,6 +484,7 @@ CONTAINS
     ray2D( 1 )%p         = [ 1.0, 0.0 ]   ! IESCO22: slowness vector
     ! second component of qv is not supported in geometric beam tracing
     ! set I.C. to 0 in hopes of saving run time
+!$TAF store beam%runtype = TraceRay2D
     IF ( Beam%RunType( 2:2 ) == 'G' .or. Beam%RunType( 2:2 ) == 'B')  THEN
         ray2D( 1 )%q = [ 0.0, 0.0 ]   ! IESCO22: geometric beam in Cartesian
     ELSE
@@ -597,18 +540,7 @@ CONTAINS
     reflect=.false.
 
     Stepping: DO istep = 1, MaxN - 1
-
-!$TAF store is,beam,continue_steps,distbegbot,distbegtop = TraceRay2D
-
-! IESCO24: Write derived type with allocatable memory by type: SSP from ssp_mod
-! Scalar components
-! Fixed arrays
-! Allocatable arrays
-!$TAF store ssp%cmat,ssp%czmat = TraceRay2D
-
-! IESCO24: Write derived type with allocatable memory by type: Bdry from bdry_mod
-! Scalar components
-!$TAF store bdry%top%hs%cp,bdry%top%hs%cs,bdry%top%hs%rho = TraceRay2D
+!$TAF store is,bdry,beam,continue_steps,distbegbot,distbegtop = TraceRay2D
 
        IF ( continue_steps ) THEN
          is  = is + 1 ! old step
@@ -687,11 +619,11 @@ CONTAINS
             END IF
 
 !$TAF store is,isegtop = TraceRay2D
-
             CALL Reflect2D( is, Bdry%Top%HS,    'TOP',  ToptInt,    TopnInt, &
                                 Top( IsegTop )%kappa,   RTop,       NTopPTS, &
                                 myThid )
 
+!$TAF store is,isegbot = TraceRay2D
             CALL Distances2D( ray2D( is+1 )%x, &
                 Top( IsegTop )%x, Bot( IsegBot )%x, dEndTop,    dEndBot, &
                 Top( IsegTop )%n, Bot( IsegBot )%n, DistEndTop, DistEndBot )
@@ -701,7 +633,6 @@ CONTAINS
              reflect=.true.
 
 !$TAF store isegbot = TraceRay2D
-
             IF ( btyType == 'C' ) THEN ! curvilinear interpolation
                ! proportional distance along segment
                sss     = DOT_PRODUCT( dEndBot, Bot( IsegBot )%t ) &
@@ -716,11 +647,11 @@ CONTAINS
             END IF
 
 !$TAF store is,isegbot = TraceRay2D
-
             CALL Reflect2D( is, Bdry%Bot%HS,    'BOT',  BottInt,    BotnInt, &
                                 Bot( IsegBot )%kappa,   RBot,       NBotPTS, &
                                 myThid )
 
+!$TAF store is,isegbot = TraceRay2D
             CALL Distances2D( ray2D( is+1 )%x, &
                 Top( IsegTop )%x, Bot( IsegBot )%x, dEndTop,    dEndBot, &
                 Top( IsegTop )%n, Bot( IsegBot )%n, DistEndTop, DistEndBot )
@@ -849,6 +780,7 @@ CONTAINS
     is  = is + 1 ! old step
     is1 = is + 1 ! new step reflected (same x, updated basis vectors)
 
+!$TAF store ray2D(is)%t = reflect2d1
     Tg = DOT_PRODUCT( ray2D( is )%t, tBdry )  ! ray tan projected along boundary
     Th = DOT_PRODUCT( ray2D( is )%t, nBdry )  ! ray tan projected normal boundary
 

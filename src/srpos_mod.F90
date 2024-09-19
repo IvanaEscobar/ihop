@@ -165,8 +165,6 @@ CONTAINS
   !     == Local Variables ==
     REAL(KIND=_RL90),    INTENT( IN ) :: zMin, zMax
 
-!$TAF init readszrz1 = 'srpos_mod_readszrz'
-
     CALL ReadVector( Pos%NSz, Pos%Sz, 'Source   depths, Sz', 'm', &
                     myThid )
     CALL ReadVector( Pos%NRz, Pos%Rz, 'Receiver depths, Rz', 'm', &

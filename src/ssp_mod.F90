@@ -42,9 +42,7 @@ MODULE ssp_mod
   EXTERNAL CHEN_MILLERO
 
 ! LOCAL VARIABLES
-!! == Local Variables ==
-!  INTEGER bi,bj
-!  INTEGER i,j
+! == Local Variables ==
 
 ! LEGACY VARIABLES
 ! == Legacy Local Variables ==
@@ -95,28 +93,12 @@ CONTAINS
 !**********************************************************************!
   SUBROUTINE initSSP( myThid )
 
-    ! Call the particular profile routine indicated by the SSP%Type and
-    ! perform initialize SSP structures
-!    USE ihop_mod,   only: SSPFile
-!    USE pchip_mod,  only: PCHIP
-!    USE splinec_mod,only: cspline
+  ! Call the particular profile routine indicated by the SSP%Type and
+  ! perform initialize SSP structures
 
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO
     INTEGER, INTENT( IN )   :: myThid
-!    CHARACTER*(MAX_LEN_MBUF):: msgBuf
-
-  !     == Local Variables ==
-!    INTEGER :: ir, iz
-!
-!!$TAF init initssp1 = 'ssp_mod_initssp'
-!
-!! IESCO24: Write derived type with allocatable memory by type: SSP from ssp_mod
-!! Scalar components
-!! Fixed arrays
-!! Allocatable arrays
-!!$TAF store ssp%cmat,ssp%czmat,ssp%seg%r,ssp%seg%x,ssp%seg%y,ssp%seg%z = initssp1
-!
     ! Check if SSPFile exists
     IF (useSSPFile) THEN
       CALL ReadSSP( myThid )
@@ -143,13 +125,14 @@ CONTAINS
   !     == Local Variables ==
     INTEGER :: ir, iz
 
-!!$TAF init setssp1 = 'ssp_mod_setssp'
-!
-!! IESCO24: Write derived type with allocatable memory by type: SSP from ssp_mod
-!! Scalar components
-!! Fixed arrays
-!! Allocatable arrays
-!!$TAF store ssp%cmat,ssp%czmat,ssp%seg%r,ssp%seg%x,ssp%seg%y,ssp%seg%z = setssp1
+!$TAF init setssp1 = 'ssp_mod_setssp'
+
+! IESCO24: Write derived type with allocatable memory by type: SSP from ssp_mod
+! Scalar components
+! Fixed arrays
+!$TAF store ssp%c = setssp1
+! Allocatable arrays
+!$TAF store ssp%cmat,ssp%czmat,ssp%seg%r = setssp1
 
     ! init defaults for ssp_mod scoped arrays
     n2    = (-1.,-1.)
@@ -609,10 +592,6 @@ CONTAINS
         FORM = 'FORMATTED', STATUS = 'OLD', IOSTAT = iostat )
     IF ( IOSTAT /= 0 ) THEN   ! successful open?
 #ifdef IHOP_WRITE_OUT
-        !WRITE(msgBuf,'(A)') 'SSPFile = ', TRIM(IHOP_fileroot) // '.ssp'
-        !! In adjoint mode we do not write output besides on the first run
-        !IF (IHOP_dumpfreq.GE.0) &
-        !    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
         WRITE(msgBuf,'(A)') 'SSPMOD ReadSSP: Unable to open the SSP file'
         CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
@@ -899,7 +878,7 @@ SUBROUTINE gcmSSP( myThid )
                 njj(ii) = njj(ii) + 1
 
                 DO iz = 1, SSP%Nz - 1
-!$TAF STORE tmpSSP(:,ii,bi,bj),njj(ii) = tape_ssp2                    !RG
+!$TAF STORE njj(ii) = tape_ssp2                    !RG
 
     IF (iz .EQ. 1) THEN
       ! Top vlevel zero depth
