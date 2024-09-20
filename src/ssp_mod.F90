@@ -846,8 +846,7 @@ SUBROUTINE gcmSSP( myThid )
 #ifdef ALLOW_AUTODIFF_TAMC
   INTEGER tkey, ijkey, lockey
 
-!!$TAF init loctape_ihop_gcmssp_bibj_ij_iijj &
-!!$TAF& = COMMON, nSx*nSy*(2*OLx+sNx)*(2*OLy+sNy)*IHOP_npts_range*IHOP_npts_idw 
+!$TAF init loctape_ihop_gcmssp_bibj_ij_iijj_k = COMMON, nSx*nSy*(2*OLx+sNx)*(2*OLy+sNy)*IHOP_npts_range*IHOP_npts_idw*SSP%Nz
 #endif
 
   ! IESCO24 fT init
@@ -891,7 +890,7 @@ SUBROUTINE gcmSSP( myThid )
             interp_finished = .FALSE.
             DO jj=1,IHOP_npts_idw
 #ifdef ALLOW_AUTODIFF_TAMC
-!$TAF STORE interp_finished = comlev1_bibj_ij_ihop, key=ijkey, byte=isbyte
+!$TAF STORE interp_finished = comlev1_bibj_ij_ihop, key=ijkey, kind=isbyte
 #endif
 
               ! Interpolate from GCM grid cell centers
@@ -901,11 +900,11 @@ SUBROUTINE gcmSSP( myThid )
                 njj(ii) = njj(ii) + 1
 
 #ifdef ALLOW_AUTODIFF_TAMC
-                lockey = jj + ((ii-1) + (ijkey-1)*IHOP_npts_range)*IHOP_npts_idw
 #endif
                 DO iz = 1, SSP%Nz - 1
 #ifdef ALLOW_AUTODIFF_TAMC
-!!$TAF store njj(ii) = loctape_ihop_gcmssp_bibj_ij_iijj, key=lockey, byte=isbyte
+                  lockey = iz + ((jj-1) + ((ii-1) + (ijkey-1)*IHOP_npts_range)*IHOP_npts_idw)*(SSP%Nz-1)
+!$TAF store njj(ii) = loctape_ihop_gcmssp_bibj_ij_iijj_k, key=lockey, kind=isbyte
 #endif
 
     IF (iz .EQ. 1) THEN
@@ -916,26 +915,26 @@ SUBROUTINE gcmSSP( myThid )
     ELSE ! 2:(SSP%Nz-1)
       ! Middle depth layers, only when not already underground
       IF (ihop_sumweights(ii, iz-1) .GT. 0.0) THEN
-#ifdef ALLOW_AUTODIFF_TAMC
-!!$TAF store njj(ii) = loctape_ihop_gcmssp_bibj_ij_iijj, key=lockey, byte=isbyte
-#endif
+        ! isolate njj increments for TAF 
+        IF (ihop_idw_weights(ii, jj) .EQ. 0.0) THEN
+          njj(ii) = IHOP_npts_idw + 1
+        END IF
 
         ! Exactly on a cell center, ignore interpolation
         IF (ihop_idw_weights(ii, jj) .EQ. 0.0) THEN
           tmpSSP(iz, ii, bi, bj) = ihop_ssp(i, j, iz-1, bi, bj)
-          njj(ii) = IHOP_npts_idw + 1
 
         ! Apply IDW interpolation
         ELSE IF (njj(ii) .LE. IHOP_npts_idw) THEN
           tmpSSP(iz, ii, bi, bj) = tmpSSP(iz, ii, bi, bj) + &
             ihop_ssp(i, j, iz-1, bi, bj) * &
             ihop_idw_weights(ii, jj) / ihop_sumweights(ii, iz-1)
-          ! Do nothing to njj
-          njj(ii) = njj(ii)
+          !! Do nothing to njj
+          !njj(ii) = njj(ii)
         ELSE
           ! do nothing
           tmpSSP(iz, ii, bi, bj) = tmpSSP(iz, ii, bi, bj)
-          njj(ii) = njj(ii)
+          !njj(ii) = njj(ii)
         END IF
       END IF
 
