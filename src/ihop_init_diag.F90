@@ -85,7 +85,7 @@ CONTAINS
       WRITE(msgBuf,'(2A)') 'Top options: ', Bdry%Top%HS%Opt
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 
-      CALL WriteTopBot( Bdry%Top%HS, myThid )
+      CALL writeBdry( Bdry%Top%HS, myThid )
 
       WRITE(msgBuf,'(A)')
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
@@ -100,7 +100,7 @@ CONTAINS
         CASE DEFAULT
       END SELECT
 
-      CALL WriteTopBot( Bdry%Bot%HS, myThid )
+      CALL writeBdry( Bdry%Bot%HS, myThid )
 
 
       CALL WriteSxSy( myThid )
@@ -437,7 +437,7 @@ CONTAINS
 
   !**********************************************************************!
 
-  SUBROUTINE WriteTopBot( HS, myThid )
+  SUBROUTINE WriteBdry( HS, myThid )
     USE ihop_mod,  only: PRTFile
     USE ssp_mod, only: rhoR, alphaR, betaR, alphaI, betaI
 
@@ -502,7 +502,7 @@ CONTAINS
     END IF ! if in adjoint mode
 #endif /* IHOP_WRITE_OUT */
   RETURN
-  END !SUBROUTINE WriteTopBot
+  END !SUBROUTINE writeBdry
 
   ! **********************************************************************!
 
