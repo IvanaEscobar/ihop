@@ -8,7 +8,7 @@ MODULE IHOP_INIT_DIAG
 
   ! mbp 12/2018, based on much older subroutine
 
-  USE ssp_mod,   only: initSSP, SSP
+  USE ssp_mod,   only: SSP
   USE bdry_mod,  only: Bdry, HSInfo
   USE atten_mod, only: CRCI
 
@@ -964,15 +964,11 @@ CONTAINS
 
   SUBROUTINE resetMemory()
     USE srpos_mod,  only: Pos
-    USE bdry_mod,   only: Top,Bot
     USE angle_mod,  only: Angles
     USE arr_mod,    only: Narr, Arr, U
     USE ihop_mod,   only: ray2D, MaxN, iStep
 
-    ! From bdry_mod
-    IF (ALLOCATED(Top))         DEALLOCATE(Top)
-    IF (ALLOCATED(Bot))         DEALLOCATE(Bot)
-    ! From bellhop
+    ! From ihop
     IF (ALLOCATED(Pos%theta))   DEALLOCATE(Pos%theta)
     IF (ALLOCATED(U))           DEALLOCATE(U)
     IF (ALLOCATED(Arr))         DEALLOCATE(Arr)

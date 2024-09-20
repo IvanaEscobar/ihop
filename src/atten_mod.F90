@@ -108,7 +108,7 @@ CONTAINS
       CASE DEFAULT
          ! Do nothing
          alphaT = 0.0
-         STOP 'ABNORMAL END: S/R CRCI'
+         STOP '1 ABNORMAL END: S/R CRCI'
     END SELECT
 
     ! added volume attenuation
@@ -143,8 +143,7 @@ CONTAINS
          END DO
       CASE DEFAULT
          ! Do nothing
-         alphaT = 0.0
-         STOP 'ABNORMAL END: S/R CRCI'
+         alphaT = alphaT
     END SELECT
 
     ! Convert Nepers/m to equivalent imaginary sound speed

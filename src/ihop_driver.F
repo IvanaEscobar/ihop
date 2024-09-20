@@ -10,7 +10,7 @@ C !DESCRIPTION:
 C Calculate ray travel times, tau
 
 C !FORTRAN90 USE MODULES: ===============================================
-      USE bellhop, only: ihop_init
+      USE ihop, only: ihop_main
 
       IMPLICIT NONE
 C !GLOBAL VARIABLES: ===============================================
@@ -42,7 +42,7 @@ CEOP
       DO t=1,nts
         IF ( IHOP_iter(t).GE.0 ) THEN
             IF ( IHOP_iter(t).EQ.myIter ) THEN
-                CALL IHOP_INIT( myTime, myIter, myThid )
+                CALL IHOP_MAIN( myTime, myIter, myThid )
             ENDIF
         ENDIF
       ENDDO

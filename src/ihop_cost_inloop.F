@@ -70,7 +70,7 @@ C !LOCAL VARIABLES:
       optimcycle = 0
 #endif
 #ifdef ALLOW_AUTODIFF_TAMC
-!      itdkey = bi + (bj - 1)*nSx + (ikey_dynamics - 1)*nSx*nSy
+      itdkey = bi + (bj - 1)*nSx + (ikey_dynamics - 1)*nSx*nSy
 #endif
 
 #ifdef ALLOW_COST
@@ -87,7 +87,9 @@ C !LOCAL VARIABLES:
      &      .AND.(ihopObs_time(num_file,m,bi,bj).LT.
      &      (myTime+deltaTclock))) THEN
 
-!!ADJ STORE ihop_modval  = comlev1_bibj, key=itdkey, kind=isbyte
+#ifdef ALLOW_AUTODIFF_TAMC
+!$TAF STORE ihop_modval  = comlev1_bibj, key=itdkey, byte=isbyte
+#endif
 
             ihop_modval=0
 

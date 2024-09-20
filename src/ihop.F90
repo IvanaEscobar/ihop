@@ -1,49 +1,31 @@
 #include "IHOP_OPTIONS.h"
 !BOP
-! !ROUTINE: BELLHOP
+! !ROUTINE: IHOP
 ! !INTERFACE:
-MODULE BELLHOP
+MODULE IHOP
   ! Written as a module to be used in ihop_*.F parts of the MITgcm package
-  ! BELLHOP Beam tracing for ocean acoustics
-
-  ! Copyright (C) 2009 Michael B. Porter
-
+  ! IHOP Beam tracing for ocean acoustics
+  !
   ! This program is free software: you can redistribute it and/or modify
   ! it under the terms of the GNU General Public License as published by
   ! the Free Software Foundation, either version 3 of the License, or
   ! (at your option) any later version.
-
+  !
   ! This program is distributed in the hope that it will be useful,
   ! but WITHOUT ANY WARRANTY; without even the implied warranty of
   ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   ! GNU General Public License for more details.
-
+  !
   ! You should have received a copy of the GNU General Public License
   ! along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
+  !
+  ! Second version BELLHOP Copyright (C) 2009 Michael B. Porter
+  !
   ! First version (1983) originally developed with Homer Bucker, Naval Ocean
   ! Systems Center
 
 
-  USE ihop_mod,     only:   rad2deg, i, Beam, ray2D, NRz_per_range, afreq,     &
-                            SrcDeclAngle, iSmallStepCtr,                       &
-                            PRTFile, SHDFile, ARRFile, RAYFile, DELFile
-  USE angle_mod,    only:   Angles, ialpha
-  USE srPos_mod,    only:   Pos
-  USE ssp_mod,      only:   evalSSP, SSP
-  USE bdry_mod,     only:   initATI, initBTY, GetTopSeg, GetBotSeg, Bot, Top,  &
-                            atiType, btyType, IsegTop, IsegBot,                &
-                            rTopSeg, rBotSeg, Bdry
-  USE refCoef,      only:   readReflectionCoefficient,                         &
-                            InterpolateReflectionCoefficient,  &
-                            RTop, RBot, NBotPts, NTopPts
-  USE influence,    only:   InfluenceGeoHatRayCen,                             &
-                            InfluenceGeoGaussianCart, InfluenceGeoHatCart,     &
-                            ScalePressure
-  USE beamPattern
-  USE writeRay,     only:   WriteRay2D, WriteDel2D
-  USE arr_mod,      only:   WriteArrivalsASCII,WriteArrivalsBinary,MaxNArr,    &
-                            Arr, NArr, U
+  USE ihop_mod,     only: i, PRTFile, SHDFile, ARRFile, RAYFile, DELFile
 
 !   !USES:
   IMPLICIT NONE
@@ -58,14 +40,27 @@ MODULE BELLHOP
 # include "CTRL_FIELDS.h"
 #endif
 
+  PRIVATE
+
+!   == Public Interfaces ==
+!=======================================================================
+  public ihop_main
+!=======================================================================
+
 !   == External Functions ==
     INTEGER  ILNBLNK
     EXTERNAL ILNBLNK
 
 CONTAINS
-  SUBROUTINE IHOP_INIT ( myTime, myIter, myThid )
+  SUBROUTINE IHOP_MAIN ( myTime, myIter, myThid )
     USE ihop_init_diag, only: initPRTFile, openOutputFiles, resetMemory
+    USE bdry_mod,       only: initATI, initBTY, Bdry
     USE ssp_mod,        only: setSSP
+    USE refCoef,        only: readReflectionCoefficient
+    USE beampattern,    only: SBPFlag, ReadPat
+    USE srPos_mod,      only: Pos
+    USE ihop_mod,       only: Beam, Nrz_per_range
+    USE arr_mod,        only: MaxNArr, Arr, NArr, U
 
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO
@@ -78,52 +73,17 @@ CONTAINS
   !     == Local Variables ==
     INTEGER             :: iAllocStat
     REAL                :: Tstart, Tstop
-    REAL (KIND=_RL90)   :: x(2)
   ! ===========================================================================
     INTEGER, PARAMETER   :: ArrivalsStorage = 2000, MinNArr = 10
   ! ===========================================================================
-
-!!$TAF init ihop_init1 = 'BellhopIhop_init'
-!
-!! IESCO24: Write derived type with allocatable memory by type: Pos from srpos_mod
-!! Scalar components
-!! Allocatable arrays
-!!$TAF store pos%wr,pos%ws = ihop_init1
-!
-!! IESCO24: Write derived type with allocatable memory by type: SSP from ssp_mod
-!! Scalar components
-!! Fixed arrays
-!!$TAF store ssp%z = ihop_init1
-!! Allocatable arrays
-!!$TAF store ssp%czmat,ssp%seg%r,ssp%seg%x,ssp%seg%y,ssp%seg%z = ihop_init1
 
     ! Reset memory
     CALL resetMemory()
     ! save data.ihop, open PRTFile: REQUIRED
     CALL initPRTFile( myTime, myIter, myThid )
 
-!!! FROM old initenvihop.F90:initEnv
-!! IESCO24: Write derived type with allocatable memory by type: Bdry from bdry_mod
-!! Scalar components
-!!$TAF store bdry%top%hs%depth,bdry%top%hs%bc = initEnv1
-!
-!!$TAF init initEnv1 = 'initenvihop_initenv'
-!
-!! IESCO24: Write derived type with allocatable memory by type: SSP from ssp_mod
-!! Scalar components
-!! Fixed arrays
-!! Allocatable arrays
-!!$TAF store ssp%czmat,ssp%seg%r,ssp%seg%x,ssp%seg%y,ssp%seg%z = initEnv1
-!
-!! IESCO24: Write derived type with allocatable memory by type: Pos from srpos_mod
-!! Scalar components
-!! Allocatable arrays
-!!$TAF store pos%rr = initEnv1
-!!$TAF store pos%theta,pos%wr,pos%ws = initEnv1
-
     ! set SSP%cmat from gcm SSP: REQUIRED
-    x = [ 0.0 _d 0, Bdry%Bot%HS%Depth ]
-    CALL setSSP( x, myThid )
+    CALL setSSP( myThid )
 
     ! AlTImetry: OPTIONAL, default is no ATIFile
     CALL initATI( Bdry%Top%HS%Opt( 5:5 ), Bdry%Top%HS%Depth, myThid )
@@ -140,10 +100,10 @@ CONTAINS
     ALLOCATE( Pos%theta( Pos%Ntheta ), Stat = IAllocStat )
     IF ( IAllocStat/=0 ) THEN
 #ifdef IHOP_WRITE_OUT
-        WRITE(msgBuf,'(2A)') 'BELLHOP IHOP_INIT: failed allocation Pos%theta'
+        WRITE(msgBuf,'(2A)') 'IHOP IHOP_MAIN: failed allocation Pos%theta'
         CALL PRINT_ERROR( msgBuf, myThid )
 #endif /* IHOP_WRITE_OUT */
-        STOP 'ABNORMAL END: S/R IHOP_INIT'
+        STOP 'ABNORMAL END: S/R IHOP_MAIN'
     ENDIF
     Pos%theta( 1 ) = 0.
 
@@ -161,11 +121,11 @@ CONTAINS
          ALLOCATE( U( NRz_per_range, Pos%NRr ), Stat = iAllocStat )
          IF ( iAllocStat/=0 ) THEN
 #ifdef IHOP_WRITE_OUT
-              WRITE(msgBuf,'(2A)') 'BELLHOP IHOP_INIT: ', &
+              WRITE(msgBuf,'(2A)') 'IHOP IHOP_MAIN: ', &
                              'Insufficient memory for TL matrix: reduce Nr*NRz'
               CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
-             STOP 'ABNORMAL END: S/R IHOP_INIT'
+             STOP 'ABNORMAL END: S/R IHOP_MAIN'
          END IF
          U = 0.0                       ! init default value
     CASE ( 'A', 'a', 'R', 'E', 'e' )   ! Arrivals calculation
@@ -191,11 +151,11 @@ CONTAINS
               NArr(Pos%NRr, NRz_per_range), STAT = iAllocStat )
     IF ( iAllocStat /= 0 ) THEN
 #ifdef IHOP_WRITE_OUT
-        WRITE(msgBuf,'(2A)') 'BELLHOP IHOP_INIT: ', &
+        WRITE(msgBuf,'(2A)') 'IHOP IHOP_MAIN: ', &
             'Not enough allocation for Arr; reduce ArrivalsStorage'
         CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
-        STOP 'ABNORMAL END: S/R IHOP_INIT'
+        STOP 'ABNORMAL END: S/R IHOP_MAIN'
     END IF
 
     NArr                      = 0
@@ -220,13 +180,13 @@ CONTAINS
     IF ( IHOP_dumpfreq .GE. 0 ) &
      CALL OpenOutputFiles( IHOP_fileroot, myTime, myIter, myThid )
 
-    ! Run Bellhop solver on a single processor
+    ! Run IHOP solver on a single processor
     if (numberOfProcs.gt.1) then
 ! Use same single processID as IHOP COST package
 !        if(myProcId.eq.(numberOfProcs-1)) then
         if(myProcId.eq.0) then
             CALL CPU_TIME( Tstart )
-            CALL BellhopCore(myThid)
+            CALL IHOPCore(myThid)
             CALL CPU_TIME( Tstop )
 ! Alternitavely, we can broadcast relevant info to all mpi processes Ask P.
 !#ifdef ALLOW_COST
@@ -237,7 +197,7 @@ CONTAINS
         endif
     else
         CALL CPU_TIME( Tstart )
-        CALL BellhopCore(myThid)
+        CALL IHOPCore(myThid)
         CALL CPU_TIME( Tstop )
     endif
 
@@ -288,12 +248,24 @@ CONTAINS
 #endif /* IHOP_WRITE_OUT */
 
   RETURN
-  END !SUBROUTINE IHOP_INIT
+  END !SUBROUTINE IHOP_MAIN
 
   ! **********************************************************************!
-  SUBROUTINE BellhopCore( myThid )
-    USE ssp_mod,  only: iSegr           !RG
+  SUBROUTINE IHOPCore( myThid )
+    USE ssp_mod,   only: evalSSP, iSegr  !RG
+    USE angle_mod, only: Angles, ialpha
+    USE srPos_mod, only: Pos
+    USE arr_mod,   only: WriteArrivalsASCII, WriteArrivalsBinary, NArr, U
+    USE writeRay,  only: WriteRay2D, WriteDel2D
+    USE influence, only: InfluenceGeoHatRayCen, InfluenceGeoGaussianCart, &
+                         InfluenceGeoHatCart, ScalePressure
+    USE beampattern,only: NSBPPts, SrcBmPat
+    USE ihop_mod,   only: Beam, ray2D, rad2deg, SrcDeclAngle, afreq, NRz_per_range
 !    USE influence,  only: ratio1, rB    !RG
+! FOR TAF
+    USE bdry_mod, only: bdry
+    USE arr_mod,  only: Arr
+
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO
   !     msgBuf :: Used to build messages for printing.
@@ -306,8 +278,7 @@ CONTAINS
     REAL (KIND=_RL90) :: Amp0, DalphaOpt, xs(2), RadMax, s, &
                          c, cimag, gradc(2), crr, crz, czz, rho
 
-!$TAF init BellhopCore1 = static, Pos%NSz
-!$TAF init BellhopCore2 = static, Pos%NSz*Angles%Nalpha
+!$TAF init IHOPCore2 = static, Pos%NSz*Angles%Nalpha
 
     afreq = 2.0 * PI * IHOP_freq
 
@@ -318,23 +289,17 @@ CONTAINS
                          / ( Angles%Nalpha - 1 )  ! angular spacing between beams
     ELSE
 #ifdef IHOP_WRITE_OUT
-        WRITE(msgBuf,'(2A)') 'BELLHOP BellhopCore: ', &
+        WRITE(msgBuf,'(2A)') 'IHOP IHOPCore: ', &
                       'Required: Nalpha>1, else add iSingle_alpha(see angleMod)'
         CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
-        STOP 'ABNORMAL END: S/R BellhopCore'
+        STOP 'ABNORMAL END: S/R IHOPCore'
     END IF
 
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !         begin solve         !
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     SourceDepth: DO is = 1, Pos%NSz
-
-! IESCO24: Write derived type with allocatable memory by type: SSP from ssp_mod
-! Scalar components
-! Fixed arrays
-! Allocatable arrays
-!$TAF store ssp%cmat,ssp%czmat = BellhopCore1
 
        xs = [ zeroRL, Pos%Sz( is ) ]   ! source coordinate, assuming source @ r=0
 
@@ -349,7 +314,7 @@ CONTAINS
        CASE DEFAULT
           U = 0.0
           NArr = 0
-          STOP 'ABNORMAL END: S/R BellhopCore'
+          STOP 'ABNORMAL END: S/R IHOPCore'
        END SELECT
 
        CALL evalSSP(  xs, c, cimag, gradc, crr, crz, czz, rho, myThid  )
@@ -375,22 +340,7 @@ CONTAINS
 
        ! Trace successive beams
        DeclinationAngle: DO ialpha = 1, Angles%Nalpha
-
-!$TAF store arr,narr,u = BellhopCore2
-!!$TAF store beam%nsteps,beam%runtype = BellhopCore2
-
-! IESCO24: Write derived type with allocatable memory by type: SSP from ssp_mod
-! Scalar components
-! Fixed arrays
-! Allocatable arrays
-
-! IESCO24: Write derived type with allocatable memory by type: Bdry from bdry_mod
-! Scalar components
-!!$TAF store bdry%bot%hs%cp,bdry%bot%hs%cs,bdry%bot%hs%rho = BellhopCore2
-! Fixed arrays
-! Allocatable arrays
-!$TAF store ssp%cmat,ssp%czmat = BellhopCore2
-
+!$TAF store ray2d,arr,narr,u = IHOPCore2
 
           ! take-off declination angle in degrees
           SrcDeclAngle = rad2deg * Angles%alpha( ialpha )
@@ -412,16 +362,16 @@ CONTAINS
              Amp0 = ( 1 - s ) * SrcBmPat( IBP, 2 ) + s * SrcBmPat( IBP + 1, 2 )
              ! IEsco22: When a beam pattern isn't specified, Amp0 = 0
 
-!$TAF store amp0,beam%runtype,beam%nsteps = BellhopCore2
-! IESCO24: Write derived type with allocatable memory by type: Bdry from bdry_mod
+!$TAF store amp0,beam%runtype,beam%nsteps = IHOPCore2
+! IESCO24: Store derived type by data type: Bdry from bdry_mod
 ! Scalar components
-!!$TAF store bdry%bot%hs%cp,bdry%bot%hs%cs,bdry%bot%hs%rho = BellhopCore2
-!$TAF store bdry%top%hs%cp,bdry%top%hs%cs,bdry%top%hs%rho = BellhopCore2
+!$TAF store bdry%top%hs%cp,bdry%top%hs%cs,bdry%top%hs%rho = IHOPCore2
 ! Fixed arrays
 ! Allocatable arrays
 
              ! Lloyd mirror pattern for semi-coherent option
              IF ( Beam%RunType( 1:1 ) == 'S' ) &
+!$TAF store amp0,beam%runtype = IHOPCore2
                 Amp0 = Amp0 * SQRT( 2.0 ) * ABS( SIN( afreq / c * xs( 2 ) &
                        * SIN( Angles%alpha( ialpha ) ) ) )
              !!IESCO22: end BEAM stuff !!
@@ -482,8 +432,8 @@ CONTAINS
        CASE ( 'a' )             ! arrivals calculation, binary
           CALL WriteArrivalsBinary( Pos%Rr, NRz_per_range, Pos%NRr, &
                                     Beam%RunType( 4:4 ) )
-       CASE DEFAULT 
-          STOP 'ABNORMAL END: S/R BellhopCore'
+       CASE DEFAULT
+          STOP 'ABNORMAL END: S/R IHOPCore'
           CALL WriteArrivalsASCII(  Pos%Rr, NRz_per_range, Pos%NRr, &
                                     Beam%RunType( 4:4 ) )
        END SELECT
@@ -491,17 +441,21 @@ CONTAINS
     END DO SourceDepth
 
   RETURN
-  END !SUBROUTINE BellhopCore
+  END !SUBROUTINE IHOPCore
 
   ! **********************************************************************!
 
   SUBROUTINE TraceRay2D( xs, alpha, Amp0, myThid )
+    USE ihop_mod, only: MaxN, istep
+    USE bdry_mod, only: GetTopSeg, GetBotSeg, atiType, btyType, Bdry, &
+                        IsegTop, IsegBot, rTopSeg, rBotSeg, Top, Bot
+    USE refCoef,  only: RTop, RBot, NBotPts, NTopPts
+    USE step,     only: Step2D
+    USE ihop_mod, only: Beam, ray2D, iSmallStepCtr
+    USE ssp_mod,  only: evalSSP, iSegr           !RG
 
   ! Traces the beam corresponding to a particular take-off angle, alpha [rad]
 
-    USE ihop_mod, only: MaxN, istep
-    USE step,     only: Step2D
-    USE ssp_mod,  only: iSegr           !RG
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO
   !     msgBuf :: Used to build messages for printing.
@@ -521,12 +475,6 @@ CONTAINS
     LOGICAL           :: RayTurn = .FALSE., continue_steps, reflect
 
 !$TAF init TraceRay2D = static, MaxN-1
-!$TAF init TraceRay2D1 = 'bellhop_traceray2d'
-
-! IESCO24: Write derived type with allocatable memory by type: Bdry from bdry_mod
-! Scalar components
-!$TAF store ssp = TraceRay2D1
-!$TAF store beam = TraceRay2D1
 
     ! Initial conditions (IC)
     iSmallStepCtr = 0
@@ -537,6 +485,7 @@ CONTAINS
     ray2D( 1 )%p         = [ 1.0, 0.0 ]   ! IESCO22: slowness vector
     ! second component of qv is not supported in geometric beam tracing
     ! set I.C. to 0 in hopes of saving run time
+!$TAF store beam%runtype = TraceRay2D
     IF ( Beam%RunType( 2:2 ) == 'G' .or. Beam%RunType( 2:2 ) == 'B')  THEN
         ray2D( 1 )%q = [ 0.0, 0.0 ]   ! IESCO22: geometric beam in Cartesian
     ELSE
@@ -555,13 +504,14 @@ CONTAINS
 
     ! IESCO22: 'L' is long format. See BeadBTY s/r in bdrymod.f90. Default is to
     ! calculate cp, cs, and rho instead of reading them in
-    IF ( atiType( 2 : 2 ) == 'L' ) THEN
+    IF ( atiType( 2:2 ) == 'L' ) THEN
        ! grab the geoacoustic info for the new segment
        Bdry%Top%HS%cp  = Top( IsegTop )%HS%cp
        Bdry%Top%HS%cs  = Top( IsegTop )%HS%cs
        Bdry%Top%HS%rho = Top( IsegTop )%HS%rho
     END IF
-    IF ( btyType( 2 : 2 ) == 'L' ) THEN
+    IF ( btyType( 2:2 ) == 'L' ) THEN
+       ! grab the geoacoustic info for the new segment
        Bdry%Bot%HS%cp  = Bot( IsegBot )%HS%cp
        Bdry%Bot%HS%cs  = Bot( IsegBot )%HS%cs
        Bdry%Bot%HS%rho = Bot( IsegBot )%HS%rho
@@ -591,18 +541,7 @@ CONTAINS
     reflect=.false.
 
     Stepping: DO istep = 1, MaxN - 1
-
-!$TAF store is,beam,continue_steps,distbegbot,distbegtop = TraceRay2D
-
-! IESCO24: Write derived type with allocatable memory by type: SSP from ssp_mod
-! Scalar components
-! Fixed arrays
-! Allocatable arrays
-!$TAF store ssp%cmat,ssp%czmat = TraceRay2D
-
-! IESCO24: Write derived type with allocatable memory by type: Bdry from bdry_mod
-! Scalar components
-!$TAF store bdry%top%hs%cp,bdry%top%hs%cs,bdry%top%hs%rho = TraceRay2D
+!$TAF store is,bdry,beam,continue_steps,distbegbot,distbegtop = TraceRay2D
 
        IF ( continue_steps ) THEN
          is  = is + 1 ! old step
@@ -632,7 +571,7 @@ CONTAINS
          IF ( ray2D( is1 )%x( 1 ) < rTopSeg( 1 ) .OR. &
               ray2D( is1 )%x( 1 ) > rTopSeg( 2 ) ) THEN
             CALL GetTopSeg( ray2D( is1 )%x( 1 ), myThid )
-            IF ( atiType( 2 : 2 ) == 'L' ) THEN
+            IF ( atiType( 2:2 ) == 'L' ) THEN
                ! ATIFile geoacoustic info from new segment, cp
                Bdry%Top%HS%cp  = Top( IsegTop )%HS%cp
                Bdry%Top%HS%cs  = Top( IsegTop )%HS%cs
@@ -644,7 +583,7 @@ CONTAINS
          IF ( ray2D( is1 )%x( 1 ) < rBotSeg( 1 ) .OR. &
               ray2D( is1 )%x( 1 ) > rBotSeg( 2 ) ) THEN
             CALL GetBotSeg( ray2D( is1 )%x( 1 ), myThid )
-            IF ( btyType( 2 : 2 ) == 'L' ) THEN
+            IF ( btyType( 2:2 ) == 'L' ) THEN
                ! BTYFile geoacoustic info from new segment, cp
                Bdry%Bot%HS%cp  = Bot( IsegBot )%HS%cp
                Bdry%Bot%HS%cs  = Bot( IsegBot )%HS%cs
@@ -681,11 +620,11 @@ CONTAINS
             END IF
 
 !$TAF store is,isegtop = TraceRay2D
-
             CALL Reflect2D( is, Bdry%Top%HS,    'TOP',  ToptInt,    TopnInt, &
                                 Top( IsegTop )%kappa,   RTop,       NTopPTS, &
                                 myThid )
 
+!$TAF store is,isegbot = TraceRay2D
             CALL Distances2D( ray2D( is+1 )%x, &
                 Top( IsegTop )%x, Bot( IsegBot )%x, dEndTop,    dEndBot, &
                 Top( IsegTop )%n, Bot( IsegBot )%n, DistEndTop, DistEndBot )
@@ -695,7 +634,6 @@ CONTAINS
              reflect=.true.
 
 !$TAF store isegbot = TraceRay2D
-
             IF ( btyType == 'C' ) THEN ! curvilinear interpolation
                ! proportional distance along segment
                sss     = DOT_PRODUCT( dEndBot, Bot( IsegBot )%t ) &
@@ -704,17 +642,17 @@ CONTAINS
                          + sss     * Bot( 1+IsegBot )%Noden
                BottInt = ( 1-sss ) * Bot( IsegBot   )%Nodet &
                          + sss     * Bot( 1+IsegBot )%Nodet
-            ELSE
+            ELSE ! btyType not 'C'
                BotnInt = Bot( IsegBot )%n   ! normal is constant in a segment
                BottInt = Bot( IsegBot )%t
             END IF
 
 !$TAF store is,isegbot = TraceRay2D
-
             CALL Reflect2D( is, Bdry%Bot%HS,    'BOT',  BottInt,    BotnInt, &
                                 Bot( IsegBot )%kappa,   RBot,       NBotPTS, &
                                 myThid )
 
+!$TAF store is,isegbot = TraceRay2D
             CALL Distances2D( ray2D( is+1 )%x, &
                 Top( IsegTop )%x, Bot( IsegBot )%x, dEndTop,    dEndBot, &
                 Top( IsegTop )%n, Bot( IsegBot )%n, DistEndTop, DistEndBot )
@@ -801,8 +739,10 @@ CONTAINS
   ! **********************************************************************!
 
   SUBROUTINE Reflect2D( is, HS, BotTop, tBdry, nBdry, kappa, RefC, Npts, myThid )
+    USE ssp_mod,  only: evalSSP
     USE bdry_mod, only: HSInfo
-    USE refCoef,  only: ReflectionCoef
+    USE refCoef,  only: ReflectionCoef, InterpolateReflectionCoefficient
+    USE ihop_mod, only: Beam, ray2D, rad2deg, afreq
 
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO
@@ -831,7 +771,7 @@ CONTAINS
     COMPLEX (KIND=_RL90) :: ch, a, b, d, sb, delta, ddelta ! for beam shift
     TYPE(ReflectionCoef) :: RInt
 
-!$TAF init reflect2d1 = 'bellhopreflectray2d'
+!$TAF init reflect2d1 = 'IHOPreflectray2d'
 
     ! Init default values for local derived type Rint
     Rint%R = 0.0
@@ -842,6 +782,7 @@ CONTAINS
     is  = is + 1 ! old step
     is1 = is + 1 ! new step reflected (same x, updated basis vectors)
 
+!$TAF store ray2D(is)%t = reflect2d1
     Tg = DOT_PRODUCT( ray2D( is )%t, tBdry )  ! ray tan projected along boundary
     Th = DOT_PRODUCT( ray2D( is )%t, nBdry )  ! ray tan projected normal boundary
 
@@ -880,14 +821,13 @@ CONTAINS
     RM = Tg / Th   ! this is tan( alpha ) where alpha is the angle of incidence
     RN = RN + RM * ( 2 * cnjump - RM * csjump ) / c ** 2
 
-    SELECT CASE ( Beam%Type( 3 : 3 ) )
+    SELECT CASE ( Beam%Type( 3:3 ) )
     CASE ( 'D' )
        RN = 2.0 * RN
     CASE ( 'Z' )
        RN = 0.0
     CASE DEFAULT
-       RN = 0.0
-       STOP "ABNORMAL END: S/R Reflect2D"
+       RN = RN
     END SELECT
 
     ray2D( is1 )%c   = c
@@ -1002,7 +942,7 @@ CONTAINS
        ! In adjoint mode we do not write output besides on the first run
        IF (IHOP_dumpfreq.GE.0) &
         CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
-       WRITE(msgBuf,'(A)') 'BELLHOP Reflect2D: Unknown boundary condition type'
+       WRITE(msgBuf,'(A)') 'IHOP Reflect2D: Unknown boundary condition type'
        CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
        STOP 'ABNORMAL END: S/R Reflect2D'
@@ -1015,7 +955,7 @@ CONTAINS
        ray2D( is+1 )%NumBotBnc = ray2D( is )%NumBotBnc + 1
     ELSE
 #ifdef IHOP_WRITE_OUT
-       WRITE(msgBuf,'(2A)') 'BELLHOP Reflect2D: ', &
+       WRITE(msgBuf,'(2A)') 'IHOP Reflect2D: ', &
                             'no reflection bounce, but in reflect2d somehow'
        CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
@@ -1025,4 +965,4 @@ CONTAINS
   RETURN
   END !SUBROUTINE Reflect2D
 
-END MODULE BELLHOP
+END MODULE IHOP

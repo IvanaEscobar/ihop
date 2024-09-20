@@ -1,4 +1,8 @@
 #include "IHOP_OPTIONS.h"
+#ifdef ALLOW_AUTODIFF
+# include "AUTODIFF_OPTIONS.h"
+#endif
+
 !BOP
 ! !INTERFACE:
 MODULE ssp_mod
@@ -12,7 +16,7 @@ MODULE ssp_mod
   ! Acoustics Toolbox. However, it returns the SSP *and* its derivatives
 
   ! Also, a greater premium has been placed on returning this info quickly,
-  ! since BELLHOP calls it at every step so more information is pre-computed
+  ! since IHOP calls it at every step so more information is pre-computed
 
   USE ihop_mod,     only: PRTFile
 
@@ -42,9 +46,7 @@ MODULE ssp_mod
   EXTERNAL CHEN_MILLERO
 
 ! LOCAL VARIABLES
-!! == Local Variables ==
-!  INTEGER bi,bj
-!  INTEGER i,j
+! == Local Variables ==
 
 ! LEGACY VARIABLES
 ! == Legacy Local Variables ==
@@ -58,7 +60,7 @@ MODULE ssp_mod
   INTEGER                :: iostat, iallocstat
   INTEGER,           PRIVATE :: iz
   REAL (KIND=_RL90), PRIVATE :: Depth, W
-  ! DEFAULT values, BELLHOP only modifies alphaR
+  ! DEFAULT values, IHOP only modifies alphaR
   REAL (KIND=_RL90)          :: alphaR = 1500, betaR = 0, alphaI = 0, &
                                 betaI = 0, rhoR = 1
   ! SSP interpolation parameters, only used in ssp_mod
@@ -93,36 +95,17 @@ MODULE ssp_mod
 
 CONTAINS
 !**********************************************************************!
-  SUBROUTINE initSSP( x, myThid )
+  SUBROUTINE initSSP( myThid )
 
-    ! Call the particular profile routine indicated by the SSP%Type and
-    ! perform initialize SSP structures
-!    USE ihop_mod,   only: SSPFile
-!    USE pchip_mod,  only: PCHIP
-!    USE splinec_mod,only: cspline
+  ! Call the particular profile routine indicated by the SSP%Type and
+  ! perform initialize SSP structures
 
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO
     INTEGER, INTENT( IN )   :: myThid
-!    CHARACTER*(MAX_LEN_MBUF):: msgBuf
-
-  !     == Local Variables ==
-    REAL (KIND=_RL90), INTENT( IN  ) :: x( 2 )  ! r-z SSP evaluation point
-!    INTEGER :: ir, iz
-!
-!!$TAF init initssp1 = 'ssp_mod_initssp'
-!
-!! IESCO24: Write derived type with allocatable memory by type: SSP from ssp_mod
-!! Scalar components
-!! Fixed arrays
-!! Allocatable arrays
-!!$TAF store ssp%cmat,ssp%czmat,ssp%seg%r,ssp%seg%x,ssp%seg%y,ssp%seg%z = initssp1
-!
-    ! All methods require Depth
-    Depth = x( 2 )
     ! Check if SSPFile exists
     IF (useSSPFile) THEN
-      CALL ReadSSP( Depth, myThid )
+      CALL ReadSSP( myThid )
     ELSE
       CALL init_fixed_SSP( myThid )
     END IF
@@ -131,13 +114,11 @@ CONTAINS
   END !SUBROUTINE initSSP
 
 !**********************************************************************!
-  SUBROUTINE setSSP( x, myThid )
-
-    ! Call the particular profile routine indicated by the SSP%Type and
-    ! set SSP structures
-
+  SUBROUTINE setSSP( myThid )
     USE pchip_mod,  only: PCHIP
     USE splinec_mod,only: cspline
+
+    ! Set SSP structures for particular SSP%Type routine
 
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO
@@ -146,16 +127,16 @@ CONTAINS
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
 
   !     == Local Variables ==
-    REAL (KIND=_RL90), INTENT( IN  ) :: x(2)  ! r-z SSP evaluation point
     INTEGER :: ir, iz
 
-!!$TAF init setssp1 = 'ssp_mod_setssp'
-!
-!! IESCO24: Write derived type with allocatable memory by type: SSP from ssp_mod
-!! Scalar components
-!! Fixed arrays
-!! Allocatable arrays
-!!$TAF store ssp%cmat,ssp%czmat,ssp%seg%r,ssp%seg%x,ssp%seg%y,ssp%seg%z = setssp1
+!$TAF init setssp1 = 'ssp_mod_setssp'
+
+! IESCO24: Write derived type with allocatable memory by type: SSP from ssp_mod
+! Scalar components
+! Fixed arrays
+!$TAF store ssp%c = setssp1
+! Allocatable arrays
+!$TAF store ssp%cmat,ssp%czmat,ssp%seg%r = setssp1
 
     ! init defaults for ssp_mod scoped arrays
     n2    = (-1.,-1.)
@@ -163,13 +144,12 @@ CONTAINS
     cSpln = (-1.,-1.)
     cCoef = (-1.,-1.)
 
-    ! All methods require Depth
-    Depth = x(2)
-    IF (useSSPFile) THEN
-        CALL ReadSSP( Depth, myThid )
-    ELSE
-        CALL ExtractSSP( Depth, myThid )
+    ! Extract gcm SSP field
+    IF ( .not. useSSPFile ) THEN
+      CALL gcmSSP( myThid )
     ENDIF
+    ! Write to PRTFile
+    CALL writeSSP( myThid )
 
     ! Populate rest of SSP derived type based on SSP interpolation scheme
     SELECT CASE ( SSP%Type )
@@ -237,8 +217,8 @@ CONTAINS
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
 
   !     == Local Variables ==
-    REAL (KIND=_RL90), INTENT( IN  ) :: x( 2 )  ! r-z SSP evaluation point
-    REAL (KIND=_RL90), INTENT( OUT ) :: c, cimag, gradc( 2 ), crr, crz, czz, rho
+    REAL (KIND=_RL90), INTENT( IN  ) :: x(2)  ! r-z SSP evaluation point
+    REAL (KIND=_RL90), INTENT( OUT ) :: c, cimag, gradc(2), crr, crz, czz, rho
 
     SELECT CASE ( SSP%Type )
     CASE ( 'N' )  !  N2-linear profile option
@@ -582,12 +562,13 @@ CONTAINS
   END !SUBROUTINE Quad
 
 !**********************************************************************!
-  SUBROUTINE ReadSSP( Depth, myThid )
+  SUBROUTINE ReadSSP( myThid )
+    USE atten_mod, only: CRCI
+    USE ihop_mod,  only: SSPFile
+    USE bdry_mod, only: Bdry
     ! reads SSP in m/s from .ssp file and convert to AttenUnit (ie. Nepers/m)
     ! Populates SSPStructure: SSP
 
-    USE atten_mod, only: CRCI
-    USE ihop_mod,  only: SSPFile
   ! IESCO24
   ! fT = 1000 ONLY for acousto-elastic halfspaces, I will have to pass this
   ! parameter in a different way after ssp_mod is split btwn fixed and varia
@@ -600,12 +581,13 @@ CONTAINS
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
 
   !     == Local Variables ==
-    REAL (KIND=_RL90), INTENT(IN) :: Depth
+    REAL (KIND=_RL90) :: Depth
     REAL (KIND=_RL90) :: bPower, fT
 
     ! IESCO24 fT init
     bPower = 1.0
     fT = 1000.0
+    Depth = Bdry%Bot%HS%Depth
 
     ! I/O on main thread only
     _BEGIN_MASTER(myThid)
@@ -614,10 +596,6 @@ CONTAINS
         FORM = 'FORMATTED', STATUS = 'OLD', IOSTAT = iostat )
     IF ( IOSTAT /= 0 ) THEN   ! successful open?
 #ifdef IHOP_WRITE_OUT
-        !WRITE(msgBuf,'(A)') 'SSPFile = ', TRIM(IHOP_fileroot) // '.ssp'
-        !! In adjoint mode we do not write output besides on the first run
-        !IF (IHOP_dumpfreq.GE.0) &
-        !    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
         WRITE(msgBuf,'(A)') 'SSPMOD ReadSSP: Unable to open the SSP file'
         CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
@@ -639,6 +617,11 @@ CONTAINS
         STOP 'ABNORMAL END: S/R ReadSSP'
     END IF
 
+    ! Initiate to nonsense
+    SSP%cMat  = -99.0 _d 0
+    SSP%czMat = -99.0 _d 0
+
+    ! Set SSP contents
     READ( SSPFile,  * ) SSP%Seg%r( 1:SSP%Nr )
     SSP%Seg%r = 1000.0 * SSP%Seg%r   ! convert km to m
 
@@ -661,32 +644,28 @@ CONTAINS
        IF ( iz > 1 ) THEN
           IF ( SSP%z( iz ) .LE. SSP%z( iz-1 ) ) THEN
 #ifdef IHOP_WRITE_OUT
-                WRITE(msgBuf,'(2A,F10.2)') 'SSPMOD ReadSSP: ', &
-                          'The depths in the SSP must be monotone increasing', &
-                          SSP%z(iz)
-                CALL PRINT_ERROR( msgBuf,myThid )
+            WRITE(msgBuf,'(2A,F10.2)') 'SSPMOD ReadSSP: ', &
+                  'The depths in the SSP must be monotone increasing', SSP%z(iz)
+            CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
-                STOP 'ABNORMAL END: S/R ReadSSP'
+            STOP 'ABNORMAL END: S/R ReadSSP'
           END IF
        END IF
 
        ! compute gradient, cz
        IF ( iz > 1 ) SSP%cz( iz-1 )  = ( SSP%c( iz ) - SSP%c( iz-1 ) ) / &
-                                         ( SSP%z( iz ) - SSP%z( iz-1 ) )
+                                       ( SSP%z( iz ) - SSP%z( iz-1 ) )
 
        ! Did we read the last point?
        IF ( ABS( SSP%z( iz ) - Depth ) < 100. * EPSILON( 1.0e0 ) ) THEN
           IF ( SSP%NPts == 1 ) THEN
 #ifdef IHOP_WRITE_OUT
-                WRITE(msgBuf,'(2A)')  'SSPMOD ReadSSP: ', &
-                                    'The SSP must have at least 2 points'
+                WRITE(msgBuf,'(2A)') 'SSPMOD ReadSSP: ', &
+                                     'The SSP must have at least 2 points'
                 CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
                 STOP 'ABNORMAL END: S/R ReadSSP'
           END IF
-
-          ! Write to PRTFile
-          CALL writeSSP( myThid )
 
           RETURN
        ENDIF
@@ -706,290 +685,6 @@ CONTAINS
     _END_MASTER(myThid)
   RETURN
   END !SUBROUTINE ReadSSP
-
-!**********************************************************************!
-SUBROUTINE ExtractSSP( Depth, myThid )
-  ! Extracts SSP from MITgcm grid points
-
-  USE atten_mod, only: CRCI
-  USE bdry_mod, only: Bdry
-  ! IESCO24
-  ! fT = 1000 ONLY for acousto-elastic halfspaces, I will have to pass this
-  ! parameter in a different way after ssp_mod is split btwn fixed and varia
-  !USE initenvihop, only: fT
-
-  ! == Routine Arguments ==
-  ! myThid :: Thread number. Unused by IESCO
-  ! msgBuf :: Used to build messages for printing.
-  INTEGER, INTENT(IN)     :: myThid
-  CHARACTER*(MAX_LEN_MBUF):: msgBuf
-  CHARACTER*(80)          :: fmtstr
-
-  ! == Local Variables ==
-  LOGICAL :: found_interpolation
-  INTEGER :: iallocstat
-  INTEGER :: bi,bj, i,j,k, ii,jj
-  INTEGER :: njj(IHOP_NPTS_RANGE)
-  REAL (KIND=_RL90), INTENT(IN) :: Depth
-  REAL (KIND=_RL90)             :: dcdz, tolerance
-  REAL (KIND=_RL90), ALLOCATABLE:: tmpSSP(:,:,:,:)
-  REAL (KIND=_RL90)             :: bPower, fT
-
-  ! IESCO24 fT init
-  bPower = 1.0
-  fT = 1000.0
-
-  ! init local vars
-  found_interpolation =.false.
-  njj(:)    = 0
-  dcdz      = 0.0 _d 0
-  tolerance = 5 _d -5
-
-  IF(ALLOCATED(tmpSSP)) DEALLOCATE(tmpSSP)
-  ALLOCATE( tmpSSP(SSP%Nz,SSP%Nr,nSx,nSy), STAT = iallocstat )
-  IF ( iallocstat /= 0 ) THEN
-# ifdef IHOP_WRITE_OUT
-    WRITE(msgBuf,'(2A)') 'SSPMOD ExtractSSP: ', &
-      'Insufficient memory to store tmpSSP'
-    CALL PRINT_ERROR( msgBuf,myThid )
-# endif /* IHOP_WRITE_OUT */
-      STOP 'ABNORMAL END: S/R ExtractSSP'
-  END IF
-  ! Initiate to ceros
-  tmpSSP    = 0.0 _d 0
-
-  ! interpolate SSP with adaptive IDW from gcm grid to ihop grid
-  DO bj=myByLo(myThid),myByHi(myThid)
-    DO bi=myBxLo(myThid),myBxHi(myThid)
-!$TAF INIT tape_ssp1 = static, 100                  !RG
-!$TAF INIT tape_ssp2 = static, 100                  !RG
-
-      DO j=1,sNy
-        DO i=1,sNx
-          DO ii=1,IHOP_npts_range
-            found_interpolation = .FALSE.
-            DO jj=1,IHOP_npts_idw
-!$TAF STORE found_interpolation = tape_ssp1                    !RG
-
-              ! Interpolate from GCM grid cell centers
-              IF (ABS(xC(i, j, bi, bj) - ihop_xc(ii, jj)) .LE. tolerance .AND. &
-                  ABS(yC(i, j, bi, bj) - ihop_yc(ii, jj)) .LE. tolerance .AND. &
-                  .NOT. found_interpolation) THEN
-                njj(ii) = njj(ii) + 1
-
-                DO iz = 1, SSP%Nz - 1
-!$TAF STORE tmpSSP(:,ii,bi,bj),njj(ii) = tape_ssp2                    !RG
-
-    IF (iz .EQ. 1) THEN
-      ! Top vlevel zero depth
-      tmpSSP(1, ii, bi, bj) = tmpSSP(1, ii, bi, bj) + &
-        CHEN_MILLERO(i, j, 0, bi, bj, myThid) * &
-        ihop_idw_weights(ii, jj) / ihop_sumweights(ii, iz)
-    ELSE ! 2:(SSP%Nz-1)
-      ! Middle depth layers, only when not already underground
-      IF (ihop_sumweights(ii, iz-1) .GT. 0.0) THEN
-!$TAF store njj(ii) = tape_ssp2                    !RG
-
-        ! Exactly on a cell center, ignore interpolation
-        IF (ihop_idw_weights(ii, jj) .EQ. 0.0) THEN
-          tmpSSP(iz, ii, bi, bj) = ihop_ssp(i, j, iz-1, bi, bj)
-          njj(ii) = IHOP_npts_idw + 1
-
-        ! Apply IDW interpolation
-        ELSE IF (njj(ii) .LE. IHOP_npts_idw) THEN
-          tmpSSP(iz, ii, bi, bj) = tmpSSP(iz, ii, bi, bj) + &
-            ihop_ssp(i, j, iz-1, bi, bj) * &
-            ihop_idw_weights(ii, jj) / ihop_sumweights(ii, iz-1)
-          ! Do nothing to njj
-          njj(ii) = njj(ii)
-        ELSE
-          ! do nothing
-          tmpSSP(iz, ii, bi, bj) = tmpSSP(iz, ii, bi, bj) 
-          njj(ii) = njj(ii)
-        END IF
-      END IF
-
-      ! Extrapolate through bathymetry; don't interpolate
-      IF (iz .EQ. SSP%Nz-1 .OR. ihop_sumweights(ii, iz-1) .EQ. 0.0) THEN
-        k = iz
-
-        IF (njj(ii) .GE. IHOP_npts_idw) THEN
-          ! Determine if you are at the last vlevel
-          IF (iz .EQ. SSP%Nz-1 .AND. ihop_sumweights(ii, iz-1) .NE. 0.0) &
-              k = k + 1
-
-          ! Calc depth gradient
-          dcdz = (tmpSSP(k-1, ii, bi, bj) - tmpSSP(k-2, ii, bi, bj)) / &
-                 (SSP%z(k-1) - SSP%z(k-2))
-          ! Extrapolate
-          tmpSSP(k:SSP%Nz, ii, bi, bj) = &
-            tmpSSP(k-1, ii, bi, bj) + dcdz * SSP%z(k:SSP%Nz)
-          ! Move to next range point, ii
-          found_interpolation = .TRUE.
-        END IF
-      END IF
-    END IF
-                END DO !iz
-              END IF
-            END DO !jj
-          END DO !ii
-        END DO !i
-      END DO !j
-    END DO !bi
-  END DO !bj
-
-  IF ((nPx.GT.1) .OR. (nPy.GT.1)) THEN
-    CALL GLOBAL_VEC_SUM_R8(SSP%Nz*SSP%Nr,SSP%Nz*SSP%Nr,tmpSSP,myThid)
-  ENDIF
-  SSP%cMat = tmpSSP(:,:,1,1)
-  IF(ALLOCATED(tmpSSP)) DEALLOCATE(tmpSSP)
-  !==================================================
-  ! END IDW Interpolate
-  !==================================================
-
-  ! set vector structured c, rho, and cz for first range point
-  IF (.not. useSSPFile ) THEN ! if usessp, these have already been set
-    DO iz = 1,SSP%Nz
-      alphaR = SSP%cMat( iz, 1 )
-
-      SSP%c(iz) = CRCI( SSP%z(iz), alphaR, alphaI, SSP%AttenUnit, bPower, fT, &
-                          myThid )
-      SSP%rho(iz) = rhoR
-
-      IF ( iz > 1 ) THEN
-        IF ( SSP%z( iz ) .LE. SSP%z( iz-1 ) ) THEN
-#ifdef IHOP_WRITE_OUT
-          WRITE( msgBuf,'(2A)' ) 'SSPMOD ExtractSSP: ', &
-            'The depths in the SSP must be monotone increasing'
-          CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
-          STOP 'ABNORMAL END: S/R ExtractSSP'
-        END IF
-      END IF
-
-      ! Compute gradient, cz
-      IF ( iz>1 ) SSP%cz( iz-1 ) = ( SSP%c( iz ) - SSP%c( iz-1 ) ) / &
-                                   ( SSP%z( iz ) - SSP%z( iz-1 ) )
-    END DO
-  END IF
-
-  ! Write to PRTFile
-  CALL writeSSP( myThid )
-
-RETURN
-END !SUBROUTINE ExtractSSP
-
-!**********************************************************************!
-SUBROUTINE writeSSP( myThid )
-  ! Extracts SSP from MITgcm grid points
-  USE ihop_mod, only: PRTFile
-
-  ! == Routine Arguments ==
-  ! myThid :: Thread number. Unused by IESCO
-  ! msgBuf :: Used to build messages for printing.
-  INTEGER, INTENT( IN )   :: myThid
-  CHARACTER*(MAX_LEN_MBUF):: msgBuf
-
-  ! == Local Variables ==
-  INTEGER           :: iz
-  CHARACTER*(80)    :: fmtstr
-  REAL (KIND=_RL90) :: ssptmp(SSP%Nr)
-
-  ! init local vars
-  ssptmp = 0.0
-
-  ! I/O on main thread only
-  _BEGIN_MASTER(myThid)
-
-#ifdef IHOP_WRITE_OUT
-  ! In adjoint mode we do not write output besides on the first run
-  IF (IHOP_dumpfreq.GE.0) THEN
-    ! Write relevant diagnostics
-    WRITE(msgBuf,'(2A)')'________________________________________________', &
-      '___________'
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(A)')
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(A)') "Sound Speed Field"
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(A)')
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-
-    WRITE(msgBuf,'(2A)') 'Profile option: ', SSP%Type
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(A)')
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-
-    IF (SSP%Nr .GT. 1) THEN
-      WRITE(msgBuf,'(A)') 'Using range-dependent sound speed'
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    END IF
-    IF (SSP%Nr .EQ. 1) THEN
-      WRITE(msgBuf,'(A)') 'Using range-independent sound speed'
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    END IF
-
-    WRITE(msgBuf,'(A,I10)') 'Number of SSP ranges = ', SSP%Nr
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(A,I10)') 'Number of SSP depths = ', SSP%Nz
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-
-    WRITE(msgBuf,'(A)')
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(A)') 'Profile ranges [km]:'
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(fmtStr,'(A,I10,A)') '(T11,',SSP%Nr, 'F10.2)'
-    ssptmp = SSP%Seg%R( 1:SSP%Nr ) / 1000.0
-    WRITE(msgBuf,fmtStr) ssptmp
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-
-    WRITE(msgBuf,'(A)')
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(A)') 'Sound speed matrix:'
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(A)') ' Depth [m ]     Soundspeed [m/s]'
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-
-    ssptmp = 0.0
-    DO iz = 1, SSP%Nz
-      ssptmp = ssp%cMat( iz,: )
-      WRITE(msgBuf,'(12F10.2)') SSP%z( iz ), ssptmp
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    END DO
-
-    IF (useSSPFile) THEN
-      WRITE(msgBuf,'(A)')
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(A)') 'Sound speed profile:'
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(2A)')'      z         alphaR      betaR     rho      ', &
-                          '  alphaI     betaI'
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(2A)')'     [m]         [m/s]      [m/s]   [g/cm^3]   ', &
-                          '   [m/s]     [m/s]'
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-
-      WRITE(msgBuf,'(2A)')'_______________________________________________', &
-                          '____________'
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(A)')
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-
-      DO iz = 1, SSP%NPts
-         WRITE(msgBuf,'( F10.2, 3X, 2F10.2, 3X, F6.2, 3X, 2F10.4)') &
-             SSP%z( iz ), SSP%cMat(iz,1), betaR, rhoR, alphaI, betaI
-         CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      END DO
-    END IF
-
-ENDIF ! don't write in adjoint mode
-#endif /* IHOP_WRITE_OUT */
-  ! I/O on main thread only
-  _END_MASTER(myThid)
-  _BARRIER
-
-RETURN
-END !SUBROUTINE writeSSP
 
 !**********************************************************************!
 SUBROUTINE init_fixed_ssp( myThid )
@@ -1116,5 +811,311 @@ SUBROUTINE init_fixed_ssp( myThid )
   END DO !bj
 
 END !SUBROUTINE init_fixed_ssp
+
+!**********************************************************************!
+SUBROUTINE gcmSSP( myThid )
+  ! Extracts SSP from MITgcm grid points
+
+  USE atten_mod, only: CRCI
+  USE bdry_mod, only: Bdry
+
+#ifdef ALLOW_AUTODIFF
+# include "tamc.h"
+#endif
+
+  ! == Routine Arguments ==
+  ! myThid :: Thread number. Unused by IESCO
+  ! msgBuf :: Used to build messages for printing.
+  INTEGER, INTENT(IN)     :: myThid
+  CHARACTER*(MAX_LEN_MBUF):: msgBuf
+  CHARACTER*(80)          :: fmtstr
+
+  ! == Local Variables ==
+  ! interp_finished : is adaptive IDW interp finished at this range point?
+  ! njj             : number interpolation points per depth level
+  LOGICAL :: interp_finished
+  INTEGER :: iallocstat
+  INTEGER :: bi,bj, i,j,k, ii,jj
+  INTEGER :: njj(IHOP_NPTS_RANGE)
+  REAL (KIND=_RL90)             :: dcdz, tolerance
+  REAL (KIND=_RL90), ALLOCATABLE:: tmpSSP(:,:,:,:)
+  ! IESCO24
+  ! fT = 1000 ONLY for acousto-elastic halfspaces, I will have to pass this
+  ! parameter in a different way after ssp_mod is split btwn fixed and varia
+  REAL (KIND=_RL90)             :: bPower, fT
+#ifdef ALLOW_AUTODIFF_TAMC
+  INTEGER tkey, ijkey, lockey
+
+!!$TAF init loctape_ihop_gcmssp_bibj_ij_iijj &
+!!$TAF& = COMMON, nSx*nSy*(2*OLx+sNx)*(2*OLy+sNy)*IHOP_npts_range*IHOP_npts_idw 
+#endif
+
+  ! IESCO24 fT init
+  bPower = 1.0
+  fT = 1000.0
+
+  ! init local vars
+  interp_finished =.false.
+  njj       = 0
+  dcdz      = 0.0 _d 0
+  tolerance = 5 _d -5
+
+  IF(ALLOCATED(tmpSSP)) DEALLOCATE(tmpSSP)
+  ALLOCATE( tmpSSP(SSP%Nz,SSP%Nr,nSx,nSy), STAT = iallocstat )
+  IF ( iallocstat /= 0 ) THEN
+# ifdef IHOP_WRITE_OUT
+    WRITE(msgBuf,'(2A)') 'SSPMOD gcmSSP: ', &
+      'Insufficient memory to store tmpSSP'
+    CALL PRINT_ERROR( msgBuf,myThid )
+# endif /* IHOP_WRITE_OUT */
+      STOP 'ABNORMAL END: S/R gcmSSP'
+  END IF
+  ! Initiate to ceros
+  tmpSSP    = 0.0 _d 0
+
+  ! interpolate SSP with adaptive IDW from gcm grid to ihop grid
+  DO bj=myByLo(myThid),myByHi(myThid)
+    DO bi=myBxLo(myThid),myBxHi(myThid)
+#ifdef ALLOW_AUTODIFF_TAMC
+      tkey = bi + (bj-1)*nSx + (ikey_dynamics-1)*nSx*nSy
+#endif
+
+! IESCO24: don't worry about gcm overlaps right now
+      DO j=1,sNy
+        DO i=1,sNx
+#ifdef ALLOW_AUTODIFF_TAMC
+! IESCO24: there's no overlap here, but keep OLx/y in case that changes
+          ijkey = i + ((j-1) + (tkey-1)*(2*OLy+sNy))*(2*OLx+sNx)
+#endif
+          DO ii=1,IHOP_npts_range
+            interp_finished = .FALSE.
+            DO jj=1,IHOP_npts_idw
+#ifdef ALLOW_AUTODIFF_TAMC
+!$TAF STORE interp_finished = comlev1_bibj_ij_ihop, key=ijkey, byte=isbyte
+#endif
+
+              ! Interpolate from GCM grid cell centers
+              IF (ABS(xC(i, j, bi, bj) - ihop_xc(ii, jj)) .LE. tolerance .AND. &
+                  ABS(yC(i, j, bi, bj) - ihop_yc(ii, jj)) .LE. tolerance .AND. &
+                  .NOT. interp_finished) THEN
+                njj(ii) = njj(ii) + 1
+
+#ifdef ALLOW_AUTODIFF_TAMC
+                lockey = jj + ((ii-1) + (ijkey-1)*IHOP_npts_range)*IHOP_npts_idw
+#endif
+                DO iz = 1, SSP%Nz - 1
+#ifdef ALLOW_AUTODIFF_TAMC
+!!$TAF store njj(ii) = loctape_ihop_gcmssp_bibj_ij_iijj, key=lockey, byte=isbyte
+#endif
+
+    IF (iz .EQ. 1) THEN
+      ! Top vlevel zero depth
+      tmpSSP(1, ii, bi, bj) = tmpSSP(1, ii, bi, bj) + &
+        CHEN_MILLERO(i, j, 0, bi, bj, myThid) * &
+        ihop_idw_weights(ii, jj) / ihop_sumweights(ii, iz)
+    ELSE ! 2:(SSP%Nz-1)
+      ! Middle depth layers, only when not already underground
+      IF (ihop_sumweights(ii, iz-1) .GT. 0.0) THEN
+#ifdef ALLOW_AUTODIFF_TAMC
+!!$TAF store njj(ii) = loctape_ihop_gcmssp_bibj_ij_iijj, key=lockey, byte=isbyte
+#endif
+
+        ! Exactly on a cell center, ignore interpolation
+        IF (ihop_idw_weights(ii, jj) .EQ. 0.0) THEN
+          tmpSSP(iz, ii, bi, bj) = ihop_ssp(i, j, iz-1, bi, bj)
+          njj(ii) = IHOP_npts_idw + 1
+
+        ! Apply IDW interpolation
+        ELSE IF (njj(ii) .LE. IHOP_npts_idw) THEN
+          tmpSSP(iz, ii, bi, bj) = tmpSSP(iz, ii, bi, bj) + &
+            ihop_ssp(i, j, iz-1, bi, bj) * &
+            ihop_idw_weights(ii, jj) / ihop_sumweights(ii, iz-1)
+          ! Do nothing to njj
+          njj(ii) = njj(ii)
+        ELSE
+          ! do nothing
+          tmpSSP(iz, ii, bi, bj) = tmpSSP(iz, ii, bi, bj)
+          njj(ii) = njj(ii)
+        END IF
+      END IF
+
+      ! Extrapolate through bathymetry; don't interpolate
+      IF (iz .EQ. SSP%Nz-1 .OR. ihop_sumweights(ii, iz-1) .EQ. 0.0) THEN
+        k = iz
+
+        IF (njj(ii) .GE. IHOP_npts_idw) THEN
+          ! Determine if you are at the last vlevel
+          IF (iz .EQ. SSP%Nz-1 .AND. ihop_sumweights(ii, iz-1) .NE. 0.0) &
+              k = k + 1
+
+          ! Calc depth gradient
+          dcdz = (tmpSSP(k-1, ii, bi, bj) - tmpSSP(k-2, ii, bi, bj)) / &
+                 (SSP%z(k-1) - SSP%z(k-2))
+          ! Extrapolate
+          tmpSSP(k:SSP%Nz, ii, bi, bj) = &
+            tmpSSP(k-1, ii, bi, bj) + dcdz * SSP%z(k:SSP%Nz)
+          ! Move to next range point, ii
+          interp_finished = .TRUE.
+        END IF
+      END IF
+    END IF
+                END DO !iz
+              END IF
+            END DO !jj
+          END DO !ii
+        END DO !i
+      END DO !j
+    END DO !bi
+  END DO !bj
+
+  IF ((nPx.GT.1) .OR. (nPy.GT.1)) THEN
+    CALL GLOBAL_VEC_SUM_R8(SSP%Nz*SSP%Nr,SSP%Nz*SSP%Nr,tmpSSP,myThid)
+  ENDIF
+  SSP%cMat = tmpSSP(:,:,1,1)
+  IF(ALLOCATED(tmpSSP)) DEALLOCATE(tmpSSP)
+  !==================================================
+  ! END IDW Interpolate
+  !==================================================
+
+  ! set vector structured c, rho, and cz for first range point
+  IF (.not. useSSPFile ) THEN ! if usessp, these have already been set
+    DO iz = 1,SSP%Nz
+      alphaR = SSP%cMat( iz, 1 )
+
+      SSP%c(iz) = CRCI( SSP%z(iz), alphaR, alphaI, SSP%AttenUnit, bPower, fT, &
+                          myThid )
+      SSP%rho(iz) = rhoR
+
+      IF ( iz > 1 ) THEN
+        IF ( SSP%z( iz ) .LE. SSP%z( iz-1 ) ) THEN
+#ifdef IHOP_WRITE_OUT
+          WRITE( msgBuf,'(2A)' ) 'SSPMOD gcmSSP: ', &
+            'The depths in the SSP must be monotone increasing'
+          CALL PRINT_ERROR( msgBuf,myThid )
+#endif /* IHOP_WRITE_OUT */
+          STOP 'ABNORMAL END: S/R gcmSSP'
+        END IF
+      END IF
+
+      ! Compute gradient, cz
+      IF ( iz>1 ) SSP%cz( iz-1 ) = ( SSP%c( iz ) - SSP%c( iz-1 ) ) / &
+                                   ( SSP%z( iz ) - SSP%z( iz-1 ) )
+    END DO
+  END IF
+
+RETURN
+END !SUBROUTINE gcmSSP
+
+!**********************************************************************!
+SUBROUTINE writeSSP( myThid )
+  ! Extracts SSP from MITgcm grid points
+  USE ihop_mod, only: PRTFile
+
+  ! == Routine Arguments ==
+  ! myThid :: Thread number. Unused by IESCO
+  ! msgBuf :: Used to build messages for printing.
+  INTEGER, INTENT( IN )   :: myThid
+  CHARACTER*(MAX_LEN_MBUF):: msgBuf
+
+  ! == Local Variables ==
+  INTEGER           :: iz
+  CHARACTER*(80)    :: fmtstr
+  REAL (KIND=_RL90) :: ssptmp(SSP%Nr)
+
+  ! init local vars
+  ssptmp = 0.0
+
+  ! I/O on main thread only
+  _BEGIN_MASTER(myThid)
+
+#ifdef IHOP_WRITE_OUT
+  ! In adjoint mode we do not write output besides on the first run
+  IF (IHOP_dumpfreq.GE.0) THEN
+    ! Write relevant diagnostics
+    WRITE(msgBuf,'(2A)')'________________________________________________', &
+      '___________'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(A)')
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(A)') "Sound Speed Field"
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(A)')
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+
+    WRITE(msgBuf,'(2A)') 'Profile option: ', SSP%Type
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(A)')
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+
+    IF (SSP%Nr .GT. 1) THEN
+      WRITE(msgBuf,'(A)') 'Using range-dependent sound speed'
+      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    END IF
+    IF (SSP%Nr .EQ. 1) THEN
+      WRITE(msgBuf,'(A)') 'Using range-independent sound speed'
+      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    END IF
+
+    WRITE(msgBuf,'(A,I10)') 'Number of SSP ranges = ', SSP%Nr
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(A,I10)') 'Number of SSP depths = ', SSP%Nz
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+
+    WRITE(msgBuf,'(A)')
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(A)') 'Profile ranges [km]:'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(fmtStr,'(A,I10,A)') '(T11,',SSP%Nr, 'F10.2)'
+    ssptmp = SSP%Seg%R( 1:SSP%Nr ) / 1000.0
+    WRITE(msgBuf,fmtStr) ssptmp
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+
+    WRITE(msgBuf,'(A)')
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(A)') 'Sound speed matrix:'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(A)') ' Depth [m ]     Soundspeed [m/s]'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+
+    ssptmp = 0.0
+    DO iz = 1, SSP%Nz
+      ssptmp = ssp%cMat( iz,: )
+      WRITE(msgBuf,'(12F10.2)') SSP%z( iz ), ssptmp
+      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    END DO
+
+    IF (useSSPFile) THEN
+      WRITE(msgBuf,'(A)')
+      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+      WRITE(msgBuf,'(A)') 'Sound speed profile:'
+      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+      WRITE(msgBuf,'(2A)')'      z         alphaR      betaR     rho      ', &
+                          '  alphaI     betaI'
+      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+      WRITE(msgBuf,'(2A)')'     [m]         [m/s]      [m/s]   [g/cm^3]   ', &
+                          '   [m/s]     [m/s]'
+      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+
+      WRITE(msgBuf,'(2A)')'_______________________________________________', &
+                          '____________'
+      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+      WRITE(msgBuf,'(A)')
+      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+
+      DO iz = 1, SSP%NPts
+         WRITE(msgBuf,'( F10.2, 3X, 2F10.2, 3X, F6.2, 3X, 2F10.4)') &
+             SSP%z( iz ), SSP%cMat(iz,1), betaR, rhoR, alphaI, betaI
+         CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+      END DO
+    END IF
+
+ENDIF ! don't write in adjoint mode
+#endif /* IHOP_WRITE_OUT */
+  ! I/O on main thread only
+  _END_MASTER(myThid)
+  _BARRIER
+
+RETURN
+END !SUBROUTINE writeSSP
 
 END MODULE ssp_mod

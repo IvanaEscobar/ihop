@@ -7,7 +7,7 @@ MODULE ihop_mod
 ! </CONTACT>
 
 ! <OVERVIEW>
-!    Defines modules used in BELLHOP
+!    Defines modules used in IHOP
 ! </OVERVIEW>
 
 ! <DESCRIPTION>

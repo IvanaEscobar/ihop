@@ -208,6 +208,10 @@ C Loop over global obs
         DO m=1,NOBSMAX_IHOP
          IF (m.LE.ObsNo(num_file)) THEN
 
+#ifdef ALLOW_AUTODIFF_TAMC
+!$TAF STORE ihop_globaldummy = comlev1, key=ikey_dynamics, byte=isbyte
+#endif
+
           ihop_modval=0.
           ihop_data=0.
           ihop_uncert=0.

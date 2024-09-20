@@ -13,7 +13,7 @@ arr_mod.f90
 atten_mod.f90
 bdry_mod.f90
 beampattern.f90
-bellhop.f90
+ihop.f90
 ihop_init_diag.f90
 ihop_init_mod.f90
 ihop_mod.f90
