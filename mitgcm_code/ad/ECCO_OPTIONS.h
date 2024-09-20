@@ -27,9 +27,9 @@ C   are specific to this package are assumed to be set in ECCO_CPPOPTIONS.h
 C-- Package-specific Options & Macros go here
 
 C o Allow for generic cost function and integral terms with pkg/ecco:
-#define ALLOW_GENCOST_CONTRIBUTION
+# define ALLOW_GENCOST_CONTRIBUTION
 C o Allow for 3 dimensional generic cost terms with pkg/ecco:
-#define ALLOW_GENCOST3D
+# define ALLOW_GENCOST3D
 C   Note regarding GENCOST usage:
 C   > In data.ecco, this requires the specification of data file (name,
 C     frequency, etc.), bar file name for corresp. model average, standard
@@ -41,17 +41,17 @@ C     implement the actual model average (i.e. the bar file content).
 # undef ALLOW_GENCOST_SSTV4_OUTPUT
 
 C o Allow Open-Boundary cost contributions
-#ifdef ALLOW_OBCS
+# ifdef ALLOW_OBCS
 C   Open-Boundary cost is meaningless without compiling pkg/obcs
 C   Note: Make sure that coresponding OBCS N/S/W/E Option is defined
-# define ALLOW_OBCSN_COST_CONTRIBUTION
-# define ALLOW_OBCSS_COST_CONTRIBUTION
-# define ALLOW_OBCSW_COST_CONTRIBUTION
-# define ALLOW_OBCSE_COST_CONTRIBUTION
-#  undef OBCS_AGEOS_COST_CONTRIBUTION
-#  undef OBCS_VOLFLUX_COST_CONTRIBUTION
-#  undef BAROTROPIC_OBVEL_CONTROL
-#endif /* ALLOW_OBCS */
+#  define ALLOW_OBCSN_COST_CONTRIBUTION
+#  define ALLOW_OBCSS_COST_CONTRIBUTION
+#  define ALLOW_OBCSW_COST_CONTRIBUTION
+#  define ALLOW_OBCSE_COST_CONTRIBUTION
+#   undef OBCS_AGEOS_COST_CONTRIBUTION
+#   undef OBCS_VOLFLUX_COST_CONTRIBUTION
+#   undef BAROTROPIC_OBVEL_CONTROL
+# endif /* ALLOW_OBCS */
 
 C o Set ALLOW_OBCS_COST_CONTRIBUTION (Do not edit/modify):
 #if (defined (ALLOW_OBCSN_COST_CONTRIBUTION) || \

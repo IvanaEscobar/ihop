@@ -527,6 +527,11 @@ CADJ INIT comlev1_bibj_k_ptracers = COMMON,
 CADJ &    nchklev_1*nSx*nSy*PTRACERS_num*Nr
 #   endif /* ALLOW_PTRACERS */
 c--
+#   ifdef ALLOW_IHOP
+! for ssp_mod>gcmSSP; make local?
+!$TAF INIT comlev1_bibj_ij_ihop = COMMON, nchklev_1*nSx*nSy*(2*OLy+sNy)*(2*OLx+sNx)
+#   endif /* ALLOW_IHOP */
+c--
 #   ifdef ALLOW_MOM_COMMON
 #   ifndef AUTODIFF_DISABLE_LEITH
 CADJ INIT comlev1_mom_ijk_loop
