@@ -76,8 +76,8 @@ C Get dimension IDs and lengths
       err = NF_INQ_DIMID( ncid, 'nidw', dimid2 )
       err = NF_INQ_DIMLEN( ncid, dimid2, IHOP_npts_idw )
 
-      IF ( IHOP_npts_range>IHOP_MAX_NC_SIZE .OR.
-     &     IHOP_npts_idw>IHOP_MAX_NC_SIZE ) THEN
+      IF ( IHOP_npts_range>IHOP_MAX_RANGE .OR.
+     &     IHOP_npts_idw>IHOP_MAX_IDW ) THEN
         WRITE(msgBuf, '(2A)') 'S/R IHOP_INIT_FIXED: reading dims',
      &  'NetCDF Dimensions exceed maximum allowable size'
         CALL PRINT_ERROR( msgBuf, myThid )
@@ -136,7 +136,7 @@ C Only do I/O if in the main thread
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
       DO k = 1,IHOP_MAX_NC_SIZE !Nr
-        DO i=1,IHOP_MAX_NC_SIZE !IHOP_npts_range
+        DO i=1,IHOP_MAX_RANGE !IHOP_npts_range
           ihop_sumweights(i,k) = -1.0
         END DO
       END DO

@@ -1,4 +1,8 @@
 #include "IHOP_OPTIONS.h"
+#ifdef ALLOW_AUTODIFF
+# include "AUTODIFF_OPTIONS.h"
+#endif
+
 !BOP
 ! !INTERFACE:
 MODULE ssp_mod
@@ -815,6 +819,10 @@ SUBROUTINE gcmSSP( myThid )
   USE atten_mod, only: CRCI
   USE bdry_mod, only: Bdry
 
+#ifdef ALLOW_AUTODIFF
+# include "tamc.h"
+#endif
+
   ! == Routine Arguments ==
   ! myThid :: Thread number. Unused by IESCO
   ! msgBuf :: Used to build messages for printing.
@@ -823,7 +831,9 @@ SUBROUTINE gcmSSP( myThid )
   CHARACTER*(80)          :: fmtstr
 
   ! == Local Variables ==
-  LOGICAL :: found_interpolation
+  ! interp_finished : is adaptive IDW interp finished at this range point?
+  ! njj             : number interpolation points per depth level
+  LOGICAL :: interp_finished
   INTEGER :: iallocstat
   INTEGER :: bi,bj, i,j,k, ii,jj
   INTEGER :: njj(IHOP_NPTS_RANGE)
@@ -833,14 +843,20 @@ SUBROUTINE gcmSSP( myThid )
   ! fT = 1000 ONLY for acousto-elastic halfspaces, I will have to pass this
   ! parameter in a different way after ssp_mod is split btwn fixed and varia
   REAL (KIND=_RL90)             :: bPower, fT
+#ifdef ALLOW_AUTODIFF_TAMC
+  INTEGER tkey, ijkey, lockey
+
+!!$TAF init loctape_ihop_gcmssp_bibj_ij_iijj &
+!!$TAF& = COMMON, nSx*nSy*(2*OLx+sNx)*(2*OLy+sNy)*IHOP_npts_range*IHOP_npts_idw 
+#endif
 
   ! IESCO24 fT init
   bPower = 1.0
   fT = 1000.0
 
   ! init local vars
-  found_interpolation =.false.
-  njj(:)    = 0
+  interp_finished =.false.
+  njj       = 0
   dcdz      = 0.0 _d 0
   tolerance = 5 _d -5
 
@@ -860,24 +876,37 @@ SUBROUTINE gcmSSP( myThid )
   ! interpolate SSP with adaptive IDW from gcm grid to ihop grid
   DO bj=myByLo(myThid),myByHi(myThid)
     DO bi=myBxLo(myThid),myBxHi(myThid)
-!$TAF INIT tape_ssp1 = static, 100                  !RG
-!$TAF INIT tape_ssp2 = static, 100                  !RG
+#ifdef ALLOW_AUTODIFF_TAMC
+      tkey = bi + (bj-1)*nSx + (ikey_dynamics-1)*nSx*nSy
+#endif
 
+! IESCO24: don't worry about gcm overlaps right now
       DO j=1,sNy
         DO i=1,sNx
+#ifdef ALLOW_AUTODIFF_TAMC
+! IESCO24: there's no overlap here, but keep OLx/y in case that changes
+          ijkey = i + ((j-1) + (tkey-1)*(2*OLy+sNy))*(2*OLx+sNx)
+#endif
           DO ii=1,IHOP_npts_range
-            found_interpolation = .FALSE.
+            interp_finished = .FALSE.
             DO jj=1,IHOP_npts_idw
-!$TAF STORE found_interpolation = tape_ssp1                    !RG
+#ifdef ALLOW_AUTODIFF_TAMC
+!$TAF STORE interp_finished = comlev1_bibj_ij_ihop, key=ijkey, byte=isbyte
+#endif
 
               ! Interpolate from GCM grid cell centers
               IF (ABS(xC(i, j, bi, bj) - ihop_xc(ii, jj)) .LE. tolerance .AND. &
                   ABS(yC(i, j, bi, bj) - ihop_yc(ii, jj)) .LE. tolerance .AND. &
-                  .NOT. found_interpolation) THEN
+                  .NOT. interp_finished) THEN
                 njj(ii) = njj(ii) + 1
 
+#ifdef ALLOW_AUTODIFF_TAMC
+                lockey = jj + ((ii-1) + (ijkey-1)*IHOP_npts_range)*IHOP_npts_idw
+#endif
                 DO iz = 1, SSP%Nz - 1
-!$TAF STORE njj(ii) = tape_ssp2                    !RG
+#ifdef ALLOW_AUTODIFF_TAMC
+!!$TAF store njj(ii) = loctape_ihop_gcmssp_bibj_ij_iijj, key=lockey, byte=isbyte
+#endif
 
     IF (iz .EQ. 1) THEN
       ! Top vlevel zero depth
@@ -887,7 +916,9 @@ SUBROUTINE gcmSSP( myThid )
     ELSE ! 2:(SSP%Nz-1)
       ! Middle depth layers, only when not already underground
       IF (ihop_sumweights(ii, iz-1) .GT. 0.0) THEN
-!$TAF store njj(ii) = tape_ssp2                    !RG
+#ifdef ALLOW_AUTODIFF_TAMC
+!!$TAF store njj(ii) = loctape_ihop_gcmssp_bibj_ij_iijj, key=lockey, byte=isbyte
+#endif
 
         ! Exactly on a cell center, ignore interpolation
         IF (ihop_idw_weights(ii, jj) .EQ. 0.0) THEN
@@ -924,7 +955,7 @@ SUBROUTINE gcmSSP( myThid )
           tmpSSP(k:SSP%Nz, ii, bi, bj) = &
             tmpSSP(k-1, ii, bi, bj) + dcdz * SSP%z(k:SSP%Nz)
           ! Move to next range point, ii
-          found_interpolation = .TRUE.
+          interp_finished = .TRUE.
         END IF
       END IF
     END IF
