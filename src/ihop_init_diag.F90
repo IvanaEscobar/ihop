@@ -30,7 +30,7 @@ MODULE IHOP_INIT_DIAG
 
 !   == Public Interfaces ==
 !=======================================================================
-  public    initPRTFile, OpenOutputFiles, resetMemory
+  public    initPRTFile, openOutputFiles, resetMemory
 !=======================================================================
 
 ! INPUT/OUTPUT PARAMETERS:
@@ -506,7 +506,7 @@ CONTAINS
 
   ! **********************************************************************!
 
-  SUBROUTINE OpenOutputFiles( fName, myTime, myIter, myThid )
+  SUBROUTINE openOutputFiles( fName, myTime, myIter, myThid )
     USE ihop_mod,  only: RAYFile, DELFile, ARRFile, SHDFile, Title, Beam
     ! Write appropriate header information
 
@@ -700,7 +700,7 @@ CONTAINS
     END SELECT
 
   RETURN
-  END !SUBROUTINE OpenOutputFiles
+  END !SUBROUTINE openOutputFiles
 
   !**********************************************************************!
 
@@ -959,8 +959,7 @@ CONTAINS
 
   END !SUBROUTINE openPRTFile
 
-
-  !**********************************************************************!
+!**********************************************************************!
 
   SUBROUTINE resetMemory()
     USE srpos_mod,  only: Pos

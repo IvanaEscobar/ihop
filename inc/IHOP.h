@@ -101,9 +101,9 @@
       _RL IHOP_rr (nrr)
       _RL IHOP_alpha (2)
       _RL IHOP_step
-      _RL ihop_idw_weights ( IHOP_MAX_NC_SIZE, IHOP_MAX_NC_SIZE )
-      _RS ihop_xc ( IHOP_MAX_NC_SIZE, IHOP_MAX_NC_SIZE )
-      _RS ihop_yc ( IHOP_MAX_NC_SIZE, IHOP_MAX_NC_SIZE )
+      _RL ihop_idw_weights ( IHOP_MAX_RANGE, IHOP_MAX_NC_SIZE )
+      _RS ihop_xc ( IHOP_MAX_RANGE, IHOP_MAX_NC_SIZE )
+      _RS ihop_yc ( IHOP_MAX_RANGE, IHOP_MAX_NC_SIZE )
       _RL ihop_ranges ( IHOP_MAX_RANGE )
       _RL ihop_sumweights ( IHOP_MAX_RANGE, IHOP_MAX_NC_SIZE )
 
