@@ -69,8 +69,7 @@ CONTAINS
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
 
   !     == Local Variables ==
-    INTEGER             :: iAllocStat
-    REAL                :: Tstart, Tstop
+    REAL :: Tstart, Tstop
 
     ! Reset memory and default values
     CALL resetMemory()
