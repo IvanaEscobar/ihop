@@ -27,7 +27,7 @@ MODULE bdry_mod
 
    public   initATI, initBTY, GetTopSeg, GetBotSeg, Bot, Top, &
             IsegTop, IsegBot, rTopSeg, rBotSeg, &
-            atiType, btyType, HSInfo, Bdry
+            atiType, btyType, HSInfo, Bdry, writeBdry
 
 !=======================================================================
 
@@ -261,9 +261,6 @@ CONTAINS
     Top%HS%Depth = -999.
     Top%HS%BC  = ''
     Top%HS%Opt = ''
-
-    ! Write to PRTFile
-    CALL WriteTopBot( Top, 'Top', NAtiPts, myThid ) 
 
   RETURN
   END !SUBROUTINE initATI
@@ -506,9 +503,6 @@ CONTAINS
     Bot%HS%BC  = ''
     Bot%HS%Opt = ''
 
-    ! Write to PRTFile
-    CALL WriteTopBot( Bot, 'Bot', NBtyPts, myThid )
-
    RETURN
   END !SUBROUTINE initBTY
 
@@ -732,8 +726,22 @@ CONTAINS
   RETURN
   END !SUBROUTINE GetBotSeg
 
-  ! **********************************************************************!
+! **********************************************************************!
+  SUBROUTINE WriteBdry( myThid )
+  ! Write Top and Bottom boundary info to PRTFile
 
+  !     == Routine Arguments ==
+  !     myThid :: Thread number. Unused by IESCO
+    INTEGER, INTENT( IN )   :: myThid
+
+    ! Write Top
+    CALL WriteTopBot( Top, 'Top', NAtiPts, myThid )
+    ! Write Bot
+    CALL WriteTopBot( Bot, 'Bot', NBtyPts, myThid )
+
+  END ! SUBROUITNE WriteBdry
+
+! **********************************************************************!
   SUBROUTINE WriteTopBot( locBdry, BotTop, NPts, myThid )
     USE ihop_mod, only: PRTFile
 
@@ -764,7 +772,7 @@ CONTAINS
       CASE DEFAULT
          ! Do nothing
          BdryType = '-'
-         STOP 'ABNORMAL END: S/R WrtieTopBot'
+         STOP 'ABNORMAL END: S/R WriteTopBot'
     END SELECT
 
     !   Only do I/O in the main thread
