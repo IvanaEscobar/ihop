@@ -1109,6 +1109,12 @@ SUBROUTINE writeSSP( myThid )
       END DO
     END IF
 
+    WRITE(msgBuf,'(2A)')'_____________________________________________', &
+                        '______________'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(A)')
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+
 ENDIF ! don't write in adjoint mode
 #endif /* IHOP_WRITE_OUT */
   ! I/O on main thread only
