@@ -12,7 +12,7 @@ CONTAINS
   ! ===========================================================================
 
   ! USES
-    USE bdry_mod,  only: Bdry, HSInfo
+    USE bdry_mod,  only: Bdry, HSInfo, initATI, initBTY
     USE srpos_mod, only: Pos, ReadSxSy, ReadSzRz, ReadRcvrRanges, ReadFreqVec
     USE ssp_mod,   only: SSP, initSSP, alphar
     USE ihop_mod,  only: Beam, rxyz
@@ -64,6 +64,8 @@ CONTAINS
 
     ! === Set local parameters ===
     AttenUnit = ''
+    PlotType = ''
+    Depth = -1.
 
     ! === Set nonallocatable derived type components from other modules ===
     Bdry%Bot%HS = HSInfo(0.,0.,0.,0., 0.,0. , (0.,0.),(0.,0.), '', '' )
@@ -247,14 +249,10 @@ CONTAINS
 ! =================
 ! ================= Below from IHOP.F90: S/R IHOP_MAIN
 ! =================
-!
-!
-!
-!
-!    ! AlTImetry: OPTIONAL, default is no ATIFile
-!    CALL initATI( Bdry%Top%HS%Opt( 5:5 ), Bdry%Top%HS%Depth, myThid )
-!    ! BaThYmetry: OPTIONAL, default is BTYFile
-!    CALL initBTY( Bdry%Bot%HS%Opt( 2:2 ), Bdry%Bot%HS%Depth, myThid )
+    ! AlTImetry: OPTIONAL, default is no ATIFile
+    CALL initATI( Bdry%Top%HS%Opt( 5:5 ), Bdry%Top%HS%Depth, myThid )
+    ! BaThYmetry: OPTIONAL, default is BTYFile
+    CALL initBTY( Bdry%Bot%HS%Opt( 2:2 ), Bdry%Bot%HS%Depth, myThid )
 !    ! (top and bottom): OPTIONAL
 !    CALL readReflectionCoefficient( Bdry%Bot%HS%Opt( 1:1 ), &
 !                                    Bdry%Top%HS%Opt( 2:2 ), myThid )

@@ -261,7 +261,7 @@ C     ihop_init_fixed.f
       ENDDO
       IHOP_npts_range   = 0
       IHOP_npts_idw     = 0
-      DO i=1,IHOP_MAX_NC_SIZE
+      DO i=1,IHOP_MAX_RANGE
        DO j=1,IHOP_MAX_NC_SIZE
         ihop_xc(i,j)            = 0. _d 0
         ihop_yc(i,j)            = 0. _d 0

@@ -54,7 +54,7 @@ MODULE IHOP
 CONTAINS
   SUBROUTINE IHOP_MAIN ( myTime, myIter, myThid )
     USE ihop_init_diag, only: initPRTFile, openOutputFiles, resetMemory
-    USE bdry_mod,       only: initATI, initBTY, Bdry
+    USE bdry_mod,       only: Bdry, writeBdry
     USE ssp_mod,        only: setSSP
     USE refCoef,        only: readReflectionCoefficient
     USE beampattern,    only: SBPFlag, ReadPat
@@ -85,11 +85,15 @@ CONTAINS
     ! set SSP%cmat from gcm SSP: REQUIRED
     CALL setSSP( myThid )
 
-    ! AlTImetry: OPTIONAL, default is no ATIFile
-    CALL initATI( Bdry%Top%HS%Opt( 5:5 ), Bdry%Top%HS%Depth, myThid )
-    ! BaThYmetry: OPTIONAL, default is BTYFile
-    CALL initBTY( Bdry%Bot%HS%Opt( 2:2 ), Bdry%Bot%HS%Depth, myThid )
-    ! (top and bottom): OPTIONAL
+    ! write Top/Bot to PRTFile
+    CALL writeBdry ( myThid )
+
+
+
+
+
+
+
     CALL readReflectionCoefficient( Bdry%Bot%HS%Opt( 1:1 ), &
                                     Bdry%Top%HS%Opt( 2:2 ), myThid )
     ! Source Beam Pattern: OPTIONAL, default is omni source pattern
