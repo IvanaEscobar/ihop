@@ -962,15 +962,21 @@ CONTAINS
 !**********************************************************************!
 
   SUBROUTINE resetMemory()
-    USE angle_mod,  only: Angles
     USE arr_mod,    only: Narr, Arr, U
     USE ihop_mod,   only: ray2D, MaxN, iStep
 
-    ! From ihop
-    IF (ALLOCATED(U))           DEALLOCATE(U)
-    IF (ALLOCATED(Arr))         DEALLOCATE(Arr)
-    IF (ALLOCATED(NArr))        DEALLOCATE(NArr)
-    ! From ssp_mod
+    ! From arr_mod.f90
+    U                         = 0.
+    NArr                      = 0
+    Arr(:,:,:)%NTopBnc        = -1
+    Arr(:,:,:)%NBotBnc        = -1
+    Arr(:,:,:)%SrcDeclAngle   = -999.
+    Arr(:,:,:)%RcvrDeclAngle  = -999.
+    Arr(:,:,:)%A              = -999.
+    Arr(:,:,:)%Phase          = -999.
+    Arr(:,:,:)%delay          = -999.
+
+    ! From ssp_mod.f90
     IF (useSSPFile) THEN
         ! don't reset values, they've been read in from a file -_-
     ELSE
@@ -981,7 +987,8 @@ CONTAINS
         SSP%czmat3 = 1.0
 #endif /* IHOP_THREED */
     ENDIF
-    ! From ihop_mod
+
+    ! From ihop_mod.f90
     DO iStep = 1,MaxN
         ray2D(iStep)%x = [zeroRL, zeroRL]
         ray2D(iStep)%t = [zeroRL, zeroRL]

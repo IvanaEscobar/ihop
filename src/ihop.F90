@@ -58,9 +58,7 @@ CONTAINS
     USE ssp_mod,        only: setSSP
     USE refCoef,        only: writeRefCoef 
     USE beampat,        only: writePat
-    USE srPos_mod,      only: Pos
-    USE ihop_mod,       only: Beam, Nrz_per_range
-    USE arr_mod,        only: MaxNArr, Arr, NArr, U
+    USE ihop_mod,       only: Beam
 
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO
@@ -73,19 +71,14 @@ CONTAINS
   !     == Local Variables ==
     INTEGER             :: iAllocStat
     REAL                :: Tstart, Tstop
-  ! ===========================================================================
-    INTEGER, PARAMETER   :: ArrivalsStorage = 2000, MinNArr = 10
-  ! ===========================================================================
 
-    ! Reset memory
+    ! Reset memory and default values
     CALL resetMemory()
+
     ! save data.ihop, open PRTFile: REQUIRED
     CALL initPRTFile( myTime, myIter, myThid )
 
-    ! set SSP%cmat from gcm SSP: REQUIRED
-    CALL setSSP( myThid )
-
-    ! write Top/Bot to PRTFile
+    ! write Top/Bot to PRTFile: REQUIRED
     CALL writeBdry ( myThid )
 
     ! write refCoef: OPTIONAL
@@ -94,73 +87,9 @@ CONTAINS
     ! Source Beam Pattern: OPTIONAL, default is omni source pattern
     CALL writePat( myThid )
 
-!    ! Allocate arrival and U variables on all MPI processes
-!    SELECT CASE ( Beam%RunType( 5:5 ) )
-!    CASE ( 'I' )
-!       NRz_per_range = 1         ! irregular grid
-!    CASE DEFAULT
-!       NRz_per_range = Pos%NRz   ! rectilinear grid
-!    END SELECT
 
-    SELECT CASE ( Beam%RunType( 1:1 ) )
-    ! for a TL calculation, allocate space for the pressure matrix
-    CASE ( 'C', 'S', 'I' )        ! TL calculation
-         ALLOCATE( U( NRz_per_range, Pos%NRr ), Stat = iAllocStat )
-         IF ( iAllocStat/=0 ) THEN
-#ifdef IHOP_WRITE_OUT
-              WRITE(msgBuf,'(2A)') 'IHOP IHOP_MAIN: ', &
-                             'Insufficient memory for TL matrix: reduce Nr*NRz'
-              CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
-             STOP 'ABNORMAL END: S/R IHOP_MAIN'
-         END IF
-         U = 0.0                       ! init default value
-    CASE ( 'A', 'a', 'R', 'E', 'e' )   ! Arrivals calculation
-         ALLOCATE( U( 1,1 ) )          ! open a dummy variable
-         U( 1,1 ) = 0.                 ! init default value
-    CASE DEFAULT
-         ALLOCATE( U( 1,1 ) )          ! open a dummy variable
-         U( 1,1 ) = 0.                 ! init default value
-    END SELECT
-
-    ! for an arrivals run, allocate space for arrivals matrices
-    SELECT CASE ( Beam%RunType( 1:1 ) )
-    CASE ( 'A', 'a', 'e' )
-         ! allow space for at least MinNArr arrivals
-         MaxNArr = MAX( ArrivalsStorage / ( NRz_per_range * Pos%NRr ), &
-                        MinNArr )
-    CASE DEFAULT
-         MaxNArr = 1
-    END SELECT
-
-    ! init Arr, Narr
-    ALLOCATE( Arr( MaxNArr, Pos%NRr, NRz_per_range ), &
-              NArr(Pos%NRr, NRz_per_range), STAT = iAllocStat )
-    IF ( iAllocStat /= 0 ) THEN
-#ifdef IHOP_WRITE_OUT
-        WRITE(msgBuf,'(2A)') 'IHOP IHOP_MAIN: ', &
-            'Not enough allocation for Arr; reduce ArrivalsStorage'
-        CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
-        STOP 'ABNORMAL END: S/R IHOP_MAIN'
-    END IF
-
-    NArr                      = 0
-    Arr(:,:,:)%NTopBnc        = -1
-    Arr(:,:,:)%NBotBnc        = -1
-    Arr(:,:,:)%SrcDeclAngle   = -999.
-    Arr(:,:,:)%RcvrDeclAngle  = -999.
-    Arr(:,:,:)%A              = -999.
-    Arr(:,:,:)%Phase          = -999.
-    Arr(:,:,:)%delay          = -999.
-
-#ifdef IHOP_WRITE_OUT
-    WRITE(msgBuf,'(A)')
-    ! In adjoint mode we do not write output besides on the first run
-    IF (IHOP_dumpfreq.GE.0) &
-      CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
-#endif /* IHOP_WRITE_OUT */
-
+    ! set SSP%cmat from gcm SSP: REQUIRED
+    CALL setSSP( myThid )
 
 
 ! open all output files

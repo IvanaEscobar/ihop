@@ -22,7 +22,7 @@ MODULE arr_mod
 ! public interfaces
 !=======================================================================
 
-    public WriteArrivalsASCII, WriteArrivalsBinary, &
+    public WriteArrivalsASCII, WriteArrivalsBinary, initArr, &
            MaxNArr, NArr, Arr, AddArr, U
 #ifdef IHOP_THREED
     public NArr3D, Arr3D
@@ -52,6 +52,88 @@ MODULE arr_mod
 #endif /* IHOP_THREED */
 
 CONTAINS
+! **************************************************************************** !
+  SUBROUTINE initArr( myThid )
+  ! Allocate arrival and U variables on all MPI processes
+    USE srPos_mod,      only: Pos
+    USE ihop_mod,       only: Beam, Nrz_per_range
+
+  !     == Routine Arguments ==
+  !     myThid :: Thread number. Unused by IESCO
+  !     msgBuf :: Used to build messages for printing.
+    INTEGER, INTENT( IN )   :: myThid
+    CHARACTER*(MAX_LEN_MBUF):: msgBuf
+
+  !     == Local Variables ==
+    INTEGER             :: iAllocStat
+    INTEGER             :: x, y
+  ! ===========================================================================
+    INTEGER, PARAMETER   :: ArrivalsStorage = 2000, MinNArr = 10
+  ! ===========================================================================
+
+    IF (ALLOCATED(U))           DEALLOCATE(U)
+    IF (ALLOCATED(Arr))         DEALLOCATE(Arr)
+    IF (ALLOCATED(NArr))        DEALLOCATE(NArr)
+
+    SELECT CASE ( Beam%RunType( 1:1 ) )
+      CASE ( 'C', 'S', 'I' )             ! TL calculation
+        ! Allocate space for the pressure matrix
+        x = NRz_per_range
+        y = Pos%NRr
+      CASE ( 'A', 'a', 'R', 'E', 'e' )   ! Arrivals calculation
+        x = 1
+        y = 1
+      CASE DEFAULT
+        x = 1
+        y = 1
+    END SELECT
+
+    ALLOCATE( U( x,y ), Stat = iAllocStat )
+    IF ( iAllocStat/=0 ) THEN
+#ifdef IHOP_WRITE_OUT
+      WRITE(msgBuf,'(2A)') 'ARR_MOD INITARR: ', &
+                     'Insufficient memory for TL matrix: reduce Nr*NRz'
+      CALL PRINT_ERROR( msgBuf,myThid )
+#endif /* IHOP_WRITE_OUT */
+      STOP 'ABNORMAL END: S/R INITARR'
+    END IF
+
+    ! for an arrivals run, allocate space for arrivals matrices
+    SELECT CASE ( Beam%RunType( 1:1 ) )
+    CASE ( 'A', 'a', 'e' )
+         ! allow space for at least MinNArr arrivals
+         MaxNArr = MAX( ArrivalsStorage / ( NRz_per_range * Pos%NRr ), &
+                        MinNArr )
+    CASE DEFAULT
+         MaxNArr = 1
+    END SELECT
+
+    ! init Arr, Narr
+    ALLOCATE( Arr( MaxNArr, Pos%NRr, NRz_per_range ), &
+              NArr(Pos%NRr, NRz_per_range), STAT = iAllocStat )
+    IF ( iAllocStat /= 0 ) THEN
+#ifdef IHOP_WRITE_OUT
+      WRITE(msgBuf,'(2A)') 'ARR_MOD INITARR: ', &
+          'Not enough allocation for Arr; reduce ArrivalsStorage'
+      CALL PRINT_ERROR( msgBuf,myThid )
+#endif /* IHOP_WRITE_OUT */
+      STOP 'ABNORMAL END: S/R IHOP_MAIN'
+    END IF
+
+    ! init default values
+    U                         = 0.0
+    NArr                      = 0
+    Arr(:,:,:)%NTopBnc        = -1
+    Arr(:,:,:)%NBotBnc        = -1
+    Arr(:,:,:)%SrcDeclAngle   = -999.
+    Arr(:,:,:)%RcvrDeclAngle  = -999.
+    Arr(:,:,:)%A              = -999.
+    Arr(:,:,:)%Phase          = -999.
+    Arr(:,:,:)%delay          = -999.
+
+  END !SUBROUTINE initArr( myThid )
+
+! **************************************************************************** !
   SUBROUTINE AddArr( afreq, iz, ir, Amp, Phase, delay, SrcDeclAngle, &
                      RcvrDeclAngle, NumTopBnc, NumBotBnc )
 

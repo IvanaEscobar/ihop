@@ -19,6 +19,7 @@ CONTAINS
     USE angle_mod, only: Angles, ReadRayElevationAngles
     USE refcoef,   only: ReadReflectionCoefficient
     USE beampat,   only: SBPFlag, readPat
+    USE arr_mod,   only: initArr
 
   ! ===========================================================================
   !     == Global Variables ==
@@ -251,7 +252,7 @@ CONTAINS
 
 
 ! =================
-! ================= Below from IHOP.F90: S/R IHOP_MAIN
+! ================= from IHOP.F90: S/R IHOP_MAIN
 ! =================
     ! AlTImetry: OPTIONAL, default is no ATIFile
     CALL initATI( Bdry%Top%HS%Opt( 5:5 ), Bdry%Top%HS%Depth, myThid )
@@ -268,140 +269,20 @@ CONTAINS
 
 ! Allocate arrival and U variables on all MPI processes
     SELECT CASE ( Beam%RunType( 5:5 ) )
-    CASE ( 'I' )
-       NRz_per_range = 1         ! irregular grid
-    CASE DEFAULT
-       NRz_per_range = Pos%NRz   ! rectilinear grid
+      CASE ( 'I' )
+        NRz_per_range = 1         ! irregular grid
+      CASE DEFAULT
+        NRz_per_range = Pos%NRz   ! rectilinear grid
     END SELECT
 !
-!    IF ( ALLOCATED( U ) ) DEALLOCATE( U )
-!     SELECT CASE ( Beam%RunType( 1:1 ) )
-!     ! for a TL calculation, allocate space for the pressure matrix
-!     CASE ( 'C', 'S', 'I' )        ! TL calculation
-!          ALLOCATE ( U( NRz_per_range, Pos%NRr ), Stat = iAllocStat )
-!          IF ( iAllocStat/=0 ) THEN
-!#ifdef IHOP_WRITE_OUT
-!              WRITE(msgBuf,'(2A)') 'IHOP IHOP_INIT: ', &
-!                             'Insufficient memory for TL matrix: reduce Nr*NRz'
-!              CALL PRINT_ERROR( msgBuf,myThid )
-!#endif /* IHOP_WRITE_OUT */
-!              STOP 'ABNORMAL END: S/R IHOP_INIT'
-!          END IF
-!          U = 0.0                                    ! init default value
-!     CASE ( 'A', 'a', 'R', 'E', 'e' )   ! Arrivals calculation
-!          ALLOCATE ( U( 1,1 ), Stat = iAllocStat )   ! open a dummy variable
-!          U( 1,1 ) = 0.                              ! init default value
-!     CASE DEFAULT
-!          ALLOCATE ( U( 1,1 ), Stat = iAllocStat )   ! open a dummy variable
-!          U( 1,1 ) = 0.                              ! init default value
-!     END SELECT
-!
-!     ! for an arrivals run, allocate space for arrivals matrices
-!     SELECT CASE ( Beam%RunType( 1:1 ) )
-!     CASE ( 'A', 'a', 'e' )
-!          ! allow space for at least MinNArr arrivals
-!          MaxNArr = MAX( ArrivalsStorage / ( NRz_per_range * Pos%NRr ), &
-!                         MinNArr )
-!          ALLOCATE ( Arr( MaxNArr, Pos%NRr, NRz_per_range ), &
-!                     NArr( Pos%NRr, NRz_per_range ), Stat = iAllocStat )
-!          IF ( iAllocStat /= 0 ) THEN
-!#ifdef IHOP_WRITE_OUT
-!              WRITE(msgBuf,'(2A)') 'IHOP IHOP_INIT: ', &
-!               'Not enough allocation for Arr; reduce ArrivalsStorage'
-!              CALL PRINT_ERROR( msgBuf,myThid )
-!#endif /* IHOP_WRITE_OUT */
-!              STOP 'ABNORMAL END: S/R IHOP_INIT'
-!          END IF
-!     CASE DEFAULT
-!          MaxNArr = 1
-!          ALLOCATE ( Arr( 1, NRz_per_range, Pos%NRr ), &
-!                     NArr( Pos%NRr, NRz_per_range ), Stat = iAllocStat )
-!     END SELECT
-!
-!     ! init Arr, Narr
-!     ! Arr = something
-!     NArr( 1:Pos%NRr, 1:NRz_per_range ) = 0 ! IEsco22 unnecessary? NArr = 0 below
-!
-!#ifdef IHOP_WRITE_OUT
-!     WRITE(msgBuf,'(A)')
-!     ! In adjoint mode we do not write output besides on the first run
-!     IF (IHOP_dumpfreq.GE.0) &
-!       CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
-!#endif /* IHOP_WRITE_OUT */
-!
-!
-!
-!! open all output files
-!    IF ( IHOP_dumpfreq .GE. 0 ) &
-!     CALL OpenOutputFiles( IHOP_fileroot, myTime, myIter, myThid )
-!
-!    ! Run ihop solver on a single processor
-!    if (numberOfProcs.gt.1) then
-!! Use same single processID as IHOP COST package
-!!        if(myProcId.eq.(numberOfProcs-1)) then
-!        if(myProcId.eq.0) then
-!            CALL CPU_TIME( Tstart )
-!            CALL ihopCore(myThid)
-!            CALL CPU_TIME( Tstop )
-!! Alternitavely, we can broadcast relevant info to all mpi processes Ask P.
-!!#ifdef ALLOW_COST
-!!            ! Broadcast info to all MPI procs for COST function accumulation
-!!            CALL MPI_BCAST(i, 1, MPI_COMPLEX, myProcId, MPI_COMM_MODEL, ierr)
-!!
-!!#endif /* ALLOW_COST */
-!        endif
-!    else
-!        CALL CPU_TIME( Tstart )
-!        CALL ihopCore(myThid)
-!        CALL CPU_TIME( Tstop )
-!    endif
-!
-!#ifdef IHOP_WRITE_OUT
-!    IF ( IHOP_dumpfreq.GE.0 ) THEN
-!        ! print run time
-!        if (numberOfProcs.gt.1) then
-!            if(myProcId.ne.(numberOfProcs-1)) then
-!                WRITE(msgBuf,'(A,I4,A)') 'NOTE: Proc ',myProcId, &
-!                    " didn't run ihop"
-!                CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
-!            endif
-!        endif
-!        WRITE(msgBuf, '(A)' )
-!        CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
-!        WRITE(msgBuf, '(A,G15.3,A)' ) 'CPU Time = ', Tstop-Tstart, 's'
-!        CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
-!
-!        ! close all files
-!        IF ( IHOP_dumpfreq .GE. 0) THEN
-!            SELECT CASE ( Beam%RunType( 1:1 ) )
-!            CASE ( 'C', 'S', 'I' )  ! TL calculation
-!               CLOSE( SHDFile )
-!            CASE ( 'A', 'a' )       ! arrivals calculation
-!               CLOSE( ARRFile )
-!            CASE ( 'R', 'E' )       ! ray and eigen ray trace
-!               CLOSE( RAYFile )
-!            CASE ( 'e' )
-!               CLOSE( RAYFile )
-!               CLOSE( ARRFile )
-!               IF ( writeDelay ) CLOSE( DELFile )
-!            END SELECT
-!
-!            if (numberOfProcs.gt.1) then
-!                ! Erase prtfiles that aren't on procid = 0
-!                if(myProcId.ne.0) then
-!                    CLOSE(PRTFile, STATUS='DELETE')
-!                else
-!                    CLOSE(PRTFile)
-!                endif
-!            else
-!                CLOSE(PRTFile)
-!            endif
-!        ENDIF
-!    ENDIF
-!#endif /* IHOP_WRITE_OUT */
+    CALL initArr( myThid )
+
+! =================
+! ================= from IHOP.F90: S/R IHOP_MAIN
+! =================
 
   RETURN
-  END !SUBROUTINE
+  END !SUBROUTINE IHOP_INIT_FIXED_ENV
 
   ! **********************************************************************!
   SUBROUTINE ReadTopOpt( BC, AttenUnit, myThid )
