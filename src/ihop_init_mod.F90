@@ -15,8 +15,10 @@ CONTAINS
     USE bdry_mod,  only: Bdry, HSInfo, initATI, initBTY
     USE srpos_mod, only: Pos, ReadSxSy, ReadSzRz, ReadRcvrRanges, ReadFreqVec
     USE ssp_mod,   only: SSP, initSSP, alphar
-    USE ihop_mod,  only: Beam, rxyz
+    USE ihop_mod,  only: Beam, rxyz, Nrz_per_range
     USE angle_mod, only: Angles, ReadRayElevationAngles
+    USE refcoef,   only: ReadReflectionCoefficient
+    USE beampat,   only: SBPFlag, readPat
 
   ! ===========================================================================
   !     == Global Variables ==
@@ -76,7 +78,7 @@ CONTAINS
     Pos%NSz = -1
     Pos%NRz = -1
     Pos%NRr = -1
-    Pos%Ntheta = -1
+    Pos%Ntheta = 1
     Pos%Delta_r = -999.
     Pos%Delta_theta = -999.
 
@@ -155,15 +157,17 @@ CONTAINS
     Pos%NSz = IHOP_nsd
     Pos%NRz = IHOP_nrd
 
-    CALL AllocatePos( Pos%NSz, Pos%Sz, IHOP_sd )
-    CALL AllocatePos( Pos%NRz, Pos%Rz, IHOP_rd )
+    CALL AllocatePos( Pos%NSz, Pos%Sz, IHOP_sd, myThid )
+    CALL AllocatePos( Pos%NRz, Pos%Rz, IHOP_rd, myThid )
     CALL ReadSzRz( Bdry%Top%HS%Depth, Bdry%Bot%HS%Depth, myThid )
 
 
     ! *** Receiver locations ***
     Pos%NRr = IHOP_nrr
-    CALL AllocatePos( Pos%NRr, Pos%Rr, IHOP_rr )
+    CALL AllocatePos( Pos%NRr, Pos%Rr, IHOP_rr, myThid )
     CALL ReadRcvrRanges( myThid )
+    ! set dummy for receiver bearing
+    CALL AllocatePos( Pos%Ntheta, Pos%theta, IHOP_rr( 1:1 ), myThid )
 #ifdef IHOP_THREED
     CALL ReadRcvrBearings( myThid )
 #endif /* IHOP_THREED */
@@ -229,16 +233,16 @@ CONTAINS
       Beam%Type( 1:1 ) = Beam%RunType( 2:2 )
 
       SELECT CASE ( Beam%Type( 1:1 ) )
-      CASE ( 'G', 'g' , '^', 'B', 'b', 'S' )
-      CASE DEFAULT
+        CASE ( 'G', 'g' , '^', 'B', 'b', 'S' )
+        CASE DEFAULT
 #ifdef IHOP_WRITE_OUT
-        !   Only do I/O if in the main thread
-        _BEGIN_MASTER(myThid)
-        WRITE(msgBuf,'(2A)') 'IHOP_INIT_MOD init_fixed_env: ', &
-            'Unknown beam type (second letter of Beam%Type)'
-        CALL PRINT_ERROR( msgBuf,myThid )
-        !   Only do I/O in the main thread
-        _END_MASTER(myThid)
+          !   Only do I/O if in the main thread
+          _BEGIN_MASTER(myThid)
+          WRITE(msgBuf,'(2A)') 'IHOP_INIT_MOD init_fixed_env: ', &
+              'Unknown beam type (second letter of Beam%Type)'
+          CALL PRINT_ERROR( msgBuf,myThid )
+          !   Only do I/O in the main thread
+          _END_MASTER(myThid)
 #endif /* IHOP_WRITE_OUT */
           STOP 'ABNORMAL END: S/R init_fixed_env'
       END SELECT
@@ -253,31 +257,22 @@ CONTAINS
     CALL initATI( Bdry%Top%HS%Opt( 5:5 ), Bdry%Top%HS%Depth, myThid )
     ! BaThYmetry: OPTIONAL, default is BTYFile
     CALL initBTY( Bdry%Bot%HS%Opt( 2:2 ), Bdry%Bot%HS%Depth, myThid )
-!    ! (top and bottom): OPTIONAL
-!    CALL readReflectionCoefficient( Bdry%Bot%HS%Opt( 1:1 ), &
-!                                    Bdry%Top%HS%Opt( 2:2 ), myThid )
-!    ! Source Beam Pattern: OPTIONAL, default is omni source pattern
-!    SBPFlag = Beam%RunType( 3:3 )
-!    CALL readPat( myThid )
-!    Pos%Ntheta = 1
-!    ALLOCATE( Pos%theta( Pos%Ntheta ), Stat = IAllocStat )
-!    IF ( IAllocStat/=0 ) THEN
-!#ifdef IHOP_WRITE_OUT
-!        WRITE(msgBuf,'(2A)') 'IHOP IHOP_INIT: failed allocation Pos%theta'
-!        CALL PRINT_ERROR( msgBuf, myThid )
-!#endif /* IHOP_WRITE_OUT */
-!        STOP 'ABNORMAL END: S/R  IHOP_INIT'
-!    ENDIF
-!    Pos%theta( 1 ) = 0.
-!
-!
-!! Allocate arrival and U variables on all MPI processes
-!    SELECT CASE ( Beam%RunType( 5:5 ) )
-!    CASE ( 'I' )
-!       NRz_per_range = 1         ! irregular grid
-!    CASE DEFAULT
-!       NRz_per_range = Pos%NRz   ! rectilinear grid
-!    END SELECT
+    ! (top and bottom): OPTIONAL
+    CALL readReflectionCoefficient( myThid )
+
+
+    ! Source Beam Pattern: OPTIONAL, default is omni source pattern
+    SBPFlag = Beam%RunType( 3:3 )
+    CALL readPat( myThid )
+
+
+! Allocate arrival and U variables on all MPI processes
+    SELECT CASE ( Beam%RunType( 5:5 ) )
+    CASE ( 'I' )
+       NRz_per_range = 1         ! irregular grid
+    CASE DEFAULT
+       NRz_per_range = Pos%NRz   ! rectilinear grid
+    END SELECT
 !
 !    IF ( ALLOCATED( U ) ) DEALLOCATE( U )
 !     SELECT CASE ( Beam%RunType( 1:1 ) )
@@ -576,18 +571,36 @@ CONTAINS
   RETURN
   END !SUBROUTINE TopBot
 
-  ! **********************************************************************!
-  SUBROUTINE AllocatePos( Nx, x_out, x_in )
+! **************************************************************************** !
+  SUBROUTINE AllocatePos( Nx, x_out, x_in, myThid )
+  ! Allocate and populate Pos structure from data.ihop
 
-    ! Allocate and populate Pos structure from data.ihop
+  !     == Global Variables ==
+!#include "SIZE.h"
+!#include "GRID.h"
+#include "EEPARAMS.h"
 
-    INTEGER,          INTENT( IN  ) :: Nx
-    REAL(KIND=_RL90), INTENT( IN  ) :: x_in(:)
+  !     == Routine Arguments ==
+  !     myThid :: Thread number. Unused by IESCO
+  !     msgBuf :: Used to build messages for printing.
+    INTEGER, INTENT( IN )   :: myThid
+    CHARACTER*(MAX_LEN_MBUF):: msgBuf
+
+  ! == Local Variables ==
+    INTEGER,          INTENT( IN ) :: Nx
+    REAL(KIND=_RL90), INTENT( IN ) :: x_in(:)
     REAL(KIND=_RL90), ALLOCATABLE, INTENT( OUT ) :: x_out(:)
-    INTEGER                         :: i
+    INTEGER           :: i, iAllocStat
 
     IF ( ALLOCATED(x_out) ) DEALLOCATE(x_out)
-    ALLOCATE( x_out(MAX(3, Nx)) )
+    ALLOCATE( x_out(MAX(3, Nx)), STAT=iAllocStat )
+    IF ( iAllocStat/=0 ) THEN
+#ifdef IHOP_WRITE_OUT
+      WRITE(msgBuf,'(2A)') 'IHOP ALLOCATEPOS: failed allocation Pos'
+      CALL PRINT_ERROR( msgBuf, myThid )
+#endif /* IHOP_WRITE_OUT */
+      STOP 'ABNORMAL END: S/R ALLOCATEPOS'
+    ENDIF
 
     ! set default values
     x_out    = 0.0

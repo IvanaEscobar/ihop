@@ -56,8 +56,8 @@ CONTAINS
     USE ihop_init_diag, only: initPRTFile, openOutputFiles, resetMemory
     USE bdry_mod,       only: Bdry, writeBdry
     USE ssp_mod,        only: setSSP
-    USE refCoef,        only: readReflectionCoefficient
-    USE beampattern,    only: SBPFlag, ReadPat
+    USE refCoef,        only: writeRefCoef 
+    USE beampat,        only: writePat
     USE srPos_mod,      only: Pos
     USE ihop_mod,       only: Beam, Nrz_per_range
     USE arr_mod,        only: MaxNArr, Arr, NArr, U
@@ -88,36 +88,19 @@ CONTAINS
     ! write Top/Bot to PRTFile
     CALL writeBdry ( myThid )
 
+    ! write refCoef: OPTIONAL
+    CALL writeRefCoef( myThid ) 
 
-
-
-
-
-
-    CALL readReflectionCoefficient( Bdry%Bot%HS%Opt( 1:1 ), &
-                                    Bdry%Top%HS%Opt( 2:2 ), myThid )
     ! Source Beam Pattern: OPTIONAL, default is omni source pattern
-    SBPFlag = Beam%RunType( 3:3 )
-    CALL readPat( myThid )
+    CALL writePat( myThid )
 
-    Pos%Ntheta = 1
-    ALLOCATE( Pos%theta( Pos%Ntheta ), Stat = IAllocStat )
-    IF ( IAllocStat/=0 ) THEN
-#ifdef IHOP_WRITE_OUT
-        WRITE(msgBuf,'(2A)') 'IHOP IHOP_MAIN: failed allocation Pos%theta'
-        CALL PRINT_ERROR( msgBuf, myThid )
-#endif /* IHOP_WRITE_OUT */
-        STOP 'ABNORMAL END: S/R IHOP_MAIN'
-    ENDIF
-    Pos%theta( 1 ) = 0.
-
-    ! Allocate arrival and U variables on all MPI processes
-    SELECT CASE ( Beam%RunType( 5:5 ) )
-    CASE ( 'I' )
-       NRz_per_range = 1         ! irregular grid
-    CASE DEFAULT
-       NRz_per_range = Pos%NRz   ! rectilinear grid
-    END SELECT
+!    ! Allocate arrival and U variables on all MPI processes
+!    SELECT CASE ( Beam%RunType( 5:5 ) )
+!    CASE ( 'I' )
+!       NRz_per_range = 1         ! irregular grid
+!    CASE DEFAULT
+!       NRz_per_range = Pos%NRz   ! rectilinear grid
+!    END SELECT
 
     SELECT CASE ( Beam%RunType( 1:1 ) )
     ! for a TL calculation, allocate space for the pressure matrix
@@ -263,8 +246,8 @@ CONTAINS
     USE writeRay,  only: WriteRay2D, WriteDel2D
     USE influence, only: InfluenceGeoHatRayCen, InfluenceGeoGaussianCart, &
                          InfluenceGeoHatCart, ScalePressure
-    USE beampattern,only: NSBPPts, SrcBmPat
-    USE ihop_mod,   only: Beam, ray2D, rad2deg, SrcDeclAngle, afreq, NRz_per_range
+    USE beampat,   only: NSBPPts, SrcBmPat
+    USE ihop_mod,  only: Beam, ray2D, rad2deg, SrcDeclAngle, afreq, NRz_per_range
 !    USE influence,  only: ratio1, rB    !RG
 ! FOR TAF
     USE bdry_mod, only: bdry

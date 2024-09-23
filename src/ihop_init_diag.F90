@@ -962,13 +962,11 @@ CONTAINS
 !**********************************************************************!
 
   SUBROUTINE resetMemory()
-    USE srpos_mod,  only: Pos
     USE angle_mod,  only: Angles
     USE arr_mod,    only: Narr, Arr, U
     USE ihop_mod,   only: ray2D, MaxN, iStep
 
     ! From ihop
-    IF (ALLOCATED(Pos%theta))   DEALLOCATE(Pos%theta)
     IF (ALLOCATED(U))           DEALLOCATE(U)
     IF (ALLOCATED(Arr))         DEALLOCATE(Arr)
     IF (ALLOCATED(NArr))        DEALLOCATE(NArr)
