@@ -40,9 +40,9 @@
 !     *==========================================================*
 !     | SUBROUTINE READPAT  is passive                           |
 !     *==========================================================*
-!$TAF SUBROUTINE beampattern::readpat INPUT   = 1
-!$TAF SUBROUTINE beampattern::readpat OUTPUT  =
-!$TAF SUBROUTINE beampattern::readpat MODULE beampattern OUTPUT  = SrcBmPat
+!$TAF SUBROUTINE beampat::readpat INPUT   = 1
+!$TAF SUBROUTINE beampat::readpat OUTPUT  =
+!$TAF SUBROUTINE beampat::readpat MODULE beampat OUTPUT  = SrcBmPat
 
 !     *==========================================================*
 !     | SUBROUTINE READREFLECTIONCOEFFICIENT  is passive         |

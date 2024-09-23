@@ -12,7 +12,7 @@ angle_mod.f90
 arr_mod.f90
 atten_mod.f90
 bdry_mod.f90
-beampattern.f90
+beampat.f90
 ihop.f90
 ihop_init_diag.f90
 ihop_init_mod.f90

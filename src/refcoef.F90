@@ -25,7 +25,7 @@ MODULE refCoef
 ! public interfaces
 !=======================================================================
     public ReadReflectionCoefficient, InterpolateReflectionCoefficient, &
-           ReflectionCoef, RBot, RTop, NBotPts, NTopPts
+           ReflectionCoef, RBot, RTop, NBotPts, NTopPts, writeRefCoef
 !=======================================================================
 
   INTEGER               :: NBotPts, NTopPts
@@ -41,10 +41,13 @@ MODULE refCoef
   TYPE(ReflectionCoef), ALLOCATABLE :: RBot( : ), RTop( : )
 
 CONTAINS
+! **************************************************************************** !
 ! NOTE: To be able to read using direct access, we assume a fixed pad of
 ! characters per line. So each line in BRCFile/TRCFile will have a fixed length
 ! of 100 characters. Helps TAF create the adjoint model. IESCO24
-  SUBROUTINE ReadReflectionCoefficient( BotRC, TopRC, myThid )
+! **************************************************************************** !
+  SUBROUTINE ReadReflectionCoefficient( myThid )
+    USE bdry_mod, only: Bdry
 
     ! Optionally read in reflection coefficient for Top or Bottom boundary
 
@@ -56,177 +59,151 @@ CONTAINS
 
   !     == Local Variables ==
 ! flag set to 'F' if refl. coef. is to be read from a File
-    CHARACTER (LEN=1), INTENT( IN ) :: BotRC, TopRC
-    CHARACTER (LEN=100)             :: line
-    INTEGER            :: itheta, ik, IOStat, iAllocStat, rec
-    REAL  (KIND=_RL90) :: freq
-    CHARACTER (LEN=80) :: Title2
+    CHARACTER (LEN=1)   :: BotRC, TopRC
+    CHARACTER (LEN=100) :: line
+    INTEGER             :: itheta, ik, IOStat, iAllocStat, rec
+    REAL  (KIND=_RL90)  :: freq
 
+    ! initiate local parameters
+    BotRC = Bdry%Bot%HS%Opt( 1:1 )
+    TopRC = Bdry%Top%HS%Opt( 2:2 )
+
+    IF ( ALLOCATED( RTop ) ) DEALLOCATE( RTop )
+    IF ( ALLOCATED( RBot ) ) DEALLOCATE( RBot )
+    IF ( ALLOCATED( xTab ) ) DEALLOCATE( xTab, fTab, gTab, iTab )
+
+    ! == read any Reflection Coefficients ==
     IF ( BotRC == 'F' ) THEN
-       OPEN( FIlE = TRIM( IHOP_fileroot )//'.brc', UNIT=BRCFile, STATUS='OLD',&
-             IOSTAT=IOStat, ACTION='READ',ACCESS='direct',RECL=100 )
-       IF ( IOStat /= 0 ) THEN
+      OPEN( FIlE = TRIM( IHOP_fileroot )//'.brc', UNIT=BRCFile, STATUS='OLD',&
+            IOSTAT=IOStat, ACTION='READ',ACCESS='direct',RECL=100 )
+      IF ( IOStat /= 0 ) THEN
 #ifdef IHOP_WRITE_OUT
-        ! In adjoint mode we do not write output besides on the first run
-        IF (IHOP_dumpfreq.GE.0) THEN
-            WRITE( PRTFile,'(2A)' ) '_______________________________________', &
-                                    '___________________________________'
-            WRITE( PRTFile,'(A)' )
-            WRITE( PRTFile,'(A)' ) 'Using tabulated bottom reflection coef.'
-            WRITE( PRTFile,'(2A)' ) 'BRCFile=', TRIM( IHOP_fileroot )//'.brc'
-        ENDIF
-            WRITE(msgBuf,'(2A)')'REFCOEF ReadReflectionCoeffcient: ',&
-                            'Unable to open Bottom Reflection Coefficient file'
-            CALL PRINT_ERROR( msgBuf,myThid )
+        WRITE(msgBuf,'(2A)')'REFCOEF ReadReflectionCoeffcient: ',&
+                      'Unable to open Bottom Reflection Coefficient file'
+        CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
-          STOP 'ABNORMAL END: S/R ReadReflectionCoefficient'
-       END IF
+        STOP 'ABNORMAL END: S/R ReadReflectionCoefficient'
+      END IF
 
-       READ( BRCFile,REC=1,IOSTAT=IOStat,FMT='(A)') line
-       READ( line,'(I10)' ) NBotPts
-#ifdef IHOP_WRITE_OUT
-       ! In adjoint mode we do not write output besides on the first run
-       IF (IHOP_dumpfreq.GE.0) &
-        WRITE( PRTFile,'(2A,I10)' ) 'Number of points in bottom reflection ', &
-                           'coefficient = ', NBotPts
-#endif /* IHOP_WRITE_OUT */
+      READ( BRCFile,REC=1,IOSTAT=IOStat,FMT='(A)') line
+      READ( line,'(I10)' ) NBotPts
 
-       IF ( ALLOCATED( RBot ) ) DEALLOCATE( RBot )
-       ALLOCATE( RBot( NBotPts ), Stat = IAllocStat )
-       IF ( IAllocStat /= 0 ) THEN
+      ALLOCATE( RBot( NBotPts ), Stat = IAllocStat )
+      IF ( IAllocStat /= 0 ) THEN
 #ifdef IHOP_WRITE_OUT
         WRITE(msgBuf,'(2A)') 'REFCOEF ReadReflectionCoeffcient: ', &
                     'Insufficient memory for bot. refl. coef.: reduce # points'
         CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
-          STOP 'ABNORMAL END: S/R ReadReflectionCoefficient'
-       END IF
+        STOP 'ABNORMAL END: S/R ReadReflectionCoefficient'
+      END IF
 
-       DO itheta=1,NBotPts
+      DO itheta=1,NBotPts
         rec = itheta+1
         READ( BRCFile,REC=rec,IOSTAT=IOStat,FMT='(A)' ) line
         READ( line,'(3F5.3)' ) RBot(itheta)%theta, RBot(itheta)%R, &
                                RBot(itheta)%phi
-       ENDDO
-       CLOSE( BRCFile )
-       RBot%phi = deg2rad * RBot%phi   ! convert to radians
+      ENDDO
+      CLOSE( BRCFile )
+      RBot%phi = deg2rad * RBot%phi   ! convert to radians
 
     ELSE   ! should allocate something anyway, since variable is passed
-       ALLOCATE(  RBot( 1 ), Stat = IAllocStat )
-       RBot(1)%theta = 0.  !RG
-       RBot(1)%R = 0.      !RG
-       RBot(1)%phi = 0.    !RG
-       NBotPts = 1         !RG
-    ENDIF
+      ALLOCATE(  RBot( 1 ), Stat = IAllocStat )
+      NBotPts = 1         !RG
+      RBot(1)%theta = 0.  !RG
+      RBot(1)%R = 0.      !RG
+      RBot(1)%phi = 0.    !RG
+
+    ENDIF ! BotRC == ...
+
 
     ! Optionally read in top reflection coefficient
-
     IF ( TopRC == 'F' ) THEN
-       OPEN( FIlE = TRIM( IHOP_fileroot )//'.trc', UNIT=TRCFile, STATUS='OLD',&
-             IOSTAT=IOStat, ACTION='READ',ACCESS='direct',RECL=100 )
-       IF ( IOStat /= 0 ) THEN
+      OPEN( FIlE = TRIM( IHOP_fileroot )//'.trc', UNIT=TRCFile, STATUS='OLD',&
+            IOSTAT=IOStat, ACTION='READ',ACCESS='direct',RECL=100 )
+      IF ( IOStat /= 0 ) THEN
 #ifdef IHOP_WRITE_OUT
-        ! In adjoint mode we do not write output besides on the first run
-        IF (IHOP_dumpfreq.GE.0) THEN
-            WRITE( PRTFile,'(2A)' ) '_______________________________________', &
-                                    '___________________________________'
-            WRITE( PRTFile,'(A)' )
-            WRITE( PRTFile,'(A)' ) 'Using tabulated top reflection coef.'
-            WRITE( PRTFile,'(2A)' ) 'TRCFile=', TRIM( IHOP_fileroot )//'.trc'
-        ENDIF
         WRITE(msgBuf,'(2A)') 'REFCOEF ReadReflectionCoeffcient: ', &
-                               'Unable to open Top Reflection Coefficient file'
+                             'Unable to open Top Reflection Coefficient file'
         CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
-          STOP 'ABNORMAL END: S/R ReadReflectionCoefficient'
-       END IF
+        STOP 'ABNORMAL END: S/R ReadReflectionCoefficient'
+      END IF
 
-       READ( TRCFile,REC=1,IOSTAT=IOStat,FMT='(A)') line
-       READ( line,'(I10)' ) NTopPts
-#ifdef IHOP_WRITE_OUT
-       ! In adjoint mode we do not write output besides on the first run
-       IF (IHOP_dumpfreq.GE.0) &
-        WRITE( PRTFile,'(2A,I10)' ) 'Number of points in top reflection ', &
-                           'coefficient = ', NTopPts
-#endif /* IHOP_WRITE_OUT */
+      READ( TRCFile,REC=1,IOSTAT=IOStat,FMT='(A)') line
+      READ( line,'(I10)' ) NTopPts
 
-       IF ( ALLOCATED( RTop ) ) DEALLOCATE( RTop )
-       ALLOCATE( RTop( NTopPts ), Stat = IAllocStat )
-       IF ( iAllocStat /= 0 ) THEN
+      ALLOCATE( RTop( NTopPts ), Stat = IAllocStat )
+      IF ( iAllocStat /= 0 ) THEN
 #ifdef IHOP_WRITE_OUT
         WRITE(msgBuf,'(2A)') 'REFCOEF ReadReflectionCoeffcient: ', &
                     'Insufficient memory for top refl. coef.: reduce # points'
         CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
-          STOP 'ABNORMAL END: S/R ReadReflectionCoefficient'
-       END IF
+        STOP 'ABNORMAL END: S/R ReadReflectionCoefficient'
+      END IF
 
-       DO itheta=1,NTopPts
+      DO itheta=1,NTopPts
         rec = itheta+1
         READ( TRCFile,REC=rec,IOSTAT=IOStat,FMT='(A)' ) line
         READ( line,'(3F5.3)' ) RTop(itheta)%theta, RTop(itheta)%R, &
                                RTop(itheta)%phi
-       ENDDO
-       CLOSE( TRCFile )
-       RTop%phi = deg2rad *  RTop%phi   ! convert to radians
+      ENDDO
+      CLOSE( TRCFile )
+      RTop%phi = deg2rad *  RTop%phi   ! convert to radians
+
     ELSE   ! should allocate something anyway, since variable is passed
-       ALLOCATE( RTop( 1 ), Stat = iAllocStat )
-    ENDIF
+      ALLOCATE( RTop( 1 ), Stat = iAllocStat )
+      NTopPts = 1         !RG
+      RTop(1)%theta = 0.  !RG
+      RTop(1)%R = 0.      !RG
+      RTop(1)%phi = 0.    !RG
+
+    ENDIF ! TopRC == ...
+
 
     ! Optionally read in internal reflection coefficient data
-
     IF ( BotRC == 'P' ) THEN
-       OPEN( FIlE = TRIM( IHOP_fileroot )//'.irc', UNIT=TRCFile, STATUS='OLD',&
-             IOSTAT=IOStat, ACTION='READ',ACCESS='direct',RECL=100 )
-       IF ( IOStat /= 0 ) THEN
+      OPEN( FIlE = TRIM( IHOP_fileroot )//'.irc', UNIT=TRCFile, STATUS='OLD',&
+            IOSTAT=IOStat, ACTION='READ',ACCESS='direct',RECL=100 )
+      IF ( IOStat /= 0 ) THEN
 #ifdef IHOP_WRITE_OUT
-        ! In adjoint mode we do not write output besides on the first run
-        IF (IHOP_dumpfreq.GE.0) &
-            WRITE( PRTFile, * ) 'Reading precalculated refl. coeff. table'
         WRITE(msgBuf,'(2A)') 'REFCOEF ReadReflectionCoeffcient: ', &
                         'Unable to open Internal Reflection Coefficient file'
         CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
-          STOP 'ABNORMAL END: S/R ReadReflectionCoefficient'
-       END IF
+        STOP 'ABNORMAL END: S/R ReadReflectionCoefficient'
+      END IF
 
-       READ( IRCFile,REC=1,IOSTAT=IOStat,FMT='(A)') line
-       READ( line,'(A80,F10.6)' ) Title2, freq
-       READ( IRCFile,REC=2,IOSTAT=IOStat,FMT='(A)') line
-       READ( line,'(I10)' ) NkTab
-#ifdef IHOP_WRITE_OUT
-       ! In adjoint mode we do not write output besides on the first run
-       IF (IHOP_dumpfreq.GE.0) THEN
-        WRITE( PRTFile, * )
-        WRITE( PRTFile, * ) 'Number of points in internal reflection ', &
-                            'coefficient = ', NkTab
-       ENDIF
-#endif /* IHOP_WRITE_OUT */
+      READ( IRCFile,REC=1,IOSTAT=IOStat,FMT='(A)') line
+      READ( line,'(A80,F10.6)' ) line, freq
+      READ( IRCFile,REC=2,IOSTAT=IOStat,FMT='(A)') line
+      READ( line,'(I10)' ) NkTab
 
-       IF ( ALLOCATED( xTab ) )  DEALLOCATE( xTab, fTab, gTab, iTab )
-       ALLOCATE( xTab( NkTab ), fTab( NkTab ), gTab( NkTab ), iTab( NkTab ), &
-                 Stat = iAllocStat )
-       IF ( iAllocStat /= 0 ) THEN
+      ALLOCATE( xTab( NkTab ), fTab( NkTab ), gTab( NkTab ), iTab( NkTab ), &
+                Stat = iAllocStat )
+      IF ( iAllocStat /= 0 ) THEN
 #ifdef IHOP_WRITE_OUT
         WRITE(msgBuf,'(2A)') 'REFCOEF ReadReflectionCoeffcient: ', &
                                'Too many points in reflection coefficient'
         CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
-          STOP 'ABNORMAL END: S/R ReadReflectionCoefficient'
-       END IF
+        STOP 'ABNORMAL END: S/R ReadReflectionCoefficient'
+      END IF
 
-       DO ik=1,NkTab
+      DO ik=1,NkTab
         rec = ik+2
         READ( IRCFile,REC=rec,IOSTAT=IOStat,FMT='(A)') line
         READ( line,'( 5G15.7,I5 )' )  xTab( ik ), fTab( ik ), &
              gTab( ik ), iTab( ik )
-       ENDDO
-       CLOSE( IRCFile )
+      ENDDO
+      CLOSE( IRCFile )
     ENDIF
 
   RETURN
   END !SUBROUTINE ReadReflectionCoefficient
 
+! **************************************************************************** !
   SUBROUTINE InterpolateReflectionCoefficient( RInt, R, NPts )
 
     ! Given an angle RInt%ThetaInt, returns the magnitude and
@@ -296,6 +273,7 @@ CONTAINS
   RETURN
   END !SUBROUTINE InterpolateReflectionCoefficient
 
+! **************************************************************************** !
   SUBROUTINE InterpolateIRC( x, f, g, iPower, xTab, fTab, gTab, iTab, NkTab )
 
     ! Internal reflection coefficient interpolator.
@@ -366,4 +344,70 @@ CONTAINS
 
   RETURN
   END !SUBROUTINE InterpolateIRC
+
+! **************************************************************************** !
+  SUBROUTINE writeRefCoef( myThid )
+    USE bdry_mod, only: Bdry
+
+    ! Optionally read in reflection coefficient for Top or Bottom boundary
+
+  !     == Routine Arguments ==
+  !     myThid :: Thread number. Unused by IESCO
+  !     msgBuf :: Used to build messages for printing.
+    INTEGER, INTENT( IN )   :: myThid
+    CHARACTER*(MAX_LEN_MBUF):: msgBuf
+
+  !     == Local Variables ==
+! flag set to 'F' if refl. coef. is to be read from a File
+    CHARACTER*(1) :: BotRC, TopRC
+
+    ! initiate local parameters
+    BotRC = Bdry%Bot%HS%Opt( 1:1 )
+    TopRC = Bdry%Top%HS%Opt( 2:2 )
+
+
+  ! I/O on main thread only
+  _BEGIN_MASTER(myThid)
+
+#ifdef IHOP_WRITE_OUT
+  ! In adjoint mode we do not write output besides on the first run
+  IF (IHOP_dumpfreq.GE.0) THEN
+
+    IF ( BotRC == 'F' ) THEN
+      WRITE( PRTFile,'(2A)' ) '_______________________________________', &
+                              '___________________________________'
+      WRITE( PRTFile,'(A)' )
+      WRITE( PRTFile,'(A)' ) 'Using tabulated bottom reflection coef.'
+      WRITE( PRTFile,'(2A)' ) 'BRCFile=', TRIM( IHOP_fileroot )//'.brc'
+
+      WRITE( PRTFile,'(2A,I10)' ) 'Number of points in bottom reflection ', &
+                           'coefficient = ', NBotPts
+    END IF
+
+    IF ( TopRC == 'F' ) THEN
+      WRITE( PRTFile,'(2A)' ) '_______________________________________', &
+                              '___________________________________'
+      WRITE( PRTFile,'(A)' )
+      WRITE( PRTFile,'(A)' ) 'Using tabulated top reflection coef.'
+      WRITE( PRTFile,'(2A)' ) 'TRCFile=', TRIM( IHOP_fileroot )//'.trc'
+
+      WRITE( PRTFile,'(2A,I10)' ) 'Number of points in top reflection ', &
+                           'coefficient = ', NTopPts
+    END IF
+
+    IF ( BotRC == 'P' ) THEN
+      WRITE( PRTFile, * )
+      WRITE( PRTFile, * ) 'Number of points in internal reflection ', &
+                          'coefficient = ', NkTab
+    END IF
+
+  END IF ! don't write in adjoint mode
+#endif /* IHOP_WRITE_OUT */
+  ! I/O on main thread only
+  _END_MASTER(myThid)
+  _BARRIER
+
+  RETURN
+  END !SUBROUTINE writeRefCoef
+
 END MODULE refCoef
