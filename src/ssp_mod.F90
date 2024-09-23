@@ -920,6 +920,7 @@ SUBROUTINE gcmSSP( myThid )
           njj(ii) = IHOP_npts_idw + 1
         END IF
 
+
         ! Exactly on a cell center, ignore interpolation
         IF (ihop_idw_weights(ii, jj) .EQ. 0.0) THEN
           tmpSSP(iz, ii, bi, bj) = ihop_ssp(i, j, iz-1, bi, bj)
@@ -929,12 +930,11 @@ SUBROUTINE gcmSSP( myThid )
           tmpSSP(iz, ii, bi, bj) = tmpSSP(iz, ii, bi, bj) + &
             ihop_ssp(i, j, iz-1, bi, bj) * &
             ihop_idw_weights(ii, jj) / ihop_sumweights(ii, iz-1)
-          !! Do nothing to njj
-          !njj(ii) = njj(ii)
+
         ELSE
           ! do nothing
           tmpSSP(iz, ii, bi, bj) = tmpSSP(iz, ii, bi, bj)
-          !njj(ii) = njj(ii)
+
         END IF
       END IF
 
@@ -955,6 +955,7 @@ SUBROUTINE gcmSSP( myThid )
             tmpSSP(k-1, ii, bi, bj) + dcdz * SSP%z(k:SSP%Nz)
           ! Move to next range point, ii
           interp_finished = .TRUE.
+
         END IF
       END IF
     END IF
