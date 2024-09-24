@@ -14,8 +14,6 @@ MODULE influence
                           SrcDeclAngle, NRz_per_range
   USE srPos_mod,    only: Pos
 ! sspMod used to construct image beams in the Cerveny style beam routines
-  USE arr_mod,      only: AddArr
-  USE writeRay,     only: WriteRay2D, WriteDel2D
 
 ! ! USES
   implicit none
@@ -539,18 +537,25 @@ CONTAINS
 
 ! **************************************************************************** !
   SUBROUTINE ApplyContribution( U )
-    USE ihop_mod, only: afreq
+    USE writeray, only: WriteRayOutput
+    USE arr_mod,  only: AddArr
+    USE ihop_mod, only: afreq, RAYFile, DELFile
 
     COMPLEX, INTENT( INOUT ) :: U
 
     SELECT CASE( Beam%RunType( 1:1 ) )
       CASE ( 'E' )                ! eigenrays
         U=U
-        CALL WriteRay2D( SrcDeclAngle, iS )
+        CALL WriteRayOutput( RAYFile, iS, ray2D%x(1), ray2D%x(2), &
+            ray2D(iS)%NumTopBnc, ray2D(iS)%NumBotBnc )
       CASE ( 'e' )                ! eigenrays AND arrivals
         U=U
-        CALL WriteRay2D( SrcDeclAngle, iS )
-        IF (writeDelay) CALL WriteDel2D( SrcDeclAngle, iS )
+        CALL WriteRayOutput( RAYFile, iS, ray2D%x(1), ray2D%x(2), &
+            ray2D(iS)%NumTopBnc, ray2D(iS)%NumBotBnc )
+        IF (writeDelay) THEN
+          CALL WriteRayOutput( DELFile, iS, REAL(ray2D%tau), ray2D%x(2), &
+              ray2D(iS)%NumTopBnc, ray2D(iS)%NumBotBnc )
+        END IF
 
         CALL AddArr( afreq, iz, ir, Amp, phaseInt, delay, SrcDeclAngle, &
                      RcvrDeclAngle, ray2D( iS )%NumTopBnc, &

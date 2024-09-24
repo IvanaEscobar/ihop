@@ -171,7 +171,7 @@ CONTAINS
     USE angle_mod, only: Angles, ialpha
     USE srPos_mod, only: Pos
     USE arr_mod,   only: WriteArrivalsASCII, WriteArrivalsBinary, NArr, U
-    USE writeRay,  only: WriteRay2D, WriteDel2D, WriteRayOutput
+    USE writeRay,  only: WriteRayOutput
     USE influence, only: InfluenceGeoHatRayCen, InfluenceGeoGaussianCart, &
                          InfluenceGeoHatCart, ScalePressure
     USE beampat,   only: NSBPPts, SrcBmPat
@@ -310,17 +310,14 @@ CONTAINS
              ! Write the ray trajectory to RAYFile
              IF ( Beam%RunType(1:1) == 'R') THEN
                 CALL WriteRayOutput( RAYFile, Beam%nSteps, &
-                    ray2D(1:Beam%nSteps)%x(1),ray2D(1:Beam%nSteps)%x(2), &
+                    ray2D%x(1),ray2D%x(2), &
                     ray2D(Beam%nSteps)%NumTopBnc,ray2D(Beam%nSteps)%NumBotBnc )
                 IF (writeDelay) THEN
-                    PRINT *, "Escobar: writeDelay"
                   CALL WriteRayOutput( DELFile, Beam%nSteps, &
-                    REAL(ray2D(1:Beam%nSteps)%tau),ray2D(1:Beam%nSteps)%x(2), &
+                    REAL(ray2D%tau),ray2D%x(2), &
                     ray2D(Beam%nSteps)%NumTopBnc,ray2D(Beam%nSteps)%NumBotBnc )
                 ENDIF
 
-                !CALL WriteRay2D( SrcDeclAngle, Beam%Nsteps )
-                !IF (writeDelay) CALL WriteDel2D( SrcDeclAngle, Beam%Nsteps )
              ELSE ! Compute the contribution to the field
                 SELECT CASE ( Beam%Type( 1:1 ) )
                 CASE ( 'g' )
