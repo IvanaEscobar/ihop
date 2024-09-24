@@ -539,21 +539,26 @@ CONTAINS
   SUBROUTINE ApplyContribution( U )
     USE writeray, only: WriteRayOutput
     USE arr_mod,  only: AddArr
-    USE ihop_mod, only: afreq, RAYFile, DELFile
+    USE ihop_mod, only: afreq, RAYFile, DELFile, MaxN
 
     COMPLEX, INTENT( INOUT ) :: U
+    REAL(KIND=_RL90) :: tmpDelay(MaxN)
 
+    tmpDelay = 0.
     SELECT CASE( Beam%RunType( 1:1 ) )
       CASE ( 'E' )                ! eigenrays
         U=U
+        tmpDelay = 0.
         CALL WriteRayOutput( RAYFile, iS, ray2D%x(1), ray2D%x(2), &
             ray2D(iS)%NumTopBnc, ray2D(iS)%NumBotBnc )
       CASE ( 'e' )                ! eigenrays AND arrivals
         U=U
+        tmpDelay = 0.
         CALL WriteRayOutput( RAYFile, iS, ray2D%x(1), ray2D%x(2), &
             ray2D(iS)%NumTopBnc, ray2D(iS)%NumBotBnc )
         IF (writeDelay) THEN
-          CALL WriteRayOutput( DELFile, iS, REAL(ray2D%tau), ray2D%x(2), &
+          tmpDelay = REAL(ray2D%tau)
+          CALL WriteRayOutput( DELFile, iS, tmpDelay, ray2D%x(2), &
               ray2D(iS)%NumTopBnc, ray2D(iS)%NumBotBnc )
         END IF
 
@@ -562,12 +567,15 @@ CONTAINS
                      ray2D( iS )%NumBotBnc )
       CASE ( 'A', 'a' )           ! arrivals
         U=U
+        tmpDelay = 0.
         CALL AddArr( afreq, iz, ir, Amp, phaseInt, delay, SrcDeclAngle, &
                      RcvrDeclAngle, ray2D( iS )%NumTopBnc, &
                      ray2D( iS )%NumBotBnc )
       CASE ( 'C' )                ! coherent TL
+        tmpDelay = 0.
         U = U + CMPLX( Amp * EXP( -i * ( afreq * delay - phaseInt ) ) )
       CASE ( 'S', 'I' )                ! incoherent/semicoherent TL
+        tmpDelay = 0.
         IF ( Beam%Type( 1:1 ) == 'B' ) THEN   ! Gaussian beam
           U = U + SNGL( SQRT( 2. * PI ) &
                   * ( Amp * EXP( AIMAG( afreq * delay ) ) )**2 )
@@ -576,6 +584,7 @@ CONTAINS
                     ( Amp * EXP( AIMAG( afreq * delay ) ) )**2 )
         END IF
       CASE DEFAULT                ! incoherent/semicoherent TL
+        tmpDelay = 0.
         IF ( Beam%Type( 1:1 ) == 'B' ) THEN   ! Gaussian beam
           U = U + SNGL( SQRT( 2. * PI ) &
                   * ( Amp * EXP( AIMAG( afreq * delay ) ) )**2 )
