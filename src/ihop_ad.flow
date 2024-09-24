@@ -57,7 +57,6 @@
 !     *==========================================================*
 !     | SUBROUTINE INITATI  is passive                           |
 !     | SUBROUTINE INITBTY  is passive                           |
-!     | SUBROUTINE COMPUTEBDRYTANGENTNORMAL  is passive          |
 !     *==========================================================*
 !$TAF SUBROUTINE bdry_mod::initati INPUT   = 1, 2, 3
 !$TAF SUBROUTINE bdry_mod::initati OUTPUT  =
@@ -65,10 +64,7 @@
 
 !$TAF SUBROUTINE bdry_mod::initbty INPUT   = 1, 2, 3
 !$TAF SUBROUTINE bdry_mod::initbty OUTPUT  =
-!$TAF SUBROUTINE bdry_mod::initati MODULE bdry_mod OUTPUT  = bot
-
-!$TAF SUBROUTINE bdry_mod::computebdrytangentnormal INPUT   = 1, 2, 3
-!$TAF SUBROUTINE bdry_mod::computebdrytangentnormal OUTPUT  =
+!$TAF SUBROUTINE bdry_mod::initbty MODULE bdry_mod OUTPUT  = bot
 
 !     *==========================================================*
 !     | PROCEDURE SORT  is passive                               |
