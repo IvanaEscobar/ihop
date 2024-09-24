@@ -313,16 +313,16 @@ CONTAINS
              ELSE ! Compute the contribution to the field
                 SELECT CASE ( Beam%Type( 1:1 ) )
                 CASE ( 'g' )
-                   CALL InfluenceGeoHatRayCen(    U, Angles%alpha( ialpha ), &
+                   CALL InfluenceGeoHatRayCen(    U, &
                                                   Angles%Dalpha, myThid )
                 CASE ( 'B' )
-                   CALL InfluenceGeoGaussianCart( U, Angles%alpha( ialpha ), &
+                   CALL InfluenceGeoGaussianCart( U, &
                                                   Angles%Dalpha, myThid )
                 CASE ( 'G','^' )
-                   CALL InfluenceGeoHatCart(  U, Angles%alpha( ialpha ), &
+                   CALL InfluenceGeoHatCart(  U, &
                                               Angles%Dalpha, myThid )
                 CASE DEFAULT !IEsco22: thesis is in default behavior
-                   CALL InfluenceGeoHatCart(  U, Angles%alpha( ialpha ), &
+                   CALL InfluenceGeoHatCart(  U, &
                                               Angles%Dalpha, myThid )
                 END SELECT
              END IF
