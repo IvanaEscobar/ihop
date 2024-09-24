@@ -553,8 +553,30 @@ CONTAINS
 #else /* IHOP_THREED */
        WRITE( RAYFile, * ) '''rz'''
 #endif /* IHOP_THREED */
-       FLUSH( RAYFile )
+
 #endif /* IHOP_WRITE_OUT */
+
+       IF (writeDelay) THEN
+        OPEN ( FILE = TRIM( fullName ) // '.delay', UNIT = DELFile, &
+               FORM = 'FORMATTED' )
+        WRITE( DELFile, * ) '''', Title( 1 : 50 ), ''''
+        WRITE( DELFile, * ) IHOP_freq
+        WRITE( DELFile, * ) Pos%NSx, Pos%NSy, Pos%NSz
+        WRITE( DELFile, * ) Angles%Nalpha
+        WRITE( DELFile, * ) Bdry%Top%HS%Depth
+        WRITE( DELFile, * ) Bdry%Bot%HS%Depth
+
+#ifdef IHOP_THREED
+        WRITE( DELFile, * ) Angles%Nalpha, Angles%Nbeta
+        WRITE( DELFile, * ) '''xyz'''
+# else /* IHOP_THREED */
+        WRITE( DELFile, * ) '''rz'''
+# endif /* IHOP_THREED */
+       ENDIF
+
+       FLUSH( RAYFile )
+       IF (writeDelay) FLUSH( DELFile )
+
     CASE ( 'e' )        ! eigenrays + arrival file in ascii format
 #ifdef IHOP_WRITE_OUT
        OPEN ( FILE = TRIM( fullName ) // '.arr', UNIT = ARRFile, &
@@ -623,6 +645,7 @@ CONTAINS
        IF (writeDelay) FLUSH( DELFile )
        FLUSH( ARRFile )
 #endif /* IHOP_WRITE_OUT */
+
     CASE ( 'A' )        ! arrival file in ascii format
 #ifdef IHOP_WRITE_OUT
        OPEN ( FILE = TRIM( fullName ) // '.arr', UNIT = ARRFile, &
@@ -681,6 +704,7 @@ CONTAINS
 # endif /* IHOP_THREED */
        FLUSH( ARRFile )
 #endif /* IHOP_WRITE_OUT */
+
     CASE DEFAULT
        atten = 0.0
 

@@ -19,7 +19,7 @@
 # rr + ihop_step < ihop_ranges(end)
  IHOP_rr=2542.0,
 # e: eigenrays; G: Hat spreading
- IHOP_runopt='eG',
+ IHOP_runopt='RG',
  IHOP_nalpha=4,
  IHOP_alpha=-20.0, 20.0,
  &

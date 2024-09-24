@@ -846,7 +846,7 @@ SUBROUTINE gcmSSP( myThid )
 #ifdef ALLOW_AUTODIFF_TAMC
   INTEGER tkey, ijkey, lockey
 
-!$TAF init loctape_ihop_gcmssp_bibj_ij_iijj_k = COMMON, nSx*nSy*(2*OLx+sNx)*(2*OLy+sNy)*IHOP_npts_range*IHOP_npts_idw*SSP%Nz
+!$TAF init loctape_ihop_gcmssp_bibj_ij_iijj_k = COMMON, nSx*nSy*(2*OLx+sNx)*(2*OLy+sNy)*IHOP_npts_range*IHOP_npts_idw*20
 #endif
 
   ! IESCO24 fT init

@@ -171,11 +171,12 @@ CONTAINS
     USE angle_mod, only: Angles, ialpha
     USE srPos_mod, only: Pos
     USE arr_mod,   only: WriteArrivalsASCII, WriteArrivalsBinary, NArr, U
-    USE writeRay,  only: WriteRay2D, WriteDel2D
+    USE writeRay,  only: WriteRay2D, WriteDel2D, WriteRayOutput
     USE influence, only: InfluenceGeoHatRayCen, InfluenceGeoGaussianCart, &
                          InfluenceGeoHatCart, ScalePressure
     USE beampat,   only: NSBPPts, SrcBmPat
-    USE ihop_mod,  only: Beam, ray2D, rad2deg, SrcDeclAngle, afreq, NRz_per_range
+    USE ihop_mod,  only: Beam, ray2D, rad2deg, SrcDeclAngle, afreq, &
+                         NRz_per_range, RAYFile, DELFile
 !    USE influence,  only: ratio1, rB    !RG
 ! FOR TAF
     USE bdry_mod, only: bdry
@@ -200,15 +201,16 @@ CONTAINS
     Angles%alpha  = Angles%alpha * deg2rad  ! convert to radians
     Angles%Dalpha = 0.0
     IF ( Angles%Nalpha > 1 ) THEN
-         Angles%Dalpha = ( Angles%alpha( Angles%Nalpha ) - Angles%alpha( 1 ) ) &
-                         / ( Angles%Nalpha - 1 )  ! angular spacing between beams
+      Angles%Dalpha = ( Angles%alpha( Angles%Nalpha ) - Angles%alpha( 1 ) ) &
+                        / ( Angles%Nalpha - 1 )  ! angular spacing between beams
     ELSE
+      Angles%Dalpha = 0.0
 #ifdef IHOP_WRITE_OUT
-        WRITE(msgBuf,'(2A)') 'IHOP IHOPCore: ', &
+      WRITE(msgBuf,'(2A)') 'IHOP IHOPCore: ', &
                       'Required: Nalpha>1, else add iSingle_alpha(see angleMod)'
-        CALL PRINT_ERROR( msgBuf,myThid )
+      CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
-        STOP 'ABNORMAL END: S/R IHOPCore'
+      STOP 'ABNORMAL END: S/R IHOPCore'
     END IF
 
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -226,10 +228,9 @@ CONTAINS
        CASE ( 'A','a','e' )   ! Arrivals calculation, zero out arrival matrix
           U = 0.0
           NArr = 0
-       CASE DEFAULT
+       CASE DEFAULT ! Ray tracing only
           U = 0.0
           NArr = 0
-          STOP 'ABNORMAL END: S/R IHOPCore'
        END SELECT
 
        CALL evalSSP(  xs, c, cimag, gradc, crr, crz, czz, rho, myThid  )
@@ -308,8 +309,18 @@ CONTAINS
 
              ! Write the ray trajectory to RAYFile
              IF ( Beam%RunType(1:1) == 'R') THEN
-                CALL WriteRay2D( SrcDeclAngle, Beam%Nsteps )
-                IF (writeDelay) CALL WriteDel2D( SrcDeclAngle, Beam%Nsteps )
+                CALL WriteRayOutput( RAYFile, Beam%nSteps, &
+                    ray2D(1:Beam%nSteps)%x(1),ray2D(1:Beam%nSteps)%x(2), &
+                    ray2D(Beam%nSteps)%NumTopBnc,ray2D(Beam%nSteps)%NumBotBnc )
+                IF (writeDelay) THEN
+                    PRINT *, "Escobar: writeDelay"
+                  CALL WriteRayOutput( DELFile, Beam%nSteps, &
+                    REAL(ray2D(1:Beam%nSteps)%tau),ray2D(1:Beam%nSteps)%x(2), &
+                    ray2D(Beam%nSteps)%NumTopBnc,ray2D(Beam%nSteps)%NumBotBnc )
+                ENDIF
+
+                !CALL WriteRay2D( SrcDeclAngle, Beam%Nsteps )
+                !IF (writeDelay) CALL WriteDel2D( SrcDeclAngle, Beam%Nsteps )
              ELSE ! Compute the contribution to the field
                 SELECT CASE ( Beam%Type( 1:1 ) )
                 CASE ( 'g' )
@@ -331,26 +342,25 @@ CONTAINS
        END DO DeclinationAngle
 
        ! write results to disk
-
        SELECT CASE ( Beam%RunType( 1:1 ) )
-       CASE ( 'C', 'S', 'I' )   ! TL calculation
-          CALL ScalePressure( Angles%Dalpha, ray2D( 1 )%c, Pos%Rr, U, &
+         CASE ( 'C', 'S', 'I' )   ! TL calculation
+           CALL ScalePressure( Angles%Dalpha, ray2D( 1 )%c, Pos%Rr, U, &
                               NRz_per_range, Pos%NRr, Beam%RunType, IHOP_freq )
-          IRec = 10 + NRz_per_range * ( is - 1 )
-          RcvrDepth: DO Irz1 = 1, NRz_per_range
+           IRec = 10 + NRz_per_range * ( is - 1 )
+           RcvrDepth: DO Irz1 = 1, NRz_per_range
              IRec = IRec + 1
              WRITE( SHDFile, REC = IRec ) U( Irz1, 1:Pos%NRr )
-          END DO RcvrDepth
-       CASE ( 'A', 'e' )             ! arrivals calculation, ascii
-          CALL WriteArrivalsASCII(  Pos%Rr, NRz_per_range, Pos%NRr, &
+           END DO RcvrDepth
+
+         CASE ( 'A', 'e' )             ! arrivals calculation, ascii
+           CALL WriteArrivalsASCII( Pos%Rr, NRz_per_range, Pos%NRr, &
                                     Beam%RunType( 4:4 ) )
-       CASE ( 'a' )             ! arrivals calculation, binary
-          CALL WriteArrivalsBinary( Pos%Rr, NRz_per_range, Pos%NRr, &
+         CASE ( 'a' )             ! arrivals calculation, binary
+           CALL WriteArrivalsBinary( Pos%Rr, NRz_per_range, Pos%NRr, &
                                     Beam%RunType( 4:4 ) )
-       CASE DEFAULT
-          STOP 'ABNORMAL END: S/R IHOPCore'
-          CALL WriteArrivalsASCII(  Pos%Rr, NRz_per_range, Pos%NRr, &
-                                    Beam%RunType( 4:4 ) )
+         CASE DEFAULT ! ray trace only, NO ARRFile
+           !CALL WriteArrivalsASCII( Pos%Rr, NRz_per_range, Pos%NRr, &
+           !                         Beam%RunType( 4:4 ) )
        END SELECT
 
     END DO SourceDepth
