@@ -43,7 +43,8 @@ MODULE angle_mod
   TYPE AnglesStructure
      INTEGER                        :: Nalpha = 0, iSingle_alpha = 0
      REAL (KIND=_RL90)              :: Dalpha
-     REAL (KIND=_RL90), ALLOCATABLE :: alpha( : )
+     REAL (KIND=_RL90), ALLOCATABLE :: aDeg( : )
+     REAL (KIND=_RL90), ALLOCATABLE :: aRad( : )
 #ifdef IHOP_THREED
      INTEGER                        :: Nbeta = 1, iSingle_beta = 0
      REAL (KIND=_RL90)              :: Dbeta
@@ -54,6 +55,7 @@ MODULE angle_mod
   Type( AnglesStructure ) :: Angles
 
 CONTAINS
+! **************************************************************************** !
   SUBROUTINE ReadRayElevationAngles( Depth, TopOpt, RunType, myThid )
 
   !     == Routine Arguments ==
@@ -92,7 +94,8 @@ CONTAINS
        END IF
     END IF
 
-    ALLOCATE( Angles%alpha( MAX( 3, Angles%Nalpha ) ), STAT = iAllocStat )
+    ALLOCATE( Angles%arad( MAX( 3, Angles%Nalpha ) ), &
+              Angles%adeg( MAX( 3, Angles%Nalpha ) ), STAT = iAllocStat )
     IF ( iAllocStat /= 0 ) THEN
 #ifdef IHOP_WRITE_OUT
         WRITE(msgBuf,'(2A)') 'ANGLEMOD ReadRayElevationAngles:', &
@@ -102,23 +105,24 @@ CONTAINS
         STOP 'ABNORMAL END: S/R ReadRayElevationAngles'
     END IF
 
-    ! init Angles%alpha
-    Angles%alpha = 0.0
-    Angles%alpha(1:2) = IHOP_alpha
-    IF ( Angles%Nalpha > 2 ) Angles%alpha(3) = -999.9
+    ! init Angles%adeg,arad
+    Angles%adeg = 0.0
+    Angles%arad = 0.0
+    Angles%adeg(1:2) = IHOP_alpha
+    IF ( Angles%Nalpha > 2 ) Angles%adeg(3) = -999.9
 
     ! set intermediate values of alpha
-    CALL SubTab( Angles%alpha, Angles%Nalpha )
-    CALL Sort(   Angles%alpha, Angles%Nalpha )
+    CALL SubTab( Angles%adeg, Angles%Nalpha )
+    CALL Sort(   Angles%adeg, Angles%Nalpha )
 
     ! full 360-degree sweep? remove duplicate beam
     IF ( Angles%Nalpha > 1 .AND. &
-         ABS( MOD( Angles%alpha(Angles%Nalpha) - &
-                   Angles%alpha(1), 360.0 ) ) < 10.0*TINY(1.0D0) ) &
+         ABS( MOD( Angles%adeg(Angles%Nalpha) - &
+                   Angles%adeg(1), 360.0 ) ) < 10.0*TINY(1.0D0) ) &
       Angles%Nalpha = Angles%Nalpha - 1
 
     IF ( Angles%Nalpha>1 .AND. &
-         Angles%alpha(Angles%Nalpha) == Angles%alpha(1) ) THEN
+         Angles%adeg(Angles%Nalpha) == Angles%adeg(1) ) THEN
 #ifdef IHOP_WRITE_OUT
         WRITE(msgBuf,'(2A)') 'ANGLEMOD ReadRayElevationAngles:', &
         'First and last beam take-off angle are identical'
@@ -139,10 +143,13 @@ CONTAINS
         END IF
     END IF
 
+    ! store angles in radians
+    Angles%arad = Angles%adeg * deg2rad
+
   RETURN
   END !SUBROUTINE ReadRayElevationAngles
 
-  !**********************************************************************!
+! **************************************************************************** !
 #ifdef IHOP_THREED
   SUBROUTINE ReadRayBearingAngles( TopOpt, RunType, myThid )
     USE ihop_mod,     only: PRTFile

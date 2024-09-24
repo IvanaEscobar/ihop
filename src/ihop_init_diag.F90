@@ -131,11 +131,11 @@ CONTAINS
 
       IF ( Angles%Nalpha >= 1 ) THEN
         WRITE(msgBuf,'(10F12.3)') &
-            Angles%alpha( 1:MIN(Angles%Nalpha,Number_to_Echo) )
+            Angles%adeg( 1:MIN(Angles%Nalpha,Number_to_Echo) )
         CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
       END IF
       IF ( Angles%Nalpha > Number_to_Echo ) THEN
-        WRITE(msgBuf,'(A,F12.6)') ' ... ', Angles%alpha( Angles%Nalpha )
+        WRITE(msgBuf,'(A,F12.6)') ' ... ', Angles%adeg( Angles%Nalpha )
         CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
       END IF
 

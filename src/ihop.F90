@@ -198,10 +198,10 @@ CONTAINS
 
     afreq = 2.0 * PI * IHOP_freq
 
-    Angles%alpha  = Angles%alpha * deg2rad  ! convert to radians
+    !Angles%alpha  = Angles%alpha * deg2rad  ! convert to radians
     Angles%Dalpha = 0.0
     IF ( Angles%Nalpha > 1 ) THEN
-      Angles%Dalpha = ( Angles%alpha( Angles%Nalpha ) - Angles%alpha( 1 ) ) &
+      Angles%Dalpha = ( Angles%arad( Angles%Nalpha ) - Angles%arad( 1 ) ) &
                         / ( Angles%Nalpha - 1 )  ! angular spacing between beams
     ELSE
       Angles%Dalpha = 0.0
@@ -240,8 +240,8 @@ CONTAINS
        IF ( Beam%RunType( 1:1 ) == 'C' ) THEN ! for Coherent TL Run
        ! Are there enough rays?
           DalphaOpt = SQRT( c / ( 6.0 * IHOP_freq * Pos%Rr( Pos%NRr ) ) )
-          NalphaOpt = 2 + INT( ( Angles%alpha( Angles%Nalpha ) &
-                               - Angles%alpha( 1 ) ) / DalphaOpt )
+          NalphaOpt = 2 + INT( ( Angles%arad( Angles%Nalpha ) &
+                               - Angles%arad( 1 ) ) / DalphaOpt )
 #ifdef IHOP_WRITE_OUT
           IF ( Angles%Nalpha < NalphaOpt ) THEN
              WRITE( msgBuf, '(A,/,A,I10.4)' ) 'WARNING: Too few beams',&
@@ -259,7 +259,7 @@ CONTAINS
 !$TAF store ray2d,arr,narr,u = IHOPCore2
 
           ! take-off declination angle in degrees
-          SrcDeclAngle = rad2deg * Angles%alpha( ialpha )
+          SrcDeclAngle = Angles%adeg( ialpha )
 
           ! Single ray run? then don't visit code below
           IF ( Angles%iSingle_alpha==0 .OR. ialpha==Angles%iSingle_alpha ) THEN
@@ -289,7 +289,7 @@ CONTAINS
              IF ( Beam%RunType( 1:1 ) == 'S' ) &
 !$TAF store amp0,beam%runtype = IHOPCore2
                 Amp0 = Amp0 * SQRT( 2.0 ) * ABS( SIN( afreq / c * xs( 2 ) &
-                       * SIN( Angles%alpha( ialpha ) ) ) )
+                       * SIN( Angles%arad( ialpha ) ) ) )
              !!IESCO22: end BEAM stuff !!
 
 #ifdef IHOP_WRITE_OUT
@@ -305,7 +305,7 @@ CONTAINS
 #endif /* IHOP_WRITE_OUT */
 
              ! Trace a ray, update ray2D structure
-             CALL TraceRay2D( xs, Angles%alpha( ialpha ), Amp0, myThid )
+             CALL TraceRay2D( xs, Angles%arad( ialpha ), Amp0, myThid )
 
              ! Write the ray trajectory to RAYFile
              IF ( Beam%RunType(1:1) == 'R') THEN
