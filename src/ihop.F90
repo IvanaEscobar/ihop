@@ -176,7 +176,7 @@ CONTAINS
                          InfluenceGeoHatCart, ScalePressure
     USE beampat,   only: NSBPPts, SrcBmPat
     USE ihop_mod,  only: Beam, ray2D, rad2deg, SrcDeclAngle, afreq, &
-                         NRz_per_range, RAYFile, DELFile
+                         NRz_per_range, RAYFile, DELFile, MaxN
 !    USE influence,  only: ratio1, rB    !RG
 ! FOR TAF
     USE bdry_mod, only: bdry
@@ -191,8 +191,9 @@ CONTAINS
   !     == Local Variables ==
     INTEGER           :: IBPvec(1), ibp, is, iBeamWindow2, Irz1, Irec, &
                          NalphaOpt
-    REAL (KIND=_RL90) :: Amp0, DalphaOpt, xs(2), RadMax, s, &
+    REAL(KIND=_RL90) :: Amp0, DalphaOpt, xs(2), RadMax, s, &
                          c, cimag, gradc(2), crr, crz, czz, rho
+    REAL(KIND=_RL90) :: tmpDelay(MaxN)
 
 !$TAF init IHOPCore2 = static, Pos%NSz*Angles%Nalpha
 
@@ -313,8 +314,9 @@ CONTAINS
                     ray2D%x(1),ray2D%x(2), &
                     ray2D(Beam%nSteps)%NumTopBnc,ray2D(Beam%nSteps)%NumBotBnc )
                 IF (writeDelay) THEN
+                  tmpDelay = REAL(ray2D%tau)
                   CALL WriteRayOutput( DELFile, Beam%nSteps, &
-                    REAL(ray2D%tau),ray2D%x(2), &
+                    tmpDelay,ray2D%x(2), &
                     ray2D(Beam%nSteps)%NumTopBnc,ray2D(Beam%nSteps)%NumBotBnc )
                 ENDIF
 
