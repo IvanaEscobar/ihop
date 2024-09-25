@@ -886,10 +886,6 @@ CONTAINS
           CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
       END SELECT
 
-      WRITE(msgBuf,'(2A)')'_____________________________________________', &
-                          '______________'
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-
     END IF ! IHOP_dumpfreq.GE.0
 # endif /* IHOP_WRITE_OUT */
 

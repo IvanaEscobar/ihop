@@ -844,9 +844,9 @@ SUBROUTINE gcmSSP( myThid )
   ! parameter in a different way after ssp_mod is split btwn fixed and varia
   REAL (KIND=_RL90)             :: bPower, fT
 #ifdef ALLOW_AUTODIFF_TAMC
-  INTEGER tkey, ijkey, lockey
+  INTEGER tkey, ijkey, hkey, lockey
 
-!$TAF init loctape_ihop_gcmssp_bibj_ij_iijj_k = COMMON, nSx*nSy*(2*OLx+sNx)*(2*OLy+sNy)*IHOP_npts_range*IHOP_npts_idw*SSP%Nz
+!$TAF init loctape_ihop_gcmssp_bibj_ij_iijj_k = STATIC, nSx*nSy*sNx*sNy*IHOP_MAX_RANGE*IHOP_MAX_NC_SIZE*(Nr + 2)
 #endif
 
   ! IESCO24 fT init
@@ -883,8 +883,8 @@ SUBROUTINE gcmSSP( myThid )
       DO j=1,sNy
         DO i=1,sNx
 #ifdef ALLOW_AUTODIFF_TAMC
-! IESCO24: there's no overlap here, but keep OLx/y in case that changes
-          ijkey = i + ((j-1) + (tkey-1)*(2*OLy+sNy))*(2*OLx+sNx)
+          ijkey = i + (j-1)*sNx + (tkey-1)*sNx*sNy
+!$TAF store njj(ii) = comlev1_bibj_ij_ihop, key=ijkey, kind=isbyte
 #endif
           DO ii=1,IHOP_npts_range
             interp_finished = .FALSE.
@@ -903,7 +903,9 @@ SUBROUTINE gcmSSP( myThid )
 #endif
                 DO iz = 1, SSP%Nz - 1
 #ifdef ALLOW_AUTODIFF_TAMC
-                  lockey = iz + ((jj-1) + ((ii-1) + (ijkey-1)*IHOP_npts_range)*IHOP_npts_idw)*(SSP%Nz-1)
+                  hkey = jj + (ii-1)*IHOP_npts_idw + (ijkey-1)*sNy*sNx*nSy*nSx
+                  lockey = iz + (hkey-1)*(SSP%Nz-1)*IHOP_npts_idw*IHOP_npts_range*sNx*sNy*nSx*nSy
+!                  + ((jj-1) + ((ii-1) + (ijkey-1)*IHOP_npts_range)*IHOP_npts_idw)*(SSP%Nz-1)
 !$TAF store njj(ii) = loctape_ihop_gcmssp_bibj_ij_iijj_k, key=lockey, kind=isbyte
 #endif
 
@@ -918,8 +920,8 @@ SUBROUTINE gcmSSP( myThid )
         ! isolate njj increments for TAF 
         IF (ihop_idw_weights(ii, jj) .EQ. 0.0) THEN
           njj(ii) = IHOP_npts_idw + 1
-        END IF
 
+        END IF
 
         ! Exactly on a cell center, ignore interpolation
         IF (ihop_idw_weights(ii, jj) .EQ. 0.0) THEN
@@ -955,6 +957,9 @@ SUBROUTINE gcmSSP( myThid )
             tmpSSP(k-1, ii, bi, bj) + dcdz * SSP%z(k:SSP%Nz)
           ! Move to next range point, ii
           interp_finished = .TRUE.
+
+        ELSE
+          interp_finished = .FALSE.
 
         END IF
       END IF
@@ -1108,6 +1113,12 @@ SUBROUTINE writeSSP( myThid )
          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
       END DO
     END IF
+
+    WRITE(msgBuf,'(2A)')'_____________________________________________', &
+                        '______________'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(A)')
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 
 ENDIF ! don't write in adjoint mode
 #endif /* IHOP_WRITE_OUT */

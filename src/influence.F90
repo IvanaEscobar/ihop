@@ -14,8 +14,6 @@ MODULE influence
                           SrcDeclAngle, NRz_per_range
   USE srPos_mod,    only: Pos
 ! sspMod used to construct image beams in the Cerveny style beam routines
-  USE arr_mod,      only: AddArr
-  USE writeRay,     only: WriteRay2D, WriteDel2D
 
 ! ! USES
   implicit none
@@ -43,7 +41,7 @@ MODULE influence
   COMPLEX (KIND=_RL90), PRIVATE :: delay
 
 CONTAINS
-  SUBROUTINE InfluenceGeoHatRayCen( U, alpha, dalpha, myThid )
+  SUBROUTINE InfluenceGeoHatRayCen( U, dalpha, myThid )
     use arr_mod, only: NArr, Arr         !RG
 
     ! Geometrically-spreading beams with a hat-shaped beam in ray-centered
@@ -56,7 +54,7 @@ CONTAINS
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
 
   !     == Local Variables ==
-    REAL (KIND=_RL90), INTENT( IN    ) :: alpha, dalpha ! take-off angle radians
+    REAL (KIND=_RL90), INTENT( IN    ) :: dalpha ! take-off angle radians
     COMPLEX,           INTENT( INOUT ) :: U( NRz_per_range, Pos%NRr )   ! complex pressure field
     INTEGER              :: irA, irB, II
     REAL (KIND=_RL90)    :: nA, nB, zr, L, dq( Beam%Nsteps - 1 )
@@ -74,7 +72,6 @@ CONTAINS
 !$TAF store ray2d = iRayCen0
 
     q0           = ray2D( 1 )%c / Dalpha   ! Reference for J = q0 / q
-    SrcDeclAngle = rad2deg * alpha          ! take-off angle in degrees
 
     dq   = ray2D( 2:Beam%Nsteps )%q( 1 ) - ray2D( 1:Beam%Nsteps-1 )%q( 1 )
     dtau = ray2D( 2:Beam%Nsteps )%tau    - ray2D( 1:Beam%Nsteps-1 )%tau
@@ -92,7 +89,8 @@ CONTAINS
 
     ! point source (cylindrical coordinates): default behavior
     Ratio1 = 1.0d0          !RG
-    IF ( Beam%RunType( 4:4 ) == 'R' ) Ratio1 = SQRT( ABS( COS( alpha ) ) )
+    IF ( Beam%RunType( 4:4 ) == 'R' ) &
+        Ratio1 = SQRT( ABS( COS( SrcDeclAngle / rad2deg ) ) )
 
     ray2D( 1:Beam%Nsteps )%Amp = Ratio1 * SQRT( ray2D( 1:Beam%Nsteps )%c ) &
                         * ray2D( 1:Beam%Nsteps )%Amp   ! pre-apply some scaling
@@ -198,7 +196,7 @@ CONTAINS
 
   ! **********************************************************************!
 
-  SUBROUTINE InfluenceGeoHatCart( U, alpha, Dalpha, myThid )
+  SUBROUTINE InfluenceGeoHatCart( U, Dalpha, myThid )
     use arr_mod, only: NArr, Arr         !RG
     ! Geometric, hat-shaped beams in Cartesisan coordinates
 
@@ -209,7 +207,7 @@ CONTAINS
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
 
   !     == Local Variables ==
-    REAL (KIND=_RL90), INTENT( IN    ) :: alpha, & ! take-off angle, radians
+    REAL (KIND=_RL90), INTENT( IN    ) :: & ! take-off angle, radians
                                           Dalpha   ! angular spacing
     COMPLEX,           INTENT( INOUT ) :: U( NRz_per_range, Pos%NRr ) ! complex pressure field
     INTEGER              :: irT(1), irTT ! irT needs size of 1, see MINLOC
@@ -224,7 +222,6 @@ CONTAINS
 !$TAF init iiitape3 = static, (Beam%Nsteps-1)*ihop_nrr*NRz_per_range
 
     q0           = ray2D( 1 )%c / Dalpha   ! Reference for J = q0 / q
-    SrcDeclAngle = rad2deg * alpha         ! take-off angle, degrees
     phase        = 0.0
     qOld         = ray2D( 1 )%q( 1 )       ! old KMAH index
     rA           = ray2D( 1 )%x( 1 )       ! range at start of ray, typically 0
@@ -237,7 +234,8 @@ CONTAINS
 
     ! point source: the default option
     Ratio1 = 1.0d0          !RG
-    IF ( Beam%RunType( 4 : 4 ) == 'R' ) Ratio1 = SQRT( ABS( COS( alpha ) ) )
+    IF ( Beam%RunType( 4 : 4 ) == 'R' ) &
+        Ratio1 = SQRT( ABS( COS( SrcDeclAngle / rad2deg ) ) )
 
     Stepping: DO iS = 2, Beam%Nsteps
 
@@ -361,7 +359,7 @@ CONTAINS
 
   ! **********************************************************************!
 
-  SUBROUTINE InfluenceGeoGaussianCart( U, alpha, Dalpha, myThid )
+  SUBROUTINE InfluenceGeoGaussianCart( U, Dalpha, myThid )
     use arr_mod, only: NArr, Arr         !RG
 
     ! Geometric, Gaussian beams in Cartesian coordintes
@@ -375,7 +373,7 @@ CONTAINS
 
   !     == Local Variables ==
     INTEGER,           PARAMETER       :: BeamWindow = 2
-    REAL (KIND=_RL90), INTENT( IN    ) :: alpha, dalpha ! take-off angle, angular spacing
+    REAL (KIND=_RL90), INTENT( IN    ) :: dalpha ! take-off angle, angular spacing
     COMPLEX,           INTENT( INOUT ) :: U( NRz_per_range, Pos%NRr )  ! complex pressure field
     INTEGER              :: irT( 1 ), irTT
     REAL (KIND=_RL90)    :: x_ray( 2 ), rayt( 2 ), rayn( 2 ), x_rcvr( 2 ), &
@@ -388,7 +386,6 @@ CONTAINS
 !$TAF init iGauCart3 = static, (Beam%Nsteps-1)*ihop_nrr*NRz_per_range
 
     q0           = ray2D( 1 )%c / Dalpha   ! Reference for J = q0 / q
-    SrcDeclAngle = rad2deg * alpha          ! take-off angle in degrees
     phase        = 0
     qOld         = ray2D( 1 )%q( 1 )       ! used to track KMAH index
     rA           = ray2D( 1 )%x( 1 )       ! range at start of ray
@@ -404,10 +401,10 @@ CONTAINS
     IF ( ray2D( 1 )%t( 1 ) < 0.0d0 .AND. ir > 1 ) ir = ir - 1
 
     ! sqrt( 2 * PI ) represents a sum of Gaussians in free space
-    IF ( Beam%RunType( 4 : 4 ) == 'R' ) THEN
-       Ratio1 = SQRT( ABS( COS( alpha ) ) ) / SQRT( 2. * PI )   ! point source
-    ELSE
-       Ratio1 = 1 / SQRT( 2. * PI )                             ! line  source
+    IF ( Beam%RunType( 4 : 4 ) == 'R' ) THEN   ! point source
+       Ratio1 = SQRT( ABS( COS( SrcDeclAngle / rad2deg ) ) ) / SQRT( 2. * PI )
+    ELSE    ! line  source
+       Ratio1 = 1 / SQRT( 2. * PI )
     END IF
 
     Stepping: DO iS = 2, Beam%Nsteps
@@ -538,45 +535,63 @@ CONTAINS
   RETURN
   END !SUBROUTINE InfluenceGeoGaussianCart
 
-  ! **********************************************************************!
-
+! **************************************************************************** !
   SUBROUTINE ApplyContribution( U )
-    USE ihop_mod, only: afreq
+    USE writeray, only: WriteRayOutput
+    USE arr_mod,  only: AddArr
+    USE ihop_mod, only: afreq, RAYFile, DELFile, MaxN
 
     COMPLEX, INTENT( INOUT ) :: U
+    REAL(KIND=_RL90) :: tmpDelay(MaxN)
 
+    tmpDelay = 0.
     SELECT CASE( Beam%RunType( 1:1 ) )
-    CASE ( 'E' )                ! eigenrays
-       CALL WriteRay2D( SrcDeclAngle, iS )
-    CASE ( 'e' )                ! eigenrays AND arrivals
-       CALL WriteRay2D( SrcDeclAngle, iS )
-       IF (writeDelay) CALL WriteDel2D( SrcDeclAngle, iS )
+      CASE ( 'E' )                ! eigenrays
+        U=U
+        tmpDelay = 0.
+        CALL WriteRayOutput( RAYFile, iS, ray2D%x(1), ray2D%x(2), &
+            ray2D(iS)%NumTopBnc, ray2D(iS)%NumBotBnc )
+      CASE ( 'e' )                ! eigenrays AND arrivals
+        U=U
+        tmpDelay = 0.
+        CALL WriteRayOutput( RAYFile, iS, ray2D%x(1), ray2D%x(2), &
+            ray2D(iS)%NumTopBnc, ray2D(iS)%NumBotBnc )
+        IF (writeDelay) THEN
+          tmpDelay = REAL(ray2D%tau)
+          CALL WriteRayOutput( DELFile, iS, tmpDelay, ray2D%x(2), &
+              ray2D(iS)%NumTopBnc, ray2D(iS)%NumBotBnc )
+        END IF
 
-       CALL AddArr( afreq, iz, ir, Amp, phaseInt, delay, SrcDeclAngle, &
-                    RcvrDeclAngle, ray2D( iS )%NumTopBnc, &
-                    ray2D( iS )%NumBotBnc )
-    CASE ( 'A', 'a' )           ! arrivals
-       CALL AddArr( afreq, iz, ir, Amp, phaseInt, delay, SrcDeclAngle, &
-                    RcvrDeclAngle, ray2D( iS )%NumTopBnc, &
-                    ray2D( iS )%NumBotBnc )
-    CASE ( 'C' )                ! coherent TL
-       U = U + CMPLX( Amp * EXP( -i * ( afreq * delay - phaseInt ) ) )
-    CASE ( 'S', 'I' )                ! incoherent/semicoherent TL
-       IF ( Beam%Type( 1:1 ) == 'B' ) THEN   ! Gaussian beam
+        CALL AddArr( afreq, iz, ir, Amp, phaseInt, delay, SrcDeclAngle, &
+                     RcvrDeclAngle, ray2D( iS )%NumTopBnc, &
+                     ray2D( iS )%NumBotBnc )
+      CASE ( 'A', 'a' )           ! arrivals
+        U=U
+        tmpDelay = 0.
+        CALL AddArr( afreq, iz, ir, Amp, phaseInt, delay, SrcDeclAngle, &
+                     RcvrDeclAngle, ray2D( iS )%NumTopBnc, &
+                     ray2D( iS )%NumBotBnc )
+      CASE ( 'C' )                ! coherent TL
+        tmpDelay = 0.
+        U = U + CMPLX( Amp * EXP( -i * ( afreq * delay - phaseInt ) ) )
+      CASE ( 'S', 'I' )                ! incoherent/semicoherent TL
+        tmpDelay = 0.
+        IF ( Beam%Type( 1:1 ) == 'B' ) THEN   ! Gaussian beam
           U = U + SNGL( SQRT( 2. * PI ) &
                   * ( Amp * EXP( AIMAG( afreq * delay ) ) )**2 )
-       ELSE
+        ELSE
           U = U + SNGL( &
                     ( Amp * EXP( AIMAG( afreq * delay ) ) )**2 )
-       END IF
-    CASE DEFAULT                ! incoherent/semicoherent TL
-       IF ( Beam%Type( 1:1 ) == 'B' ) THEN   ! Gaussian beam
+        END IF
+      CASE DEFAULT                ! incoherent/semicoherent TL
+        tmpDelay = 0.
+        IF ( Beam%Type( 1:1 ) == 'B' ) THEN   ! Gaussian beam
           U = U + SNGL( SQRT( 2. * PI ) &
                   * ( Amp * EXP( AIMAG( afreq * delay ) ) )**2 )
-       ELSE
+        ELSE
           U = U + SNGL( &
                     ( Amp * EXP( AIMAG( afreq * delay ) ) )**2 )
-       END IF
+        END IF
     END SELECT
 
   RETURN

@@ -47,7 +47,7 @@ MODULE ihop_mod
                         BTYFile = 42, &    ! optional 2D/3D bathymetry
                         BRCFile = 38, TRCFile = 39, IRCFile = 16, &
                         SBPFile = 50, &
-                        MaxN = 100000
+                        MaxN = 50000
 
   ! *** varying parameters for ihop ***
   INTEGER            :: iSmallStepCtr = 0

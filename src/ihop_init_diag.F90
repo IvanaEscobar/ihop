@@ -131,11 +131,11 @@ CONTAINS
 
       IF ( Angles%Nalpha >= 1 ) THEN
         WRITE(msgBuf,'(10F12.3)') &
-            Angles%alpha( 1:MIN(Angles%Nalpha,Number_to_Echo) )
+            Angles%adeg( 1:MIN(Angles%Nalpha,Number_to_Echo) )
         CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
       END IF
       IF ( Angles%Nalpha > Number_to_Echo ) THEN
-        WRITE(msgBuf,'(A,F12.6)') ' ... ', Angles%alpha( Angles%Nalpha )
+        WRITE(msgBuf,'(A,F12.6)') ' ... ', Angles%adeg( Angles%Nalpha )
         CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
       END IF
 
@@ -553,8 +553,30 @@ CONTAINS
 #else /* IHOP_THREED */
        WRITE( RAYFile, * ) '''rz'''
 #endif /* IHOP_THREED */
-       FLUSH( RAYFile )
+
 #endif /* IHOP_WRITE_OUT */
+
+       IF (writeDelay) THEN
+        OPEN ( FILE = TRIM( fullName ) // '.delay', UNIT = DELFile, &
+               FORM = 'FORMATTED' )
+        WRITE( DELFile, * ) '''', Title( 1 : 50 ), ''''
+        WRITE( DELFile, * ) IHOP_freq
+        WRITE( DELFile, * ) Pos%NSx, Pos%NSy, Pos%NSz
+        WRITE( DELFile, * ) Angles%Nalpha
+        WRITE( DELFile, * ) Bdry%Top%HS%Depth
+        WRITE( DELFile, * ) Bdry%Bot%HS%Depth
+
+#ifdef IHOP_THREED
+        WRITE( DELFile, * ) Angles%Nalpha, Angles%Nbeta
+        WRITE( DELFile, * ) '''xyz'''
+# else /* IHOP_THREED */
+        WRITE( DELFile, * ) '''rz'''
+# endif /* IHOP_THREED */
+       ENDIF
+
+       FLUSH( RAYFile )
+       IF (writeDelay) FLUSH( DELFile )
+
     CASE ( 'e' )        ! eigenrays + arrival file in ascii format
 #ifdef IHOP_WRITE_OUT
        OPEN ( FILE = TRIM( fullName ) // '.arr', UNIT = ARRFile, &
@@ -623,6 +645,7 @@ CONTAINS
        IF (writeDelay) FLUSH( DELFile )
        FLUSH( ARRFile )
 #endif /* IHOP_WRITE_OUT */
+
     CASE ( 'A' )        ! arrival file in ascii format
 #ifdef IHOP_WRITE_OUT
        OPEN ( FILE = TRIM( fullName ) // '.arr', UNIT = ARRFile, &
@@ -681,6 +704,7 @@ CONTAINS
 # endif /* IHOP_THREED */
        FLUSH( ARRFile )
 #endif /* IHOP_WRITE_OUT */
+
     CASE DEFAULT
        atten = 0.0
 
@@ -962,17 +986,21 @@ CONTAINS
 !**********************************************************************!
 
   SUBROUTINE resetMemory()
-    USE srpos_mod,  only: Pos
-    USE angle_mod,  only: Angles
     USE arr_mod,    only: Narr, Arr, U
     USE ihop_mod,   only: ray2D, MaxN, iStep
 
-    ! From ihop
-    IF (ALLOCATED(Pos%theta))   DEALLOCATE(Pos%theta)
-    IF (ALLOCATED(U))           DEALLOCATE(U)
-    IF (ALLOCATED(Arr))         DEALLOCATE(Arr)
-    IF (ALLOCATED(NArr))        DEALLOCATE(NArr)
-    ! From ssp_mod
+    ! From arr_mod.f90
+    U                         = 0.
+    NArr                      = 0
+    Arr(:,:,:)%NTopBnc        = -1
+    Arr(:,:,:)%NBotBnc        = -1
+    Arr(:,:,:)%SrcDeclAngle   = -999.
+    Arr(:,:,:)%RcvrDeclAngle  = -999.
+    Arr(:,:,:)%A              = -999.
+    Arr(:,:,:)%Phase          = -999.
+    Arr(:,:,:)%delay          = -999.
+
+    ! From ssp_mod.f90
     IF (useSSPFile) THEN
         ! don't reset values, they've been read in from a file -_-
     ELSE
@@ -983,7 +1011,8 @@ CONTAINS
         SSP%czmat3 = 1.0
 #endif /* IHOP_THREED */
     ENDIF
-    ! From ihop_mod
+
+    ! From ihop_mod.f90
     DO iStep = 1,MaxN
         ray2D(iStep)%x = [zeroRL, zeroRL]
         ray2D(iStep)%t = [zeroRL, zeroRL]
