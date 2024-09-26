@@ -71,6 +71,9 @@ CONTAINS
   !     == Local Variables ==
     REAL :: Tstart, Tstop
 
+    Tstart = 0.
+    Tstop  = 0.
+
     ! Reset memory and default values
     CALL resetMemory()
 
@@ -97,18 +100,10 @@ CONTAINS
 
     ! Run IHOP solver on a single processor
     if (numberOfProcs.gt.1) then
-! Use same single processID as IHOP COST package
-!        if(myProcId.eq.(numberOfProcs-1)) then
         if(myProcId.eq.0) then
             CALL CPU_TIME( Tstart )
             CALL IHOPCore(myThid)
             CALL CPU_TIME( Tstop )
-! Alternitavely, we can broadcast relevant info to all mpi processes Ask P.
-!#ifdef ALLOW_COST
-!            ! Broadcast info to all MPI procs for COST function accumulation
-!            CALL MPI_BCAST(i, 1, MPI_COMPLEX, myProcId, MPI_COMM_MODEL, ierr)
-!
-!#endif /* ALLOW_COST */
         endif
     else
         CALL CPU_TIME( Tstart )
@@ -120,16 +115,28 @@ CONTAINS
     IF ( IHOP_dumpfreq.GE.0 ) THEN
         ! print run time
         if (numberOfProcs.gt.1) then
-            if(myProcId.ne.(numberOfProcs-1)) then
-                WRITE(msgBuf,'(A,I4,A)') 'NOTE: Proc ',myProcId, &
-                    " didn't run ihop"
-                CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
-            endif
+          if(myProcId.gt.1) then
+            WRITE(msgBuf,'(A,I4,A)') 'NOTE: Proc ',myProcId, " didn't run ihop"
+            CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
+            ! Erase prtfiles that aren't on procid = 0
+            CLOSE(PRTFile, STATUS='DELETE')
+
+          else ! myProcId.eq.0
+            WRITE(msgBuf, '(A)' )
+            CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
+            WRITE(msgBuf, '(A,G15.3,A)' ) 'CPU Time = ', Tstop-Tstart, 's'
+            CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
+            CLOSE(PRTFile)
+
+          endif
+        else
+          WRITE(msgBuf, '(A)' )
+          CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
+          WRITE(msgBuf, '(A,G15.3,A)' ) 'CPU Time = ', Tstop-Tstart, 's'
+          CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
+          CLOSE(PRTFile)
+
         endif
-        WRITE(msgBuf, '(A)' )
-        CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
-        WRITE(msgBuf, '(A,G15.3,A)' ) 'CPU Time = ', Tstop-Tstart, 's'
-        CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
 
         ! close all files
         SELECT CASE ( Beam%RunType( 1:1 ) )
@@ -147,17 +154,6 @@ CONTAINS
         CASE DEFAULT
            STOP "ABNORMAL END: S/R IHOP_MAIN"
         END SELECT
-
-        if (numberOfProcs.gt.1) then
-            ! Erase prtfiles that aren't on procid = 0
-            if(myProcId.ne.0) then
-                CLOSE(PRTFile, STATUS='DELETE')
-            else
-                CLOSE(PRTFile)
-            endif
-        else
-            CLOSE(PRTFile)
-        endif
 
     ENDIF
 #endif /* IHOP_WRITE_OUT */
