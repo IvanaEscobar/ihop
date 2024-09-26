@@ -569,6 +569,8 @@
 !C          :: Target residual for cg2d solver; W unit (No RHS normalisation)
 !C     cg3dTargetResidual
 !C               :: Target residual for cg3d solver.
+!C     cg3dTargetResWunit
+!C          :: Target residual for cg3d solver ; W unit (No RHS normalisation)
 !C     cg2dpcOffDFac :: Averaging weight for preconditioner off-diagonal.
 !C     Note. 20th May 1998
 !C           I made a weird discovery! In the model paper we argue
@@ -817,7 +819,7 @@
 !C     thetaEuler    :: Euler angle, rotation about new x-axis
 !C     psiEuler      :: Euler angle, rotation about new z-axis
       COMMON /PARM_R/ cg2dTargetResidual, cg2dTargetResWunit,                                                                       &
-     & cg2dpcOffDFac, cg3dTargetResidual,                                                                                           &
+     & cg2dpcOffDFac, cg3dTargetResidual, cg3dTargetResWunit,                                                                       &
      & delR, delRc, xgOrigin, ygOrigin, rSphere, recip_rSphere,                                                                     &
      & radius_fromHorizGrid, seaLev_Z, top_Pres, rSigmaBnd,                                                                         &
      & deltaT, deltaTMom, dTtracerLev, deltaTFreeSurf, deltaTClock,                                                                 &
@@ -866,6 +868,7 @@
       _RL cg2dTargetResidual
       _RL cg2dTargetResWunit
       _RL cg3dTargetResidual
+      _RL cg3dTargetResWunit
       _RL cg2dpcOffDFac
       _RL delR(Nr)
       _RL delRc(Nr+1)
@@ -1101,6 +1104,4 @@
      &        useRunClock, useEMBED_FILES,                                                                                          &
      &        useMYPACKAGE, useIHOP
 
-!CEH3 ;;; Local Variables: ***
-!CEH3 ;;; mode:fortran ***
-!CEH3 ;;; End: ***
+!---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|

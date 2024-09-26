@@ -838,7 +838,7 @@ SUBROUTINE gcmSSP( myThid )
   INTEGER :: bi,bj, i,j,k, ii,jj
   INTEGER :: njj(IHOP_NPTS_RANGE)
   REAL (KIND=_RL90)             :: dcdz, tolerance
-  REAL (KIND=_RL90), ALLOCATABLE:: tmpSSP(:,:,:,:)
+  REAL (KIND=_RL90), ALLOCATABLE:: tileSSP(:,:,:,:), tmpSSP(:,:,:), globSSP(:)
   ! IESCO24
   ! fT = 1000 ONLY for acousto-elastic halfspaces, I will have to pass this
   ! parameter in a different way after ssp_mod is split btwn fixed and varia
@@ -859,18 +859,23 @@ SUBROUTINE gcmSSP( myThid )
   dcdz      = 0.0 _d 0
   tolerance = 5 _d -5
 
-  IF(ALLOCATED(tmpSSP)) DEALLOCATE(tmpSSP)
-  ALLOCATE( tmpSSP(SSP%Nz,SSP%Nr,nSx,nSy), STAT = iallocstat )
+  IF(ALLOCATED(tileSSP)) DEALLOCATE(tileSSP)
+  IF(ALLOCATED(globSSP)) DEALLOCATE(globSSP)
+!  ALLOCATE( tileSSP(SSP%Nz,SSP%Nr,nSx,nSy), STAT = iallocstat )
+  ALLOCATE( tileSSP(nSx,nSy,SSP%Nz,SSP%Nr), tmpSSP(nSx,nSy,SSP%Nz*SSP%Nr), &
+            globSSP(SSP%Nz*SSP%Nr), STAT = iallocstat )
   IF ( iallocstat /= 0 ) THEN
 # ifdef IHOP_WRITE_OUT
     WRITE(msgBuf,'(2A)') 'SSPMOD gcmSSP: ', &
-      'Insufficient memory to store tmpSSP'
+      'Insufficient memory to store tileSSP and/or globSSP'
     CALL PRINT_ERROR( msgBuf,myThid )
 # endif /* IHOP_WRITE_OUT */
       STOP 'ABNORMAL END: S/R gcmSSP'
   END IF
   ! Initiate to ceros
-  tmpSSP    = 0.0 _d 0
+  tileSSP    = 0.0 _d 0
+  tmpSSP     = 0.0 _d 0
+  globSSP    = 0.0 _d 0
 
   ! interpolate SSP with adaptive IDW from gcm grid to ihop grid
   DO bj=myByLo(myThid),myByHi(myThid)
@@ -911,7 +916,7 @@ SUBROUTINE gcmSSP( myThid )
 
     IF (iz .EQ. 1) THEN
       ! Top vlevel zero depth
-      tmpSSP(1, ii, bi, bj) = tmpSSP(1, ii, bi, bj) + &
+      tileSSP(1, ii, bi, bj) = tileSSP(1, ii, bi, bj) + &
         CHEN_MILLERO(i, j, 0, bi, bj, myThid) * &
         ihop_idw_weights(ii, jj) / ihop_sumweights(ii, iz)
     ELSE ! 2:(SSP%Nz-1)
@@ -925,17 +930,17 @@ SUBROUTINE gcmSSP( myThid )
 
         ! Exactly on a cell center, ignore interpolation
         IF (ihop_idw_weights(ii, jj) .EQ. 0.0) THEN
-          tmpSSP(iz, ii, bi, bj) = ihop_ssp(i, j, iz-1, bi, bj)
+          tileSSP(iz, ii, bi, bj) = ihop_ssp(i, j, iz-1, bi, bj)
 
         ! Apply IDW interpolation
         ELSE IF (njj(ii) .LE. IHOP_npts_idw) THEN
-          tmpSSP(iz, ii, bi, bj) = tmpSSP(iz, ii, bi, bj) + &
+          tileSSP(iz, ii, bi, bj) = tileSSP(iz, ii, bi, bj) + &
             ihop_ssp(i, j, iz-1, bi, bj) * &
             ihop_idw_weights(ii, jj) / ihop_sumweights(ii, iz-1)
 
         ELSE
           ! do nothing
-          tmpSSP(iz, ii, bi, bj) = tmpSSP(iz, ii, bi, bj)
+          tileSSP(iz, ii, bi, bj) = tileSSP(iz, ii, bi, bj)
 
         END IF
       END IF
@@ -950,11 +955,11 @@ SUBROUTINE gcmSSP( myThid )
               k = k + 1
 
           ! Calc depth gradient
-          dcdz = (tmpSSP(k-1, ii, bi, bj) - tmpSSP(k-2, ii, bi, bj)) / &
+          dcdz = (tileSSP(k-1, ii, bi, bj) - tileSSP(k-2, ii, bi, bj)) / &
                  (SSP%z(k-1) - SSP%z(k-2))
           ! Extrapolate
-          tmpSSP(k:SSP%Nz, ii, bi, bj) = &
-            tmpSSP(k-1, ii, bi, bj) + dcdz * SSP%z(k:SSP%Nz)
+          tileSSP(k:SSP%Nz, ii, bi, bj) = &
+            tileSSP(k-1, ii, bi, bj) + dcdz * SSP%z(k:SSP%Nz)
           ! Move to next range point, ii
           interp_finished = .TRUE.
 
@@ -973,11 +978,36 @@ SUBROUTINE gcmSSP( myThid )
     END DO !bi
   END DO !bj
 
+! IESCO24: MITgcm checkpoint69a uses a new global sum subroutine...
+  DO bj=myByLo(myThid),myByHi(myThid)
+    DO bi=myBxLo(myThid),myBxHi(myThid)
+      k = 1
+      DO jj = 1,SSP%Nr
+        DO ii = 1,SSP%Nz
+          tmpSSP(bi,bj,k) = tileSSP(bi,bj,ii,jj)
+          k = k + 1
+        END DO
+      END DO
+    END DO
+  END DO
+
   IF ((nPx.GT.1) .OR. (nPy.GT.1)) THEN
-    CALL GLOBAL_VEC_SUM_R8(SSP%Nz*SSP%Nr,SSP%Nz*SSP%Nr,tmpSSP,myThid)
+    CALL GLOBAL_SUM_VECTOR_RL(SSP%Nz*SSP%Nr,tmpSSP,globSSP,myThid)
+!IESCO c68s: CALL GLOBAL_VEC_SUM_R8(SSP%Nz*SSP%Nr,SSP%Nz*SSP%Nr,tileSSP,myThid)
   ENDIF
-  SSP%cMat = tmpSSP(:,:,1,1)
-  IF(ALLOCATED(tmpSSP)) DEALLOCATE(tmpSSP)
+
+  ! reshape ssp to matrix
+  k = 1
+  DO jj = 1,SSP%Nr
+    DO ii = 1,SSP%Nz
+      SSP%cMat(ii,jj) = globSSP(k)
+      k = k + 1
+    END DO
+  END DO
+
+  IF(ALLOCATED(tileSSP)) DEALLOCATE(tileSSP)
+  IF(ALLOCATED(globSSP)) DEALLOCATE(globSSP)
+
   !==================================================
   ! END IDW Interpolate
   !==================================================
