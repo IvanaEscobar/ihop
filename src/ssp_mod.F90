@@ -61,8 +61,8 @@ MODULE ssp_mod
   INTEGER,           PRIVATE :: iz
   REAL (KIND=_RL90), PRIVATE :: Depth, W
   ! DEFAULT values, IHOP only modifies alphaR
-  REAL (KIND=_RL90)          :: alphaR = 1500, betaR = 0, alphaI = 0, &
-                                betaI = 0, rhoR = 1
+  REAL (KIND=_RL90)      :: alphaR = 1500, betaR = 0, alphaI = 0, &
+                            betaI = 0, rhoR = 1
   ! SSP interpolation parameters, only used in ssp_mod
   COMPLEX (KIND=_RL90) :: n2(MaxSSP), n2z(MaxSSP)
   COMPLEX (KIND=_RL90) :: cSpln( 4, MaxSSP ), cCoef( 4, MaxSSP )
@@ -862,7 +862,7 @@ SUBROUTINE gcmSSP( myThid )
   IF(ALLOCATED(tileSSP)) DEALLOCATE(tileSSP)
   IF(ALLOCATED(globSSP)) DEALLOCATE(globSSP)
 !  ALLOCATE( tileSSP(SSP%Nz,SSP%Nr,nSx,nSy), STAT = iallocstat )
-  ALLOCATE( tileSSP(nSx,nSy,SSP%Nz,SSP%Nr), tmpSSP(nSx,nSy,SSP%Nz*SSP%Nr), &
+  ALLOCATE( tileSSP(SSP%Nz,SSP%Nr,nSx,nSy), tmpSSP(nSx,nSy,SSP%Nz*SSP%Nr), &
             globSSP(SSP%Nz*SSP%Nr), STAT = iallocstat )
   IF ( iallocstat /= 0 ) THEN
 # ifdef IHOP_WRITE_OUT
@@ -984,17 +984,17 @@ SUBROUTINE gcmSSP( myThid )
       k = 1
       DO jj = 1,SSP%Nr
         DO ii = 1,SSP%Nz
-          tmpSSP(bi,bj,k) = tileSSP(bi,bj,ii,jj)
+          tmpSSP(bi,bj,k) = tileSSP(ii,jj,bi,bj)
           k = k + 1
         END DO
       END DO
     END DO
   END DO
 
-  IF ((nPx.GT.1) .OR. (nPy.GT.1)) THEN
-    CALL GLOBAL_SUM_VECTOR_RL(SSP%Nz*SSP%Nr,tmpSSP,globSSP,myThid)
-!IESCO c68s: CALL GLOBAL_VEC_SUM_R8(SSP%Nz*SSP%Nr,SSP%Nz*SSP%Nr,tileSSP,myThid)
-  ENDIF
+!IESCO c68s: IF ((nPx.GT.1) .OR. (nPy.GT.1)) THEN
+!IESCO c68s:   CALL GLOBAL_VEC_SUM_R8(SSP%Nz*SSP%Nr,SSP%Nz*SSP%Nr,tileSSP,myThid)
+!IESCO c68s: ENDIF
+  CALL GLOBAL_SUM_VECTOR_RL(SSP%Nz*SSP%Nr,tmpSSP,globSSP,myThid)
 
   ! reshape ssp to matrix
   k = 1
@@ -1004,8 +1004,10 @@ SUBROUTINE gcmSSP( myThid )
       k = k + 1
     END DO
   END DO
+! IESCO24: END MITgcm checkpoint69a uses a new global sum subroutine...
 
   IF(ALLOCATED(tileSSP)) DEALLOCATE(tileSSP)
+  IF(ALLOCATED(tmpSSP))  DEALLOCATE(tmpSSP)
   IF(ALLOCATED(globSSP)) DEALLOCATE(globSSP)
 
   !==================================================

@@ -33,6 +33,9 @@ MODULE IHOP
 #include "SIZE.h"
 #include "GRID.h"
 #include "EEPARAMS.h"
+#ifdef ALLOW_USE_MPI
+# include "EESUPPORT.h"
+#endif
 #include "PARAMS.h"
 #include "IHOP_SIZE.h"
 #include "IHOP.h"
@@ -70,6 +73,10 @@ CONTAINS
 
   !     == Local Variables ==
     REAL :: Tstart, Tstop
+#ifdef ALLOW_USE_MPI
+    INTEGER :: mpiRC
+    mpiRC  = 0
+#endif
 
     Tstart = 0.
     Tstop  = 0.
@@ -100,11 +107,14 @@ CONTAINS
 
     ! Run IHOP solver on a single processor
     if (numberOfProcs.gt.1) then
+#ifdef ALLOW_USE_MPI
         if(myProcId.eq.0) then
             CALL CPU_TIME( Tstart )
             CALL IHOPCore(myThid)
             CALL CPU_TIME( Tstop )
         endif
+        CALL MPI_BARRIER(MPI_COMM_WORLD, mpiRC)
+#endif
     else
         CALL CPU_TIME( Tstart )
         CALL IHOPCore(myThid)
@@ -115,7 +125,7 @@ CONTAINS
     IF ( IHOP_dumpfreq.GE.0 ) THEN
         ! print run time
         if (numberOfProcs.gt.1) then
-          if(myProcId.gt.1) then
+          if(myProcId.gt.0) then
             WRITE(msgBuf,'(A,I4,A)') 'NOTE: Proc ',myProcId, " didn't run ihop"
             CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
             ! Erase prtfiles that aren't on procid = 0
