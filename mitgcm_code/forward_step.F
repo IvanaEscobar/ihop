@@ -271,8 +271,8 @@ C     == Global variables ==
 # endif
 # ifdef ALLOW_CTRL
 #  include "CTRL_SIZE.h"
-#  include "ctrl.h"
-#  include "ctrl_dummy.h"
+#  include "CTRL.h"
+#  include "CTRL_DUMMY.h"
 #  include "CTRL_GENARR.h"
 #  include "CTRL_OBCS.h"
 # endif
@@ -517,7 +517,6 @@ C--   Switch on/off individual tracer time-stepping
 C--   Switch on/off diagnostics for snap-shot output:
 #ifdef ALLOW_DIAGNOSTICS
       IF ( useDiagnostics ) THEN
-C        CALL DIAGNOSTICS_SWITCH_ONOFF( myTime, myIter, myThid )
         CALL DIAGNOSTICS_SWITCH_ONOFF( 1, myTime, myIter, myThid )
 C--   State-variables diagnostics
         CALL TIMER_START('DO_STATEVARS_DIAGS  [FORWARD_STEP]',myThid)

@@ -38,10 +38,8 @@ C == Global variables ===
 # endif
 #endif
 #ifdef ALLOW_CTRL
-! c68s
-# include "optim.h"
 ! >=c68u
-!# include "optimcycle.h"
+# include "OPTIMCYCLE.h"
 #endif
 #ifdef ALLOW_AUTODIFF
 # include "tamc.h"
