@@ -85,6 +85,8 @@ C       |-- STREAMICE_INIT_FIXED
 C       |
 C       |-- SHELFICE_INIT_FIXED
 C       |
+C       |-- STIC_INIT_FIXED
+C       |
 C       |-- ICEFRONT_INIT_FIXED
 C       |
 C       |-- FRAZIL_INIT_FIXED
@@ -121,7 +123,7 @@ C       |-- EMBED_FILES_INIT
 C       |
 C       |-- MYPACKAGE_INIT_FIXED
 C       |
-C       |-- CTRL_INIT
+C       |-- CTRL_INIT_FIXED
 C       |-- CTRL_ADMTLM
 C       |
 C       |-- DIAGNOSTICS_INIT_FIXED
@@ -353,7 +355,7 @@ C--   Initialize fixed arrays for Down-Slope pkg
 
 #ifdef ALLOW_SEAICE
 C--   Initialise ecco-specific cost function.
-C--   This needs to preceed the call ctrl_init
+C--   This needs to preceed the call CTRL_INIT_FIXED
 C--   in order to provide the weight files
       IF (useSEAICE) THEN
 # ifdef ALLOW_DEBUG
@@ -365,8 +367,9 @@ C--   in order to provide the weight files
 
 #ifdef ALLOW_ECCO
       IF (useECCO) THEN
-C--   Calls ECCO_COST_INIT_FIXED which initialises ecco-specific cost function.
-C     This needs to preceed CTRL_INIT call in order to provide the weight files
+C--   Calls ECCO_COST_INIT_FIXED which initialises ecco-specific cost
+C--   function. This needs to preceed CTRL_INIT_FIXED call in order to
+C--   provide the weight files.
 # ifdef ALLOW_DEBUG
         IF (debugMode) CALL DEBUG_CALL('ECCO_INIT_FIXED',myThid)
 # endif
@@ -397,7 +400,6 @@ C     This needs to preceed CTRL_INIT call in order to provide the weight files
 # endif
       ENDIF
 #endif
-
 
 C--   Old place where CTRL_INIT & CTRL_ADMTLM used to be called
 
@@ -468,6 +470,15 @@ C--   Initialise fixed array for Float pkg
         CALL SHELFICE_INIT_FIXED( myThid )
       ENDIF
 #endif /* ALLOW_SHELFICE */
+
+#ifdef ALLOW_STEEP_ICECAVITY
+      IF (useSTIC) THEN
+# ifdef ALLOW_DEBUG
+        IF (debugMode) CALL DEBUG_CALL('STIC_INIT_FIXED',myThid)
+# endif
+        CALL STIC_INIT_FIXED( myThid )
+      ENDIF
+#endif /* ALLOW_STEEP_ICECAVITY */
 
 #ifdef ALLOW_SMOOTH
       IF (useSMOOTH) THEN
@@ -652,9 +663,9 @@ C--   needs to be called after the OASIS_INIT
 C--   Initialise the control variables. Moved to the end of this S/R
 C     to allow other pkgs to set mask and weight fields.
 # ifdef ALLOW_DEBUG
-        IF (debugMode) CALL DEBUG_CALL('CTRL_INIT',myThid)
+        IF (debugMode) CALL DEBUG_CALL('CTRL_INIT_FIXED',myThid)
 # endif
-        CALL CTRL_INIT( myThid )
+        CALL CTRL_INIT_FIXED( myThid )
       ENDIF
 
 # ifdef ALLOW_ADMTLM
