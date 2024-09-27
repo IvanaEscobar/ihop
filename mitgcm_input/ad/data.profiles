@@ -1,0 +1,13 @@
+# *************** 
+# PROFILES cost function
+# *************** 
+#1 to 6: temperature, salinity, zonal velocity, meridional velocity, sea surface height anomaly, and passive trace
+ &PROFILES_NML
+ profilesDoNcOutput=.TRUE.,
+#profilesDoGenGrid=.FALSE.,
+ profilesDir='profiles',
+#
+ profilesfiles(1) = 'bcg_T_profiles_205601',
+ mult_profiles(1,1) = 1., 
+#
+/
