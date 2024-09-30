@@ -73,6 +73,16 @@ C     *================================================================*
 C     \ev
 
 C     !USES:
+#ifdef ALLOW_AUTODIFF_TAMC
+# ifdef ALLOW_IHOP
+      use arr_mod, only: arr, narr
+      use bdry_mod, only: bdry
+      use ssp_mod, only: ssp
+      use srpos_mod, only: pos
+      use angle_mod, only: angles
+      use ihop_mod, only: beam, ray2d
+# endif
+#endif
       IMPLICIT NONE
 C     == Global variables ==
 #include "SIZE.h"
@@ -443,6 +453,10 @@ c**************************************
 #    endif
             CALL AUTODIFF_STORE( myThid )
 #include "checkpoint_lev4_directives.h"
+#    ifdef ALLOW_IHOP
+!$TAF STORE arr, bdry, narr, pos, ssp = tapelev4, key = ilev_4
+!$TAF STORE angles, beam, ray2d = tapelev4, key = ilev_4
+#    endif
             CALL AUTODIFF_RESTORE( myThid )
 #    ifdef ALLOW_AUTODIFF_WHTAPEIO
             CALL AUTODIFF_WHTAPEIO_SYNC( 4 , 1, myThid )
@@ -462,6 +476,10 @@ c**************************************
 #    endif
             CALL AUTODIFF_STORE( myThid )
 #include "checkpoint_lev3_directives.h"
+#    ifdef ALLOW_IHOP
+!$TAF STORE arr, bdry, narr, pos, ssp = tapelev3, key = ilev_3
+!$TAF STORE angles, beam, ray2d = tapelev3, key = ilev_3
+#    endif
             CALL AUTODIFF_RESTORE( myThid )
 #    ifdef ALLOW_AUTODIFF_WHTAPEIO
             CALL AUTODIFF_WHTAPEIO_SYNC( 3 , 1, myThid )
@@ -480,6 +498,18 @@ c**************************************
 #   endif
             CALL AUTODIFF_STORE( myThid )
 #include "checkpoint_lev2_directives.h"
+#    ifdef ALLOW_IHOP
+CML!$TAF STORE arr, bdry, narr, pos, ssp = tapelev2, key = ilev_2
+CML!$TAF STORE angles, beam, ray2d       = tapelev2, key = ilev_2
+!$TAF STORE arr, narr, ray2d   = tapelev2, key = ilev_2
+!$TAF STORE angles%dalpha      = tapelev2, key = ilev_2
+!$TAF STORE bdry%bot, bdry%top = tapelev2, key = ilev_2
+!$TAF STORE beam%nsteps        = tapelev2, key = ilev_2
+!$TAF STORE pos%rz, pos%sz     = tapelev2, key = ilev_2
+!$TAF STORE ssp%c, ssp%cmat    = tapelev2, key = ilev_2
+!$TAF STORE ssp%cz, ssp%czmat  = tapelev2, key = ilev_2
+!$TAF STORE ssp%rho            = tapelev2, key = ilev_2
+#    endif
             CALL AUTODIFF_RESTORE( myThid )
 #   ifdef ALLOW_AUTODIFF_WHTAPEIO
             CALL AUTODIFF_WHTAPEIO_SYNC( 2 , 1, myThid )
@@ -520,6 +550,8 @@ CADJ &    nchklev_1*nSx*nSy*PTRACERS_num*Nr
 c--
 #   ifdef ALLOW_IHOP
 ! for ssp_mod>gcmSSP; make local?
+!$TAF INIT comlev1_ihop = STATIC, nchklev_1
+!$TAF INIT comlev1_ihop_nts = STATIC, nchklev_1*nts
 !$TAF INIT comlev1_bibj_ij_ihop = COMMON, nchklev_1*nSx*nSy*(2*OLy+sNy)*(2*OLx+sNx)
 #   endif /* ALLOW_IHOP */
 c--
@@ -698,16 +730,29 @@ C--   Reset the model iteration counter and the model time.
       ENDIF
 #endif
 #ifdef ALLOW_IHOP
+# ifdef ALLOW_AUTODIFF_TAMC
+CML!$TAF STORE arr,narr,bdry,pos,ssp = comlev1_ihop, key = ikey_dynamics
+!$TAF STORE arr, narr, ray2d   = comlev1_ihop, key = ikey_dynamics
+!$TAF STORE angles%dalpha      = comlev1_ihop, key = ikey_dynamics
+!$TAF STORE bdry%bot, bdry%top = comlev1_ihop, key = ikey_dynamics
+!$TAF STORE beam%nsteps        = comlev1_ihop, key = ikey_dynamics
+!$TAF STORE pos%rz, pos%sz     = comlev1_ihop, key = ikey_dynamics
+!$TAF STORE ssp%c, ssp%cmat    = comlev1_ihop, key = ikey_dynamics
+!$TAF STORE ssp%cz, ssp%czmat  = comlev1_ihop, key = ikey_dynamics
+C     for some reason TAF does not do this right, so we store ssp instead
+CML!$TAF STORE ssp%rho            = comlev1_ihop, key = ikey_dynamics
+!$TAF STORE ssp                = comlev1_ihop, key = ikey_dynamics
+#endif
       IF (useIHOP) THEN
 #ifdef ALLOW_DEBUG
         IF (debugMode) CALL DEBUG_CALL('ihop_cost_inloop',myThid)
 #endif
 c--     Accumulate in-situ acoutsic travel times.
-#ifdef ALLOW_AUTODIFF
+# ifdef ALLOW_AUTODIFF
 C--   Reset the model iteration counter and the model time.
         myIter = nIter0 + (iloop-1)
         myTime = startTime + deltaTClock*(iloop-1)
-#endif
+# endif
         CALL TIMER_START('IHOP_COST_INLOOP    [MAIN_DO_LOOP]', myThid)
         CALL IHOP_COST_INLOOP( myTime, myThid )
         CALL TIMER_STOP ('IHOP_COST_INLOOP    [MAIN_DO_LOOP]', myThid)
@@ -771,6 +816,10 @@ c--   Compute all profiles cost function contributions.
 #endif
 #ifdef ALLOW_IHOP
       IF (useIHOP) THEN
+# ifdef ALLOW_AUTODIFF
+!$TAF STORE arr, narr      = comlev1_ihop, key = ikey_dynamics
+!$TAF STORE pos%rz, pos%sz = comlev1_ihop, key = ikey_dynamics
+# endif
 c--   Accumulate travel times
         CALL TIMER_START('IHOP_COST_INLOOP    [THE_MAIN_LOOP]', myThid)
         CALL IHOP_COST_INLOOP( endtime, myThid )
