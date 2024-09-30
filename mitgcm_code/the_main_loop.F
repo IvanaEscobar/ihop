@@ -550,9 +550,8 @@ CADJ &    nchklev_1*nSx*nSy*PTRACERS_num*Nr
 c--
 #   ifdef ALLOW_IHOP
 ! for ssp_mod>gcmSSP; make local?
-!$TAF INIT comlev1_ihop = STATIC, nchklev_1
+!$TAF INIT comlev1_ihop     = STATIC, nchklev_1
 !$TAF INIT comlev1_ihop_nts = STATIC, nchklev_1*nts
-!$TAF INIT comlev1_bibj_ij_ihop = COMMON, nchklev_1*nSx*nSy*(2*OLy+sNy)*(2*OLx+sNx)
 #   endif /* ALLOW_IHOP */
 c--
 #   ifdef ALLOW_MOM_COMMON

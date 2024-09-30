@@ -903,7 +903,6 @@ SUBROUTINE gcmSSP( myThid )
         DO i=1,sNx
 #ifdef ALLOW_AUTODIFF_TAMC
           ijkey = i + (j-1)*sNx + (tkey-1)*sNx*sNy
-!$TAF store njj(ii) = comlev1_bibj_ij_ihop, key=ijkey
 #endif
           DO ii=1,IHOP_npts_range
             interp_finished = .FALSE.
