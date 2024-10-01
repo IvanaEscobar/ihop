@@ -20,7 +20,7 @@ C Computes ihop predicted datum
 C !FORTRAN90 USE MODULES: ===============================================
       USE arr_mod,  only: Arr, Narr, MaxNArr
       USE srPos_mod,only: Pos
-      USE ihop_mod, only: rad2deg, i, ray2D
+      USE ihop_mod, only: rad2deg
 
 C !USES: ===============================================================
       IMPLICIT NONE
@@ -74,7 +74,7 @@ C !LOCAL VARIABLES:
 ! Finally, will save the travel time of max magnitude
 !       tau_predicted = tau(ia)
 
-! added uses of modules above , have access to Arr, Pos, and ray2D
+! added uses of modules above , have access to Arr, and Pos
 ! ======================================================================
 
 ! are ri and rj contained in Nrr AND Nrd
@@ -87,7 +87,7 @@ C !LOCAL VARIABLES:
 
 ! Calc Arrival Amplitude with cylindrical spreading to receiver range
       DO ii=1,Narr(ri,rj)
-       arrival_amplitude(ii) = Arr(ii,ri,rj)%A / sqrt(pos%rr(ri))
+       arrival_amplitude(ii) = Arr(ii,ri,rj)%A / sqrt(Pos%Rr(ri))
      &        * exp(cmplx(0,1)*rad2deg*Arr(ii,ri,rj)%Phase)
        arrval(ii) = ABS( arrival_amplitude(ii) )
 
