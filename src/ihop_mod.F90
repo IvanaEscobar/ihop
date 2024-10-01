@@ -24,7 +24,7 @@ MODULE ihop_mod
 ! public interfaces
 !=======================================================================
 
-    public  rad2deg, i, &
+    public  rad2deg, oneCMPLX, &
             PRTFile, RAYFile, DELFile, SHDFile, ARRFile, SSPFile,&
             ATIFile, BTYFile, BRCFile, TRCFile, IRCFile, SBPFile,&
             MaxN, Nrz_per_range, iStep, afreq, SrcDeclAngle,     &
@@ -35,7 +35,7 @@ MODULE ihop_mod
   ! *** fixed parameters useful for ONLY ihop ***
   REAL(KIND=_RL90), PARAMETER :: rad2deg = 180.D0 / PI
 
-  COMPLEX (KIND=_RL90), PARAMETER :: i = ( 0.0D0, 1.0D0 )
+  COMPLEX (KIND=_RL90), PARAMETER :: oneCMPLX = ( 0.0D0, 1.0D0 )
 
   INTEGER, PARAMETER :: PRTFile = 61, &    ! standard output file
                         RAYFile = 21, &    ! ray paths file
