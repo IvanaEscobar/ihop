@@ -10,7 +10,7 @@ MODULE influence
   ! complex pressure
   ! mbp 12/2018, based on much older subroutines
 
-  USE ihop_mod,     only: rad2deg, i, PRTFile, MaxN, Beam, ray2D, &
+  USE ihop_mod,     only: rad2deg, oneCMPLX, PRTFile, MaxN, Beam, ray2D, &
                           SrcDeclAngle, NRz_per_range
   USE srPos_mod,    only: Pos
 ! sspMod used to construct image beams in the Cerveny style beam routines
@@ -573,7 +573,7 @@ CONTAINS
                      ray2D( iS )%NumBotBnc )
       CASE ( 'C' )                ! coherent TL
         tmpDelay = 0.
-        U = U + CMPLX( Amp * EXP( -i * ( afreq * delay - phaseInt ) ) )
+        U = U + CMPLX( Amp * EXP( -oneCMPLX * ( afreq * delay - phaseInt ) ) )
       CASE ( 'S', 'I' )                ! incoherent/semicoherent TL
         tmpDelay = 0.
         IF ( Beam%Type( 1:1 ) == 'B' ) THEN   ! Gaussian beam

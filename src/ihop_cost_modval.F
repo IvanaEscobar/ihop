@@ -68,7 +68,7 @@ C !LOCAL VARIABLES:
 ! ======================================================================
 ! apply parameter-to-observable map on predicted datum
 ! want to find arrival amplitude, A:
-!       A = 1/sqrt(r) * Amp * exp(i*rad2deg*phase)
+!       A = 1/sqrt(r) * Amp * exp(oneCMPLX*rad2deg*phase)
 ! then want to save the index of maximum magnitude:
 !       ia = argmax(abs(A))
 ! Finally, will save the travel time of max magnitude
@@ -82,13 +82,13 @@ C !LOCAL VARIABLES:
             WRITE(msgBuf,'(3A)')
      &       'IHOP_COST_MODVAL:',
      &       ' receiver range and depth ID larger than Nrr and Nrd.'
-            CALL PRINT_ERROR( msgBuf, myThid)
+            CALL PRINT_ERROR( msgBuf, myThid )
       ENDIF
 
 ! Calc Arrival Amplitude with cylindrical spreading to receiver range
       DO ii=1,Narr(ri,rj)
-       arrival_amplitude(ii) = Arr(ii,ri,rj)%A / sqrt(Pos%Rr(ri))
-     &        * exp(cmplx(0,1)*rad2deg*Arr(ii,ri,rj)%Phase)
+       arrival_amplitude(ii) = Arr(ii,ri,rj)%A / sqrt( Pos%Rr(ri) )
+     &        * exp( cmplx(0,1)*rad2deg*Arr(ii,ri,rj)%Phase )
        arrval(ii) = ABS( arrival_amplitude(ii) )
 
       ENDDO !ii
@@ -101,7 +101,7 @@ C !LOCAL VARIABLES:
 
       DO ii=1,Narr(ri,rj)
 !$TAF store maxarrval = ihop_modval
-          IF (arrval(ii) > maxarrval) THEN
+          IF ( arrval(ii) > maxarrval ) THEN
               maxarrval = arrval(ii)
               maxindex  = ii
           ENDIF

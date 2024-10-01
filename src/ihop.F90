@@ -25,7 +25,7 @@ MODULE IHOP
   ! Systems Center
 
 
-  USE ihop_mod,     only: i, PRTFile, SHDFile, ARRFile, RAYFile, DELFile
+  USE ihop_mod,     only: oneCMPLX, PRTFile, SHDFile, ARRFile, RAYFile, DELFile
 
 !   !USES:
   IMPLICIT NONE
@@ -812,7 +812,7 @@ CONTAINS
        ENDIF
 
        ! complex reflection coef.
-       Refl =  - ( rho*f - i * kz*g ) / ( rho*f + i*kz*g )
+       Refl =  - ( rho*f - oneCMPLX * kz*g ) / ( rho*f + oneCMPLX*kz*g )
 
        IF ( ABS( Refl ) < 1.0E-5 ) THEN   ! kill a ray that has lost its energy in reflection
           ray2D( is1 )%Amp   = 0.0
