@@ -8,5 +8,8 @@ else # FC is ifort
     FFLAGS="$FFLAGS -132"
 fi
 
+# Request TAF write code with -f08
 TAF_FORTRAN_VERS='F08'
+# Extend free format to 150 columns and fixed format to 132 columns
 USE_EXTENDED_SRC='t'
+TAF_F90_FLAGS='-N 150'
