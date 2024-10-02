@@ -881,7 +881,7 @@ EOF
     FC_NAMEMANGLE="#define FC_NAMEMANGLE(X)  $nmangle"
 
     #  cleanup the testing files
-    rm -rf genmake_tcomp.* genmake_test.*
+    rm -f genmake_tcomp.* genmake_test.*
 
     echo " --> set FC_NAMEMANGLE='$FC_NAMEMANGLE'" >> $LOGFILE
 }
@@ -2074,7 +2074,7 @@ else
     HAVE_SYSTEM=
     echo "no"
 fi
-rm -rf genmake_tcomp*
+rm -f genmake_tcomp*
 
 printf "  Do we have the fdate() command using $FC...  "
 cat > genmake_tcomp.$FS <<EOF
@@ -2095,7 +2095,7 @@ else
     HAVE_FDATE=
     echo "no"
 fi
-rm -rf genmake_tcomp*
+rm -f genmake_tcomp*
 
 printf "  Do we have the etime() command using $FC... "
 cat > genmake_tcomp_1.$FS <<EOF
@@ -2147,7 +2147,7 @@ EOF
   fi
 fi
 #mkdir chk_etime ; cp -p -f genmake_tcomp* chk_etime
-rm -rf genmake_tcomp*
+rm -f genmake_tcomp*
 
 printf "  Can we call simple C routines (here, \"cloc()\") using $FC...  "
 check_HAVE_CLOC
@@ -2162,7 +2162,7 @@ else
 	EMBED_SRC=
     fi
 fi
-rm -rf genmake_t*
+rm -f genmake_t*
 
 printf "  Can we unlimit the stack size using $FC...  "
 check_HAVE_SETRLSTK
@@ -2172,7 +2172,7 @@ if test "x$HAVE_SETRLSTK" = xt ; then
 else
     echo "no"
 fi
-rm -rf genmake_t*
+rm -f genmake_t*
 
 printf "  Can we register a signal handler using $FC...  "
 check_HAVE_SIGREG
@@ -2182,7 +2182,7 @@ if test "x$HAVE_SIGREG" = xt ; then
 else
     echo "no"
 fi
-rm -rf genmake_t*
+rm -f genmake_t*
 
 printf "  Can we use stat() through C calls...  "
 check_HAVE_STAT
@@ -2192,7 +2192,7 @@ if test "x$HAVE_STAT" != x ; then
 else
     echo "no"
 fi
-rm -rf genmake_t*
+rm -f genmake_t*
 
 printf "  Can we create NetCDF-enabled binaries...  "
 check_netcdf_libs
@@ -2809,14 +2809,14 @@ while IFS= read -r f90file; do
     mod_used=$(grep -i "^[^!]*\buse\b" $f90file | awk '{print $2}' | tr -d ',')
 
     if [ -n "$mod_used" ]; then
-    for mod in $mod_used; do
+	for mod in $mod_used; do
         # Find the file that defines this module
         mod_file=$(grep -li "^module $mod\b" \
             $(grep -v $f90file "$TMP.adF90Files"))
         if [ -n "$mod_file" ]; then
             echo $mod_file $f90file >> $TMP.adF90Graph
         fi
-    done
+	done
     else
 	    echo $f90file >> $TMP.adF90noGraph
     fi
@@ -3135,16 +3135,16 @@ done
 while IFS= read -r f90file; do
     # Find modules used, ignoring those commented out
     mod_used=$(grep -i "^[^!]*\buse\b" $f90file | awk '{print $2}' | tr -d ',')
-    
+
     if [ -n "$mod_used" ]; then
-    for mod in $mod_used; do
+	for mod in $mod_used; do
         # Find the file that defines this module
         mod_file=$(grep -li "^module $mod\b" \
             $(grep -v $f90file "$TMP.F90Files"))
         if [ -n "$mod_file" ]; then
             echo $mod_file $f90file >> "$TMP.F90Graph"
         fi
-    done
+	done
     else
 	    echo $f90file >> $TMP.F90noGraph
     fi
@@ -3386,6 +3386,7 @@ Clean:
 	@\$(MAKE) -f \$(MAKEFILE) clean
 	@\$(MAKE) -f \$(MAKEFILE) cleanlinks
 	-rm -f \$(SPECIAL_FILES) f90mkdepend.log $MAKEFILE.old
+    -rm -f taf_ad.f90
 	-rm -f taf_command taf_output taf_ad.log taf_ad_flow.log taf_ftl.log
 
 # remove also the executable, files that "genmake2" generates (except Makefile)
@@ -3607,8 +3608,8 @@ ad_taf_output.$FS: ad_input_code.$FS
 	ls -l ad_input_code_ad.$FS
 	cat ad_input_code_ad.$FS | sed -f \$(TOOLSDIR)/adjoint_sed > ad_taf_output.$FS
 
-\$(EXE_ADJ): \$(SPECIAL_FILES) \$(H_SRC_FILES) ad_taf_output.o \$(NON_AD_F77_SRC_FILES:.F=.o) \$(NON_AD_F90_SRC_FILES:.F90=.o) \$(C_SRC_FILES:.c=.o) \$(EMBEDDED_FILES)
-	\$(LINK) -o \${EXE_ADJ} \$(FFLAGS) \$(FOPTIM) ad_taf_output.o \$(NON_AD_F77_SRC_FILES:.F=.o) \$(NON_AD_F90_SRC_FILES:.F90=.o) \$(C_SRC_FILES:.c=.o) \$(LIBS)
+\$(EXE_ADJ): \$(SPECIAL_FILES) \$(H_SRC_FILES) ad_taf_output.o \$(NON_AD_F90_SRC_FILES:.F90=.o) \$(NON_AD_F77_SRC_FILES:.F=.o) \$(C_SRC_FILES:.c=.o) \$(EMBEDDED_FILES)
+	\$(LINK) -o \${EXE_ADJ} \$(FFLAGS) \$(FOPTIM) ad_taf_output.o \$(NON_AD_F90_SRC_FILES:.F90=.o) \$(NON_AD_F77_SRC_FILES:.F=.o) \$(C_SRC_FILES:.c=.o) \$(LIBS)
 
 adobj: ad_taf_output.o \$(NON_AD_F90_SRC_FILES:.F90=.o) \$(NON_AD_F77_SRC_FILES:.F=.o) \$(C_SRC_FILES:.c=.o)
 
@@ -3664,7 +3665,7 @@ cat >>$MAKEFILE <<EOF
 
 \$(EXE_ADJ): \$(SPECIAL_FILES) \$(H_SRC_FILES) ad_taf_output.$FS \$(NON_AD_F90_SRC_FILES:.F90=.o) \$(NON_AD_F77_SRC_FILES:.F=.o) \$(C_SRC_FILES:.c=.o) \$(EMBEDDED_FILES)
 	\$(MAKE) -f \$(MAKEFILE) adobjfiles
-	\$(LINK) -o \${EXE_ADJ} \$(FFLAGS) \$(FOPTIM) \$(AD_F90FILES:.$FS90=_ad.o) \$(AD_FILES:.$FS=_ad.o) \$(NON_AD_F77_SRC_FILES:.F=.o) \$(C_SRC_FILES:.c=.o) \$(LIBS)
+	\$(LINK) -o \${EXE_ADJ} \$(FFLAGS) \$(FOPTIM) \$(AD_F90FILES:.$FS90=_ad.o) \$(AD_FILES:.$FS=_ad.o) \$(NON_AD_F90_SRC_FILES:.F90=.o) \$(NON_AD_F77_SRC_FILES:.F=.o) \$(C_SRC_FILES:.c=.o) \$(LIBS)
 
 adobj: ad_taf_output.$FS \$(NON_AD_F90_SRC_FILES:.F90=.o) \$(NON_AD_F77_SRC_FILES:.F=.o) \$(C_SRC_FILES:.c=.o)
 	\$(MAKE) -f \$(MAKEFILE) adobjfiles
@@ -3743,7 +3744,7 @@ cat >>$MAKEFILE <<EOF
 # ... send 1 fixed format file and 1 free format file to TAF ...
 ftl_taf_output.$FS: ftl_input_code.$FS ftl_inpF90_code.$FS90
 	@-rm -f ftl_input_code_tl.$FS ftl_inpF90_code_tl.$FS90 ; echo ''
-	\$(TAF) \$(FTL_TAF_FLAGS) \$(TAF_EXTRA) -fixed \$(TAF_F77_FLAGS) ftl_input_code.$FS -free \$(TAF_F90_FLAGS) ftl_inpF90_code.$FS90
+	\$(TAF) \$(FTL_TAF_FLAGS) \$(TAF_EXTRA) -free \$(TAF_F90_FLAGS) ftl_inpF90_code.$FS90 -fixed \$(TAF_F77_FLAGS) ftl_input_code.$FS
 	ls -l ftl_input_code_tl.$FS ftl_inpF90_code_tl.$FS90
 	cat ftl_input_code_tl.$FS | sed -f \$(TOOLSDIR)/adjoint_sed > ftl_taf_output.$FS
 
@@ -3752,10 +3753,10 @@ ftl_taf_output.$FS: ftl_input_code.$FS ftl_inpF90_code.$FS90
 ftl_taf_outpF90.$FS90: ftl_taf_output.$FS
 	cat ftl_inpF90_code_tl.$FS90 > ftl_taf_outpF90.$FS90
 
-\$(EXE_TLM): \$(SPECIAL_FILES) \$(H_SRC_FILES) ftl_taf_output.o ftl_taf_outpF90.o \$(NON_AD_F77_SRC_FILES:.F=.o) \$(NON_AD_F90_SRC_FILES:.F90=.o) \$(C_SRC_FILES:.c=.o) \$(EMBEDDED_FILES)
-	\$(LINK) -o \${EXE_TLM} \$(FFLAGS) \$(FOPTIM) ftl_taf_output.o ftl_taf_outpF90.o \$(NON_AD_F77_SRC_FILES:.F=.o) \$(NON_AD_F90_SRC_FILES:.F90=.o) \$(C_SRC_FILES:.c=.o) \$(LIBS)
+\$(EXE_TLM): \$(SPECIAL_FILES) \$(H_SRC_FILES) ftl_taf_output.o ftl_taf_outpF90.o \$(NON_AD_F90_SRC_FILES:.F90=.o) \$(NON_AD_F77_SRC_FILES:.F=.o) \$(C_SRC_FILES:.c=.o) \$(EMBEDDED_FILES)
+	\$(LINK) -o \${EXE_TLM} \$(FFLAGS) \$(FOPTIM) ftl_taf_output.o ftl_taf_outpF90.o \$(NON_AD_F90_SRC_FILES:.F90=.o) \$(NON_AD_F77_SRC_FILES:.F=.o) \$(C_SRC_FILES:.c=.o) \$(LIBS)
 
-ftlobj: ftl_taf_output.o ftl_taf_outpF90.o \$(NON_AD_F77_SRC_FILES:.F=.o) \$(NON_AD_F90_SRC_FILES:.F90=.o) \$(C_SRC_FILES:.c=.o)
+ftlobj: ftl_taf_output.o ftl_taf_outpF90.o \$(NON_AD_F90_SRC_FILES:.F90=.o) \$(NON_AD_F77_SRC_FILES:.F=.o) \$(C_SRC_FILES:.c=.o)
 
 EOF
 fi
