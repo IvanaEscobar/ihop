@@ -7,7 +7,7 @@
 #profilesDoGenGrid=.FALSE.,
  profilesDir='profiles',
 #
- profilesfiles(1) = 'bcg_T_profiles_205601',
+ profilesfiles(1) = 'bcg_prof_T_20210101_230000',
  mult_profiles(1,1) = 1., 
 #
 /
