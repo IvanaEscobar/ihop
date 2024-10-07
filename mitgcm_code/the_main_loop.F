@@ -438,6 +438,11 @@ c++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #   endif
       max_lev2=nTimeSteps/nchklev_1+1
 
+C     Declaring variables as passive does not work properly
+CML#   ifdef ALLOW_IHOP
+CML!$TAF PASSIVE angles
+CML#   endif
+
 c**************************************
 #   ifdef ALLOW_DIVIDED_ADJOINT
 CADJ loop = divided
@@ -499,6 +504,7 @@ c**************************************
             CALL AUTODIFF_STORE( myThid )
 #include "checkpoint_lev2_directives.h"
 #    ifdef ALLOW_IHOP
+CML!$TAF PASSIVE angles
 CML!$TAF STORE arr, bdry, narr, pos, ssp = tapelev2, key = ilev_2
 CML!$TAF STORE angles, beam, ray2d       = tapelev2, key = ilev_2
 !$TAF STORE arr, narr, ray2d   = tapelev2, key = ilev_2
@@ -552,6 +558,9 @@ c--
 ! for ssp_mod>gcmSSP; make local?
 !$TAF INIT comlev1_ihop     = STATIC, nchklev_1
 !$TAF INIT comlev1_ihop_nts = STATIC, nchklev_1*nts
+C     global tapes for gcmSSP
+!$TAF INIT comlev1_ihop_iijj = STATIC, nchklev_1*nSx*nSy*sNx*sNy*IHOP_MAX_RANGE*IHOP_MAX_NC_SIZE
+!$TAF INIT comlev1_ihop_iijj_k = STATIC, nchklev_1*nSx*nSy*sNx*sNy*IHOP_MAX_RANGE*IHOP_MAX_NC_SIZE*(Nr + 2)
 #   endif /* ALLOW_IHOP */
 c--
 #   ifdef ALLOW_MOM_COMMON
@@ -730,14 +739,15 @@ C--   Reset the model iteration counter and the model time.
 #endif
 #ifdef ALLOW_IHOP
 # ifdef ALLOW_AUTODIFF_TAMC
+CML!$TAF PASSIVE angles
 CML!$TAF STORE arr,narr,bdry,pos,ssp = comlev1_ihop, key = ikey_dynamics
 !$TAF STORE arr, narr, ray2d   = comlev1_ihop, key = ikey_dynamics
 !$TAF STORE angles%dalpha      = comlev1_ihop, key = ikey_dynamics
 !$TAF STORE bdry%bot, bdry%top = comlev1_ihop, key = ikey_dynamics
 !$TAF STORE beam%nsteps        = comlev1_ihop, key = ikey_dynamics
 !$TAF STORE pos%rz, pos%sz     = comlev1_ihop, key = ikey_dynamics
-!$TAF STORE ssp%c, ssp%cmat    = comlev1_ihop, key = ikey_dynamics
-!$TAF STORE ssp%cz, ssp%czmat  = comlev1_ihop, key = ikey_dynamics
+CML!$TAF STORE ssp%c, ssp%cmat    = comlev1_ihop, key = ikey_dynamics
+CML!$TAF STORE ssp%cz, ssp%czmat  = comlev1_ihop, key = ikey_dynamics
 C     for some reason TAF does not do this right, so we store ssp instead
 CML!$TAF STORE ssp%rho            = comlev1_ihop, key = ikey_dynamics
 !$TAF STORE ssp                = comlev1_ihop, key = ikey_dynamics

@@ -850,11 +850,11 @@ SUBROUTINE gcmSSP( myThid )
   REAL (KIND=_RL90)             :: bPower, fT
 #ifdef ALLOW_AUTODIFF_TAMC
   INTEGER tkey, ijkey, hkey, kkey
-  INTEGER nloctape
+!ML INTEGER nloctape
 
-  nloctape = nSx*nSy*sNx*sNy*IHOP_MAX_RANGE*IHOP_MAX_NC_SIZE
-!$TAF init loctape_ihop_iijj   = STATIC, nloctape
-!$TAF init loctape_ihop_iijj_k = STATIC, nloctape*(Nr + 2)
+!ML nloctape = nSx*nSy*sNx*sNy*IHOP_MAX_RANGE*IHOP_MAX_NC_SIZE
+!ML!$TAF init loctape_ihop_iijj   = STATIC, nloctape
+!ML!$TAF init loctape_ihop_iijj_k = STATIC, nloctape*(Nr + 2)
 #endif
 
   ! IESCO24 fT init
@@ -895,6 +895,7 @@ SUBROUTINE gcmSSP( myThid )
   DO bj=myByLo(myThid),myByHi(myThid)
     DO bi=myBxLo(myThid),myBxHi(myThid)
 #ifdef ALLOW_AUTODIFF_TAMC
+!ML      tkey = bi + (bj-1)*nSx
       tkey = bi + (bj-1)*nSx + (ikey_dynamics-1)*nSx*nSy
 #endif
 
@@ -910,7 +911,8 @@ SUBROUTINE gcmSSP( myThid )
 #ifdef ALLOW_AUTODIFF_TAMC
               hkey = jj + (ii-1)*IHOP_npts_idw &
                    + (ijkey-1)*IHOP_npts_idw*IHOP_npts_range
-!$TAF STORE interp_finished = loctape_ihop_iijj, key=hkey
+!ML!$TAF STORE interp_finished = loctape_ihop_iijj, key=hkey
+!$TAF STORE interp_finished = comlev1_ihop_iijj, key=hkey
 #endif
 
               ! Interpolate from GCM grid cell centers
@@ -922,7 +924,8 @@ SUBROUTINE gcmSSP( myThid )
                 DO iz = 1, SSP%Nz - 1
 #ifdef ALLOW_AUTODIFF_TAMC
                   kkey = iz + (hkey-1)*(SSP%Nz-1)
-!$TAF store njj(ii) = loctape_ihop_iijj_k, key=kkey
+!ML!$TAF store njj(ii) = loctape_ihop_iijj_k, key=kkey
+!$TAF store njj(ii) = comlev1_ihop_iijj_k, key=kkey
 #endif
 
     IF (iz .EQ. 1) THEN
