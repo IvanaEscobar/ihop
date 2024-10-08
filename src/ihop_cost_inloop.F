@@ -86,10 +86,6 @@ C !LOCAL VARIABLES:
      &      .AND.(ihopObs_time(num_file,m,bi,bj).LT.
      &      (myTime+deltaTclock))) THEN
 
-#ifdef ALLOW_AUTODIFF_TAMC
-!$TAF STORE ihop_modval  = comlev1_bibj, key=itdkey, byte=isbyte
-#endif
-
             ihop_modval=0
 
             CALL ihop_cost_modval(ihop_modval, num_file,

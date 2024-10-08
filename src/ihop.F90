@@ -1,4 +1,7 @@
 #include "IHOP_OPTIONS.h"
+#ifdef ALLOW_AUTODIFF
+# include "AUTODIFF_OPTIONS.h"
+#endif
 !BOP
 ! !ROUTINE: IHOP
 ! !INTERFACE:
@@ -59,10 +62,16 @@ CONTAINS
     USE ihop_init_diag, only: initPRTFile, openOutputFiles, resetMemory
     USE bdry_mod,       only: Bdry, writeBdry
     USE ssp_mod,        only: setSSP
-    USE refCoef,        only: writeRefCoef 
+#ifdef ALLOW_AUTODIFF_TAMC
+    USE ssp_mod,        only: SSP
+#endif
+    USE refCoef,        only: writeRefCoef
     USE beampat,        only: writePat
     USE ihop_mod,       only: Beam
 
+#ifdef ALLOW_AUTODIFF
+# include "tamc.h"
+#endif
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO
   !     msgBuf :: Used to build messages for printing.
@@ -91,15 +100,18 @@ CONTAINS
     CALL writeBdry ( myThid )
 
     ! write refCoef: OPTIONAL
-    CALL writeRefCoef( myThid ) 
+    CALL writeRefCoef( myThid )
 
     ! Source Beam Pattern: OPTIONAL, default is omni source pattern
     CALL writePat( myThid )
 
 
     ! set SSP%cmat from gcm SSP: REQUIRED
+#ifdef ALLOW_AUTODIFF_TAMC
+!$TAF STORE ssp%c, ssp%cz      = comlev1_ihop, key = ikey_dynamics
+!$TAF STORE ssp%czmat, ssp%rho = comlev1_ihop, key = ikey_dynamics
+#endif
     CALL setSSP( myThid )
-
 
 ! open all output files
     IF ( IHOP_dumpfreq .GE. 0 ) &

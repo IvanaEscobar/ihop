@@ -120,6 +120,9 @@ CONTAINS
 
     ! Set SSP structures for particular SSP%Type routine
 
+#ifdef ALLOW_AUTODIFF
+# include "tamc.h"
+#endif
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO
   !     msgBuf :: Used to build messages for printing.
@@ -129,14 +132,16 @@ CONTAINS
   !     == Local Variables ==
     INTEGER :: ir, iz
 
-!$TAF init setssp1 = 'ssp_mod_setssp'
+!ML!$TAF init setssp1 = 'ssp_mod_setssp'
 
 ! IESCO24: Write derived type with allocatable memory by type: SSP from ssp_mod
 ! Scalar components
 ! Fixed arrays
-!$TAF store ssp%c = setssp1
+!ML!$TAF store ssp%c = setssp1
 ! Allocatable arrays
-!$TAF store ssp%cmat,ssp%czmat,ssp%seg%r = setssp1
+!ML!$TAF store ssp%cmat,ssp%czmat,ssp%seg%r = setssp1
+!$TAF STORE ssp%c           = comlev1_ihop, key = ikey_dynamics
+!$TAF STORE ssp%cz, ssp%rho = comlev1_ihop, key = ikey_dynamics
 
     ! init defaults for ssp_mod scoped arrays
     n2    = (-1.,-1.)
@@ -844,9 +849,12 @@ SUBROUTINE gcmSSP( myThid )
   ! parameter in a different way after ssp_mod is split btwn fixed and varia
   REAL (KIND=_RL90)             :: bPower, fT
 #ifdef ALLOW_AUTODIFF_TAMC
-  INTEGER tkey, ijkey, hkey, lockey
+  INTEGER tkey, ijkey, hkey, kkey
+!ML INTEGER nloctape
 
-!$TAF init loctape_ihop_gcmssp_bibj_ij_iijj_k = STATIC, nSx*nSy*sNx*sNy*IHOP_MAX_RANGE*IHOP_MAX_NC_SIZE*(Nr + 2)
+!ML nloctape = nSx*nSy*sNx*sNy*IHOP_MAX_RANGE*IHOP_MAX_NC_SIZE
+!ML!$TAF init loctape_ihop_iijj   = STATIC, nloctape
+!ML!$TAF init loctape_ihop_iijj_k = STATIC, nloctape*(Nr + 2)
 #endif
 
   ! IESCO24 fT init
@@ -877,10 +885,17 @@ SUBROUTINE gcmSSP( myThid )
   tmpSSP     = 0.0 _d 0
   globSSP    = 0.0 _d 0
 
+#ifdef ALLOW_AUTODIFF_TAMC
+  ! This is weird. The alternative is to copy SPP%Nr and SPP%Nz to
+  ! local variables.
+!$TAF INIT loctape_ihop_ssp = COMMON, 1
+!$TAF STORE ssp%nr, ssp%nz = loctape_ihop_ssp, key = 1
+#endif
   ! interpolate SSP with adaptive IDW from gcm grid to ihop grid
   DO bj=myByLo(myThid),myByHi(myThid)
     DO bi=myBxLo(myThid),myBxHi(myThid)
 #ifdef ALLOW_AUTODIFF_TAMC
+!ML      tkey = bi + (bj-1)*nSx
       tkey = bi + (bj-1)*nSx + (ikey_dynamics-1)*nSx*nSy
 #endif
 
@@ -889,13 +904,15 @@ SUBROUTINE gcmSSP( myThid )
         DO i=1,sNx
 #ifdef ALLOW_AUTODIFF_TAMC
           ijkey = i + (j-1)*sNx + (tkey-1)*sNx*sNy
-!$TAF store njj(ii) = comlev1_bibj_ij_ihop, key=ijkey, kind=isbyte
 #endif
           DO ii=1,IHOP_npts_range
             interp_finished = .FALSE.
             DO jj=1,IHOP_npts_idw
 #ifdef ALLOW_AUTODIFF_TAMC
-!$TAF STORE interp_finished = comlev1_bibj_ij_ihop, key=ijkey, kind=isbyte
+              hkey = jj + (ii-1)*IHOP_npts_idw &
+                   + (ijkey-1)*IHOP_npts_idw*IHOP_npts_range
+!ML!$TAF STORE interp_finished = loctape_ihop_iijj, key=hkey
+!$TAF STORE interp_finished = comlev1_ihop_iijj, key=hkey
 #endif
 
               ! Interpolate from GCM grid cell centers
@@ -904,14 +921,11 @@ SUBROUTINE gcmSSP( myThid )
                   .NOT. interp_finished) THEN
                 njj(ii) = njj(ii) + 1
 
-#ifdef ALLOW_AUTODIFF_TAMC
-#endif
                 DO iz = 1, SSP%Nz - 1
 #ifdef ALLOW_AUTODIFF_TAMC
-                  hkey = jj + (ii-1)*IHOP_npts_idw + (ijkey-1)*sNy*sNx*nSy*nSx
-                  lockey = iz + (hkey-1)*(SSP%Nz-1)*IHOP_npts_idw*IHOP_npts_range*sNx*sNy*nSx*nSy
-!                  + ((jj-1) + ((ii-1) + (ijkey-1)*IHOP_npts_range)*IHOP_npts_idw)*(SSP%Nz-1)
-!$TAF store njj(ii) = loctape_ihop_gcmssp_bibj_ij_iijj_k, key=lockey, kind=isbyte
+                  kkey = iz + (hkey-1)*(SSP%Nz-1)
+!ML!$TAF store njj(ii) = loctape_ihop_iijj_k, key=kkey
+!$TAF store njj(ii) = comlev1_ihop_iijj_k, key=kkey
 #endif
 
     IF (iz .EQ. 1) THEN
@@ -922,7 +936,7 @@ SUBROUTINE gcmSSP( myThid )
     ELSE ! 2:(SSP%Nz-1)
       ! Middle depth layers, only when not already underground
       IF (ihop_sumweights(ii, iz-1) .GT. 0.0) THEN
-        ! isolate njj increments for TAF 
+        ! isolate njj increments for TAF
         IF (ihop_idw_weights(ii, jj) .EQ. 0.0) THEN
           njj(ii) = IHOP_npts_idw + 1
 
@@ -990,6 +1004,9 @@ SUBROUTINE gcmSSP( myThid )
       END DO
     END DO
   END DO
+#ifdef ALLOW_AUTODIFF_TAMC
+!$TAF STORE tmpssp   = comlev1_ihop, key = ikey_dynamics
+#endif
 
 !IESCO c68s: IF ((nPx.GT.1) .OR. (nPy.GT.1)) THEN
 !IESCO c68s:   CALL GLOBAL_VEC_SUM_R8(SSP%Nz*SSP%Nr,SSP%Nz*SSP%Nr,tileSSP,myThid)
@@ -1004,6 +1021,9 @@ SUBROUTINE gcmSSP( myThid )
       k = k + 1
     END DO
   END DO
+#ifdef ALLOW_AUTODIFF_TAMC
+!$TAF STORE ssp%cMat = comlev1_ihop, key = ikey_dynamics
+#endif
 ! IESCO24: END MITgcm checkpoint69a uses a new global sum subroutine...
 
   IF(ALLOCATED(tileSSP)) DEALLOCATE(tileSSP)
