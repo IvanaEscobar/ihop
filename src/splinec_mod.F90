@@ -122,13 +122,13 @@ SUBROUTINE CSPLINE (TAU, C, N, IBCBEG, IBCEND, NDIM)
 
   !   * RUNNING CALCULATIONS TO N-1 - LOOP IS NOT EXECUTED IF N = 2 *
 
-!$TAF store C = cspline1
   DO M = 2,L
 !$TAF store C = cspline1_ndim, key = M
      G = -C(3,M+1) / C(4,M-1)
      C(2,M) = G*C(2,M-1) + 3.0*(C(3,M)*C(4,M+1) + C(3,M+1)*C(4,M))
      C(4,M) = G*C(3,M-1) + 2.0*(C(3,M) + C(3,M+1))
   END DO
+!$TAF store G = cspline1
 
   !   * ENDING BOUNDARY CONDITION SECTION *
 
@@ -200,7 +200,7 @@ SUBROUTINE CSPLINE (TAU, C, N, IBCBEG, IBCEND, NDIM)
 
   C(4,N) = (0.0,0.0)
   DO I = 1,L                            ! INTEGRATE OVER THE INTERVAL
-!$TAF store C = cspline1_ndim, key = I
+!$TAF store C(4,:) = cspline1_ndim, key = I
      DTAU = TAU(I+1) - TAU(I)
      C(4,N) = C(4,N) + DTAU*(C(1,I) + DTAU*(C(2,I)/2.0 + &
           DTAU*(C(3,I)/6.0 + DTAU*C(4,I)/24.0)))
