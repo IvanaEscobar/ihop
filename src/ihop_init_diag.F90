@@ -104,7 +104,7 @@ CONTAINS
 
 
       CALL WriteSxSy( myThid )
-      CALL WriteSzRz( Bdry%Top%HS%Depth, Bdry%Bot%HS%Depth, myThid )
+      CALL WriteSzRz( myThid )
       CALL WriteRcvrRanges( myThid )
 #ifdef IHOP_THREED
       CALL WriteRcvrBearings( myThid )

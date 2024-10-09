@@ -28,7 +28,7 @@ MODULE srpos_mod
 !=======================================================================
 
     public Pos, Nfreq, freqVec, &
-           ReadSxSy, ReadSzRz, ReadRcvrRanges, ReadFreqVec, &
+           ReadSxSy,  ReadSzRz,  ReadRcvrRanges,  ReadFreqVec, &
            WriteSxSy, WriteSzRz, WriteRcvrRanges, WriteFreqVec
 #ifdef IHOP_THREED
     public ReadRcvrBearings, WriteRcvrBearings
@@ -164,11 +164,62 @@ CONTAINS
 
   !     == Local Variables ==
     REAL(KIND=_RL90),    INTENT( IN ) :: zMin, zMax
+    INTEGER :: posShift
 
     CALL ReadVector( Pos%NSz, Pos%Sz, 'Source   depths, Sz', 'm', &
                     myThid )
     CALL ReadVector( Pos%NRz, Pos%Rz, 'Receiver depths, Rz', 'm', &
                     myThid )
+
+    ! *** Check for Sz/Rz in water column ***
+    IF ( ANY( Pos%Sz( 1:Pos%NSz ) < zMin ) ) THEN
+      WHERE ( Pos%Sz < zMin ) Pos%Sz = zMin
+      posShift = 1
+    END IF
+
+    IF ( ANY( Pos%Sz( 1:Pos%NSz ) > zMax ) ) THEN
+      WHERE( Pos%Sz > zMax ) Pos%Sz = zMax
+      posShift = 2
+    END IF
+
+    IF ( ANY( Pos%Rz( 1:Pos%NRz ) < zMin ) ) THEN
+      WHERE( Pos%Rz < zMin ) Pos%Rz = zMin
+      posShift = 3
+    END IF
+
+    IF ( ANY( Pos%Rz( 1:Pos%NRz ) > zMax ) ) THEN
+      WHERE( Pos%Rz > zMax ) Pos%Rz = zMax
+      posShift = 4
+    END IF
+
+#ifdef IHOP_WRITE_OUT
+    ! In adjoint mode we do not write output besides on the first run
+    IF (IHOP_dumpfreq.GE.0) THEN
+      IF ( posShift.eq.1 ) THEN
+        WRITE(msgBuf,'(2A)') 'Warning in WriteSzRz : Source above or too ',&
+                            'near the top bdry has been moved down'
+        CALL PRINT_ERROR( msgBuf,myThid )
+      END IF
+
+      IF ( posShift.eq.2 ) THEN
+        WRITE(msgBuf,'(2A)') 'Warning in WriteSzRz : Source below or too ',&
+                            'near the bottom bdry has been moved up'
+        CALL PRINT_ERROR( msgBuf,myThid )
+      END IF
+
+      IF ( posShift.eq.3 ) THEN
+        WRITE(msgBuf,'(2A)') 'Warning in WriteSzRz : Receiver above or too ',&
+            'near the top bdry has been moved down'
+        CALL PRINT_ERROR( msgBuf,myThid )
+      END IF
+
+      IF ( posShift.eq.4 ) THEN
+        WRITE(msgBuf,'(2A)') 'Warning in WriteSzRz : Receiver below or too ',&
+                            'near the bottom bdry has been moved up'
+        CALL PRINT_ERROR( msgBuf,myThid )
+      END IF
+    ENDIF
+#endif /* IHOP_WRITE_OUT */
 
     IF ( ALLOCATED( Pos%ws ) ) DEALLOCATE( Pos%ws, Pos%iSz )
     ALLOCATE( Pos%ws( Pos%NSz ), Pos%iSz( Pos%NSz ), Stat = IAllocStat )
@@ -404,7 +455,8 @@ CONTAINS
 
   !********************************************************************!
 
-  SUBROUTINE WriteSzRz( zMin, zMax, myThid )
+  SUBROUTINE WriteSzRz( myThid )
+    USE bdry_mod, only: Bdry
 
     ! Writes source and receiver z-coordinates (depths)
 
@@ -415,45 +467,13 @@ CONTAINS
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
 
   !     == Local Variables ==
-    REAL(KIND=_RL90),    INTENT( IN ) :: zMin, zMax
 
 #ifdef IHOP_WRITE_OUT
-    CALL WriteVector( Pos%NSz, Pos%Sz, 'Source   depths, Sz', 'm', &
+    CALL WriteVector( Pos%NSz, Pos%Sz, 'Source depths,   Sz', 'm', &
                     myThid )
     CALL WriteVector( Pos%NRz, Pos%Rz, 'Receiver depths, Rz', 'm', &
                     myThid )
 
-    ! *** Check for Sz/Rz in water column ***
-    ! In adjoint mode we do not write output besides on the first run
-    IF (IHOP_dumpfreq.GE.0) THEN
-        IF ( ANY( Pos%Sz( 1:Pos%NSz ) < zMin ) ) THEN
-           WHERE ( Pos%Sz < zMin ) Pos%Sz = zMin
-           WRITE(msgBuf,'(2A)') 'Warning in WriteSzRz : Source above or too ',&
-                               'near the top bdry has been moved down'
-           CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-        END IF
-
-        IF ( ANY( Pos%Sz( 1:Pos%NSz ) > zMax ) ) THEN
-           WHERE( Pos%Sz > zMax ) Pos%Sz = zMax
-           WRITE(msgBuf,'(2A)') 'Warning in WriteSzRz : Source below or too ',&
-                               'near the bottom bdry has been moved up'
-           CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-        END IF
-
-        IF ( ANY( Pos%Rz( 1:Pos%NRz ) < zMin ) ) THEN
-           WHERE( Pos%Rz < zMin ) Pos%Rz = zMin
-           WRITE(msgBuf,'(2A)') 'Warning in WriteSzRz : Receiver above or too ',&
-               'near the top bdry has been moved down'
-           CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-        END IF
-
-        IF ( ANY( Pos%Rz( 1:Pos%NRz ) > zMax ) ) THEN
-           WHERE( Pos%Rz > zMax ) Pos%Rz = zMax
-           WRITE(msgBuf,'(2A)') 'Warning in WriteSzRz : Receiver below or too ',&
-                               'near the bottom bdry has been moved up'
-           CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-        END IF
-    ENDIF
 #endif /* IHOP_WRITE_OUT */
 
   RETURN
@@ -541,8 +561,8 @@ CONTAINS
       WRITE(msgBuf,'(5G14.6)') ( x( ix ), ix = 1, MIN( Nx, Number_to_Echo ) )
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
       IF ( Nx > Number_to_Echo ) THEN
-          WRITE(msgBuf,'(G14.6)') ' ... ', x( Nx )
-          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+        WRITE(msgBuf,'(G14.6)') ' ... ', x( Nx )
+        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
       END IF
 
       WRITE(msgBuf,'(A)')
