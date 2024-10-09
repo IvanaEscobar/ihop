@@ -17,6 +17,9 @@ CONTAINS
     USE ssp_mod,   only: SSP, initSSP, alphar
     USE ihop_mod,  only: Beam, rxyz, Nrz_per_range
     USE angle_mod, only: Angles, ReadRayElevationAngles
+#ifdef IHOP_THREED
+    USE angle_mod, only: ReadRayBearingAngles
+#endif /* IHOP_THREED */
     USE refcoef,   only: ReadReflectionCoefficient
     USE beampat,   only: SBPFlag, readPat
     USE arr_mod,   only: initArr
