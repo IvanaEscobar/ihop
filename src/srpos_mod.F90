@@ -172,6 +172,7 @@ CONTAINS
                     myThid )
 
     ! *** Check for Sz/Rz in water column ***
+    posShift = 0
     IF ( ANY( Pos%Sz( 1:Pos%NSz ) < zMin ) ) THEN
       WHERE ( Pos%Sz < zMin ) Pos%Sz = zMin
       posShift = 1
@@ -456,7 +457,6 @@ CONTAINS
   !********************************************************************!
 
   SUBROUTINE WriteSzRz( myThid )
-    USE bdry_mod, only: Bdry
 
     ! Writes source and receiver z-coordinates (depths)
 
