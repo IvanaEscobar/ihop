@@ -372,7 +372,7 @@ CONTAINS
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
 
   !     == Local Variables ==
-    INTEGER,           PARAMETER       :: BeamWindow = 2
+    INTEGER,           PARAMETER       :: BeamWindow = 4
     REAL (KIND=_RL90), INTENT( IN    ) :: dalpha ! take-off angle, angular spacing
     COMPLEX,           INTENT( INOUT ) :: U( NRz_per_range, Pos%NRr )  ! complex pressure field
     INTEGER              :: irT( 1 ), irTT
