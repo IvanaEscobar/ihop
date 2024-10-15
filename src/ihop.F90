@@ -205,21 +205,6 @@ CONTAINS
 
     afreq = 2.0 * PI * IHOP_freq
 
-    !Angles%alpha  = Angles%alpha * deg2rad  ! convert to radians
-    Angles%Dalpha = 0.0
-    IF ( Angles%Nalpha > 1 ) THEN
-      Angles%Dalpha = ( Angles%arad( Angles%Nalpha ) - Angles%arad( 1 ) ) &
-                        / ( Angles%Nalpha - 1 )  ! angular spacing between beams
-    ELSE
-      Angles%Dalpha = 0.0
-#ifdef IHOP_WRITE_OUT
-      WRITE(msgBuf,'(2A)') 'IHOP IHOPCore: ', &
-                      'Required: Nalpha>1, else add iSingle_alpha(see angleMod)'
-      CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
-      STOP 'ABNORMAL END: S/R IHOPCore'
-    END IF
-
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !         begin solve         !
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
