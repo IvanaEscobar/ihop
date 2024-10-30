@@ -63,7 +63,7 @@ CEOP
      &     active_num_file,
      &     active_var, lAdInit,
      &     irec, ihopObs_ind_glob_tiled(active_num_file,irec,bi,bj),
-     &     TANGENT_SIMULATION, myOptimIter, bi, bj, myThid)
+     &     FORWARD_SIMULATION, myOptimIter, bi, bj, myThid)
 
       CALL active_read_ihop_tile_rl( fidftl_obs(active_num_file,bi,bj),
      &     active_num_file,
@@ -132,7 +132,7 @@ CEOP
      &     active_num_file,
      &     active_var,
      &     irec, ihopObs_ind_glob_tiled(active_num_file,irec,bi,bj),
-     &     TANGENT_SIMULATION, myOptimIter, bi, bj, myThid)
+     &     FORWARD_SIMULATION, myOptimIter, bi, bj, myThid)
 
       CALL active_write_ihop_tile_rl( fidftl_obs(active_num_file,bi,bj),
      &     active_num_file,
@@ -202,7 +202,7 @@ CEOP
      &     active_num_file,
      &     active_var, lAdInit,
      &     irec, ihopObs_ind_glob(active_num_file,irec),
-     &     TANGENT_SIMULATION, myOptimIter, myThid)
+     &     FORWARD_SIMULATION, myOptimIter, myThid)
 
       CALL active_read_ihop_glob_rl( fidftlglobal(active_num_file),
      &     active_num_file,
@@ -270,7 +270,7 @@ CEOP
      &     active_num_file,
      &     active_var,
      &     irec, ihopObs_ind_glob(active_num_file,irec),
-     &     TANGENT_SIMULATION, myOptimIter,myThid)
+     &     FORWARD_SIMULATION, myOptimIter,myThid)
 
       CALL active_write_ihop_glob_rl( fidftlglobal(active_num_file),
      &     active_num_file,
