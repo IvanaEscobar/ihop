@@ -78,7 +78,7 @@ C o Allow for near-shore and high-latitude altimetry
 C o Allow for In-Situ Profiles cost function contribution
 #undef ALLOW_PROFILES_CONTRIBUTION
 
-C o Allow for In-Situ Ihop cost function contribution
+C o Allow for In-Situ iHOP cost function contribution
 #define ALLOW_IHOP_CONTRIBUTION
 
 C o Cost function output format
