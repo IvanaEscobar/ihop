@@ -4,7 +4,7 @@
   frequency(1)    = 1200.,
 
   fileName(2)     = 'diags/dynDiag',
-  fields(1:6,2)   = 'THETA   ', 'SALT    ', 'PHIHYD  ',
+  fields(1:5,2)   = 'THETA   ', 'SALT    ',
                     'UVEL    ', 'VVEL    ', 'WVEL    ',
   frequency(2)    = 1200.,
  &

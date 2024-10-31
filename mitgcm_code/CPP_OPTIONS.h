@@ -5,18 +5,18 @@
 ! !ROUTINE: CPP_OPTIONS.h
 ! !INTERFACE:
 ! #include "CPP_OPTIONS.h"
-!
+
 ! !DESCRIPTION:
 ! *==================================================================*
 ! | main CPP options file for the model:
 ! | Control which optional features to compile in model/src code.
 ! *==================================================================*
 !EOP
-!
+
 ! CPP flags controlling particular source code features
-!
+
 !-- Forcing code options:
-!
+
 ! o Shortwave heating as extra term in external_forcing.F
 ! Note: this should be a run-time option
 #undef SHORTWAVE_HEATING

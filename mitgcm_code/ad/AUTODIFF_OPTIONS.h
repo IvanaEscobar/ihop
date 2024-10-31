@@ -41,7 +41,7 @@
 #undef ALLOW_AUTODIFF_MONITOR_DIAG
 
 !       >>> DO 2-level checkpointing instead of 3-level
-#define AUTODIFF_2_LEVEL_CHECKPOINT
+#undef AUTODIFF_2_LEVEL_CHECKPOINT
 
 ! extend to 4-level checkpointing
 #undef AUTODIFF_4_LEVEL_CHECKPOINT

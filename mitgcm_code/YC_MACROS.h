@@ -12,7 +12,7 @@
 !     | axis or axes.
 !     *==========================================================*
 !     \ev
-EOP
+!EOP
 
 #ifdef YC_CONST
 #define  _yC(i,j,bi,bj) yC(1,1,1,1)
