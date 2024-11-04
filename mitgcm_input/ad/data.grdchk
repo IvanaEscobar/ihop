@@ -10,5 +10,6 @@
 # Let pkg/grdchk get position by using default nbeg
 # nbeg             = 1,
  nstep            = 1,
- nend             = 1,
+ nend             = 0,
+#useCentralDiff = .false.,
  &

@@ -3,7 +3,7 @@
 # *************** 
 #1 to 6: temperature, salinity, zonal velocity, meridional velocity, sea surface height anomaly, and passive trace
  &PROFILES_NML
- profilesDoNcOutput=.TRUE.,
+#profilesDoNcOutput=.TRUE.,
 #profilesDoGenGrid=.FALSE.,
  profilesDir='profiles',
 #
