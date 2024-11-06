@@ -2,7 +2,7 @@
 # ECCO gradient check
 # *******************
  &GRDCHK_NML
- grdchk_eps       = 1.d-2,
+ grdchk_eps       = 1.d-5,
  iGloPos         = 12,
  jGloPos         = 38,
  kGloPos         = 2,
@@ -11,5 +11,5 @@
 # nbeg             = 1,
  nstep            = 1,
  nend             = 0,
-#useCentralDiff = .false.,
+ useCentralDiff = .false.,
  &
