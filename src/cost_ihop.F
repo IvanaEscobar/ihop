@@ -128,10 +128,11 @@ c then re-open it to compute cost function
 ! Open tiled files
            iG=bi+(myXGlobalLo-1)/sNx ! Kludge until unstructered tiles
            jG=bj+(myYGlobalLo-1)/sNy ! Kludge until unstructered tiles
-           write(fnameequinc,'(3A,I3.3,A,I3.3,A)')
+           write(fnameequinc,'(3A,2(I3.3,A)A)')
      &      ihopObsDir(1:JL),ihopObsFile(1:IL),'.',iG,'.',jG,'.equi.nc'
 c
-           err = NF_OPEN(fnameequinc,NF_NOWRITE,
+           JL = ILNBLNK( fnameequinc )
+           err = NF_OPEN(fnameequinc(1:JL),NF_NOWRITE,
      &     fidfwd_obs(num_file,bi,bj))
          ENDIF
 
@@ -199,7 +200,9 @@ cc       IF ( myProcId .eq. 0 ) THEN
         IL  = ILNBLNK( ihopObsFile )
         write(fnameequinc,'(3A)')
      &   ihopObsDir(1:JL),ihopObsFile(1:IL),'.equi.nc'
-        err = NF_OPEN(fnameequinc,NF_NOWRITE,fidglobal(num_file))
+
+        JL = ILNBLNK( fnameequinc )
+        err = NF_OPEN(fnameequinc(1:JL),NF_NOWRITE,fidglobal(num_file))
 cc       ENDIF
 
 C Loop over global obs

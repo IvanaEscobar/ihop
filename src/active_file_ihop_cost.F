@@ -82,7 +82,7 @@ C     !INTERFACE:
      I                           bi,
      I                           bj,
      I                           myThid,
-     I                           dummy )
+     O                           dummy )
 
 C     !DESCRIPTION:
 C     ==================================================================
@@ -204,7 +204,7 @@ C     !INTERFACE:
      I                           irec,
      I                           myOptimIter,
      I                           myThid,
-     I                           dummy )
+     O                           dummy )
 
 C     !DESCRIPTION:
 C     ==================================================================
