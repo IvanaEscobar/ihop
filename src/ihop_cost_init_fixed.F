@@ -705,12 +705,12 @@ C     == end of interface ==
            IF (.NOT.exst) THEN
             CALL ihop_cost_init_equifiles(num_file,
      &       fiddata_obs(num_file),
-     &       tlfnameequinc(1:JL), fidtlm_obs(num_file,bi,bj),
+     &       tlfnameequinc(1:JL), fidftl_obs(num_file,bi,bj),
      &       ObsNo_tiled(num_file,bi,bj),
      &       bi,bj,myThid)
            ELSE
             err = NF_OPEN(tlfnameequinc(1:JL),NF_WRITE,
-     &       fidtlm_obs(num_file,bi,bj))
+     &       fidftl_obs(num_file,bi,bj))
            ENDIF
 #endif
 

@@ -44,8 +44,9 @@ C !INPUT PARAMETERS:
 C !LOCAL VARIABLES:
       INTEGER dimid,varid(10),varid0,err
       INTEGER irec
+      CHARACTER*(MAX_LEN_MBUF) msgBuf
       Real*8  tmp_vec(2)
-c     == end of interface ==
+C     == end of interface ==
 
 C Create a netcdf file
       err = NF_CREATE(file2,NF_CLOBBER,fid2)
