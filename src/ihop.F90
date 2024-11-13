@@ -471,14 +471,25 @@ CONTAINS
              IF ( is > 1 ) THEN
                 rayt    = ray2D(is1)%x - ray2D(is)%x
                 raytOld = ray2D(is)%x  - ray2D(is-1)%x
-                declAlpha    = ATAN2( rayt(2), rayt(1) )
-                declAlphaOld = ATAN2( raytOld(2), raytOld(1) )
+
+                IF ( ALL(rayt==0.0) ) THEN
+                    declAlpha = 0.0
+                ELSE
+                    declAlpha = ATAN2( rayt(2), rayt(1) )
+                ENDIF
+
+                IF ( ALL(raytOld==0.0) ) THEN
+                    declAlphaOld = 0.0
+                ELSE
+                    declAlphaOld = ATAN2( raytOld(2), raytOld(1) )
+                ENDIF
+
                 RayTurn = ( declAlpha <= 0.0d0 .AND. declAlphaOld > 0.0d0 .OR. &
                             declAlpha >= 0.0d0 .AND. declAlphaOld < 0.0d0 )
                 IF (RayTurn) THEN
                    ray2D( is1 )%NumTurnPt = ray2D( is )%NumTurnPt + 1
-                END IF
-             END IF
+                ENDIF
+             ENDIF
 
              ! New altimetry segment?
              IF ( ray2D( is1 )%x( 1 ) < rTopSeg( 1 ) .OR. &
@@ -762,11 +773,20 @@ CONTAINS
        ray2D( is1 )%Phase = ray2D( is )%Phase + PI
     CASE ( 'F' )                 ! file
 !$TAF store rint = reflect2d1
-       RInt%theta = rad2deg * ABS( ATAN2( Th, Tg ) )           ! angle of incidence (relative to normal to bathymetry)
-       IF ( RInt%theta > 90 ) RInt%theta = 180. - RInt%theta  ! reflection coefficient is symmetric about 90 degrees
+       ! angle of incidence (relative to normal to bathymetry)
+       IF ( (Th==0.0) .AND. (Tg==0.0) ) THEN
+          RInt%theta = 0.0
+       ELSE
+          RInt%theta = rad2deg * ABS( ATAN2( Th, Tg ) )
+       ENDIF
+       
+       ! reflection coefficient is symmetric about 90 degrees
+       IF ( RInt%theta > 90 ) RInt%theta = 180. - RInt%theta 
+
        CALL InterpolateReflectionCoefficient( RInt, RefC, Npts )
        ray2D( is1 )%Amp   = ray2D( is )%Amp * RInt%R
        ray2D( is1 )%Phase = ray2D( is )%Phase + RInt%phi
+
     CASE ( 'A', 'G' )     ! half-space
        kx = afreq * Tg    ! wavenumber in direction parallel      to bathymetry
        kz = afreq * Th    ! wavenumber in direction perpendicular to bathymetry
