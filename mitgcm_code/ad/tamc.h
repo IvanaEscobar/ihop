@@ -31,9 +31,9 @@
 !     nchklev_2 :: length of second loop (stored on disk)
 !     nchklev_3 :: length of outer loop of 3-level checkpointing
       INTEGER    nchklev_1
-      PARAMETER( nchklev_1 =   2 )
+      PARAMETER( nchklev_1 =  2 )
       INTEGER    nchklev_2
-      PARAMETER( nchklev_2 =   5 )
+      PARAMETER( nchklev_2 =  5 )
       INTEGER    nchklev_3
       PARAMETER( nchklev_3 =  50 )
 #ifdef AUTODIFF_4_LEVEL_CHECKPOINT

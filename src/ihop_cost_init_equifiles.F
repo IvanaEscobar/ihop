@@ -20,7 +20,7 @@ C for ihop obs data
 
 C !USES:
       IMPLICIT NONE
-C     == Global variables ===
+C ==================== Global Variables ===========================
 #include "EEPARAMS.h"
 #include "SIZE.h"
 #include "GRID.h"
@@ -34,16 +34,19 @@ C     == Global variables ===
 #endif
 CEOP
 
+C ==================== Routine Variables ==========================
 C !INPUT PARAMETERS:
       INTEGER num_file, fid1, fid2
       INTEGER bi, bj, myThid, length
-      CHARACTER*(MAX_LEN_FNAM) file2
+      CHARACTER*(*) file2
 
 #if (defined ALLOW_IHOP) && (defined ALLOW_COST)
 C !LOCAL VARIABLES:
-      INTEGER dimid,varid(3),varid0,err
+      INTEGER dimid,varid(10),varid0,err
       INTEGER irec
+      CHARACTER*(MAX_LEN_MBUF) msgBuf
       Real*8  tmp_vec(2)
+C     == end of interface ==
 
 C Create a netcdf file
       err = NF_CREATE(file2,NF_CLOBBER,fid2)
@@ -56,7 +59,6 @@ C Create a netcdf file
       err = NF_INQ_VARID(fid1,ihop_nameval,varid0)
 
       IF (err.EQ.NF_NOERR) THEN
-
        err = NF_DEF_VAR(fid2,ihop_nameequi,
      &  NF_DOUBLE,1,dimid,varid(2))
        err = NF_PUT_ATT_DOUBLE(fid2,varid(2),
@@ -65,6 +67,13 @@ C Create a netcdf file
      &  NF_DOUBLE,1,dimid,varid(3))
        err = NF_PUT_ATT_DOUBLE(fid2,varid(3),
      &  '_FillValue',NF_DOUBLE,1,-9999. _d 0)
+
+      ELSE
+       WRITE(msgBuf,'(2A)')
+     &      'S/R IHOP_COST_INIT_EQUIFILES: no variable ',
+     &      ihop_nameval
+       CALL PRINT_MESSAGE( msgBuf, standardMessageUnit,
+     &                     SQUEEZE_RIGHT, myThid )
 
       ENDIF
 ! Transition NetCDF file to data mode
@@ -76,4 +85,5 @@ C Create a netcdf file
 
 #endif
 
+      RETURN
       END

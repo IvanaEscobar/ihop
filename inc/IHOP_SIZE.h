@@ -17,7 +17,7 @@
 !     ================================
       INTEGER nts
 #ifdef IHOP_MULTIPLE_TIMES
-      PARAMETER ( nts=10 )
+      PARAMETER ( nts=1080 )
 #else
       PARAMETER ( nts=1 )
 #endif
@@ -55,11 +55,11 @@
 !     Number of interpolation points:
 !     ================================
       INTEGER IHOP_MAX_NC_SIZE
-      PARAMETER ( IHOP_MAX_NC_SIZE = 10 )
-!      INTEGER IHOP_NPTS_RANGE
-!      PARAMETER( IHOP_NPTS_RANGE = 6 )
-!      INTEGER IHOP_IDW_NPTS
-!      PARAMETER( IHOP_IDW_NPTS = 4 )
+      PARAMETER ( IHOP_MAX_NC_SIZE = 15 )
+      INTEGER IHOP_MAX_RANGE
+      PARAMETER( IHOP_MAX_RANGE = 6 )
+      INTEGER IHOP_MAX_IDW
+      PARAMETER( IHOP_MAX_IDW = 4 )
 
 
 
@@ -70,10 +70,10 @@
 
 #ifdef ALLOW_COST
       INTEGER NFILESMAX_IHOP
-      PARAMETER ( NFILESMAX_IHOP=2 )
+      PARAMETER ( NFILESMAX_IHOP=1 )
 
       INTEGER NOBSMAX_IHOP
-      PARAMETER ( NOBSMAX_IHOP=1000 )
+      PARAMETER ( NOBSMAX_IHOP=10 )
 
 #endif
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|

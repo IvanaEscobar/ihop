@@ -81,8 +81,13 @@ CONTAINS
     znV = -ray2D( 1:Beam%Nsteps )%t( 1 ) * ray2D( 1:Beam%Nsteps )%c
     rnV =  ray2D( 1:Beam%Nsteps )%t( 2 ) * ray2D( 1:Beam%Nsteps )%c
 
-    RcvrDeclAngleV( 1:Beam%Nsteps ) = rad2deg * &
-        ATAN2( ray2D( 1:Beam%Nsteps )%t( 2 ), ray2D( 1:Beam%Nsteps )%t( 1 ) )
+    DO ii=1,Beam%Nsteps
+       IF ( ALL(ray2D(ii)%t==0.0) ) THEN
+          RcvrDeclAngleV(ii) = 0.0
+       ELSE
+          RcvrDeclAngleV(ii) = rad2deg * ATAN2( ray2D(ii)%t(2), ray2D(ii)%t(1) )
+       ENDIF
+    ENDDO
 
     ! During reflection imag(q) is constant and adjacent normals cannot bracket
     ! a segment of the TL line, so no special treatment is necessary
@@ -246,7 +251,12 @@ CONTAINS
 
        ! compute normalized tangent (we need to measure the step length)
        rayt = ray2D( iS )%x - x_ray
-       rlen = NORM2( rayt )
+       IF ( ALL(rayt==0.0) ) THEN
+          rlen = 0.0
+       ELSE
+          rlen = NORM2( rayt )
+       ENDIF
+
        ! if duplicate point in ray, skip to next step along the ray
        IF ( rlen .GE. 1.0D3 * SPACING( ray2D( iS )%x( 1 ) ) ) THEN
 
@@ -254,7 +264,11 @@ CONTAINS
 
         rayt = rayt / rlen                    ! unit tangent of ray @ A
         rayn = [ -rayt( 2 ), rayt( 1 ) ]      ! unit normal  of ray @ A
-        RcvrDeclAngle = rad2deg * ATAN2( rayt( 2 ), rayt( 1 ) )
+        IF ( ALL(rayt==0.0) ) THEN
+           RcvrDeclAngle = 0.0
+        ELSE
+           RcvrDeclAngle = rad2deg * ATAN2( rayt( 2 ), rayt( 1 ) )
+        ENDIF
 
         q      = ray2D( iS-1 )%q( 1 )
         dqds   = ray2D( iS   )%q( 1 ) - q
@@ -415,7 +429,11 @@ CONTAINS
        ! compute normalized tangent (compute it because we need to measure the
        ! step length)
        rayt = ray2D( iS )%x - ray2D( iS - 1 )%x
-       rlen = NORM2( rayt )
+       IF ( ALL(rayt==0.0) ) THEN
+          rlen = 0.0
+       ELSE
+          rlen = NORM2( rayt )
+       ENDIF
        ! if duplicate point in ray, skip to next step along the ray
        IF ( rlen .GE. 1.0D3 * SPACING( ray2D( iS )%x( 1 ) ) ) THEN
 
@@ -423,7 +441,11 @@ CONTAINS
 
         rayt = rayt / rlen
         rayn = [ -rayt( 2 ), rayt( 1 ) ]      ! unit normal to ray
-        RcvrDeclAngle = rad2deg * ATAN2( rayt( 2 ), rayt( 1 ) )
+        IF ( ALL(rayt==0.0) ) THEN
+           RcvrDeclAngle = 0.0
+        ELSE
+           RcvrDeclAngle = rad2deg * ATAN2( rayt( 2 ), rayt( 1 ) )
+        ENDIF
 
         q      = ray2D( iS-1 )%q( 1 )
         dqds   = ray2D( iS )%q( 1 ) - q

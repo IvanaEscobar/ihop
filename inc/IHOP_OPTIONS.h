@@ -4,7 +4,7 @@
 #include "CPP_OPTIONS.h"
 
 !BOP
-! !ROUTINE: IHOP_OPTINOS.h
+! !ROUTINE: IHOP_OPTIONS.h
 ! !INTERFACE:
 ! #include "IHOP_OPTIONS.h"
 

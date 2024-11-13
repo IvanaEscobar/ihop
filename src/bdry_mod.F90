@@ -558,8 +558,13 @@ CONTAINS
        Bdry( ii )%Dx  = Bdry( ii )%t( 2 ) / Bdry( ii )%t( 1 )   ! 1st derivative
 
        ! normalize the tangent vector
-       Bdry( ii )%Len = NORM2( Bdry( ii )%t )
-       Bdry( ii )%t   = Bdry( ii )%t / Bdry( ii )%Len
+       IF ( ALL(Bdry(ii)%t==0.0) ) THEN
+          Bdry( ii )%Len = 0.0
+          Bdry( ii )%t   = 0.0 * Bdry( ii )%t
+       ELSE
+          Bdry( ii )%Len = NORM2( Bdry( ii )%t )
+          Bdry( ii )%t   = Bdry( ii )%t / Bdry( ii )%Len
+       ENDIF
 
        SELECT CASE ( BotTop )
          CASE ( 'Bot' )

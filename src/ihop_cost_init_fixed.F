@@ -72,8 +72,10 @@ C     == global variables ==
       INTEGER :: bi, bj, k, i, j, l, m
       INTEGER :: iG, jG
       CHARACTER*(MAX_LEN_FNAM) ihopObsfile, fnamedatanc
-      CHARACTER*(MAX_LEN_FNAM) fnameequinc, adfnameequinc
-      CHARACTER*(MAX_LEN_FNAM) fnameequincglo, adfnameequincglo
+      CHARACTER*(MAX_LEN_FNAM) fnameequinc
+      CHARACTER*(MAX_LEN_FNAM) adfnameequinc, tlfnameequinc
+      CHARACTER*(MAX_LEN_FNAM) fnameequincglo
+      CHARACTER*(MAX_LEN_FNAM) adfnameequincglo, tlfnameequincglo
       LOGICAL exst
 
 C ==================== External Functions ==========================
@@ -88,9 +90,9 @@ C     == end of interface ==
       WRITE(msgbuf,'(a)') 'ihop general parameters :'
       JL  = ILNBLNK( ihopObsDir )
       IF (JL.NE.0) THEN
-        WRITE(msgbuf,'(a,a)') '  ihopObsDir ',ihopObsDir(1:JL)
+        WRITE(msgbuf,'(2a)') '  ihopObsDir ',ihopObsDir(1:JL)
       ELSE
-        WRITE(msgbuf,'(a,a)') '  ihopObsDir ','./'
+        WRITE(msgbuf,'(2a)') '  ihopObsDir ','./'
       ENDIF
       CALL print_message(
      &   msgbuf, standardmessageunit, SQUEEZE_RIGHT, myThid)
@@ -217,14 +219,24 @@ C     == end of interface ==
 
          WRITE(fnameequincglo,'(3A)')
      &    ihopObsDir(1:JL),ihopObsFile(1:IL),'.equi.nc'
+#ifdef ALLOW_ADJOINT_RUN
          WRITE(adfnameequincglo,'(4A)')
      &    ihopObsDir(1:JL),'ad',
      &    ihopObsFile(1:IL),'.equi.nc'
+#endif
+#ifdef ALLOW_TANGENTLINEAR_RUN
+         WRITE(tlfnameequincglo,'(4A)')
+     &    ihopObsDir(1:JL),'tl',
+     &    ihopObsFile(1:IL),'.equi.nc'
+#endif
 
-         inquire( file=fnameequincglo, exist=exst )
+         JL = ILNBLNK( fnameequincglo )
+         inquire( file=fnameequincglo(1:JL), exist=exst )
          IF (.NOT.exst) THEN
 
-          err = NF_CREATE(fnameequincglo,NF_CLOBBER,fidglobal(num_file))
+! Create NetCDF file
+          err = NF_CREATE(fnameequincglo(1:JL),NF_CLOBBER,
+     &           fidglobal(num_file))
           err = NF_DEF_DIM(fidglobal(num_file),'iOBS',ObsNo(num_file),
      &           dimid1)
 
@@ -244,19 +256,25 @@ C     == end of interface ==
      &         varidEquiv(2),'_FillValue',
      &         NF_DOUBLE,1, -9999. _d 0 )
 
+! Write buffer to file, reopen file with WRITE permissions
           err = NF_ENDDEF(fidglobal(num_file))
           err = NF_CLOSE(fidglobal(num_file))
-          err = NF_OPEN(fnameequincglo, NF_WRITE, fidglobal(num_file))
+          err = NF_OPEN(fnameequincglo(1:JL), NF_WRITE, 
+     &           fidglobal(num_file))
 
          ELSE
-          err = NF_OPEN(fnameequincglo, NF_WRITE, fidglobal(num_file))
+! Obtain file unit id
+          err = NF_OPEN(fnameequincglo(1:JL), NF_WRITE,
+     &           fidglobal(num_file))
          ENDIF
 
 #ifdef ALLOW_ADJOINT_RUN
-         inquire( file=adfnameequincglo, exist=exst )
+         JL = ILNBLNK( adfnameequincglo )
+         inquire( file=adfnameequincglo(1:JL), exist=exst )
          IF (.NOT.exst) THEN
 
-          err = NF_CREATE(adfnameequincglo,NF_CLOBBER,
+! Create NetCDF ad file
+          err = NF_CREATE(adfnameequincglo(1:JL),NF_CLOBBER,
      &           fidadglobal(num_file))
           err = NF_DEF_DIM(fidadglobal(num_file),'iOBS',
      &           ObsNo(num_file),dimid1)
@@ -277,14 +295,56 @@ C     == end of interface ==
      &         varidEquiv(2),'_FillValue',
      &         NF_DOUBLE,1, 0. _d 0 )
 
+! Write buffer to file, reopen file with WRITE permissions
           err = NF_ENDDEF(fidadglobal(num_file))
           err = NF_CLOSE(fidadglobal(num_file))
-          err = NF_OPEN(adfnameequincglo, NF_WRITE,
+          err = NF_OPEN(adfnameequincglo(1:JL), NF_WRITE,
      &         fidadglobal(num_file))
 
          ELSE
-          err = NF_OPEN(adfnameequincglo, NF_WRITE,
+! Obtain ad file unit id
+          err = NF_OPEN(adfnameequincglo(1:JL), NF_WRITE,
      &         fidadglobal(num_file))
+         ENDIF
+#endif
+
+#ifdef ALLOW_TANGENTLINEAR_RUN
+         JL = ILNBLNK( tlfnameequincglo )
+         inquire( file=tlfnameequincglo(1:JL), exist=exst )
+         IF (.NOT.exst) THEN
+
+! Create NetCDF tl file
+          err = NF_CREATE(tlfnameequincglo(1:JL),NF_CLOBBER,
+     &           fidftlglobal(num_file))
+          err = NF_DEF_DIM(fidftlglobal(num_file),'iOBS',
+     &           ObsNo(num_file),dimid1)
+
+          err = NF_DEF_VAR(fidftlglobal(num_file),
+     &         'mod_val',NF_DOUBLE,
+     &         1,dimid1,varidEquiv(1))
+
+          err = NF_PUT_ATT_DOUBLE(fidftlglobal(num_file),
+     &         varidEquiv(1),'_FillValue',
+     &         NF_DOUBLE,1, 0. _d 0 )
+
+          err = NF_DEF_VAR(fidglobal(num_file),
+     &         'mod_mask',NF_DOUBLE,
+     &         1,dimid1,varidEquiv(2))
+
+          err = NF_PUT_ATT_DOUBLE(fidglobal(num_file),
+     &         varidEquiv(2),'_FillValue',
+     &         NF_DOUBLE,1, 0. _d 0 )
+
+! Write buffer to file, reopen file with WRITE permissions
+          err = NF_ENDDEF(fidftlglobal(num_file))
+          err = NF_CLOSE(fidftlglobal(num_file))
+          err = NF_OPEN(tlfnameequincglo(1:JL), NF_WRITE,
+     &         fidftlglobal(num_file))
+
+         ELSE
+! Obtain tl file unit id
+          err = NF_OPEN(tlfnameequincglo(1:JL), NF_WRITE,
+     &         fidftlglobal(num_file))
          ENDIF
 #endif
         ENDIF
@@ -573,7 +633,7 @@ C     == end of interface ==
 ! Number of valid ihop obs in the file
           ObsNo_tiled(num_file,bi,bj) = ObsNo_valid
 
-          WRITE(msgbuf,'(A,I4,A,I4)')
+          WRITE(msgbuf,'(2(A,I4))')
      &       '  current tile is bi,bj                      =',
      &       bi,',',bj
           CALL print_message(
@@ -589,7 +649,7 @@ C     == end of interface ==
 ! Create files for model counterparts to ihop obs
 !===========================================================
 
-          IF (ObsNo_tiled(num_file,bi,bj).GT.0) THEN
+          IF (obsNo_tiled(num_file,bi,bj).GT.0) THEN
            iG=bi+(myXGlobalLo-1)/sNx ! Kludge until unstructered tiles
            jG=bj+(myYGlobalLo-1)/sNy ! Kludge until unstructered tiles
 
@@ -598,35 +658,59 @@ C     == end of interface ==
 !IE:           IF (ihopObsDoNcOutput) THEN
 ! ALWAYS Write to nc file
 
-           WRITE(fnameequinc,'(3A,I3.3,A,I3.3,A)')
+           WRITE(fnameequinc,'(3A,2(I3.3,A))')
      &      ihopObsDir(1:JL),ihopObsFile(1:IL),'.',iG,'.',jG,'.equi.nc'
-           WRITE(adfnameequinc,'(4A,I3.3,A,I3.3,A)')
+#ifdef ALLOW_ADJOINT_RUN
+           WRITE(adfnameequinc,'(4A,2(I3.3,A))')
      &      ihopObsDir(1:JL),'ad',
      &      ihopObsFile(1:IL),'.',iG,'.',jG,'.equi.nc'
+#endif
+#ifdef ALLOW_TANGENTLINEAR_RUN
+           WRITE(tlfnameequinc,'(4A,2(I3.3,A))')
+     &      ihopObsDir(1:JL),'ad',
+     &      ihopObsFile(1:IL),'.',iG,'.',jG,'.equi.nc'
+#endif
 
-           inquire( file=fnameequinc, exist=exst )
+           JL = ILNBLNK( fnameequinc )
+           inquire( file=fnameequinc(1:JL), exist=exst )
            IF (.NOT.exst) THEN
             CALL ihop_cost_init_equifiles(num_file,
-     &       fiddata_obs(num_file),fnameequinc,
+     &       fiddata_obs(num_file),fnameequinc(1:JL),
      &       fidfwd_obs(num_file,bi,bj),
      &       ObsNo_tiled(num_file,bi,bj),
      &       bi,bj,myThid)
            ELSE
-            err = NF_OPEN(fnameequinc,NF_WRITE,
+            err = NF_OPEN(fnameequinc(1:JL),NF_WRITE,
      &        fidfwd_obs(num_file,bi,bj))
            ENDIF
 
 #ifdef ALLOW_ADJOINT_RUN
-           inquire( file=adfnameequinc, exist=exst )
+           JL = ILNBLNK( adfnameequinc )
+           inquire( file=adfnameequinc(1:JL), exist=exst )
            IF (.NOT.exst) THEN
             CALL ihop_cost_init_equifiles(num_file,
      &       fiddata_obs(num_file),
-     &       adfnameequinc, fidadj_obs(num_file,bi,bj),
+     &       adfnameequinc(1:JL), fidadj_obs(num_file,bi,bj),
      &       ObsNo_tiled(num_file,bi,bj),
      &       bi,bj,myThid)
            ELSE
-            err = NF_OPEN(adfnameequinc,NF_WRITE,
+            err = NF_OPEN(adfnameequinc(1:JL),NF_WRITE,
      &       fidadj_obs(num_file,bi,bj))
+           ENDIF
+#endif
+
+#ifdef ALLOW_TANGENTLINEAR_RUN
+           JL = ILNBLNK( tlfnameequinc )
+           inquire( file=tlfnameequinc(1:JL), exist=exst )
+           IF (.NOT.exst) THEN
+            CALL ihop_cost_init_equifiles(num_file,
+     &       fiddata_obs(num_file),
+     &       tlfnameequinc(1:JL), fidftl_obs(num_file,bi,bj),
+     &       ObsNo_tiled(num_file,bi,bj),
+     &       bi,bj,myThid)
+           ELSE
+            err = NF_OPEN(tlfnameequinc(1:JL),NF_WRITE,
+     &       fidftl_obs(num_file,bi,bj))
            ENDIF
 #endif
 
