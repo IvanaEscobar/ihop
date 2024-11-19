@@ -1145,6 +1145,8 @@ CADJ STORE pTracer     = comlev1, key = ikey_dynamics, kind = isbyte
 C--   Acoustical physics
       CALL IHOP_SOUND_SPEED( myThid )
       CALL IHOP_DRIVER( myTime,myIter,myThid )
+CML   I think that this could go here instead of being called twice in the_main_loop
+CML   CALL IHOP_COST_INLOOP( myTime, myThid )
 #endif /* ALLOW_IHOP */
 
 #ifdef ALLOW_DIAGNOSTICS

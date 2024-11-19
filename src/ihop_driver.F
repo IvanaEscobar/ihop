@@ -36,16 +36,18 @@ C !OUTPUT PARAMETERS: ==================================================
 
 C !LOCAL VARIABLES: ====================================================
       INTEGER t
+      LOGICAL do_ihop_main
+
 CEOP
 
 #ifdef ALLOW_IHOP
+      do_ihop_main=.FALSE.
       DO t=1,nts
-        IF ( IHOP_iter(t).GE.0 ) THEN
-            IF ( IHOP_iter(t).EQ.myIter ) THEN
-                CALL IHOP_MAIN( myTime, myIter, myThid )
-            ENDIF
+        IF ( IHOP_iter(t).GE.0 .AND. IHOP_iter(t).EQ.myIter ) THEN
+          do_ihop_main=.TRUE.
         ENDIF
       ENDDO
+      IF ( do_ihop_main ) CALL IHOP_MAIN( myTime, myIter, myThid )
 #endif /* ALLOW_IHOP */
 
       RETURN

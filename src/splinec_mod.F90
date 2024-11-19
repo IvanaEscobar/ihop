@@ -79,7 +79,9 @@ SUBROUTINE CSPLINE (TAU, C, N, IBCBEG, IBCEND, NDIM)
 
   L = N - 1
 
-!$TAF init cspline1 = static, 4*ndim*L
+!$TAF init cspline1 = static, 1
+!$TAF init cspline1_ndim = static, NDIM
+!ML!$TAF init cspline1 = static, 4*NDIM*L ! not sure if this correct
 
   DO M = 2,N
      C(3,M) = TAU(M) - TAU(M-1)
@@ -88,7 +90,7 @@ SUBROUTINE CSPLINE (TAU, C, N, IBCBEG, IBCEND, NDIM)
 
   !   * BEGINNING BOUNDARY CONDITION SECTION *
 
-!$TAF store C = cspline1
+!$TAF INCOMPLETE C
   IF (IBCBEG==0)  THEN                           ! IBCBEG = 0
 !$TAF store C = cspline1
      IF (N.GT.2)  THEN                           !     N > 2
@@ -121,17 +123,20 @@ SUBROUTINE CSPLINE (TAU, C, N, IBCBEG, IBCEND, NDIM)
   !   * RUNNING CALCULATIONS TO N-1 - LOOP IS NOT EXECUTED IF N = 2 *
 
   DO M = 2,L
-!$TAF store C = cspline1
+!$TAF store C = cspline1_ndim, key = M
      G = -C(3,M+1) / C(4,M-1)
      C(2,M) = G*C(2,M-1) + 3.0*(C(3,M)*C(4,M+1) + C(3,M+1)*C(4,M))
      C(4,M) = G*C(3,M-1) + 2.0*(C(3,M) + C(3,M+1))
   END DO
+!$TAF store G = cspline1
 
   !   * ENDING BOUNDARY CONDITION SECTION *
 
+!$TAF INCOMPLETE C
   IF (IBCEND /= 1)  THEN
 !$TAF store C = cspline1
      IF (IBCEND==0)  THEN
+!$TAF INCOMPLETE C
         IF (N==2 .AND. IBCBEG==0)  THEN
            C(2,N) = C(4,N)
         ELSE IF ((N==3 .AND. IBCBEG==0) .OR. N==2)  THEN
@@ -154,10 +159,10 @@ SUBROUTINE CSPLINE (TAU, C, N, IBCBEG, IBCEND, NDIM)
         G = -1.0 / C(4,N-1)
      ELSE
         ! do nothing
-        C(2,N) = C(2,N) 
-        C(4,N) = C(4,N) 
+        C(2,N) = C(2,N)
+        C(4,N) = C(4,N)
         G = G
-     END IF
+     ENDIF
 
      IF ( IBCBEG.GT.0 .OR. N.GT.2)  THEN
 !$TAF store C = cspline1
@@ -165,6 +170,7 @@ SUBROUTINE CSPLINE (TAU, C, N, IBCBEG, IBCEND, NDIM)
         C(2,N) = (G*C(2,N-1) + C(2,N)) / C(4,N)
      END IF
   END IF
+!$TAF store C = cspline1
 
   !   * RUN THE ENDING BOUNDARY EFFECT BACK THROUGH THE EQUATIONS *
 
@@ -194,7 +200,7 @@ SUBROUTINE CSPLINE (TAU, C, N, IBCBEG, IBCEND, NDIM)
 
   C(4,N) = (0.0,0.0)
   DO I = 1,L                            ! INTEGRATE OVER THE INTERVAL
-!$TAF store C = cspline1
+!$TAF store C(4,:) = cspline1_ndim, key = I
      DTAU = TAU(I+1) - TAU(I)
      C(4,N) = C(4,N) + DTAU*(C(1,I) + DTAU*(C(2,I)/2.0 + &
           DTAU*(C(3,I)/6.0 + DTAU*C(4,I)/24.0)))
