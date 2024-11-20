@@ -1,13 +1,24 @@
 #include "IHOP_OPTIONS.h"
 
-C--  File active_file_control_ihop_tile_rl.F:
-C--   Contents
-C--   o active_read_ihop_tile_rl
-C--   o active_write_ihop_tile_rl
+C     ==================================================================
+C     active_file_control_cost_ihop.F: Routines that handle I/O of
+C                                      tiled and global active 
+C                                      variables for adjoint
+C                                      calculations, related to NetCDF
+C                                      iHOP data files
+C
+C     Routines:
+C     o active_read_ihop_tile_rl  - Read an active 1D record from file
+C     o active_write_ihop_tile_rl - Write an active 1D record to file
+C     o active_read_ihop_glob_rl  - Read an active 1D record from file
+C     o active_write_ihop_glob_rl - Write an active 1D record to file
+C     ==================================================================
 
-CBOP 0
-C     !ROUTINE: ACTIVE_READ_IHOP_TILE_RL
-C     !INTERFACE:
+C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
+CBOP
+C !ROUTINE: ACTIVE_READ_IHOP_TILE_RL
+
+C !INTERFACE:
       SUBROUTINE ACTIVE_READ_IHOP_TILE_RL(
      I                                  fid,
      I                                  active_num_file,
@@ -22,14 +33,12 @@ C     !INTERFACE:
      I                                  myThid )
 
 C     !DESCRIPTION:
-C     ==================================================================
-C     | SUBROUTINE ACTIVE_READ_IHOP_TILE_RL
-C     | Read an active record from an IHOP .equi. tiled file
-C     | (can be netcdf or binary)
-C     ==================================================================
+C     Read an active record from an iHOP .equi tiled NetCDF or 
+C     Binary file
 
-C !USES:
+C     !USES:
       IMPLICIT NONE
+C     == Global variables ===
 #include "EEPARAMS.h"
 #include "SIZE.h"
 #include "PARAMS.h"
@@ -38,168 +47,146 @@ C !USES:
 # include "IHOP_SIZE.h"
 # ifdef ALLOW_COST
 #  include "IHOP_COST.h"
-# endif
+# ENDIF
 #endif
 
-C !INPUT PARAMETERS:
-      integer  fid
-      integer  active_num_file
-      integer  irec, irecglob
-      integer  theSimulationMode
-      integer  myOptimIter
-      integer  bi, bj, myThid
+C     !INPUT PARAMETERS:
+C     myThid :: my thread ID
+      INTEGER  fid
+      INTEGER  active_num_file
+      LOGICAL  lAdInit
+      INTEGER  irec, irecglob
+      INTEGER  theSimulationMode
+      INTEGER  myOptimIter
+      INTEGER  bi, bj, myThid
+C     !OUTPUT PARAMETERS:
       _RL      active_var
-      logical  lAdInit
-
 CEOP
 
+C     !LOCAL VARIABLES:
 #if (defined ALLOW_IHOP) && (defined ALLOW_COST)
-C !LOCAL VARIABLES:
-      integer  err, varid1, varid2
-      integer  vec_start, vec_count
-      integer  ivar, i
+      INTEGER  err, varId1
+      INTEGER  vec_start, vec_count
       _RL      active_data_t
-      Real*8   vec_tmp(2)
+      REAL*8   vec_tmp(2)
 
-c     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
-c     >>>>>>>>>>>>>>>>>>> FORWARD RUN <<<<<<<<<<<<<<<<<<<
-c     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
+      IF (ihopDoNcOutput) THEN
+        vec_start = irec
+        vec_count = 1
 
-      if (theSimulationMode .eq. FORWARD_SIMULATION) then
+        err = NF_INQ_VARID( fid, ihop_nameequi, varId1 )
 
-        _BEGIN_MASTER( myThid )
+      ENDIF
 
-      if (ihopDoNcOutput) then
+C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
+C     >>>>>>>>>>>>>>>>>>> FORWARD RUN <<<<<<<<<<<<<<<<<<<
+C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
 
-      vec_start=irec
-      vec_count=1
-
-      err = NF_INQ_VARID(fid, ihop_nameequi, varid1)
-      err = NF_GET_VARA_DOUBLE(fid, varid1, vec_start, vec_count,
-     & active_var)
-
-
-      else
-
-      read(fid,rec=(irec-1)*2+1 )
-     & vec_tmp
-#ifdef _BYTESWAPIO
-            call MDS_BYTESWAPR8(2,vec_tmp)
-#endif
-      active_var=vec_tmp(1)
-      read(fid,rec=(irec-1)*2+2 )
-     & vec_tmp
-#ifdef _BYTESWAPIO
-            call MDS_BYTESWAPR8(2,vec_tmp)
-#endif
-
-      endif
-
-        _END_MASTER( myThid )
-
-      endif
-
-c     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
-c     >>>>>>>>>>>>>>>>>>> ADJOINT RUN <<<<<<<<<<<<<<<<<<<
-c     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
-
-      if (theSimulationMode .eq. REVERSE_SIMULATION) then
+      IF (theSimulationMode .EQ. FORWARD_SIMULATION) THEN
 
         _BEGIN_MASTER( myThid )
 
-      if (ihopDoNcOutput) then
+        IF (ihopDoNcOutput) THEN
+          err = NF_GET_VARA_DOUBLE( fid, varId1, 
+     &          vec_start, vec_count, active_var )
 
-      vec_start=irec
-      vec_count=1
-
-      err = NF_INQ_VARID(fid, ihop_nameequi, varid1)
-      err = NF_GET_VARA_DOUBLE(fid, varid1, vec_start, vec_count,
-     & active_data_t)
-
-c     Add active_var from appropriate location to data.
-      active_data_t = active_data_t + active_var
-c     Store the result on disk.
-      vec_start=irec
-      vec_count=1
-
-      err = NF_INQ_VARID(fid, ihop_nameequi, varid1)
-      err = NF_PUT_VARA_DOUBLE(fid, varid1, vec_start, vec_count,
-     & active_data_t)
-
-c     Set active_var to zero.
-      active_var = 0. _d 0
-
-      else
-
-      read(fid,rec=(irec-1)*2+1 )
-     & vec_tmp
+        ELSE
+          READ( fid, REC = (irec-1)*2+1 ) vec_tmp
 #ifdef _BYTESWAPIO
-            call MDS_BYTESWAPR8(2,vec_tmp)
+          CALL MDS_BYTESWAPR8( 2, vec_tmp )
 #endif
-      active_data_t=vec_tmp(1)
+          active_var = vec_tmp(1)
 
-c     Add active_var from appropriate location to data.
-      active_data_t = active_data_t + active_var
-
-c     Store the result on disk.
-      vec_tmp(1)=active_data_t
-#ifdef _BYTESWAPIO
-            call MDS_BYTESWAPR8(2,vec_tmp)
-#endif
-      write(fid,rec=(irec-1)*2+1 )
-     & vec_tmp
-
-c     Set active_var to zero.
-      active_var = 0. _d 0
-
-      endif
+        ENDIF
 
         _END_MASTER( myThid )
 
-      endif
+      ENDIF
 
-c     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
-c     >>>>>>>>>>>>>>>>>>> TANGENT RUN <<<<<<<<<<<<<<<<<<<
-c     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
+C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
+C     >>>>>>>>>>>>>>>>>>> ADJOINT RUN <<<<<<<<<<<<<<<<<<<
+C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
 
-      if (theSimulationMode .eq. TANGENT_SIMULATION) then
+      IF (theSimulationMode .EQ. REVERSE_SIMULATION) THEN
 
         _BEGIN_MASTER( myThid )
 
-      if (ihopDoNcOutput) then
+        IF (ihopDoNcOutput) THEN
+          err = NF_GET_VARA_DOUBLE( fid, varId1, 
+     &          vec_start, vec_count, active_data_t )
 
-      vec_start=irec
-      vec_count=1
+C Add active_var from appropriate location to data.
+          active_data_t = active_data_t + active_var
 
-      err = NF_INQ_VARID(fid, ihop_nameequi, varid1)
-      err = NF_GET_VARA_DOUBLE(fid, varid1, vec_start, vec_count,
-     & active_var)
+C Store the result on disk.
+          err = NF_PUT_VARA_DOUBLE(fid, varId1, 
+     &          vec_start, vec_count, active_data_t )
 
-      else
+C Set active_var to zero.
+          active_var = 0. _d 0
 
-      read(fid,rec=(irec-1)*2+1 )
-     & vec_tmp
+        ELSE
+          READ( fid, REC = (irec-1)*2+1 ) vec_tmp
 #ifdef _BYTESWAPIO
-            call MDS_BYTESWAPR8(2,vec_tmp)
+          CALL MDS_BYTESWAPR8( 2, vec_tmp )
 #endif
-      active_var=vec_tmp(1)
 
-      endif
+C Add active_var from appropriate location to data.
+          active_data_t = vec_tmp(1)
+          active_data_t = active_data_t + active_var
+
+C Store the result on disk.
+          vec_tmp(1) = active_data_t
+#ifdef _BYTESWAPIO
+          CALL MDS_BYTESWAPR8( 2, vec_tmp )
+#endif
+          WRITE( fid, REC = (irec-1)*2+1 ) vec_tmp
+
+C Set active_var to zero.
+          active_var = 0. _d 0
+
+        ENDIF
 
         _END_MASTER( myThid )
 
-      endif
+      ENDIF
+
+C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
+C     >>>>>>>>>>>>>>>>>>> TANGENT RUN <<<<<<<<<<<<<<<<<<<
+C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
+
+      IF (theSimulationMode .EQ. TANGENT_SIMULATION) THEN
+
+        _BEGIN_MASTER( myThid )
+
+        IF (ihopDoNcOutput) THEN
+        err = NF_GET_VARA_DOUBLE( fid, varId1,
+     &        vec_start, vec_count, active_var )
+
+        ELSE
+
+          READ( fid, REC = (irec-1)*2+1 ) vec_tmp
+#ifdef _BYTESWAPIO
+          CALL MDS_BYTESWAPR8( 2, vec_tmp )
+#endif
+          active_var = vec_tmp(1)
+
+        ENDIF
+
+        _END_MASTER( myThid )
+
+      ENDIF
 
 #endif /* ALLOW_IHOP */
 
       RETURN
       END
 
-C     =================================================================
+C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
+CBOP
+C !ROUTINE: ACTIVE_WRITE_IHOP_TILE_RL
 
-CBOP 0
-C     !ROUTINE: ACTIVE_WRITE_IHOP_TILE_RL
-C     !INTERFACE:
+C !INTERFACE:
       SUBROUTINE ACTIVE_WRITE_IHOP_TILE_RL(
      I                                 fid,
      I                                 active_num_file,
@@ -212,15 +199,14 @@ C     !INTERFACE:
      I                                 bj,
      I                                 myThid )
 
-C     !DESCRIPTION:
-C     ==========================================================
-C     | SUBROUTINE ACTIVE_WRITE_IHOP_TILE_RL
-C     | Write an active record to an ihop .equi. tiled file
-C     | (can be netcdf or binary)
-C     ==========================================================
 
-C !USES:
+C     !DESCRIPTION:
+C     Write an active record from an iHOP .equi tiled NetCDF or 
+C     Binary file
+
+C     !USES:
       IMPLICIT NONE
+C     == Global variables ===
 #include "EEPARAMS.h"
 #include "SIZE.h"
 #include "PARAMS.h"
@@ -229,125 +215,144 @@ C !USES:
 # include "IHOP_SIZE.h"
 # ifdef ALLOW_COST
 #  include "IHOP_COST.h"
-# endif
+# ENDIF
 #endif
 
-C !INPUT PARAMETERS:
-      integer  fid
-      integer  active_num_file
-      integer  irec, irecglob
-      integer  theSimulationMode
-      integer  myOptimIter
-      integer  bi, bj, myThid
+C     !INPUT PARAMETERS:
+C     myThid :: my thread ID
+      INTEGER  fid
+      INTEGER  active_num_file
       _RL      active_var
+      INTEGER  irec, irecglob
+      INTEGER  theSimulationMode
+      INTEGER  myOptimIter
+      INTEGER  bi, bj, myThid
+C     !OUTPUT PARAMETERS:
 CEOP
 
+C     !LOCAL VARIABLES:
 #if (defined ALLOW_IHOP) && (defined ALLOW_COST)
-C !LOCAL VARIABLES:
-      integer  err, varid1, varid2, varid3
-      integer  vec_start, vec_count
-      integer  ivar, i
+      INTEGER  err, varId1, varId2
+      INTEGER  vec_start, vec_count
       _RL      active_data_t
-      real*8   vec_tmp(2)
+      REAL*8   vec_tmp(2)
 
-c     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
-c     >>>>>>>>>>>>>>>>>>> FORWARD RUN <<<<<<<<<<<<<<<<<<<
-c     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
+      IF (ihopDoNcOutput) THEN
+        vec_start = irec
+        vec_count = 1
 
-      if (theSimulationMode .eq. FORWARD_SIMULATION) then
+        err = NF_INQ_VARID( fid, ihop_nameequi, varId1 )
 
-        _BEGIN_MASTER( myThid )
+      ENDIF
 
-      vec_start=irec
-      vec_count=1
+C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
+C     >>>>>>>>>>>>>>>>>>> FORWARD RUN <<<<<<<<<<<<<<<<<<<
+C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
 
-      err = NF_INQ_VARID(fid, ihop_nameequi, varid1)
-      err = NF_PUT_VARA_DOUBLE(fid, varid1, vec_start, vec_count,
-     & active_var)
-
-
-      err = NF_INQ_VARID(fid,'ihopObs_ind_glob_tiled', varid3 )
-      err = NF_PUT_VAR1_INT(fid, varid3, vec_start,
-     & irecglob)
-
-        _END_MASTER( myThid )
-
-      endif
-
-c     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
-c     >>>>>>>>>>>>>>>>>>> ADJOINT RUN <<<<<<<<<<<<<<<<<<<
-c     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
-
-      if (theSimulationMode .eq. REVERSE_SIMULATION) then
+      IF (theSimulationMode .EQ. FORWARD_SIMULATION) THEN
 
         _BEGIN_MASTER( myThid )
 
-      vec_start=irec
-      vec_count=1
-      err = NF_INQ_VARID(fid, ihop_nameequi, varid1)
-      err = NF_GET_VARA_DOUBLE(fid, varid1, vec_start, vec_count,
-     & active_data_t)
+        IF (ihopDoNcOutput) THEN
+          err = NF_PUT_VARA_DOUBLE( fid, varId1, 
+     &          vec_start, vec_count, active_var )
 
-c     Add active_var to data.
-      active_var = active_var + active_data_t
-      active_data_t = 0. _d 0
+          err = NF_INQ_VARID( fid, 'ihopObs_ind_glob_tiled', varId2 )
+          err = NF_PUT_VAR1_INT( fid, varId2, vec_start, irecglob )
 
-      vec_start=irec
-      vec_count=1
+        ELSE
+          vec_tmp(1) = active_var
+          vec_tmp(2) = irecglob
 
-      err = NF_INQ_VARID(fid, ihop_nameequi, varid1)
-      err = NF_PUT_VARA_DOUBLE(fid, varid1, vec_start, vec_count,
-     & active_data_t)
-
-
-        _END_MASTER( myThid )
-
-      endif
-
-c     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
-c     >>>>>>>>>>>>>>>>>>> TANGENT RUN <<<<<<<<<<<<<<<<<<<
-c     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
-
-      if (theSimulationMode .eq. TANGENT_SIMULATION) then
-
-        _BEGIN_MASTER( myThid )
-
-      if (ihopDoNcOutput) then
-
-      vec_start=irec
-      vec_count=1
-
-      err = NF_INQ_VARID(fid, ihop_nameequi, varid1)
-      err = NF_PUT_VARA_DOUBLE(fid, varid1, vec_start, vec_count,
-     & active_var)
-
-      else
-
-      vec_tmp(1)=active_var
-      vec_tmp(2)=irecglob
 #ifdef _BYTESWAPIO
-            call MDS_BYTESWAPR8(2,vec_tmp)
+          CALL MDS_BYTESWAPR8( 2, vec_tmp )
 #endif
-      write(fid,rec=(irec-1)*2+1 )
-     & vec_tmp
+          WRITE( fid, REC = (irec-1)*2+1 ) vec_tmp
 
-      endif
+        ENDIF
 
         _END_MASTER( myThid )
 
-      endif
+      ENDIF
+
+C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
+C     >>>>>>>>>>>>>>>>>>> ADJOINT RUN <<<<<<<<<<<<<<<<<<<
+C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
+
+      IF (theSimulationMode .EQ. REVERSE_SIMULATION) THEN
+
+        _BEGIN_MASTER( myThid )
+
+        IF (ihopDoNcOutput) THEN
+          err = NF_GET_VARA_DOUBLE( fid, varId1,
+     &          vec_start, vec_count, active_data_t )
+
+C Add active_var to data.
+          active_var = active_var + active_data_t
+          active_data_t = 0. _d 0
+
+          err = NF_PUT_VARA_DOUBLE( fid, varId1,
+     &          vec_start, vec_count, active_data_t )
+
+        ELSE
+          READ( fid, REC = (irec-1)*2+1 ) vec_tmp
+#ifdef _BYTESWAPIO
+          CALL MDS_BYTESWAPR8( 2, vec_tmp )
+#endif
+
+C Add active_var from appropriate location to data.
+          active_data = active_data + active_var_t
+          active_data_t = 0. _d 0
+
+C Store the result on disk.
+          vec_tmp(1) = active_data_t
+#ifdef _BYTESWAPIO
+          CALL MDS_BYTESWAPR8( 2, vec_tmp )
+#endif
+          WRITE( fid, REC = (irec-1)*2+1 ) vec_tmp
+
+        ENDIF
+
+        _END_MASTER( myThid )
+
+      ENDIF
+
+C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
+C     >>>>>>>>>>>>>>>>>>> TANGENT RUN <<<<<<<<<<<<<<<<<<<
+C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
+
+      IF (theSimulationMode .EQ. TANGENT_SIMULATION) THEN
+
+        _BEGIN_MASTER( myThid )
+
+        IF (ihopDoNcOutput) THEN
+          err = NF_PUT_VARA_DOUBLE( fid, varId1,
+     &          vec_start, vec_count, active_var )
+
+        ELSE
+          vec_tmp(1)=active_var
+          vec_tmp(2)=irecglob
+#ifdef _BYTESWAPIO
+          CALL MDS_BYTESWAPR8( 2, vec_tmp )
+#endif  
+          WRITE( fid, REC = (irec-1)*2+1 ) vec_tmp
+
+        ENDIF
+
+        _END_MASTER( myThid )
+
+      ENDIF
 
 #endif /* ALLOW_IHOP */
 
       RETURN
       END
 
-C     ==================================================================
+C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
+CBOP
+C !ROUTINE: ACTIVE_READ_IHOP_GLOB_RL
 
-
-CBOP 0
-C     !ROUTINE: ACTIVE_READ_IHOP_GLOB_RL
-C     !INTERFACE:
+C !INTERFACE:
       SUBROUTINE ACTIVE_READ_IHOP_GLOB_RL(
      I                                  fid,
      I                                  active_num_file,
@@ -360,13 +365,11 @@ C     !INTERFACE:
      I                                  myThid )
 
 C     !DESCRIPTION:
-C     ==================================================================
-C     | SUBROUTINE ACTIVE_READ_IHOP_GLOB_RL
-C     | Read an active record from an IHOP .equi. global file
-C     ==================================================================
+C     Read an active record from an iHOP .equi global NetCDF file
 
-C !USES:
+C     !USES:
       IMPLICIT NONE
+C     == Global variables ===
 #include "EEPARAMS.h"
 #include "SIZE.h"
 #include "PARAMS.h"
@@ -375,109 +378,103 @@ C !USES:
 # include "IHOP_SIZE.h"
 # ifdef ALLOW_COST
 #  include "IHOP_COST.h"
-# endif
+# ENDIF
 #endif
 
-C !INPUT PARAMETERS:
-      integer  fid
-      integer  active_num_file
-      integer  irec, irecglob
-      integer  theSimulationMode
-      integer  myOptimIter
-      integer  myThid
+C     !INPUT PARAMETERS:
+C     myThid :: my thread ID
+      INTEGER  fid
+      INTEGER  active_num_file
+      LOGICAL  lAdInit
+      INTEGER  irec, irecglob
+      INTEGER  theSimulationMode
+      INTEGER  myOptimIter
+      INTEGER  myThid
+C     !OUTPUT PARAMETERS:
       _RL      active_var
-      logical  lAdInit
-
 CEOP
 
+C     !LOCAL VARIABLES:
 #if (defined ALLOW_IHOP) && (defined ALLOW_COST)
-C !LOCAL VARIABLES:
-      integer  err, varid1, varid2
-      integer  vec_start, vec_count
-      integer  ivar, i
+      INTEGER  err, varId1
+      INTEGER  vec_start, vec_count
       _RL      active_data_t
-      real*8   vec_tmp(2)
+      REAL*8   vec_tmp(2)
 
-c     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
-c     >>>>>>>>>>>>>>>>>>> FORWARD RUN <<<<<<<<<<<<<<<<<<<
-c     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
+      IF (ihopDoNcOutput) THEN
+        vec_start = irecglob
+        vec_count = 1
 
-      if (theSimulationMode .eq. FORWARD_SIMULATION) then
+        err = NF_INQ_VARID( fid, ihop_nameequi, varId1 )
 
-        _BEGIN_MASTER( myThid )
+      ENDIF
 
-      vec_start=irecglob
-      vec_count=1
+C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
+C     >>>>>>>>>>>>>>>>>>> FORWARD RUN <<<<<<<<<<<<<<<<<<<
+C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
 
-      err = NF_INQ_VARID(fid, ihop_nameequi, varid1)
-      err = NF_GET_VARA_DOUBLE(fid, varid1, vec_start, vec_count,
-     & active_var)
-
-        _END_MASTER( myThid )
-
-      endif
-
-c     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
-c     >>>>>>>>>>>>>>>>>>> ADJOINT RUN <<<<<<<<<<<<<<<<<<<
-c     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
-
-      if (theSimulationMode .eq. REVERSE_SIMULATION) then
+      IF (theSimulationMode .EQ. FORWARD_SIMULATION) THEN
 
         _BEGIN_MASTER( myThid )
 
-      vec_start=irecglob
-      vec_count=1
-
-      err = NF_INQ_VARID(fid, ihop_nameequi, varid1)
-      err = NF_GET_VARA_DOUBLE(fid, varid1, vec_start, vec_count,
-     & active_data_t)
-
-c     Add active_var from appropriate location to data.
-      active_data_t = active_data_t + active_var
-c     Store the result on disk.
-      vec_start=irec
-      vec_count=1
-
-      err = NF_INQ_VARID(fid, ihop_nameequi, varid1)
-      err = NF_PUT_VARA_DOUBLE(fid, varid1, vec_start, vec_count,
-     & active_data_t)
-
-c     Set active_var to zero.
-      active_var = 0. _d 0
+        err = NF_GET_VARA_DOUBLE( fid, varId1, 
+     &        vec_start, vec_count, active_var )
 
         _END_MASTER( myThid )
 
-      endif
+      ENDIF
 
-c     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
-c     >>>>>>>>>>>>>>>>>>> TANGENT RUN <<<<<<<<<<<<<<<<<<<
-c     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
+C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
+C     >>>>>>>>>>>>>>>>>>> ADJOINT RUN <<<<<<<<<<<<<<<<<<<
+C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
 
-      if (theSimulationMode .eq. TANGENT_SIMULATION) then
+      IF (theSimulationMode .EQ. REVERSE_SIMULATION) THEN
 
         _BEGIN_MASTER( myThid )
 
-      vec_start=irecglob
-      vec_count=1
+        err = NF_GET_VARA_DOUBLE( fid, varId1,
+     &        vec_start, vec_count, active_data_t )
 
-      err = NF_INQ_VARID(fid, ihop_nameequi, varid1)
-      err = NF_GET_VARA_DOUBLE(fid, varid1, vec_start, vec_count,
-     & active_var)
+C Add active_var from appropriate location to data.
+        active_data_t = active_data_t + active_var
+C Store the result on disk.
+        vec_start=irec
+
+        err = NF_PUT_VARA_DOUBLE( fid, varId1,
+     &        vec_start, vec_count, active_data_t )
+
+C Set active_var to zero.
+        active_var = 0. _d 0
 
         _END_MASTER( myThid )
 
-      endif
+      ENDIF
+
+C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
+C     >>>>>>>>>>>>>>>>>>> TANGENT RUN <<<<<<<<<<<<<<<<<<<
+C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
+
+      IF (theSimulationMode .EQ. TANGENT_SIMULATION) THEN
+
+        _BEGIN_MASTER( myThid )
+
+        err = NF_GET_VARA_DOUBLE( fid, varId1, 
+     &        vec_start, vec_count, active_var )
+
+        _END_MASTER( myThid )
+
+      ENDIF
 
 #endif /* ALLOW_IHOP */
 
       RETURN
       END
 
-C     =================================================================
+C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
+CBOP
+C !ROUTINE: ACTIVE_WRITE_IHOP_GLOB_RL
 
-CBOP 0
-C     !ROUTINE: ACTIVE_WRITE_IHOP_GLOB_RL
-C     !INTERFACE:
+C !INTERFACE:
       SUBROUTINE ACTIVE_WRITE_IHOP_GLOB_RL(
      I                                 fid,
      I                                 active_num_file,
@@ -489,13 +486,11 @@ C     !INTERFACE:
      I                                 myThid )
 
 C     !DESCRIPTION:
-C     ==========================================================
-C     | SUBROUTINE ACTIVE_WRITE_IHOP_GLOB_RL
-C     | Write an active record to an ihop .equi. global file
-C     ==========================================================
+C     Write an active record from an iHOP .equi global NetCDF file
 
-C !USES:
+C     !USES:
       IMPLICIT NONE
+C     == Global variables ===
 #include "EEPARAMS.h"
 #include "SIZE.h"
 #include "PARAMS.h"
@@ -504,98 +499,91 @@ C !USES:
 # include "IHOP_SIZE.h"
 # ifdef ALLOW_COST
 #  include "IHOP_COST.h"
-# endif
+# ENDIF
 #endif
 
-C !INPUT PARAMETERS:
-      integer  fid
-      integer  active_num_file
-      integer  irec, irecglob
-      integer  theSimulationMode
-      integer  myOptimIter
-      integer  myThid
+C     !INPUT PARAMETERS:
+C     myThid :: my thread ID
+      INTEGER  fid
+      INTEGER  active_num_file
       _RL      active_var
+      INTEGER  irec, irecglob
+      INTEGER  theSimulationMode
+      INTEGER  myOptimIter
+      INTEGER  myThid
+C     !OUTPUT PARAMETERS:
 CEOP
 
+C     !LOCAL VARIABLES:
 #if (defined ALLOW_IHOP) && (defined ALLOW_COST)
-C !LOCAL VARIABLES:
-      integer  err, varid1, varid2
-      integer  vec_start, vec_count
-      integer  ivar, i
+      INTEGER  err, varId1
+      INTEGER  vec_start, vec_count
       _RL      active_data_t
-      real*8   vec_tmp(2)
+      REAL*8   vec_tmp(2)
 
-c     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
-c     >>>>>>>>>>>>>>>>>>> FORWARD RUN <<<<<<<<<<<<<<<<<<<
-c     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
+      IF (ihopDoNcOutput) THEN
+        vec_start = irecglob
+        vec_count = 1
 
-      if (theSimulationMode .eq. FORWARD_SIMULATION) then
+        err = NF_INQ_VARID( fid, ihop_nameequi, varId1 )
 
-        _BEGIN_MASTER( myThid )
+      ENDIF
 
-      vec_start=irecglob
-      vec_count=1
+C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
+C     >>>>>>>>>>>>>>>>>>> FORWARD RUN <<<<<<<<<<<<<<<<<<<
+C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
 
-      err = NF_INQ_VARID(fid, ihop_nameequi, varid1)
-      err = NF_PUT_VARA_DOUBLE(fid, varid1, vec_start, vec_count,
-     & active_var)
-
-        _END_MASTER( myThid )
-
-      endif
-
-c     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
-c     >>>>>>>>>>>>>>>>>>> ADJOINT RUN <<<<<<<<<<<<<<<<<<<
-c     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
-
-      if (theSimulationMode .eq. REVERSE_SIMULATION) then
+      IF (theSimulationMode .EQ. FORWARD_SIMULATION) THEN
 
         _BEGIN_MASTER( myThid )
 
-      vec_start=irec
-      vec_count=1
-      err = NF_INQ_VARID(fid, ihop_nameequi, varid1)
-      err = NF_GET_VARA_DOUBLE(fid, varid1, vec_start, vec_count,
-     & active_data_t)
-
-c     Add active_var to data.
-      active_var = active_var + active_data_t
-      active_data_t = 0. _d 0
-
-      vec_start=irecglob
-      vec_count=1
-
-      err = NF_INQ_VARID(fid, ihop_nameequi, varid1)
-      err = NF_PUT_VARA_DOUBLE(fid, varid1, vec_start, vec_count,
-     & active_data_t)
+        err = NF_PUT_VARA_DOUBLE( fid, varId1, 
+     &        vec_start, vec_count, active_var )
 
         _END_MASTER( myThid )
 
-      endif
+      ENDIF
 
-c     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
-c     >>>>>>>>>>>>>>>>>>> TANGENT RUN <<<<<<<<<<<<<<<<<<<
-c     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
+C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
+C     >>>>>>>>>>>>>>>>>>> ADJOINT RUN <<<<<<<<<<<<<<<<<<<
+C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
 
-      if (theSimulationMode .eq. TANGENT_SIMULATION) then
+      IF (theSimulationMode .EQ. REVERSE_SIMULATION) THEN
 
         _BEGIN_MASTER( myThid )
 
-      vec_start=irecglob
-      vec_count=1
+        vec_start = irec
+        err = NF_GET_VARA_DOUBLE( fid, varId1,
+     &        vec_start, vec_count, active_data_t )
 
-      err = NF_INQ_VARID(fid, ihop_nameequi, varid1)
-      err = NF_PUT_VARA_DOUBLE(fid, varid1, vec_start, vec_count,
-     & active_var)
+C       Add active_var to data.
+        active_var = active_var + active_data_t
+        active_data_t = 0. _d 0
+
+        vec_start = irecglob
+        err = NF_PUT_VARA_DOUBLE( fid, varId1,
+     &        vec_start, vec_count, active_data_t )
 
         _END_MASTER( myThid )
 
-      endif
+      ENDIF
+
+C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
+C     >>>>>>>>>>>>>>>>>>> TANGENT RUN <<<<<<<<<<<<<<<<<<<
+C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
+
+      IF (theSimulationMode .EQ. TANGENT_SIMULATION) THEN
+
+        _BEGIN_MASTER( myThid )
+
+        err = NF_PUT_VARA_DOUBLE( fid, varId1, 
+     &        vec_start, vec_count, active_var )
+
+        _END_MASTER( myThid )
+
+      ENDIF
 
 #endif /* ALLOW_IHOP */
 
       RETURN
       END
-
-C     ==================================================================
-
