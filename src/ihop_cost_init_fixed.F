@@ -71,7 +71,7 @@ C     == global variables ==
       INTEGER :: num_file, hh, obsno_hh
       INTEGER :: bi, bj, k, i, j, l, m
       INTEGER :: iG, jG
-      CHARACTER*(MAX_LEN_FNAM) ihopObsfile, fnamedatanc
+      CHARACTER*(MAX_LEN_FNAM) IHOPObs_File, fnamedatanc
       CHARACTER*(MAX_LEN_FNAM) fnameequinc
       CHARACTER*(MAX_LEN_FNAM) adfnameequinc, tlfnameequinc
       CHARACTER*(MAX_LEN_FNAM) fnameequincglo
@@ -88,11 +88,11 @@ C     == end of interface ==
       CALL print_message( msgbuf, standardmessageunit,
      &                    SQUEEZE_RIGHT, myThid)
       WRITE(msgbuf,'(a)') 'ihop general parameters :'
-      JL  = ILNBLNK( ihopObsDir )
+      JL  = ILNBLNK( IHOPObs_Dir )
       IF (JL.NE.0) THEN
-        WRITE(msgbuf,'(2a)') '  ihopObsDir ',ihopObsDir(1:JL)
+        WRITE(msgbuf,'(2a)') '  IHOPObs_Dir ',IHOPObs_Dir(1:JL)
       ELSE
-        WRITE(msgbuf,'(2a)') '  ihopObsDir ','./'
+        WRITE(msgbuf,'(2a)') '  IHOPObs_Dir ','./'
       ENDIF
       CALL print_message(
      &   msgbuf, standardmessageunit, SQUEEZE_RIGHT, myThid)
@@ -118,27 +118,27 @@ C     == end of interface ==
 
        ObsNo_hh=0
 
-       ihopObsFile=' '
-       IL  = ILNBLNK( ihopObsFiles(num_file) )
+       IHOPObs_File=' '
+       IL  = ILNBLNK( IHOPObs_Files(num_file) )
        IF (IL.NE.0) THEN
-        WRITE(ihopObsFile,'(A)') ihopObsFiles(num_file)(1:IL)
+        WRITE(IHOPObs_File,'(A)') IHOPObs_Files(num_file)(1:IL)
         WRITE(msgbuf,'(A)') ' '
         CALL print_message( msgbuf, standardmessageunit,
      &                    SQUEEZE_RIGHT, myThid)
         WRITE(msgbuf,'(A,I3,2A)')
-     &     'ihop file #',num_file,' is ', ihopObsFile(1:IL)
+     &     'ihop file #',num_file,' is ', IHOPObs_File(1:IL)
         CALL print_message(
      &     msgbuf, standardmessageunit, SQUEEZE_RIGHT, myThid)
        ENDIF
 
-       IL  = ILNBLNK( ihopObsFile )
+       IL  = ILNBLNK( IHOPObs_File )
        IF (IL.NE.0) THEN
 
 !===========================================================
 !       READ IHOP OBS NETCDF IDs
 !===========================================================
 
-        WRITE(fnamedatanc,'(2A)') ihopObsFile(1:IL),'.nc'
+        WRITE(fnamedatanc,'(2A)') IHOPObs_File(1:IL),'.nc'
         err = NF_OPEN(fnamedatanc, 0, fiddata_obs(num_file))
 
 ! Read number of observations:
@@ -158,9 +158,9 @@ C     == end of interface ==
         err = err + NF_INQ_VARID(ncid,'ihop_iter', varid2 )
 
         IF (err.NE.NF_NOERR) THEN
-         IL  = ILNBLNK( ihopObsFile )
+         IL  = ILNBLNK( IHOPObs_File )
          WRITE(msgBuf,'(3A)')
-     &    'IHOP_COST_INIT_FIXED: file ', ihopObsFile(1:IL),
+     &    'IHOP_COST_INIT_FIXED: file ', IHOPObs_File(1:IL),
      &    '.nc is not in the pkg/ihop cost format: check iter,uncert'
          CALL PRINT_ERROR( msgBuf, myThid )
         ENDIF
@@ -185,9 +185,9 @@ C     == end of interface ==
         err = err + NF_INQ_VARID(ncid,'ihop_y', varid4b )
         err = err + NF_INQ_VARID(ncid,'ihop_z', varid4c )
         IF (err.NE.NF_NOERR) THEN
-         IL  = ILNBLNK( ihopObsFile )
+         IL  = ILNBLNK( IHOPObs_File )
          WRITE(msgBuf,'(3A)')
-     &    'IHOP_COST_INIT_FIXED: file ', ihopObsFile(1:IL),
+     &    'IHOP_COST_INIT_FIXED: file ', IHOPObs_File(1:IL),
      &    '.nc is not in the pkg/ihop cost format, check x,y,z'
          CALL PRINT_ERROR( msgBuf, myThid)
         ENDIF
@@ -196,9 +196,9 @@ C     == end of interface ==
         err =       NF_INQ_VARID(ncid,'ihop_val', varid5a )
 
         IF (err.NE.NF_NOERR) THEN
-         IL  = ILNBLNK( ihopObsFile )
+         IL  = ILNBLNK( IHOPObs_File )
          WRITE(msgBuf,'(3A)')
-     &    'IHOP_COST_INIT_FIXED: file ', ihopObsFile(1:IL),
+     &    'IHOP_COST_INIT_FIXED: file ', IHOPObs_File(1:IL),
      &    '.nc is not in the pkg/ihop cost format, check ihop_val'
          CALL PRINT_ERROR( msgBuf, myThid)
         ENDIF
@@ -215,19 +215,19 @@ C     == end of interface ==
 
 ! Create netcdf global file for ihop model equivalent
         IF ( myProcId .eq. 0 ) THEN
-         JL  = ILNBLNK( ihopObsDir )
+         JL  = ILNBLNK( IHOPObs_Dir )
 
          WRITE(fnameequincglo,'(3A)')
-     &    ihopObsDir(1:JL),ihopObsFile(1:IL),'.equi.nc'
+     &    IHOPObs_Dir(1:JL),IHOPObs_File(1:IL),'.equi.nc'
 #ifdef ALLOW_ADJOINT_RUN
          WRITE(adfnameequincglo,'(4A)')
-     &    ihopObsDir(1:JL),'ad',
-     &    ihopObsFile(1:IL),'.equi.nc'
+     &    IHOPObs_Dir(1:JL),'ad',
+     &    IHOPObs_File(1:IL),'.equi.nc'
 #endif
 #ifdef ALLOW_TANGENTLINEAR_RUN
          WRITE(tlfnameequincglo,'(4A)')
-     &    ihopObsDir(1:JL),'tl',
-     &    ihopObsFile(1:IL),'.equi.nc'
+     &    IHOPObs_Dir(1:JL),'tl',
+     &    IHOPObs_File(1:IL),'.equi.nc'
 #endif
 
          JL = ILNBLNK( fnameequincglo )
@@ -369,7 +369,7 @@ C     == end of interface ==
 
         IF (err.NE.NF_NOERR) THEN
          WRITE(msgBuf,'(3A)')
-     &   'IHOP_COST_INIT_FIXED: file ', ihopObsFile(1:IL),
+     &   'IHOP_COST_INIT_FIXED: file ', IHOPObs_File(1:IL),
      &   '.nc was not read properly: check yyyymmdd, hhmmss.'
          CALL PRINT_ERROR( msgBuf, myThid)
         ENDIF
@@ -420,7 +420,7 @@ C     == end of interface ==
 ! check that maximum size was not reached:
          IF (ObsNo(num_file).GT.NOBSMAX_IHOP) THEN
           WRITE(msgBuf,'(3A)')
-     &     'IHOP_COST_INIT_FIXED: file ', ihopObsFile(1:IL),
+     &     'IHOP_COST_INIT_FIXED: file ', IHOPObs_File(1:IL),
      &     '.nc was not read properly: increase NOBSMAX_IHOP.'
           CALL PRINT_ERROR( msgBuf, myThid)
          ENDIF
@@ -473,7 +473,7 @@ C     == end of interface ==
 
           IF (err.NE.NF_NOERR) THEN
            WRITE(msgBuf,'(3A)')
-     &      'IHOP_COST_INIT_FIXED: file ', ihopObsFile(1:IL),
+     &      'IHOP_COST_INIT_FIXED: file ', IHOPObs_File(1:IL),
      &      '.nc was not read properly: check x,y,z,uncert.'
            CALL PRINT_ERROR(msgBuf, myThid)
           ENDIF
@@ -623,7 +623,7 @@ C     == end of interface ==
 ! Check that maximum size was not reached:
            IF (m.GE.NOBSMAX_IHOP) then
             WRITE(msgBuf,'(3A)')
-     &       'IHOP_COST_INIT_FIXED: file ', ihopObsFile(1:IL),
+     &       'IHOP_COST_INIT_FIXED: file ', IHOPObs_File(1:IL),
      &       '.nc was not read properly: increase NOBSMAX_IHOP.'
             CALL PRINT_ERROR( msgBuf, myThid)
            ENDIF
@@ -653,22 +653,22 @@ C     == end of interface ==
            iG=bi+(myXGlobalLo-1)/sNx ! Kludge until unstructered tiles
            jG=bj+(myYGlobalLo-1)/sNy ! Kludge until unstructered tiles
 
-           JL  = ILNBLNK( ihopObsDir )
+           JL  = ILNBLNK( IHOPObs_Dir )
 
 !IE:           IF (ihopObsDoNcOutput) THEN
 ! ALWAYS Write to nc file
 
            WRITE(fnameequinc,'(3A,2(I3.3,A))')
-     &      ihopObsDir(1:JL),ihopObsFile(1:IL),'.',iG,'.',jG,'.equi.nc'
+     &      IHOPObs_Dir(1:JL),IHOPObs_File(1:IL),'.',iG,'.',jG,'.equi.nc'
 #ifdef ALLOW_ADJOINT_RUN
            WRITE(adfnameequinc,'(4A,2(I3.3,A))')
-     &      ihopObsDir(1:JL),'ad',
-     &      ihopObsFile(1:IL),'.',iG,'.',jG,'.equi.nc'
+     &      IHOPObs_Dir(1:JL),'ad',
+     &      IHOPObs_File(1:IL),'.',iG,'.',jG,'.equi.nc'
 #endif
 #ifdef ALLOW_TANGENTLINEAR_RUN
            WRITE(tlfnameequinc,'(4A,2(I3.3,A))')
-     &      ihopObsDir(1:JL),'ad',
-     &      ihopObsFile(1:IL),'.',iG,'.',jG,'.equi.nc'
+     &      IHOPObs_Dir(1:JL),'ad',
+     &      IHOPObs_File(1:IL),'.',iG,'.',jG,'.equi.nc'
 #endif
 
            JL = ILNBLNK( fnameequinc )

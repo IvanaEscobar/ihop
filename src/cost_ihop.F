@@ -64,7 +64,7 @@ C bi,bj     :: Tile indices
       integer optimcycle
 #endif
       character*(max_len_mbuf) msgbuf
-      character*(max_len_fnam) ihopObsFile, fnameequinc
+      character*(max_len_fnam) IHOPObs_File, fnameequinc
       integer IL, JL, err
       integer irec, ii, varid1
       integer samples_cnt, obs_num, num_valid_samples
@@ -103,7 +103,7 @@ C ==================================================================
         _BEGIN_MASTER( myThid )
 
 #ifdef ALLOW_COST
-      JL  = ILNBLNK( ihopObsDir )
+      JL  = ILNBLNK( IHOPObs_Dir )
 
       DO num_file=1,NFILESMAX_IHOP
 ! Init default buffer values
@@ -121,15 +121,15 @@ C File maintenance
 c need to close the file so that the data is not lost when run finishes
            err = NF_CLOSE(fidfwd_obs(num_file,bi,bj))
 c then re-open it to compute cost function
-           IL  = ILNBLNK( ihopObsFiles(num_file) )
-           write(ihopObsFile,'(A)') ihopObsFiles(num_file)(1:IL)
-           IL  = ILNBLNK( ihopObsFile )
+           IL  = ILNBLNK( IHOPObs_Files(num_file) )
+           write(IHOPObs_File,'(A)') IHOPObs_Files(num_file)(1:IL)
+           IL  = ILNBLNK( IHOPObs_File )
 
 ! Open tiled files
            iG=bi+(myXGlobalLo-1)/sNx ! Kludge until unstructered tiles
            jG=bj+(myYGlobalLo-1)/sNy ! Kludge until unstructered tiles
            write(fnameequinc,'(3A,2(I3.3,A)A)')
-     &      ihopObsDir(1:JL),ihopObsFile(1:IL),'.',iG,'.',jG,'.equi.nc'
+     &      IHOPObs_Dir(1:JL),IHOPObs_File(1:IL),'.',iG,'.',jG,'.equi.nc'
 c
            JL = ILNBLNK( fnameequinc )
            err = NF_OPEN(fnameequinc(1:JL),NF_NOWRITE,
@@ -195,11 +195,11 @@ C END Loop over global obs
 
 cc       IF ( myProcId .eq. 0 ) THEN
         err = NF_CLOSE(fidglobal(num_file))
-        IL  = ILNBLNK( ihopObsFiles(num_file) )
-        write(ihopObsFile,'(A)') ihopObsFiles(num_file)(1:IL)
-        IL  = ILNBLNK( ihopObsFile )
+        IL  = ILNBLNK( IHOPObs_Files(num_file) )
+        write(IHOPObs_File,'(A)') IHOPObs_Files(num_file)(1:IL)
+        IL  = ILNBLNK( IHOPObs_File )
         write(fnameequinc,'(3A)')
-     &   ihopObsDir(1:JL),ihopObsFile(1:IL),'.equi.nc'
+     &   IHOPObs_Dir(1:JL),IHOPObs_File(1:IL),'.equi.nc'
 
         JL = ILNBLNK( fnameequinc )
         err = NF_OPEN(fnameequinc(1:JL),NF_NOWRITE,fidglobal(num_file))
