@@ -11,8 +11,7 @@ CBOP
 C !ROUTINE: COST_IHOP
 
 C !INTERFACE:
-      SUBROUTINE COST_IHOP(
-     I                     myIter, myTime, myThid )
+      SUBROUTINE COST_IHOP( myIter, myTime, myThid )
 
 C    !DESCRIPTION:
 C    Computes iHOP data misfit for cost function
@@ -69,7 +68,7 @@ C     bi,bj :: Tile indices
 # endif
       CHARACTER*(MAX_LEN_MBUF) msgBuf
       CHARACTER*(MAX_LEN_FNAM) IHOPObs_File
-      INTEGER IL, JL, err
+      INTEGER IL, err
       INTEGER irec
       LOGICAL exst
       _RL  objf_ihop_glo
@@ -94,13 +93,7 @@ C     bi,bj :: Tile indices
         _BEGIN_MASTER( myThid )
 
 # ifdef ALLOW_COST
-      JL = ILNBLNK( IHOPObs_Dir )
-
       DO num_file = 1, NFILESMAX_IHOP
-        DO iObs = 1, NOBSMAX_IHOP
-          ihopObs_buff(iObs) = 0.0
-        ENDDO
-
         DO bj = 1, nSy
           DO bi = 1, nSx
 C File maintenance
@@ -113,6 +106,10 @@ C Sync tiled file so data is not lost in buffer
 
           ENDDO !DO bi
         ENDDO !DO bj
+
+        DO iObs = 1, NOBSMAX_IHOP
+          ihopObs_buff(iObs) = 0.0
+        ENDDO
 
         DO bj = 1, nSy
           DO bi = 1, nSx
@@ -153,6 +150,7 @@ C TAF active var init
 
             IF (iObs.LE.ObsNo(num_file)) THEN
               ihop_modval = 0.
+C ESCO Future dev: add time and space averaging here ...
 
 C Extract model equi
               ihop_modval = ihop_modval+ihopObs_modval_glob(iObs)
@@ -167,7 +165,7 @@ C Write to global netcdf file
 
           ENDDO !DO iObs
 
-C Loop over global obs
+C Sync global obs
           err = NF_SYNC( fidglobal(num_file) )
 
           DO iObs = 1, NOBSMAX_IHOP
@@ -179,6 +177,12 @@ C Loop over global obs
               ihop_data = 0.
               ihop_uncert = 0.
 
+C Read model equivalent from global file
+              CALL ACTIVE_READ_IHOP_GLOB( num_file,
+     &             ihop_modval, iObs,
+     &             .false., optimcycle, myThid,
+     &             ihop_globaldummy(num_file) )
+
 C Read observation and uncertainty
               CALL IHOP_COST_READ_OBS( num_file,  1,
      &             ihopObs_ind_glob(num_file,iObs),
@@ -188,17 +192,10 @@ C Read observation and uncertainty
      &             ihopObs_ind_glob(num_file,iObs),
      &             ihop_uncert, myThid )
 
-C Read model equivalent from global file
-              CALL ACTIVE_READ_IHOP_GLOB( num_file,
-     &             ihop_modval, iObs,
-     &             .false., optimcycle, myThid,
-     &             ihop_globaldummy(num_file) )
-
               IF (ihop_uncert.GT.0.) THEN
-                ihop_weight = 1 / (ihop_uncert*ihop_uncert)
+                ihop_weight = 1. / (ihop_uncert*ihop_uncert)
 
-                objf_ihop(num_file) =
-     &           objf_ihop(num_file)
+                objf_ihop(num_file) = objf_ihop(num_file)
      &           +ihop_weight
      &           *(ihop_modval-ihop_data)
      &           *(ihop_modval-ihop_data)
