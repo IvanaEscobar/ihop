@@ -12,14 +12,14 @@ C !ROUTINE: IHOP_COST_MODVAL
 
 C !INTERFACE:
       SUBROUTINE IHOP_COST_MODVAL(
-     O                         modval,
+     O                         modVal,
      I                         num_file, ri, rj, myTime, myThid )
 
 C     !DESCRIPTION:
 C     Computes ihop predicted datum
 
 C     !USES:
-      USE arr_mod,  only: Arr, Narr, MaxNArr
+      USE arr_mod,  only: Arr, nArr, maxNArr
       USE srPos_mod,only: Pos
       USE ihop_mod, only: rad2deg
       IMPLICIT NONE
@@ -54,17 +54,16 @@ C     myThid :: my thread ID
       _RL     myTime
       INTEGER myThid
 C     !OUTPUT PARAMETERS:
-      _RL     modval
+      _RL     modVal
 CEOP
 
 C     !LOCAL VARIABLES:
 #ifdef ALLOW_IHOP
       CHARACTER*(MAX_LEN_MBUF) msgBuf
-      INTEGER ii,j
-      INTEGER k
-      INTEGER maxindex
-      _RL     maxarrval, arrval(MaxNArr)
-      COMPLEX*8 arrival_amplitude(MaxNArr)
+      INTEGER ii
+      INTEGER maxID
+      _RL     maxarrVal, arrVal(maxNArr)
+      COMPLEX*8 arrAmplitude(maxNArr)
 
 ! ===================================================================
 ! Apply parameter-to-observable map on predicted datum
@@ -78,37 +77,38 @@ C     !LOCAL VARIABLES:
 ! Added uses of modules above, have access to Arr and Pos
 ! ===================================================================
 
-! Are ri and rj contained in Nrr AND Nrd
-      IF ( (ri.GT.Nrr).AND.(rj.gt.Nrd) ) THEN
+! Are ri and rj contained in nRR AND nRD
+      IF ( (ri.GT.nRR).AND.(rj.gt.nRD) ) THEN
         WRITE(msgBuf,'(3A)')
      &   'IHOP_COST_MODVAL:',
-     &   ' receiver range and depth ID larger than Nrr and Nrd.'
+     &   ' receiver range and depth ID larger than nRR and nRD.'
         CALL PRINT_ERROR( msgBuf, myThid )
       ENDIF
 
 ! Calc arrival amplitude with cylindrical spreading to receiver range
-      DO ii = 1, Narr(ri,rj)
-        arrival_amplitude(ii) = Arr(ii,ri,rj)%A / SQRT( Pos%Rr(ri) )
+      DO ii = 1, nArr(ri,rj)
+        arrAmplitude(ii) = Arr(ii,ri,rj)%A / SQRT( Pos%Rr(ri) )
      &   * EXP( CMPLX(0,1)*rad2deg*Arr(ii,ri,rj)%Phase )
-        arrval(ii) = ABS( arrival_amplitude(ii) )
+
+        arrVal(ii) = ABS( arrAmplitude(ii) )
 
       ENDDO !DO ii
 
-!$TAF init ihop_modval = 'ihop_cost_modval'
+!$TAF init ihop_modVal = 'ihop_cost_modVal'
 ! Find index of max amplitude for each ri,rj arrival, custom maxloc 
-      maxarrval = arrval(1)
-      maxindex  = 1
+      maxarrVal = arrVal(1)
+      maxID = 1
 
-      DO ii = 1, Narr(ri,rj)
-!$TAF store maxarrval = ihop_modval
-        IF (arrval(ii)>maxarrval) THEN
-          maxarrval = arrval(ii)
-          maxindex  = ii
+      DO ii = 1, nArr(ri,rj)
+!$TAF store maxarrVal = ihop_modVal
+        IF (arrVal(ii)>maxarrVal) THEN
+          maxarrVal = arrVal(ii)
+          maxID = ii
         ENDIF
       ENDDO !DO ii
 
 ! Save predicted travel time according to max index
-      modval = REAL( Arr( maxindex,ri,rj )%delay )
+      modVal = REAL( Arr( maxID,ri,rj )%delay )
 ! ray storage of top arrival...
 #endif /* ALLOW_IHOP */
 

@@ -37,8 +37,10 @@ C     !INPUT PARAMETERS:
 C     fNb, vNb  ::
 C     irec      ::
 C     myThid    :: my thread ID
-      INTEGER fNb, vNb
-      INTEGER irec, myThid
+      INTEGER fNb
+      INTEGER vNb
+      INTEGER irec
+      INTEGER myThid
 C     !OUTPUT PARAMETERS:
 C     vec_loc   ::
       _RL     vec_loc
@@ -47,10 +49,10 @@ CEOP
 C     !LOCAL VARIABLES:
 #if (defined ALLOW_IHOP) && (defined ALLOW_COST)
 C tmpObsNo :: number of obs in the file
-      INTEGER v1, err, varId1, tmpObsNo
-      INTEGER vec_start,vec_count
-      _RL     vec_tmp1(1000),vec_tmp2(1000)
       CHARACTER*(MAX_LEN_MBUF) msgBuf
+      INTEGER v1, err, varId1, tmpObsNo
+      INTEGER vec_start, vec_count
+      _RL     vec_tmp1(1000), vec_tmp2(1000)
 
       IF ( (irec.LT.ihop_minind_buff) .OR.
      &     (irec.GT.ihop_maxind_buff) .OR.

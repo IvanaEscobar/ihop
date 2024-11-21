@@ -49,19 +49,18 @@ C     !LOCAL VARIABLES:
       CHARACTER*(MAX_LEN_FNAM) fnameequincglo
       CHARACTER*(MAX_LEN_FNAM) adfnameequincglo, tlfnameequincglo
       LOGICAL exst
-      INTEGER :: iUnit
-      INTEGER :: JL, IL, err, ncid, dimid1, dimid2
-      INTEGER :: varid1a, varid1b, varid2, varid3
-      INTEGER :: varid4a, varid4b, varid4c
-      INTEGER :: varid5a, varid5b, varidEquiv(2)
+      INTEGER :: JL, IL, err, ncid, dimId1, dimId2
+      INTEGER :: varId1a, varId1b, varId2, varId3
+      INTEGER :: varId4a, varId4b, varId4c
+      INTEGER :: varId5a, varId5b, varIdEquiv(2)
       INTEGER :: weighIhopObs, obsIsInRunTime
-      INTEGER :: ObsNo_valid, ihopObsInTile
+      INTEGER :: obsNo_valid, ihopObsInTile
       INTEGER :: tmpdate(4), tmpdiff(4)
-      INTEGER :: num_file, hh, obsno_hh
-      INTEGER :: bi, bj, k, i, j, l, m
+      INTEGER :: num_file, hh, obsNo_hh
+      INTEGER :: bi, bj, nObs, i, j
       INTEGER :: iG, jG
-      _RL :: yymmddMin,yymmddMax
-      _RL :: hhmmssMin,hhmmssMax
+      _RL :: yymmddMin, yymmddMax
+      _RL :: hhmmssMin, hhmmssMax
       _RL :: tmpyymmdd(NOBSMAX_IHOP), tmphhmmss(NOBSMAX_IHOP)
       _RL :: diffsecs
       _RL :: tmp_ihopObs_time(NOBSMAX_IHOP)
@@ -72,16 +71,12 @@ C     !LOCAL VARIABLES:
       _RL :: tmp_uncert2(NOBSMAX_IHOP)
       _RL :: ihopObs_i
       _RL :: ihopObs_j
-      _RL :: ihopObs_k1
-      _RL :: ihopObs_k2
-      _RL :: lon_1
-      _RL :: lon_2
-      _RL :: lat_1
-      _RL :: lat_2
-      _RL :: depth_1
-      _RL :: depth_2
+      _RL :: ihopObs_k1, ihopObs_k2
+      _RL :: lon_1, lon_2
+      _RL :: lat_1, lat_2
+      _RL :: depth_1, depth_2
       _RL :: lon_tmp1, lon_tmp2, lat_tmp1, lat_tmp2
-      _RL :: lat_fac, lon_fac, depth_fac
+      _RL :: depth_fac
 
       WRITE(msgBuf,'(A)') ''// CHAR(10) //
      & '                    iHOP COST general parameters :'
@@ -116,7 +111,7 @@ C     !LOCAL VARIABLES:
       hhmmssMax=modelenddate(2)
 
       DO num_file = 1, NFILESMAX_IHOP
-        ObsNo_hh = 0
+        obsNo_hh = 0
 
         IHOPObs_File=' '
         IL = ILNBLNK( IHOPObs_Files(num_file) )
@@ -140,8 +135,8 @@ C     !LOCAL VARIABLES:
 
 !1) Read number of observations and available dimensions:
           ncid = fiddata_obs(num_file)
-          err = NF_INQ_DIMID( ncid,'iOBS', dimid1 )
-          err = NF_INQ_DIMLEN( ncid, dimid1, obsNo(num_file) )
+          err = NF_INQ_DIMID( ncid,'iOBS', dimId1 )
+          err = NF_INQ_DIMLEN( ncid, dimId1, obsNo(num_file) )
 
           WRITE(msgBuf,'(A,I9)')
      &       '  # of observations in file                   =',
@@ -149,9 +144,9 @@ C     !LOCAL VARIABLES:
           CALL PRINT_MESSAGE( msgBuf,
      &         standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
-          err =       NF_INQ_VARID( ncid, 'ihop_YYYYMMDD', varid1a )
-          err = err + NF_INQ_VARID( ncid, 'ihop_HHMMSS', varid1b )
-          err = err + NF_INQ_VARID( ncid, 'ihop_iter', varid2 )
+          err =       NF_INQ_VARID( ncid, 'ihop_YYYYMMDD', varId1a )
+          err = err + NF_INQ_VARID( ncid, 'ihop_HHMMSS', varId1b )
+          err = err + NF_INQ_VARID( ncid, 'ihop_iter', varId2 )
 
           IF (err.NE.NF_NOERR) THEN
             WRITE(msgBuf,'(4A)')
@@ -165,7 +160,7 @@ C     !LOCAL VARIABLES:
 !2 Weight for each ihop obs (if missing, assume equal weights):
           weighIhopObs = 1
 
-          err = NF_INQ_VARID( ncid, 'ihop_uncert', varid3 )
+          err = NF_INQ_VARID( ncid, 'ihop_uncert', varId3 )
           IF (err.NE.NF_NOERR) THEN
             WRITE(msgBuf,'(2A)')
      &        '      ihop obs file does not have uncertainties;',
@@ -178,9 +173,9 @@ C     !LOCAL VARIABLES:
           ENDIF
 
 !3 Read ihop observation positions and values:
-          err =       NF_INQ_VARID( ncid, 'ihop_x', varid4a )
-          err = err + NF_INQ_VARID( ncid, 'ihop_y', varid4b )
-          err = err + NF_INQ_VARID( ncid, 'ihop_z', varid4c )
+          err =       NF_INQ_VARID( ncid, 'ihop_x', varId4a )
+          err = err + NF_INQ_VARID( ncid, 'ihop_y', varId4b )
+          err = err + NF_INQ_VARID( ncid, 'ihop_z', varId4c )
 
           IF (err.NE.NF_NOERR) THEN
             WRITE(msgBuf,'(3A)')
@@ -189,13 +184,13 @@ C     !LOCAL VARIABLES:
             CALL PRINT_ERROR( msgBuf, myThid )
           ENDIF
 
-          err =       NF_INQ_VARID( ncid, 'ihop_val', varid5a )
+          err =       NF_INQ_VARID( ncid, 'ihop_val', varId5a )
 
           IF (err.NE.NF_NOERR) THEN
            WRITE(msgBuf,'(3A)')
      &      'IHOP_COST_INIT_FIXED: file ', IHOPObs_File(1:IL),
      &      '.nc is not in the pkg/ihop cost format, check ihop_val'
-           CALL PRINT_ERROR( msgBuf, myThid)
+           CALL PRINT_ERROR( msgBuf, myThid )
           ENDIF
 
 !===========================================================
@@ -233,18 +228,18 @@ C     !LOCAL VARIABLES:
               err = NF_CREATE( fnameequincglo(1:JL), NF_CLOBBER,
      &              fidglobal(num_file) )
               err = NF_DEF_DIM( fidglobal(num_file),'iOBS',
-     &              ObsNo(num_file), dimid1 )
+     &              obsNo(num_file), dimId1 )
 
               err = NF_DEF_VAR( fidglobal(num_file), 'mod_val',
-     &              NF_DOUBLE, 1, dimid1, varidEquiv(1) )
+     &              NF_DOUBLE, 1, dimId1, varIdEquiv(1) )
               err = NF_PUT_ATT_DOUBLE( fidglobal(num_file),
-     &              varidEquiv(1), '_FillValue',
+     &              varIdEquiv(1), '_FillValue',
      &              NF_DOUBLE, 1, -9999. _d 0 )
 
               err = NF_DEF_VAR( fidglobal(num_file), 'mod_mask',
-     &              NF_DOUBLE, 1, dimid1, varidEquiv(2) )
+     &              NF_DOUBLE, 1, dimId1, varIdEquiv(2) )
               err = NF_PUT_ATT_DOUBLE( fidglobal(num_file),
-     &              varidEquiv(2), '_FillValue',
+     &              varIdEquiv(2), '_FillValue',
      &              NF_DOUBLE, 1, -9999. _d 0 )
 
 ! Write buffer to file, reopen file with WRITE permissions
@@ -267,12 +262,12 @@ C     !LOCAL VARIABLES:
               err = NF_CREATE( adfnameequincglo(1:JL), NF_CLOBBER,
      &              fidadglobal(num_file) )
               err = NF_DEF_DIM( fidadglobal(num_file), 'iOBS',
-     &              ObsNo(num_file), dimid1 )
+     &              obsNo(num_file), dimId1 )
 
               err = NF_DEF_VAR( fidadglobal(num_file), 'mod_val',
-     &              NF_DOUBLE, 1, dimid1, varidEquiv(1) )
+     &              NF_DOUBLE, 1, dimId1, varIdEquiv(1) )
               err = NF_PUT_ATT_DOUBLE( fidadglobal(num_file),
-     &              varidEquiv(1), '_FillValue',
+     &              varIdEquiv(1), '_FillValue',
      &              NF_DOUBLE, 1, 0. _d 0 )
 
 ! Write buffer to file, reopen file with WRITE permissions
@@ -296,12 +291,12 @@ C     !LOCAL VARIABLES:
               err = NF_CREATE( tlfnameequincglo(1:JL), NF_CLOBBER,
      &              fidftlglobal(num_file) )
               err = NF_DEF_DIM( fidftlglobal(num_file), 'iOBS',
-     &              ObsNo(num_file), dimid1 )
+     &              obsNo(num_file), dimId1 )
 
               err = NF_DEF_VAR( fidftlglobal(num_file), 'mod_val',
-     &              NF_DOUBLE, 1, dimid1, varidEquiv(1) )
+     &              NF_DOUBLE, 1, dimId1, varIdEquiv(1) )
               err = NF_PUT_ATT_DOUBLE( fidftlglobal(num_file),
-     &              varidEquiv(1), '_FillValue',
+     &              varIdEquiv(1), '_FillValue',
      &              NF_DOUBLE, 1, 0. _d 0 )
 
 ! Write buffer to file, reopen file with WRITE permissions
@@ -326,41 +321,41 @@ C     !LOCAL VARIABLES:
 !       see pkg/profiles or pkg/obsfit for how to chunk.
 
 ! Default values
-          DO k = 1, NOBSMAX_IHOP
-            ihopObs_ind_glob(num_file,k) = 0
+          DO nObs = 1, NOBSMAX_IHOP
+            ihopObs_ind_glob(num_file,nObs) = 0
           ENDDO
-          ObsNo_valid = 0
+          obsNo_valid = 0
 
 ! Read time
-          err = NF_GET_VARA_DOUBLE( ncid, varid1a, 
-     &          1, ObsNo(num_file), tmpyymmdd )
-          err = NF_GET_VARA_DOUBLE(ncid,varid1b,
-     &          1, ObsNo(num_file), tmphhmmss )
+          err = NF_GET_VARA_DOUBLE( ncid, varId1a, 
+     &          1, obsNo(num_file), tmpyymmdd )
+          err = NF_GET_VARA_DOUBLE(ncid,varId1b,
+     &          1, obsNo(num_file), tmphhmmss )
 
           IF (err.NE.NF_NOERR) THEN
             WRITE(msgBuf,'(3A)')
      &       'IHOP_COST_INIT_FIXED: file ', IHOPObs_File(1:IL),
      &       '.nc was not read properly: check yyyymmdd, hhmmss.'
-            CALL PRINT_ERROR( msgBuf, myThid)
+            CALL PRINT_ERROR( msgBuf, myThid )
           ENDIF
 
 ! Loop through number of observations, in obsfit this is a 'chunk'
-          DO m = 1, ObsNo(num_file)
+          DO nObs = 1, obsNo(num_file)
 !AV If obs starts before model run, will be ignored even if 
 !AV it ends after model starts - ok for now
-            IF (( (tmpyymmdd(m).GT.yymmddMin).OR.
-     &            ((tmpyymmdd(m).EQ.yymmddMin) .AND.
-     &             (tmphhmmss(m).GE.hhmmssMin)) ) .AND.
-     &          ( (tmpyymmdd(m).LT.yymmddMax).OR.
-     &            ((tmpyymmdd(m).EQ.yymmddMax) .AND.
-     &             (tmphhmmss(m).LE.hhmmssMax)) )) THEN
-              hh = INT(tmphhmmss(m)) / 10000
+            IF (( (tmpyymmdd(nObs).GT.yymmddMin).OR.
+     &            ((tmpyymmdd(nObs).EQ.yymmddMin) .AND.
+     &             (tmphhmmss(nObs).GE.hhmmssMin)) ) .AND.
+     &          ( (tmpyymmdd(nObs).LT.yymmddMax).OR.
+     &            ((tmpyymmdd(nObs).EQ.yymmddMax) .AND.
+     &             (tmphhmmss(nObs).LE.hhmmssMax)) )) THEN
+              hh = INT(tmphhmmss(nObs)) / 10000
 
               IF (hh.LT.hoursPerDay) THEN
                 obsIsInRunTime = 1
 #ifdef ALLOW_CAL
-                CALL CAL_FULLDATE( INT(tmpyymmdd(m)),
-     &               INT(tmphhmmss(m)), tmpdate, myThid )
+                CALL CAL_FULLDATE( INT(tmpyymmdd(nObs)),
+     &               INT(tmphhmmss(nObs)), tmpdate, myThid )
                 CALL CAL_TIMEPASSED( modelstartdate, tmpdate,
      &               tmpdiff, myThid )
                 CALL CAL_TOSECONDS( tmpdiff, diffsecs, myThid )
@@ -372,7 +367,7 @@ C     !LOCAL VARIABLES:
 ! If tmphhmmss is out of range then disregard ihop obs
                 obsIsInRunTime = 0
                 diffsecs = -deltaTclock
-                ObsNo_hh = ObsNo_hh+1
+                obsNo_hh = obsNo_hh+1
 
               ENDIF
 
@@ -380,40 +375,40 @@ C     !LOCAL VARIABLES:
              obsIsInRunTime = 0
              diffsecs = -deltaTclock
 
-            ENDIF !IF (( (tmpyymmdd(m).GT.yymmddMin)
+            ENDIF !IF (( (tmpyymmdd(nObs).GT.yymmddMin)
 
             IF (obsIsInRunTime.EQ.1) THEN
 ! If yes then store obs index position:
-              ObsNo_valid = ObsNo_valid+1
-              ihopObs_ind_glob(num_file,ObsNo_valid) = m
+              obsNo_valid = obsNo_valid+1
+              ihopObs_ind_glob(num_file,obsNo_valid) = nObs
 
             ENDIF !IF (obsIsInRunTime.EQ.1)
 
 ! Regardless of whether ihop obs is in run time or not,
 ! Keep track of ihop obs index position and assign time to ihop obs
-            tmp_ihopObs_time(m) = diffsecs
+            tmp_ihopObs_time(nObs) = diffsecs
 
 ! Check that maximum size was not reached:
-            IF (ObsNo(num_file).GT.NOBSMAX_IHOP) THEN
+            IF (obsNo(num_file).GT.NOBSMAX_IHOP) THEN
               WRITE(msgBuf,'(3A)')
      &         'IHOP_COST_INIT_FIXED: file ', IHOPObs_File(1:IL),
      &         '.nc was not read properly: increase NOBSMAX_IHOP.'
               CALL PRINT_ERROR( msgBuf, myThid )
             ENDIF
 
-          ENDDO !DO m
+          ENDDO !DO nObs
 
 ! Calibrate number of VALID obs datum
-          ObsNo(num_file) = ObsNo_valid
+          obsNo(num_file) = obsNo_valid
 
 ! Output ihop cost init info
           WRITE(msgBuf,'(A,I9)')
-     &     '  # of ihop obs with erroneous HHMMSS values =', ObsNo_hh
+     &     '  # of ihop obs with erroneous HHMMSS values =', obsNo_hh
           CALL PRINT_MESSAGE( msgBuf,
      &         standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
           WRITE(msgBuf,'(A,I9)')
-     &     '  # of ihop obs within time period  =', ObsNo(num_file)
+     &     '  # of ihop obs within time period  =', obsNo(num_file)
           CALL PRINT_MESSAGE( msgBuf,
      &         standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
@@ -421,30 +416,30 @@ C     !LOCAL VARIABLES:
 ! Initiate tiled defaults for ihopObs before reading in from netcdf
           DO bj = 1, nSy
             DO bi = 1, nSx
-              ObsNo_valid = 0
-              ObsNo_tiled(num_file,bi,bj) = ObsNo(num_file)
+              obsNo_valid = 0
+              obsNo_tiled(num_file,bi,bj) = obsNo(num_file)
 
-              DO k = 1, NOBSMAX_IHOP
-                ihopObs_time(num_file,k,bi,bj) =     -999. _d 0
-                ihopObs_lon(num_file,k,bi,bj) =      -999. _d 0
-                ihopObs_lat(num_file,k,bi,bj) =      -999. _d 0
-                ihopObs_depth(num_file,k,bi,bj) =    -999. _d 0
-                ihopObs_uncert(num_file,k,bi,bj) =      1. _d 0
-                ihopObs_ind_glob_tiled(num_file,k,bi,bj) =    0
-              ENDDO !DO k
+              DO nObs = 1, NOBSMAX_IHOP
+                ihopObs_time(num_file,nObs,bi,bj) =     -999. _d 0
+                ihopObs_lon(num_file,nObs,bi,bj) =      -999. _d 0
+                ihopObs_lat(num_file,nObs,bi,bj) =      -999. _d 0
+                ihopObs_depth(num_file,nObs,bi,bj) =    -999. _d 0
+                ihopObs_uncert(num_file,nObs,bi,bj) =      1. _d 0
+                ihopObs_ind_glob_tiled(num_file,nObs,bi,bj) =    0
+              ENDDO !DO nObs
 
 ! Read ALL info using respective varid and save to tmp, NO CHUNKS!
               IF (weighIhopObs.EQ.1) THEN
-                err = NF_GET_VARA_DOUBLE( ncid, varid3,
-     &                1, ObsNo_tiled(num_file,bi,bj), tmp_uncert2 )
+                err = NF_GET_VARA_DOUBLE( ncid, varId3,
+     &                1, obsNo_tiled(num_file,bi,bj), tmp_uncert2 )
               ENDIF
 
-              err = NF_GET_VARA_DOUBLE( ncid, varid4a,
-     &              1, ObsNo_tiled(num_file,bi,bj), tmp_lon2 )
-              err = NF_GET_VARA_DOUBLE( ncid, varid4b,
-     &              1, ObsNo_tiled(num_file,bi,bj), tmp_lat2 )
-              err = NF_GET_VARA_DOUBLE( ncid, varid4c,
-     &              1, ObsNo_tiled(num_file,bi,bj), tmp_depth2 )
+              err = NF_GET_VARA_DOUBLE( ncid, varId4a,
+     &              1, obsNo_tiled(num_file,bi,bj), tmp_lon2 )
+              err = NF_GET_VARA_DOUBLE( ncid, varId4b,
+     &              1, obsNo_tiled(num_file,bi,bj), tmp_lat2 )
+              err = NF_GET_VARA_DOUBLE( ncid, varId4c,
+     &              1, obsNo_tiled(num_file,bi,bj), tmp_depth2 )
 
               IF (err.NE.NF_NOERR) THEN
                 WRITE(msgBuf,'(3A)')
@@ -455,20 +450,20 @@ C     !LOCAL VARIABLES:
 
 ! Find obs datum in MITgcm spatial grid
 ! Loop through observations, NOTE: in obsfit this is a 'chunk'
-              DO m = 1, ObsNo_tiled(num_file,bi,bj)
+              DO nObs = 1, obsNo_tiled(num_file,bi,bj)
                 ihopObsInTile = 1
 
 ! In a valid time?
-                IF ( (tmp_ihopObs_time(m).LT.0. _d 0) .OR.
-     &               (tmp_ihopObs_time(m).GT.modelend-modelstart) )
+                IF ( (tmp_ihopObs_time(nObs).LT.0. _d 0) .OR.
+     &               (tmp_ihopObs_time(nObs).GT.modelend-modelstart) )
      &          THEN
                   ihopObsInTile = 0
                 ENDIF
 
 ! Determine whether obs datum is in current tile domain
-                lon_cur = tmp_lon2(m)
-                lat_cur = tmp_lat2(m)
-                depth_cur = tmp_depth2(m)
+                lon_cur = tmp_lon2(nObs)
+                lat_cur = tmp_lat2(nObs)
+                depth_cur = tmp_depth2(nObs)
 
                 IF (ihopObsInTile.EQ.1) THEN
                   IF (xC(sNx+1,1,bi,bj).LT.xC(1,1,bi,bj)) THEN
@@ -556,7 +551,7 @@ C     !LOCAL VARIABLES:
                           lon_tmp2=lon_tmp2+360
                         ENDIF
                         IF (xC(i,j,bi,bj).LT.xC(1,j,bi,bj)) THEN
-                          lon_tmp1=lon_tmp1+360
+                          lon_tmp1 = lon_tmp1+360
                         ENDIF
 
                         IF ( (lon_tmp1.LE.lon_cur) .AND.
@@ -579,28 +574,28 @@ C     !LOCAL VARIABLES:
 
 ! 'Reshape' observed datum to tiled structures
                   IF (ihopObsInTile.EQ.1) THEN
-                    ObsNo_valid = ObsNo_valid+1
+                    obsNo_valid = obsNo_valid+1
                     ihopObs_ind_glob_tiled(num_file,
-     &               ObsNo_valid,bi,bj) = m
+     &               obsNo_valid,bi,bj) = nObs
 
-                    ihopObs_time(num_file,ObsNo_valid,bi,bj) =
-     &               tmp_ihopObs_time(m)
+                    ihopObs_time(num_file,obsNo_valid,bi,bj) =
+     &               tmp_ihopObs_time(nObs)
 
                     IF (weighIhopObs.EQ.1) THEN
-                      ihopObs_uncert(num_file,ObsNo_valid,bi,bj) =
-     &                 tmp_uncert2(m)
+                      ihopObs_uncert(num_file,obsNo_valid,bi,bj) =
+     &                 tmp_uncert2(nObs)
                     ENDIF
 
-                    ihopObs_lon(num_file,ObsNo_valid,bi,bj) = lon_cur
-                    ihopObs_lat(num_file,ObsNo_valid,bi,bj) = lat_cur
-                    ihopObs_depth(num_file,ObsNo_valid,bi,bj) =
+                    ihopObs_lon(num_file,obsNo_valid,bi,bj) = lon_cur
+                    ihopObs_lat(num_file,obsNo_valid,bi,bj) = lat_cur
+                    ihopObs_depth(num_file,obsNo_valid,bi,bj) =
      &               depth_cur
 
-                    ihopObs_i_tiled(num_file,ObsNo_valid,bi,bj) = 
+                    ihopObs_i_tiled(num_file,obsNo_valid,bi,bj) = 
      &               ihopObs_i
-                    ihopObs_j_tiled(num_file,ObsNo_valid,bi,bj) =
+                    ihopObs_j_tiled(num_file,obsNo_valid,bi,bj) =
      &               ihopObs_j
-                    ihopObs_k_tiled(num_file,ObsNo_valid,bi,bj) =
+                    ihopObs_k_tiled(num_file,obsNo_valid,bi,bj) =
      &               ihopObs_k1
 
                   ENDIF !IF (ihopObsInTile.EQ.1) 3rd time
@@ -609,17 +604,17 @@ C     !LOCAL VARIABLES:
 
 ! ====================================================================
 ! Check that maximum size was not reached:
-                IF (m.GE.NOBSMAX_IHOP) THEN
+                IF (nObs.GE.NOBSMAX_IHOP) THEN
                   WRITE(msgBuf,'(3A)')
      &             'IHOP_COST_INIT_FIXED: file ', IHOPObs_File(1:IL),
      &             '.nc was not read properly: increase NOBSMAX_IHOP.'
-                  CALL PRINT_ERROR( msgBuf, myThid)
+                  CALL PRINT_ERROR( msgBuf, myThid )
                 ENDIF
 
-              ENDDO !DO m
+              ENDDO !DO nObs
 
 ! Number of valid ihop obs in the file
-              ObsNo_tiled(num_file,bi,bj) = ObsNo_valid
+              obsNo_tiled(num_file,bi,bj) = obsNo_valid
 
               WRITE(msgBuf,'(2(A,I4))')
      &         '  current tile is bi,bj                      =',
@@ -629,7 +624,7 @@ C     !LOCAL VARIABLES:
 
               WRITE(msgBuf,'(A,I9)')
      &         '  # of ihop obs within tile and time period  =',
-     &         ObsNo_tiled(num_file,bi,bj)
+     &         obsNo_tiled(num_file,bi,bj)
               CALL PRINT_MESSAGE( msgBuf,
      &             standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
@@ -664,7 +659,7 @@ C     !LOCAL VARIABLES:
                     CALL IHOP_COST_INIT_EQUI( num_file,
      &                   fiddata_obs(num_file), fnameequinc(1:JL),
      &                   fidfwd_obs(num_file,bi,bj),
-     &                   ObsNo_tiled(num_file,bi,bj),
+     &                   obsNo_tiled(num_file,bi,bj),
      &                   bi, bj, myThid )
                   ELSE
 ! Obtain existing NetCDF file id
@@ -679,7 +674,7 @@ C     !LOCAL VARIABLES:
                     CALL IHOP_COST_INIT_EQUI( num_file,
      &                   fiddata_obs(num_file), adfnameequinc(1:JL), 
      &                   fidadj_obs(num_file,bi,bj),
-     &                   ObsNo_tiled(num_file,bi,bj),
+     &                   obsNo_tiled(num_file,bi,bj),
      &                   bi, bj, myThid )
                   ELSE
 ! Obtain existing AD NetCDF file id
@@ -695,7 +690,7 @@ C     !LOCAL VARIABLES:
                     CALL IHOP_COST_INIT_EQUI( num_file,
      &                   fiddata_obs(num_file),tlfnameequinc(1:JL),
      &                   fidftl_obs(num_file,bi,bj),
-     &                   ObsNo_tiled(num_file,bi,bj),
+     &                   obsNo_tiled(num_file,bi,bj),
      &                   bi, bj, myThid )
                   ELSE
 ! Obtain existing TL NetCDF file id
@@ -715,15 +710,15 @@ C     !LOCAL VARIABLES:
         ELSE !IF (IL.NE.0)
           DO bj = 1, nSy
             DO bi = 1, nSx
-              ObsNo(num_file) = 0
-              ObsNo_tiled(num_file,bi,bj) = 0
+              obsNo(num_file) = 0
+              obsNo_tiled(num_file,bi,bj) = 0
 
-              DO k = 1, NOBSMAX_IHOP
-                ihopObs_lon(num_file,k,bi,bj) =      -999. _d 0
-                ihopObs_lat(num_file,k,bi,bj) =      -999. _d 0
-                ihopObs_depth(num_file,k,bi,bj) =    -999. _d 0
-                ihopObs_uncert(num_file,k,bi,bj) =      1. _d 0
-                ihopObs_ind_glob_tiled(num_file,k,bi,bj) =    0
+              DO nObs = 1, NOBSMAX_IHOP
+                ihopObs_lon(num_file,nObs,bi,bj) =      -999. _d 0
+                ihopObs_lat(num_file,nObs,bi,bj) =      -999. _d 0
+                ihopObs_depth(num_file,nObs,bi,bj) =    -999. _d 0
+                ihopObs_uncert(num_file,nObs,bi,bj) =      1. _d 0
+                ihopObs_ind_glob_tiled(num_file,nObs,bi,bj) =    0
               ENDDO
 
             ENDDO !DO bi
