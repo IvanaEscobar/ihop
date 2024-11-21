@@ -25,7 +25,7 @@ MODULE IHOP
   ! Systems Center
 
 
-  USE ihop_mod,     only: oneCMPLX, PRTFile, SHDFile, ARRFile, RAYFile, DELFile
+  USE ihop_mod, only: oneCMPLX, PRTFile, SHDFile, ARRFile, RAYFile, DELFile
 
 !   !USES:
   IMPLICIT NONE
@@ -174,15 +174,15 @@ CONTAINS
   ! **********************************************************************!
   SUBROUTINE IHOPCore( myThid )
     USE ssp_mod,   only: evalSSP, iSegr  !RG
-    USE angle_mod, only: Angles, ialpha
+    USE angle_mod, only: Angles, iAlpha
     USE srPos_mod, only: Pos
-    USE arr_mod,   only: WriteArrivalsASCII, WriteArrivalsBinary, NArr, U
+    USE arr_mod,   only: WriteArrivalsASCII, WriteArrivalsBinary, nArr, U
     USE writeRay,  only: WriteRayOutput
     USE influence, only: InfluenceGeoHatRayCen, InfluenceGeoGaussianCart, &
                          InfluenceGeoHatCart, ScalePressure
     USE beampat,   only: NSBPPts, SrcBmPat
     USE ihop_mod,  only: Beam, ray2D, rad2deg, SrcDeclAngle, afreq, &
-                         NRz_per_range, RAYFile, DELFile, MaxN
+                         nRz_per_range, RAYFile, DELFile, maxN
 !    USE influence,  only: ratio1, rB    !RG
 ! FOR TAF
     USE bdry_mod, only: bdry
@@ -196,33 +196,33 @@ CONTAINS
 
   !     == Local Variables ==
     INTEGER           :: IBPvec(1), ibp, is, iBeamWindow2, Irz1, Irec, &
-                         NalphaOpt
+                         nAlphaOpt
     REAL(KIND=_RL90) :: Amp0, DalphaOpt, xs(2), RadMax, s, &
                          c, cimag, gradc(2), crr, crz, czz, rho
-    REAL(KIND=_RL90) :: tmpDelay(MaxN)
+    REAL(KIND=_RL90) :: tmpDelay(maxN)
 
-!$TAF init IHOPCore2 = static, Pos%NSz*Angles%Nalpha
+!$TAF init IHOPCore2 = static, Pos%nSZ*Angles%nAlpha
 
     afreq = 2.0 * PI * IHOP_freq
 
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !         begin solve         !
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    SourceDepth: DO is = 1, Pos%NSz
+    SourceDepth: DO is = 1, Pos%nSZ
 
-       xs = [ zeroRL, Pos%Sz( is ) ]   ! source coordinate, assuming source @ r=0
+       xs = [ zeroRL, Pos%SZ( is ) ]   ! source coordinate, assuming source @ r=0
 
-       ! Reset U and Narr for each new source depth
+       ! Reset U and nArr for each new source depth
        SELECT CASE ( Beam%RunType( 1:1 ) )
        CASE ( 'C','S','I' ) ! TL calculation, zero out pressure matrix
           U = 0.0
-          NArr = 0
+          nArr = 0
        CASE ( 'A','a','e' )   ! Arrivals calculation, zero out arrival matrix
           U = 0.0
-          NArr = 0
+          nArr = 0
        CASE DEFAULT ! Ray tracing only
           U = 0.0
-          NArr = 0
+          nArr = 0
        END SELECT
 
        CALL evalSSP(  xs, c, cimag, gradc, crr, crz, czz, rho, myThid  )
@@ -231,13 +231,13 @@ CONTAINS
        RadMax = 5 * c / IHOP_freq  ! 5 wavelength max radius IEsco22: unused
        IF ( Beam%RunType( 1:1 ) == 'C' ) THEN ! for Coherent TL Run
        ! Are there enough rays?
-          DalphaOpt = SQRT( c / ( 6.0 * IHOP_freq * Pos%Rr( Pos%NRr ) ) )
-          NalphaOpt = 2 + INT( ( Angles%arad( Angles%Nalpha ) &
+          DalphaOpt = SQRT( c / ( 6.0 * IHOP_freq * Pos%RR( Pos%nRR ) ) )
+          nAlphaOpt = 2 + INT( ( Angles%arad( Angles%nAlpha ) &
                                - Angles%arad( 1 ) ) / DalphaOpt )
 #ifdef IHOP_WRITE_OUT
-          IF ( Angles%Nalpha < NalphaOpt ) THEN
+          IF ( Angles%nAlpha < nAlphaOpt ) THEN
              WRITE( msgBuf, '(A,/,A,I10.4)' ) 'WARNING: Too few beams',&
-                 'Nalpha should be at least = ', NalphaOpt
+                 'nAlpha should be at least = ', nAlphaOpt
              ! In adjoint mode we do not write output besides on the first run
              IF (IHOP_dumpfreq.GE.0) &
                 CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
@@ -247,14 +247,14 @@ CONTAINS
        !!IESCO22: end BEAM stuff !!
 
        ! Trace successive beams
-       DeclinationAngle: DO ialpha = 1, Angles%Nalpha
-!$TAF store ray2d,arr,narr,u = IHOPCore2
+       DeclinationAngle: DO iAlpha = 1, Angles%nAlpha
+!$TAF store ray2d,arr,nArr,u = IHOPCore2
 
           ! take-off declination angle in degrees
-          SrcDeclAngle = Angles%adeg( ialpha )
+          SrcDeclAngle = Angles%adeg( iAlpha )
 
           ! Single ray run? then don't visit code below
-          IF ( Angles%iSingle_alpha==0 .OR. ialpha==Angles%iSingle_alpha ) THEN
+          IF ( Angles%iSingle_alpha==0 .OR. iAlpha==Angles%iSingle_alpha ) THEN
 
              !!IESCO22: BEAM stuff !!
              IBPvec = maxloc( SrcBmPat( :, 1 ), mask = SrcBmPat( :, 1 ) &
@@ -281,14 +281,14 @@ CONTAINS
              IF ( Beam%RunType( 1:1 ) == 'S' ) &
 !$TAF store amp0,beam%runtype = IHOPCore2
                 Amp0 = Amp0 * SQRT( 2.0 ) * ABS( SIN( afreq / c * xs( 2 ) &
-                       * SIN( Angles%arad( ialpha ) ) ) )
+                       * SIN( Angles%arad( iAlpha ) ) ) )
              !!IESCO22: end BEAM stuff !!
 
 #ifdef IHOP_WRITE_OUT
              ! report progress in PRTFile (skipping some angles)
-             IF ( MOD( ialpha - 1, max( Angles%Nalpha / 50, 1 ) ) == 0 ) THEN
+             IF ( MOD( iAlpha - 1, max( Angles%nAlpha / 50, 1 ) ) == 0 ) THEN
                 WRITE(msgBuf,'(A,I7,F10.2)') 'Tracing ray ', &
-                       ialpha, SrcDeclAngle
+                       iAlpha, SrcDeclAngle
                 ! In adjoint mode we do not write output besides on the first run
                 IF (IHOP_dumpfreq.GE.0) &
                     CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
@@ -297,7 +297,7 @@ CONTAINS
 #endif /* IHOP_WRITE_OUT */
 
              ! Trace a ray, update ray2D structure
-             CALL TraceRay2D( xs, Angles%arad( ialpha ), Amp0, myThid )
+             CALL TraceRay2D( xs, Angles%arad( iAlpha ), Amp0, myThid )
 
              ! Write the ray trajectory to RAYFile
              IF ( Beam%RunType(1:1) == 'R') THEN
@@ -334,22 +334,22 @@ CONTAINS
        ! write results to disk
        SELECT CASE ( Beam%RunType( 1:1 ) )
          CASE ( 'C', 'S', 'I' )   ! TL calculation
-           CALL ScalePressure( Angles%Dalpha, ray2D( 1 )%c, Pos%Rr, U, &
-                              NRz_per_range, Pos%NRr, Beam%RunType, IHOP_freq )
-           IRec = 10 + NRz_per_range * ( is - 1 )
-           RcvrDepth: DO Irz1 = 1, NRz_per_range
+           CALL ScalePressure( Angles%Dalpha, ray2D( 1 )%c, Pos%RR, U, &
+                              nRz_per_range, Pos%nRR, Beam%RunType, IHOP_freq )
+           IRec = 10 + nRz_per_range * ( is - 1 )
+           RcvrDepth: DO Irz1 = 1, nRz_per_range
              IRec = IRec + 1
-             WRITE( SHDFile, REC = IRec ) U( Irz1, 1:Pos%NRr )
+             WRITE( SHDFile, REC = IRec ) U( Irz1, 1:Pos%nRR )
            END DO RcvrDepth
 
          CASE ( 'A', 'e' )             ! arrivals calculation, ascii
-           CALL WriteArrivalsASCII( Pos%Rr, NRz_per_range, Pos%NRr, &
+           CALL WriteArrivalsASCII( Pos%RR, nRz_per_range, Pos%nRR, &
                                     Beam%RunType( 4:4 ) )
          CASE ( 'a' )             ! arrivals calculation, binary
-           CALL WriteArrivalsBinary( Pos%Rr, NRz_per_range, Pos%NRr, &
+           CALL WriteArRivalsBinary( Pos%RR, nRz_per_range, Pos%nRR, &
                                     Beam%RunType( 4:4 ) )
          CASE DEFAULT ! ray trace only, NO ARRFile
-           !CALL WriteArrivalsASCII( Pos%Rr, NRz_per_range, Pos%NRr, &
+           !CALL WriteArrivalsASCII( Pos%RR, nRz_per_range, Pos%nRR, &
            !                         Beam%RunType( 4:4 ) )
        END SELECT
 
@@ -361,7 +361,7 @@ CONTAINS
   ! **********************************************************************!
 
   SUBROUTINE TraceRay2D( xs, alpha, Amp0, myThid )
-    USE ihop_mod, only: MaxN, istep
+    USE ihop_mod, only: maxN, istep
     USE bdry_mod, only: GetTopSeg, GetBotSeg, atiType, btyType, Bdry, &
                         IsegTop, IsegBot, rTopSeg, rBotSeg, Top, Bot
     USE refCoef,  only: RTop, RBot, NBotPts, NTopPts
@@ -389,7 +389,7 @@ CONTAINS
     REAL (KIND=_RL90) :: sss, declAlpha, declAlphaOld
     LOGICAL           :: RayTurn = .FALSE., continue_steps, reflect
 
-!$TAF init TraceRay2D = static, MaxN-1
+!$TAF init TraceRay2D = static, maxN-1
 
     ! Initial conditions (IC)
     iSmallStepCtr = 0
@@ -453,7 +453,7 @@ CONTAINS
        continue_steps = .true.
        reflect=.false.
 
-       Stepping: DO istep = 1, MaxN - 1
+       Stepping: DO istep = 1, maxN - 1
 !$TAF store is,bdry,beam,continue_steps,distbegbot,distbegtop = TraceRay2D
 
           IF ( continue_steps ) THEN
@@ -601,7 +601,7 @@ CONTAINS
                 WRITE(msgBuf,'(A)') 'TraceRay2D: ray escaped top bound'
              ELSE IF ( DistBegBot < 0.0 .AND. DistEndBot < 0.0 ) THEN
                 WRITE(msgBuf,'(A)') 'TraceRay2D: ray escaped bot bound'
-             ELSE IF ( is >= MaxN - 3 ) THEN
+             ELSE IF ( is >= maxN - 3 ) THEN
                 WRITE(msgBuf,'(2A)') 'WARNING: TraceRay2D: Check storage ',&
                                      'for ray trajectory'
              ELSE
@@ -615,7 +615,7 @@ CONTAINS
                   ( ABS( ray2D( is+1 )%Amp ) < 0.005 ) .OR. &
                   ( DistBegTop < 0.0 .AND. DistEndTop < 0.0 ) .OR. &
                   ( DistBegBot < 0.0 .AND. DistEndBot < 0.0 ) .OR. &
-                  ( is >= MaxN - 3 ) ) THEN
+                  ( is >= maxN - 3 ) ) THEN
                   IF ( IHOP_dumpfreq .GE. 0) &
                       CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
              ENDIF

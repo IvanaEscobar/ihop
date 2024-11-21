@@ -10,8 +10,8 @@ MODULE influence
   ! complex pressure
   ! mbp 12/2018, based on much older subroutines
 
-  USE ihop_mod,     only: rad2deg, oneCMPLX, PRTFile, MaxN, Beam, ray2D, &
-                          SrcDeclAngle, NRz_per_range
+  USE ihop_mod,     only: rad2deg, oneCMPLX, PRTFile, maxN, Beam, ray2D, &
+                          SrcDeclAngle, nRz_per_range
   USE srPos_mod,    only: Pos
 ! sspMod used to construct image beams in the Cerveny style beam routines
 
@@ -42,7 +42,7 @@ MODULE influence
 
 CONTAINS
   SUBROUTINE InfluenceGeoHatRayCen( U, dalpha, myThid )
-    use arr_mod, only: NArr, Arr         !RG
+    use arr_mod, only: nArr, Arr         !RG
 
     ! Geometrically-spreading beams with a hat-shaped beam in ray-centered
     ! coordinates
@@ -55,7 +55,7 @@ CONTAINS
 
   !     == Local Variables ==
     REAL (KIND=_RL90), INTENT( IN    ) :: dalpha ! take-off angle radians
-    COMPLEX,           INTENT( INOUT ) :: U( NRz_per_range, Pos%NRr )   ! complex pressure field
+    COMPLEX,           INTENT( INOUT ) :: U( nRz_per_range, Pos%nRR )   ! complex pressure field
     INTEGER              :: irA, irB, II
     REAL (KIND=_RL90)    :: nA, nB, zr, L, dq( Beam%Nsteps - 1 )
     REAL (KIND=_RL90)    :: znV( Beam%Nsteps ), rnV( Beam%Nsteps ), &
@@ -63,15 +63,15 @@ CONTAINS
     COMPLEX (KIND=_RL90) :: dtau( Beam%Nsteps-1 )
     LOGICAL :: skip_step
 
-    !!! need to add logic related to NRz_per_range
+    !!! need to add logic related to nRz_per_range
 
 !$TAF init iRayCen0  = 'influence_iraycen'
-!$TAF init iRayCen1  = static, (Beam%Nsteps-1)*NRz_per_range
-!$TAF init iRayCen2  = static, (Beam%Nsteps-1)*ihop_nrr*NRz_per_range
+!$TAF init iRayCen1  = static, (Beam%Nsteps-1)*nRz_per_range
+!$TAF init iRayCen2  = static, (Beam%Nsteps-1)*ihop_nRR*nRz_per_range
 
 !$TAF store ray2d = iRayCen0
 
-    q0           = ray2D( 1 )%c / Dalpha   ! Reference for J = q0 / q
+    q0   = ray2D( 1 )%c / Dalpha   ! Reference for J = q0 / q
 
     dq   = ray2D( 2:Beam%Nsteps )%q( 1 ) - ray2D( 1:Beam%Nsteps-1 )%q( 1 )
     dtau = ray2D( 2:Beam%Nsteps )%tau    - ray2D( 1:Beam%Nsteps-1 )%tau
@@ -100,8 +100,8 @@ CONTAINS
     ray2D( 1:Beam%Nsteps )%Amp = Ratio1 * SQRT( ray2D( 1:Beam%Nsteps )%c ) &
                         * ray2D( 1:Beam%Nsteps )%Amp   ! pre-apply some scaling
 
-    RcvrDepths: DO iz = 1, NRz_per_range
-       zR = Pos%Rz( iz )
+    RcvrDepths: DO iz = 1, nRz_per_range
+       zR = Pos%RZ( iz )
 
        phase = 0.0
        qOld  = ray2D( 1 )%q( 1 ) ! used to track KMAH index
@@ -114,9 +114,9 @@ CONTAINS
        ELSE
           nA  = ( zR - ray2D( 1 )%x( 2 ) ) / znV( 1 )
           rA  = ray2D( 1 )%x( 1 ) + nA*rnV( 1 )
-          !!! Find index of receiver: assumes uniform spacing in Pos%Rr
-          irA = MAX( MIN( INT( ( rA - Pos%Rr( 1 ) ) / Pos%Delta_r )+1,  &
-                          Pos%NRr ),                                    &
+          !!! Find index of receiver: assumes uniform spacing in Pos%RR
+          irA = MAX( MIN( INT( ( rA - Pos%RR( 1 ) ) / Pos%Delta_r )+1,  &
+                          Pos%nRR ),                                    &
                      1 )
        END IF
 
@@ -134,9 +134,9 @@ CONTAINS
            nB = (zR - ray2D(iS)%x(2)) / znV(iS)
            rB = ray2D(iS)%x(1) + nB * rnV(iS)
 
-           ! Find index of receiver: assumes uniform spacing in Pos%Rr
-           irB = MAX(MIN(INT((rB - Pos%Rr(1)) / Pos%Delta_r) + 1, &
-                          Pos%NRr), &
+           ! Find index of receiver: assumes uniform spacing in Pos%RR
+           irB = MAX(MIN(INT((rB - Pos%RR(1)) / Pos%Delta_r) + 1, &
+                          Pos%nRR), &
                      1)
 
            ! Detect and skip duplicate points (happens at boundary reflection)
@@ -167,8 +167,8 @@ CONTAINS
 
            ! Compute influence for each receiver
            DO ir = irA + 1 - II, irB + II, SIGN(1, irB - irA)
-!$TAF store Arr(:,ir,iz),NArr(ir,iz) = iRayCen2
-             W = (Pos%Rr(ir) - rA) / (rB - rA)  ! relative range between rR
+!$TAF store Arr(:,ir,iz),nArr(ir,iz) = iRayCen2
+             W = (Pos%RR(ir) - rA) / (rB - rA)  ! relative range between rR
              n = ABS(nA + W * (nB - nA))
              q = ray2D(iS - 1)%q(1) + W * dq(iS - 1)  ! interpolated amplitude
              L = ABS(q) / q0   ! beam radius
@@ -202,7 +202,7 @@ CONTAINS
   ! **********************************************************************!
 
   SUBROUTINE InfluenceGeoHatCart( U, Dalpha, myThid )
-    use arr_mod, only: NArr, Arr         !RG
+    use arr_mod, only: nArr, Arr         !RG
     ! Geometric, hat-shaped beams in Cartesisan coordinates
 
   !     == Routine Arguments ==
@@ -214,17 +214,17 @@ CONTAINS
   !     == Local Variables ==
     REAL (KIND=_RL90), INTENT( IN    ) :: & ! take-off angle, radians
                                           Dalpha   ! angular spacing
-    COMPLEX,           INTENT( INOUT ) :: U( NRz_per_range, Pos%NRr ) ! complex pressure field
+    COMPLEX,           INTENT( INOUT ) :: U( nRz_per_range, Pos%nRR ) ! complex pressure field
     INTEGER              :: irT(1), irTT ! irT needs size of 1, see MINLOC
     REAL (KIND=_RL90)    :: x_ray( 2 ), rayt( 2 ), rayn( 2 ), &
-                            x_rcvr( 2, NRz_per_range ), rLen, RadiusMax, &
+                            x_rcvr( 2, nRz_per_range ), rLen, RadiusMax, &
                             zMin, zMax, dqds
     COMPLEX (KIND=_RL90) :: dtauds
     LOGICAL              :: inRcvrRanges
 
 !$TAF init iiitape1 = static, (Beam%Nsteps-1)
-!$TAF init iiitape2 = static, (Beam%Nsteps-1)*ihop_nrr
-!$TAF init iiitape3 = static, (Beam%Nsteps-1)*ihop_nrr*NRz_per_range
+!$TAF init iiitape2 = static, (Beam%Nsteps-1)*ihop_nRR
+!$TAF init iiitape3 = static, (Beam%Nsteps-1)*ihop_nRR*nRz_per_range
 
     q0           = ray2D( 1 )%c / Dalpha   ! Reference for J = q0 / q
     phase        = 0.0
@@ -232,7 +232,7 @@ CONTAINS
     rA           = ray2D( 1 )%x( 1 )       ! range at start of ray, typically 0
 
     ! find index of first receiver to the right of rA
-    irT = MINLOC( Pos%Rr( 1 : Pos%NRr ), MASK = Pos%Rr( 1 : Pos%NRr ) > rA )
+    irT = MINLOC( Pos%RR( 1 : Pos%nRR ), MASK = Pos%RR( 1 : Pos%nRR ) > rA )
     ir  = irT( 1 )
     ! if ray is left-traveling, get the first receiver to the left of rA
     IF ( ray2D( 1 )%t( 1 ) < 0.0d0 .AND. ir > 1 ) ir = ir - 1
@@ -294,22 +294,22 @@ CONTAINS
 
         ! compute beam influence for this segment of the ray
         inRcvrRanges=.TRUE.
-        RcvrRanges: DO ir = 1, ihop_nrr
+        RcvrRanges: DO ir = 1, ihop_nRR
 !$TAF store inrcvrranges = iiitape2
            ! is Rr( ir ) contained in [ rA, rB )? Then compute beam influence
-           IF ( Pos%Rr( ir ) >= MIN( rA, rB ) &
-                .AND. Pos%Rr( ir ) < MAX( rA, rB ) &
+           IF ( Pos%RR( ir ) >= MIN( rA, rB ) &
+                .AND. Pos%RR( ir ) < MAX( rA, rB ) &
                 .AND. inRcvrRanges ) THEN
 
-              x_rcvr( 1, 1:NRz_per_range ) = Pos%Rr( ir )
+              x_rcvr( 1, 1:nRz_per_range ) = Pos%RR( ir )
               IF ( Beam%RunType( 5 : 5 ) == 'I' ) THEN ! irregular grid
-                 x_rcvr( 2, 1 ) = Pos%Rz( ir )
+                 x_rcvr( 2, 1 ) = Pos%RZ( ir )
               ELSE ! default: rectilinear grid
-                 x_rcvr( 2, 1:NRz_per_range ) = Pos%Rz( 1:NRz_per_range )
+                 x_rcvr( 2, 1:nRz_per_range ) = Pos%RZ( 1:nRz_per_range )
               END IF
 
-              RcvrDepths: DO iz = 1, NRz_per_range
-!$TAF store Arr(:,ir,iz),NArr(ir,iz),q = iiitape3
+              RcvrDepths: DO iz = 1, nRz_per_range
+!$TAF store Arr(:,ir,iz),nArr(ir,iz),q = iiitape3
                  ! is x_rcvr( 2, iz ) contained in ( zmin, zmax )?
                  IF (       x_rcvr( 2, iz ) .GE. zmin &
                       .AND. x_rcvr( 2, iz ) .LE. zmax ) THEN
@@ -352,14 +352,14 @@ CONTAINS
            END IF
 
            ! bump receiver index, ir, towards rB
-           IF ( Pos%Rr( ir ) < rB ) THEN
-              IF ( ir >= Pos%NRr        ) inRcvrRanges=.FALSE. ! to next step on ray
+           IF ( Pos%RR( ir ) < rB ) THEN
+              IF ( ir >= Pos%nRR        ) inRcvrRanges=.FALSE. ! to next step on ray
               irTT = ir + 1                     ! bump right
-              IF ( Pos%Rr( irTT ) >= rB ) inRcvrRanges=.FALSE.
+              IF ( Pos%RR( irTT ) >= rB ) inRcvrRanges=.FALSE.
            !ELSE
            !   IF ( ir <= 1              ) inRcvrRanges=.FALSE. ! to next step on ray
            !   irTT = ir - 1                     ! bump left
-           !   IF ( Pos%Rr( irTT ) <= rB ) inRcvrRanges=.FALSE.
+           !   IF ( Pos%RR( irTT ) <= rB ) inRcvrRanges=.FALSE.
            END IF
            !ir = irTT
         END DO RcvrRanges
@@ -374,7 +374,7 @@ CONTAINS
   ! **********************************************************************!
 
   SUBROUTINE InfluenceGeoGaussianCart( U, Dalpha, myThid )
-    use arr_mod, only: NArr, Arr         !RG
+    use arr_mod, only: nArr, Arr         !RG
 
     ! Geometric, Gaussian beams in Cartesian coordintes
 
@@ -388,7 +388,7 @@ CONTAINS
   !     == Local Variables ==
     INTEGER,           PARAMETER       :: BeamWindow = 4
     REAL (KIND=_RL90), INTENT( IN    ) :: dalpha ! take-off angle, angular spacing
-    COMPLEX,           INTENT( INOUT ) :: U( NRz_per_range, Pos%NRr )  ! complex pressure field
+    COMPLEX,           INTENT( INOUT ) :: U( nRz_per_range, Pos%nRR )  ! complex pressure field
     INTEGER              :: irT( 1 ), irTT
     REAL (KIND=_RL90)    :: x_ray( 2 ), rayt( 2 ), rayn( 2 ), x_rcvr( 2 ), &
                             rLen, RadiusMax, zMin, zMax, sigma, lambda, A, dqds
@@ -396,8 +396,8 @@ CONTAINS
     LOGICAL              :: inRcvrRanges
 
 !$TAF init iGauCart1 = static, (Beam%Nsteps-1)
-!$TAF init iGauCart2 = static, (Beam%Nsteps-1)*ihop_nrr
-!$TAF init iGauCart3 = static, (Beam%Nsteps-1)*ihop_nrr*NRz_per_range
+!$TAF init iGauCart2 = static, (Beam%Nsteps-1)*ihop_nRR
+!$TAF init iGauCart3 = static, (Beam%Nsteps-1)*ihop_nRR*nRz_per_range
 
     q0           = ray2D( 1 )%c / Dalpha   ! Reference for J = q0 / q
     phase        = 0
@@ -408,7 +408,7 @@ CONTAINS
     ! what if there is a single receiver (ir = 0 possible)
 
     ! irT: find index of first receiver to the right of rA
-    irT = MINLOC( Pos%Rr( 1 : Pos%NRr ), MASK = Pos%Rr( 1 : Pos%NRr ) > rA )
+    irT = MINLOC( Pos%RR( 1 : Pos%nRR ), MASK = Pos%RR( 1 : Pos%nRR ) > rA )
     ir  = irT( 1 )
 
     ! if ray is left-traveling, get the first receiver to the left of rA
@@ -480,19 +480,19 @@ CONTAINS
 
         ! compute beam influence for this segment of the ray
         inRcvrRanges=.TRUE.
-        RcvrRanges: DO ir = 1, ihop_nrr
+        RcvrRanges: DO ir = 1, ihop_nRR
 !$TAF store inrcvrranges = iGauCart2
            ! is Rr( ir ) contained in [ rA, rB )? Then compute beam influence
-           IF ( Pos%Rr( ir ) >= MIN( rA, rB ) &
-                .AND. Pos%Rr( ir ) < MAX( rA, rB ) &
+           IF ( Pos%RR( ir ) >= MIN( rA, rB ) &
+                .AND. Pos%RR( ir ) < MAX( rA, rB ) &
                 .AND. inRcvrRanges ) THEN
 
-              RcvrDepths: DO iz = 1, NRz_per_range
-!$TAF store arr,narr,q = iGauCart3
+              RcvrDepths: DO iz = 1, nRz_per_range
+!$TAF store arr,nArr,q = iGauCart3
                  IF ( Beam%RunType( 5 : 5 ) == 'I' ) THEN
-                    x_rcvr = [ Pos%Rr( ir ), Pos%Rz( ir ) ]   ! irregular   grid
+                    x_rcvr = [ Pos%RR( ir ), Pos%RZ( ir ) ]   ! irregular   grid
                  ELSE
-                    x_rcvr = [ Pos%Rr( ir ), Pos%Rz( iz ) ]   ! rectilinear grid
+                    x_rcvr = [ Pos%RR( ir ), Pos%RZ( iz ) ]   ! rectilinear grid
                  END IF
                  ! is x_rcvr( 2, iz ) contained in ( zmin, zmax )?
                  IF (       x_rcvr( 2 ) .GE. zmin &
@@ -538,14 +538,14 @@ CONTAINS
            END IF
 
             ! bump receiver index, ir, towards rB
-            IF ( Pos%Rr( ir ) < rB ) THEN
-               IF ( ir >= Pos%NRr        ) inRcvrRanges=.FALSE. ! to next step on ray
+            IF ( Pos%RR( ir ) < rB ) THEN
+               IF ( ir >= Pos%nRR        ) inRcvrRanges=.FALSE. ! to next step on ray
                irTT = ir + 1                     ! bump right
-               IF ( Pos%Rr( irTT ) >= rB ) inRcvrRanges=.FALSE.
+               IF ( Pos%RR( irTT ) >= rB ) inRcvrRanges=.FALSE.
             ELSE
                IF ( ir <= 1              ) inRcvrRanges=.FALSE. ! to next step on ray
                irTT = ir - 1                     ! bump left
-               IF ( Pos%Rr( irTT ) <= rB ) inRcvrRanges=.FALSE.
+               IF ( Pos%RR( irTT ) <= rB ) inRcvrRanges=.FALSE.
             END IF
             !ir = irTT
         END DO RcvrRanges
@@ -561,10 +561,10 @@ CONTAINS
   SUBROUTINE ApplyContribution( U )
     USE writeray, only: WriteRayOutput
     USE arr_mod,  only: AddArr
-    USE ihop_mod, only: afreq, RAYFile, DELFile, MaxN
+    USE ihop_mod, only: afreq, RAYFile, DELFile, maxN
 
     COMPLEX, INTENT( INOUT ) :: U
-    REAL(KIND=_RL90) :: tmpDelay(MaxN)
+    REAL(KIND=_RL90) :: tmpDelay(maxN)
 
     tmpDelay = 0.
     SELECT CASE( Beam%RunType( 1:1 ) )

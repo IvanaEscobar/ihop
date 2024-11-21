@@ -118,7 +118,7 @@ CONTAINS
       WRITE(msgBuf,'(A)')
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
       WRITE(msgBuf,'(A,I10)') 'Number of beams in elevation   = ', &
-                              Angles%Nalpha
+                              Angles%nAlpha
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
       IF ( Angles%iSingle_alpha > 0 ) THEN
         WRITE(msgBuf,'(A,I10)') 'Trace only beam number ', &
@@ -129,13 +129,13 @@ CONTAINS
       WRITE(msgBuf,'(A)') 'Beam take-off angles (degrees)'
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 
-      IF ( Angles%Nalpha >= 1 ) THEN
+      IF ( Angles%nAlpha >= 1 ) THEN
         WRITE(msgBuf,'(10F12.3)') &
-            Angles%adeg( 1:MIN(Angles%Nalpha,Number_to_Echo) )
+            Angles%adeg( 1:MIN(Angles%nAlpha,Number_to_Echo) )
         CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
       END IF
-      IF ( Angles%Nalpha > Number_to_Echo ) THEN
-        WRITE(msgBuf,'(A,F12.6)') ' ... ', Angles%adeg( Angles%Nalpha )
+      IF ( Angles%nAlpha > Number_to_Echo ) THEN
+        WRITE(msgBuf,'(A,F12.6)') ' ... ', Angles%adeg( Angles%nAlpha )
         CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
       END IF
 
@@ -542,13 +542,13 @@ CONTAINS
               FORM = 'FORMATTED' )
        WRITE( RAYFile, * ) '''', Title( 1 : 50 ), ''''
        WRITE( RAYFile, * ) IHOP_freq
-       WRITE( RAYFile, * ) Pos%NSx, Pos%NSy, Pos%NSz
-       WRITE( RAYFile, * ) Angles%Nalpha
+       WRITE( RAYFile, * ) Pos%nSX, Pos%nSY, Pos%nSZ
+       WRITE( RAYFile, * ) Angles%nAlpha
        WRITE( RAYFile, * ) Bdry%Top%HS%Depth
        WRITE( RAYFile, * ) Bdry%Bot%HS%Depth
 
 #ifdef IHOP_THREED
-       WRITE( RAYFile, * ) Angles%Nalpha, Angles%Nbeta
+       WRITE( RAYFile, * ) Angles%nAlpha, Angles%nBeta
        WRITE( RAYFile, * ) '''xyz'''
 #else /* IHOP_THREED */
        WRITE( RAYFile, * ) '''rz'''
@@ -561,13 +561,13 @@ CONTAINS
                FORM = 'FORMATTED' )
         WRITE( DELFile, * ) '''', Title( 1 : 50 ), ''''
         WRITE( DELFile, * ) IHOP_freq
-        WRITE( DELFile, * ) Pos%NSx, Pos%NSy, Pos%NSz
-        WRITE( DELFile, * ) Angles%Nalpha
+        WRITE( DELFile, * ) Pos%nSX, Pos%nSY, Pos%nSZ
+        WRITE( DELFile, * ) Angles%nAlpha
         WRITE( DELFile, * ) Bdry%Top%HS%Depth
         WRITE( DELFile, * ) Bdry%Bot%HS%Depth
 
 #ifdef IHOP_THREED
-        WRITE( DELFile, * ) Angles%Nalpha, Angles%Nbeta
+        WRITE( DELFile, * ) Angles%nAlpha, Angles%nBeta
         WRITE( DELFile, * ) '''xyz'''
 # else /* IHOP_THREED */
         WRITE( DELFile, * ) '''rz'''
@@ -592,18 +592,18 @@ CONTAINS
 
        ! write source locations
 # ifdef IHOP_THREED
-       WRITE( ARRFile, * ) Pos%NSx,    Pos%Sx(    1 : Pos%NSx )
-       WRITE( ARRFile, * ) Pos%NSy,    Pos%Sy(    1 : Pos%NSy )
-       WRITE( ARRFile, * ) Pos%NSz,    Pos%Sz(    1 : Pos%NSz )
+       WRITE( ARRFile, * ) Pos%nSX,    Pos%SX(    1 : Pos%nSX )
+       WRITE( ARRFile, * ) Pos%nSY,    Pos%SY(    1 : Pos%nSY )
+       WRITE( ARRFile, * ) Pos%nSZ,    Pos%SZ(    1 : Pos%nSZ )
 # else /* IHOP_THREED */
-       WRITE( ARRFile, * ) Pos%NSz,    Pos%Sz(    1 : Pos%NSz )
+       WRITE( ARRFile, * ) Pos%nSZ,    Pos%SZ(    1 : Pos%nSZ )
 # endif /* IHOP_THREED */
 
        ! write receiver locations
-       WRITE( ARRFile, *    ) Pos%NRz,    Pos%Rz(    1 : Pos%NRz )
-       WRITE( ARRFile, *    ) Pos%NRr,    Pos%Rr(    1 : Pos%NRr )
+       WRITE( ARRFile, *    ) Pos%nRZ,    Pos%RZ(    1 : Pos%nRZ )
+       WRITE( ARRFile, *    ) Pos%nRR,    Pos%RR(    1 : Pos%nRR )
 # ifdef IHOP_THREED
-       WRITE( ARRFile, * ) Pos%Ntheta, Pos%theta( 1 : Pos%Ntheta )
+       WRITE( ARRFile, * ) Pos%nTheta, Pos%theta( 1 : Pos%nTheta )
 # endif /* IHOP_THREED */
 
        ! IEsco22: add erays to arrivals output
@@ -611,13 +611,13 @@ CONTAINS
               FORM = 'FORMATTED' )
        WRITE( RAYFile, * ) '''', Title( 1 : 50 ), ''''
        WRITE( RAYFile, * ) IHOP_freq
-       WRITE( RAYFile, * ) Pos%NSx, Pos%NSy, Pos%NSz
-       WRITE( RAYFile, * ) Angles%Nalpha
+       WRITE( RAYFile, * ) Pos%nSX, Pos%nSY, Pos%nSZ
+       WRITE( RAYFile, * ) Angles%nAlpha
        WRITE( RAYFile, * ) Bdry%Top%HS%Depth
        WRITE( RAYFile, * ) Bdry%Bot%HS%Depth
 
 # ifdef IHOP_THREED
-       WRITE( RAYFile, * ) Angles%Nalpha, Angles%Nbeta
+       WRITE( RAYFile, * ) Angles%nAlpha, Angles%nBeta
        WRITE( RAYFile, * ) '''xyz'''
 # else /* IHOP_THREED */
        WRITE( RAYFile, * ) '''rz'''
@@ -628,13 +628,13 @@ CONTAINS
                FORM = 'FORMATTED' )
         WRITE( DELFile, * ) '''', Title( 1 : 50 ), ''''
         WRITE( DELFile, * ) IHOP_freq
-        WRITE( DELFile, * ) Pos%NSx, Pos%NSy, Pos%NSz
-        WRITE( DELFile, * ) Angles%Nalpha
+        WRITE( DELFile, * ) Pos%nSX, Pos%nSY, Pos%nSZ
+        WRITE( DELFile, * ) Angles%nAlpha
         WRITE( DELFile, * ) Bdry%Top%HS%Depth
         WRITE( DELFile, * ) Bdry%Bot%HS%Depth
 
 #ifdef IHOP_THREED
-        WRITE( DELFile, * ) Angles%Nalpha, Angles%Nbeta
+        WRITE( DELFile, * ) Angles%nAlpha, Angles%nBeta
         WRITE( DELFile, * ) '''xyz'''
 # else /* IHOP_THREED */
         WRITE( DELFile, * ) '''rz'''
@@ -661,16 +661,16 @@ CONTAINS
 
        ! write source locations
 # ifdef IHOP_THREED
-       WRITE( ARRFile, * ) Pos%NSx,    Pos%Sx(    1 : Pos%NSx )
-       WRITE( ARRFile, * ) Pos%NSy,    Pos%Sy(    1 : Pos%NSy )
+       WRITE( ARRFile, * ) Pos%nSX,    Pos%SX(    1 : Pos%nSX )
+       WRITE( ARRFile, * ) Pos%nSY,    Pos%SY(    1 : Pos%nSY )
 # endif /* IHOP_THREED */
-       WRITE( ARRFile, * ) Pos%NSz,    Pos%Sz(    1 : Pos%NSz )
+       WRITE( ARRFile, * ) Pos%nSZ,    Pos%SZ(    1 : Pos%nSZ )
 
        ! write receiver locations
-       WRITE( ARRFile, *    ) Pos%NRz,    Pos%Rz(    1 : Pos%NRz )
-       WRITE( ARRFile, *    ) Pos%NRr,    Pos%Rr(    1 : Pos%NRr )
+       WRITE( ARRFile, *    ) Pos%nRZ,    Pos%RZ(    1 : Pos%nRZ )
+       WRITE( ARRFile, *    ) Pos%nRR,    Pos%RR(    1 : Pos%nRR )
 # ifdef IHOP_THREED
-       WRITE( ARRFile, * ) Pos%Ntheta, Pos%theta( 1 : Pos%Ntheta )
+       WRITE( ARRFile, * ) Pos%nTheta, Pos%theta( 1 : Pos%nTheta )
 # endif /* IHOP_THREED */
        FLUSH( ARRFile )
 #endif /* IHOP_WRITE_OUT */
@@ -689,18 +689,18 @@ CONTAINS
 
        ! write source locations
 # ifdef IHOP_THREED
-       WRITE( ARRFile    ) Pos%NSx,    Pos%Sx(    1 : Pos%NSx )
-       WRITE( ARRFile    ) Pos%NSy,    Pos%Sy(    1 : Pos%NSy )
-       WRITE( ARRFile    ) Pos%NSz,    Pos%Sz(    1 : Pos%NSz )
+       WRITE( ARRFile    ) Pos%nSX,    Pos%SX(    1 : Pos%nSX )
+       WRITE( ARRFile    ) Pos%nSY,    Pos%SY(    1 : Pos%nSY )
+       WRITE( ARRFile    ) Pos%nSZ,    Pos%SZ(    1 : Pos%nSZ )
 # else /* IHOP_THREED */
-       WRITE( ARRFile    ) Pos%NSz,    Pos%Sz(    1 : Pos%NSz )
+       WRITE( ARRFile    ) Pos%nSZ,    Pos%SZ(    1 : Pos%nSZ )
 # endif /* IHOP_THREED */
 
        ! write receiver locations
-       WRITE( ARRFile       ) Pos%NRz,    Pos%Rz(    1 : Pos%NRz )
-       WRITE( ARRFile       ) Pos%NRr,    Pos%Rr(    1 : Pos%NRr )
+       WRITE( ARRFile       ) Pos%nRZ,    Pos%RZ(    1 : Pos%nRZ )
+       WRITE( ARRFile       ) Pos%nRR,    Pos%RR(    1 : Pos%nRR )
 # ifdef IHOP_THREED
-       WRITE( ARRFile    ) Pos%Ntheta, Pos%theta( 1 : Pos%Ntheta )
+       WRITE( ARRFile    ) Pos%nTheta, Pos%theta( 1 : Pos%nTheta )
 # endif /* IHOP_THREED */
        FLUSH( ARRFile )
 #endif /* IHOP_WRITE_OUT */
@@ -745,64 +745,64 @@ CONTAINS
     IF ( .NOT. ALLOCATED( Pos%theta ) ) THEN
        ALLOCATE( Pos%theta( 1 ) )
        Pos%theta( 1 ) = 0   ! dummy bearing angle
-       Pos%Ntheta     = 1
+       Pos%nTheta     = 1
     END IF
 
     ! source x-coordinates
-    IF ( .NOT. ALLOCATED( Pos%Sx ) ) THEN
-       ALLOCATE( Pos%Sx( 1 ) )
-       Pos%sx( 1 ) = 0      ! dummy x-coordinate
-       Pos%NSx     = 1
+    IF ( .NOT. ALLOCATED( Pos%SX ) ) THEN
+       ALLOCATE( Pos%SX( 1 ) )
+       Pos%SX( 1 ) = 0      ! dummy x-coordinate
+       Pos%nSX     = 1
     END IF
 
     ! source y-coordinates
-    IF ( .NOT. ALLOCATED( Pos%Sy ) ) THEN
-       ALLOCATE( Pos%Sy( 1 ) )
-       Pos%sy( 1 ) = 0      ! dummy y-coordinate
-       Pos%NSy     = 1
+    IF ( .NOT. ALLOCATED( Pos%SY ) ) THEN
+       ALLOCATE( Pos%SY( 1 ) )
+       Pos%SY( 1 ) = 0      ! dummy y-coordinate
+       Pos%nSY     = 1
     END IF
 
     IF ( PlotType( 1 : 2 ) /= 'TL' ) THEN
        ! MAX( 41, ... ) below because Title is already 40 words (or 80 bytes)
- ! words/record (NRr doubled for complex pressure storage)
-       LRecl = MAX( 41, 2 * Nfreq, Pos%Ntheta, Pos%NSx, Pos%NSy, Pos%NSz, &
-                    Pos%NRz, 2 * Pos%NRr )
+ ! words/record (nRR doubled for complex pressure storage)
+       LRecl = MAX( 41, 2 * Nfreq, Pos%nTheta, Pos%nSX, Pos%nSY, Pos%nSZ, &
+                    Pos%nRZ, 2 * Pos%nRR )
 
        OPEN ( FILE = FileName, UNIT = SHDFile, STATUS = 'REPLACE', &
               ACCESS = 'DIRECT', RECL = 4 * LRecl, FORM = 'UNFORMATTED')
        WRITE( SHDFile, REC = 1  ) LRecl, Title( 1 : 80 )
        WRITE( SHDFile, REC = 2  ) PlotType
-       WRITE( SHDFile, REC = 3  ) Nfreq, Pos%Ntheta, Pos%NSx, Pos%NSy, Pos%NSz,&
-                                  Pos%NRz, Pos%NRr, freq0, atten
+       WRITE( SHDFile, REC = 3  ) Nfreq, Pos%nTheta, Pos%nSX, Pos%nSY, Pos%nSZ,&
+                                  Pos%nRZ, Pos%nRR, freq0, atten
        WRITE( SHDFile, REC = 4  ) freqVec(   1 : Nfreq )
-       WRITE( SHDFile, REC = 5  ) Pos%theta( 1 : Pos%Ntheta )
+       WRITE( SHDFile, REC = 5  ) Pos%theta( 1 : Pos%nTheta )
 
-       WRITE( SHDFile, REC = 6  ) Pos%Sx( 1 : Pos%NSx )
-       WRITE( SHDFile, REC = 7  ) Pos%Sy( 1 : Pos%NSy )
-       WRITE( SHDFile, REC = 8  ) Pos%Sz( 1 : Pos%NSz )
+       WRITE( SHDFile, REC = 6  ) Pos%SX( 1 : Pos%nSX )
+       WRITE( SHDFile, REC = 7  ) Pos%SY( 1 : Pos%nSY )
+       WRITE( SHDFile, REC = 8  ) Pos%SZ( 1 : Pos%nSZ )
 
-       WRITE( SHDFile, REC = 9  ) Pos%Rz( 1 : Pos%NRz )
-       WRITE( SHDFile, REC = 10 ) Pos%Rr( 1 : Pos%NRr )
+       WRITE( SHDFile, REC = 9  ) Pos%RZ( 1 : Pos%nRZ )
+       WRITE( SHDFile, REC = 10 ) Pos%RR( 1 : Pos%nRR )
 
     ELSE   ! compressed format for TL from FIELD3D
   ! words/record (NR doubled for complex pressure storage)
-       LRecl = MAX( 41, 2 * Nfreq, Pos%Ntheta, Pos%NSz, Pos%NRz, 2 * Pos%NRr )
+       LRecl = MAX( 41, 2 * Nfreq, Pos%nTheta, Pos%nSZ, Pos%nRZ, 2 * Pos%nRR )
 
        OPEN ( FILE = FileName, UNIT = SHDFile, STATUS = 'REPLACE', &
               ACCESS = 'DIRECT', RECL = 4 * LRecl, FORM = 'UNFORMATTED')
        WRITE( SHDFile, REC = 1  ) LRecl, Title( 1 : 80 )
        WRITE( SHDFile, REC = 2  ) PlotType
-       WRITE( SHDFile, REC = 3  ) Nfreq, Pos%Ntheta, Pos%NSx, Pos%NSy, Pos%NSz,&
-                                  Pos%NRz, Pos%NRr, freq0, atten
+       WRITE( SHDFile, REC = 3  ) Nfreq, Pos%nTheta, Pos%nSX, Pos%nSY, Pos%nSZ,&
+                                  Pos%nRZ, Pos%nRR, freq0, atten
        WRITE( SHDFile, REC = 4  ) freqVec(   1 : Nfreq )
-       WRITE( SHDFile, REC = 5  ) Pos%theta( 1 : Pos%Ntheta )
+       WRITE( SHDFile, REC = 5  ) Pos%theta( 1 : Pos%nTheta )
 
-       WRITE( SHDFile, REC = 6  ) Pos%Sx( 1 ), Pos%Sx( Pos%NSx )
-       WRITE( SHDFile, REC = 7  ) Pos%Sy( 1 ), Pos%Sy( Pos%NSy )
-       WRITE( SHDFile, REC = 8  ) Pos%Sz( 1 : Pos%NSz )
+       WRITE( SHDFile, REC = 6  ) Pos%SX( 1 ), Pos%SX( Pos%nSX )
+       WRITE( SHDFile, REC = 7  ) Pos%SY( 1 ), Pos%SY( Pos%nSY )
+       WRITE( SHDFile, REC = 8  ) Pos%SZ( 1 : Pos%nSZ )
 
-       WRITE( SHDFile, REC = 9  ) Pos%Rz( 1 : Pos%NRz )
-       WRITE( SHDFile, REC = 10 ) Pos%Rr( 1 : Pos%NRr )
+       WRITE( SHDFile, REC = 9  ) Pos%RZ( 1 : Pos%nRZ )
+       WRITE( SHDFile, REC = 10 ) Pos%RR( 1 : Pos%nRR )
     END IF
 
   RETURN
@@ -810,17 +810,17 @@ CONTAINS
 
   !**********************************************************************!
 
-  SUBROUTINE WriteSHDField( P, NRz, NRr, IRec )
+  SUBROUTINE WriteSHDField( P, nRZ, nRR, IRec )
     USE ihop_mod,   only: SHDFile
 
     ! Write the field to disk
 
-    INTEGER, INTENT( IN )    :: NRz, NRr      ! # of receiver depths, ranges
-    COMPLEX, INTENT( IN )    :: P( NRz, NRr ) ! Pressure field
+    INTEGER, INTENT( IN )    :: nRZ, nRR      ! # of receiver depths, ranges
+    COMPLEX, INTENT( IN )    :: P( nRZ, nRR ) ! Pressure field
     INTEGER, INTENT( INOUT ) :: iRec          ! last record read
     INTEGER                  :: iRz
 
-    DO iRz = 1, NRz
+    DO iRz = 1, nRZ
        iRec = iRec + 1
        WRITE( SHDFile, REC = iRec ) P( iRz, : )
     END DO
@@ -986,12 +986,12 @@ CONTAINS
 !**********************************************************************!
 
   SUBROUTINE resetMemory()
-    USE arr_mod,    only: Narr, Arr, U
+    USE arr_mod,    only: nArr, Arr, U
     USE ihop_mod,   only: ray2D, MaxN, iStep
 
     ! From arr_mod.f90
     U                         = 0.
-    NArr                      = 0
+    nArr                      = 0
     Arr(:,:,:)%NTopBnc        = -1
     Arr(:,:,:)%NBotBnc        = -1
     Arr(:,:,:)%SrcDeclAngle   = -999.

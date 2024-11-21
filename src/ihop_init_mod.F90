@@ -13,9 +13,9 @@ CONTAINS
 
   ! USES
     USE bdry_mod,  only: Bdry, HSInfo, initATI, initBTY
-    USE srpos_mod, only: Pos, ReadSxSy, ReadSzRz, ReadRcvrRanges, ReadFreqVec
+    USE srpos_mod, only: Pos, ReadSXSY, ReadSZRz, ReadRcvrRanges, ReadFreqVec
     USE ssp_mod,   only: SSP, initSSP, alphar
-    USE ihop_mod,  only: Beam, rxyz, Nrz_per_range
+    USE ihop_mod,  only: Beam, rxyz, nRz_per_range
     USE angle_mod, only: Angles, ReadRayElevationAngles
 #ifdef IHOP_THREED
     USE angle_mod, only: ReadRayBearingAngles
@@ -57,10 +57,10 @@ CONTAINS
     ! - From initenvihop.F90:initEnv
     !   - Bdry%Top, Bdry%Bot,
     !     SSP%AttenUnit,Type,Nr,Nz,z,SSP%Seg%r,
-    !     Pos%Sx,Sy,Nsz,Nrz,Sz,Rz,Ws,Isz,Wr,Irz,Nrr,Rr,Delta_r,
+    !     Pos%SX,SY,nSZ,nRZ,SZ,Rz,Ws,ISZ,Wr,Irz,nRR,Rr,Delta_r,
     !     Beam%RunType,Deltas,Nimage,iBeamWindow,Component,Multiplier,rloop,
     !     Beam%Box%r,Box%z,Type,
-    !     Angles%Nalpha,alpha,
+    !     Angles%nAlpha,alpha,
     ! - From bdry_mod.F90:initATI
     !   - Top%Natipts,x,
     ! - From bdry_mod.F90:initBTY
@@ -77,29 +77,29 @@ CONTAINS
     Bdry%Bot%HS = HSInfo(0.,0.,0.,0., 0.,0. , (0.,0.),(0.,0.), '', '' )
     Bdry%Top%HS = HSInfo(0.,0.,0.,0., 0.,0. , (0.,0.),(0.,0.), '', '' )
 
-    Pos%NSx = -1
-    Pos%NSy = -1
-    Pos%NSz = -1
-    Pos%NRz = -1
-    Pos%NRr = -1
-    Pos%Ntheta = 1
+    Pos%nSX = -1
+    Pos%nSY = -1
+    Pos%nSZ = -1
+    Pos%nRZ = -1
+    Pos%nRR = -1
+    Pos%nTheta = 1
     Pos%Delta_r = -999.
     Pos%Delta_theta = -999.
 
-    SSP%NPts = -1.
-    SSP%Nr = -1.
-    SSP%Nx = -1.
-    SSP%Ny = -1.
-    SSP%Nz = -1.
+    SSP%nPts = -1.
+    SSP%nR = -1.
+    SSP%nX = -1.
+    SSP%nY = -1.
+    SSP%nZ = -1.
     SSP%z = -1.
     SSP%rho = -1.
     SSP%c = -1.
     SSP%Type = ''
     SSP%AttenUnit = ''
 
-    Beam%NBeams = -1
-    Beam%NImage = -1
-    Beam%NSteps = -1
+    Beam%nBeams = -1
+    Beam%nImage = -1
+    Beam%nSteps = -1
     Beam%iBeamWindow = -1
     Beam%deltas = -1.
     Beam%epsMultiplier = 1.
@@ -109,7 +109,7 @@ CONTAINS
     Beam%RunType = ''
     Beam%Box = rxyz(0.,0.,0.,0.)
 
-    Angles%Nalpha = 0
+    Angles%nAlpha = 0
     Angles%iSingle_alpha = 0
     Angles%Dalpha = -1.
 
@@ -156,22 +156,22 @@ CONTAINS
 
 
     ! *** Source locations ***
-    CALL ReadSxSy( myThid ) ! Read source/receiver x-y coordinates
+    CALL ReadSXSY( myThid ) ! Read source/receiver x-y coordinates
 
-    Pos%NSz = IHOP_nsd
-    Pos%NRz = IHOP_nrd
+    Pos%nSZ = IHOP_nsd
+    Pos%nRZ = IHOP_nrd
 
-    CALL AllocatePos( Pos%NSz, Pos%Sz, IHOP_sd, myThid )
-    CALL AllocatePos( Pos%NRz, Pos%Rz, IHOP_rd, myThid )
-    CALL ReadSzRz( Bdry%Top%HS%Depth, Bdry%Bot%HS%Depth, myThid )
+    CALL AllocatePos( Pos%nSZ, Pos%SZ, IHOP_sd, myThid )
+    CALL AllocatePos( Pos%nRZ, Pos%RZ, IHOP_rd, myThid )
+    CALL ReadSZRz( Bdry%Top%HS%Depth, Bdry%Bot%HS%Depth, myThid )
 
 
     ! *** Receiver locations ***
-    Pos%NRr = IHOP_nrr
-    CALL AllocatePos( Pos%NRr, Pos%Rr, IHOP_rr, myThid )
+    Pos%nRR = IHOP_nRR
+    CALL AllocatePos( Pos%nRR, Pos%RR, IHOP_rr, myThid )
     CALL ReadRcvrRanges( myThid )
     ! set dummy for receiver bearing
-    CALL AllocatePos( Pos%Ntheta, Pos%theta, IHOP_rr( 1:1 ), myThid )
+    CALL AllocatePos( Pos%nTheta, Pos%theta, IHOP_rr( 1:1 ), myThid )
 #ifdef IHOP_THREED
     CALL ReadRcvrBearings( myThid )
 #endif /* IHOP_THREED */
@@ -273,9 +273,9 @@ CONTAINS
 ! Allocate arrival and U variables on all MPI processes
     SELECT CASE ( Beam%RunType( 5:5 ) )
       CASE ( 'I' )
-        NRz_per_range = 1         ! irregular grid
+        nRz_per_range = 1         ! irregular grid
       CASE DEFAULT
-        NRz_per_range = Pos%NRz   ! rectilinear grid
+        nRz_per_range = Pos%nRZ   ! rectilinear grid
     END SELECT
 !
     CALL initArr( myThid )
@@ -544,10 +544,10 @@ CONTAINS
       CASE ( 'R' )
         PlotType = 'rectilin  '
       CASE ( 'I' )
-        IF ( Pos%NRz /= Pos%NRr ) THEN
+        IF ( Pos%nRZ /= Pos%nRR ) THEN
 #ifdef IHOP_WRITE_OUT
           WRITE(msgBuf,'(2A)') 'INIT_FIXED_ENV ReadRunType: ', &
-                  'Irregular grid option selected with NRz not equal to Nr'
+                  'Irregular grid option selected with nRZ not equal to Nr'
           CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
           STOP 'ABNORMAL END: S/R ReadRunType'

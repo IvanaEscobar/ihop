@@ -23,18 +23,18 @@ MODULE arr_mod
 !=======================================================================
 
     public WriteArrivalsASCII, WriteArrivalsBinary, initArr, &
-           MaxNArr, NArr, Arr, AddArr, U
+           maxnArr, nArr, Arr, AddArr, U
 #ifdef IHOP_THREED
-    public NArr3D, Arr3D
+    public nArr3D, Arr3D
 #endif /* IHOP_THREED */
 
 !=======================================================================
 
-  INTEGER               :: MaxNArr
-  INTEGER, ALLOCATABLE  :: NArr( :, : )
+  INTEGER               :: maxnArr
+  INTEGER, ALLOCATABLE  :: nArr( :, : )
   COMPLEX, ALLOCATABLE  :: U( :, : )
 #ifdef IHOP_THREED
-  INTEGER, ALLOCATABLE  :: NArr3D( :, :, : )
+  INTEGER, ALLOCATABLE  :: nArr3D( :, :, : )
 #endif /* IHOP_THREED */
 
   TYPE Arrival
@@ -56,7 +56,7 @@ CONTAINS
   SUBROUTINE initArr( myThid )
   ! Allocate arrival and U variables on all MPI processes
     USE srPos_mod,      only: Pos
-    USE ihop_mod,       only: Beam, Nrz_per_range
+    USE ihop_mod,       only: Beam, nRz_per_range
 
   !     == Routine Arguments ==
   !     myThid :: Thread number. Unused by IESCO
@@ -68,18 +68,18 @@ CONTAINS
     INTEGER             :: iAllocStat
     INTEGER             :: x, y
   ! ===========================================================================
-    INTEGER, PARAMETER   :: ArrivalsStorage = 2000, MinNArr = 10
+    INTEGER, PARAMETER   :: arrStorage = 2000, minnArr = 10
   ! ===========================================================================
 
     IF (ALLOCATED(U))           DEALLOCATE(U)
     IF (ALLOCATED(Arr))         DEALLOCATE(Arr)
-    IF (ALLOCATED(NArr))        DEALLOCATE(NArr)
+    IF (ALLOCATED(nArr))        DEALLOCATE(nArr)
 
     SELECT CASE ( Beam%RunType( 1:1 ) )
       CASE ( 'C', 'S', 'I' )             ! TL calculation
         ! Allocate space for the pressure matrix
-        x = NRz_per_range
-        y = Pos%NRr
+        x = nRz_per_range
+        y = Pos%nRR
       CASE ( 'A', 'a', 'R', 'E', 'e' )   ! Arrivals calculation
         x = 1
         y = 1
@@ -101,20 +101,20 @@ CONTAINS
     ! for an arrivals run, allocate space for arrivals matrices
     SELECT CASE ( Beam%RunType( 1:1 ) )
     CASE ( 'A', 'a', 'e' )
-         ! allow space for at least MinNArr arrivals
-         MaxNArr = MAX( ArrivalsStorage / ( NRz_per_range * Pos%NRr ), &
-                        MinNArr )
+         ! allow space for at least minnArr arrivals
+         maxnArr = MAX( arrStorage / ( nRz_per_range * Pos%nRR ), &
+                        minnArr )
     CASE DEFAULT
-         MaxNArr = 1
+         maxnArr = 1
     END SELECT
 
-    ! init Arr, Narr
-    ALLOCATE( Arr( MaxNArr, Pos%NRr, NRz_per_range ), &
-              NArr(Pos%NRr, NRz_per_range), STAT = iAllocStat )
+    ! init Arr, nArr
+    ALLOCATE( Arr( maxnArr, Pos%nRR, nRz_per_range ), &
+              nArr(Pos%nRR, nRz_per_range), STAT = iAllocStat )
     IF ( iAllocStat /= 0 ) THEN
 #ifdef IHOP_WRITE_OUT
       WRITE(msgBuf,'(2A)') 'ARR_MOD INITARR: ', &
-          'Not enough allocation for Arr; reduce ArrivalsStorage'
+          'Not enough allocation for Arr; reduce arrStorage'
       CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
       STOP 'ABNORMAL END: S/R IHOP_MAIN'
@@ -122,7 +122,7 @@ CONTAINS
 
     ! init default values
     U                         = 0.0
-    NArr                      = 0
+    nArr                      = 0
     Arr(:,:,:)%NTopBnc        = -1
     Arr(:,:,:)%NBotBnc        = -1
     Arr(:,:,:)%SrcDeclAngle   = -999.
@@ -150,7 +150,7 @@ CONTAINS
     INTEGER              :: iArr( 1 ), Nt
     REAL                 :: AmpTot, w1, w2
 
-    Nt     = NArr( ir, iz )    ! # of arrivals
+    Nt     = nArr( ir, iz )    ! # of arrivals
     NewRay = .TRUE.
 
     ! Is this the second bracketting ray of a pair?
@@ -165,7 +165,7 @@ CONTAINS
     END IF
 
     IF ( NewRay ) THEN
-       IF ( Nt >= MaxNArr ) THEN       ! space available to add an arrival?
+       IF ( Nt >= maxnArr ) THEN       ! space available to add an arrival?
           iArr = MINLOC( Arr( :, ir, iz )%A )   ! no: replace weakest arrival
           IF ( Amp > Arr( iArr(1), ir, iz )%A ) THEN
              Arr( iArr(1), ir, iz )%A             = SNGL( Amp )       ! amplitude
@@ -177,7 +177,7 @@ CONTAINS
              Arr( iArr(1), ir, iz )%NBotBnc       = NumBotBnc         ! # bottom bounces
           ENDIF
        ELSE
-          NArr( ir, iz       )               = Nt + 1              ! # arrivals
+          nArr( ir, iz       )               = Nt + 1              ! # arrivals
           Arr( Nt + 1, ir, iz)%A             = SNGL( Amp )         ! amplitude
           Arr( Nt + 1, ir, iz)%Phase         = SNGL( Phase )       ! phase
           Arr( Nt + 1, ir, iz)%delay         = CMPLX( delay )      ! delay time
@@ -206,12 +206,12 @@ CONTAINS
 
   ! **********************************************************************!
 
-  SUBROUTINE WriteArrivalsASCII( r, Nrz, Nrr, SourceType )
+  SUBROUTINE WriteArrivalsASCII( r, Nrz, nRR, SourceType )
 
     ! Writes the arrival data (Amplitude, delay for each eigenray)
     ! ASCII output file
 
-    INTEGER,           INTENT( IN ) :: Nrz, Nrr     ! NRz per range, NRr
+    INTEGER,           INTENT( IN ) :: Nrz, nRR     ! NRz per range, nRR
     REAL (KIND=_RL90), INTENT( IN ) :: r( Nr )      ! Rr
     CHARACTER (LEN=1), INTENT( IN ) :: SourceType   ! Beam%RunType(4:4)
     INTEGER             :: ir, iz, iArr
@@ -221,11 +221,11 @@ CONTAINS
     IF (IHOP_dumpfreq.LT.0) RETURN
 
 #ifdef IHOP_WRITE_OUT
-    WRITE( ARRFile, * ) MAXVAL( NArr( 1:Nrr, 1:Nrz ) )
+    WRITE( ARRFile, * ) MAXVAL( nArr( 1:nRR, 1:Nrz ) )
 #endif /* IHOP_WRITE_OUT */
 
     DO iz = 1, Nrz
-       DO ir = 1, Nrr
+       DO ir = 1, nRR
           IF ( SourceType == 'X' ) THEN   ! line source
              factor =  4.0 * SQRT( PI )
           ELSE                            ! point source: default
@@ -237,8 +237,8 @@ CONTAINS
           END IF
 
 #ifdef IHOP_WRITE_OUT
-          WRITE( ARRFile, * ) NArr( ir, iz )
-          DO iArr = 1, NArr( ir, iz )
+          WRITE( ARRFile, * ) nArr( ir, iz )
+          DO iArr = 1, nArr( ir, iz )
              ! You can compress the output file a lot by putting in an explicit
              ! format statement here ...
              ! However, you'll need to make sure you keep adequate precision
@@ -261,12 +261,12 @@ CONTAINS
 
   ! **********************************************************************!
 
-  SUBROUTINE WriteArrivalsBinary( r, Nrz, Nrr, SourceType )
+  SUBROUTINE WriteArrivalsBinary( r, Nrz, nRR, SourceType )
 
     ! Writes the arrival data (amplitude, delay for each eigenray)
     ! Binary output file
 
-    INTEGER,           INTENT( IN ) :: Nrz, Nrr     ! NRz per range, NRrr
+    INTEGER,           INTENT( IN ) :: Nrz, nRR     ! NRz per range, nRR
     REAL (KIND=_RL90), INTENT( IN ) :: r( Nr )      ! Rr
     CHARACTER (LEN=1), INTENT( IN ) :: SourceType   ! Beam%RunType(4:4)
     INTEGER                 :: ir, iz, iArr
@@ -276,11 +276,11 @@ CONTAINS
     IF (IHOP_dumpfreq.LT.0) RETURN
 
 #ifdef IHOP_WRITE_OUT
-    WRITE( ARRFile ) MAXVAL( NArr( 1:Nrr, 1:Nrz ) )
+    WRITE( ARRFile ) MAXVAL( nArr( 1:nRR, 1:Nrz ) )
 #endif /* IHOP_WRITE_OUT */
 
     DO iz = 1, Nrz
-       DO ir = 1, Nrr
+       DO ir = 1, nRR
           IF ( SourceType == 'X' ) THEN   ! line source
              factor = 4.0 * SQRT( PI )
           ELSE                            ! point source
@@ -292,8 +292,8 @@ CONTAINS
           END IF
 
 #ifdef IHOP_WRITE_OUT
-          WRITE( ARRFile ) NArr( ir, iz )
-          DO iArr = 1, NArr( ir, iz )
+          WRITE( ARRFile ) nArr( ir, iz )
+          DO iArr = 1, nArr( ir, iz )
              ! integers written out as reals below for fast reading in Matlab
              WRITE( ARRFile ) &
             SNGL( factor * Arr( iArr, ir, iz )%A ),           &
