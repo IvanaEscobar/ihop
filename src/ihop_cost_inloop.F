@@ -6,18 +6,19 @@
 # include "AUTODIFF_OPTIONS.h"
 #endif
 
+C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
 C !ROUTINE: IHOP_COST_INLOOP
 
-C !INTERFACE: ==========================================================
+C !INTERFACE:
       SUBROUTINE IHOP_COST_INLOOP( myTime, myThid )
 
-C !DESCRIPTION:
-C Extract ihop model counterparts for cost function data misfit
+C     !DESCRIPTION:
+C     Extract ihop model counterparts for cost function data misfit
 
-C !USES: ===============================================================
+C     !USES:
       IMPLICIT NONE
-C     == Global variables ===
+C == Global variables ===
 #include "SIZE.h"
 #include "EEPARAMS.h"
 #include "GRID.h"
@@ -40,81 +41,73 @@ C     == Global variables ===
 # include "tamc.h"
 #endif
 
-C !INPUT PARAMETERS:
-C myTime    :: Current time in simulation
-C myThid    :: my Thread Id number
+C     !INPUT PARAMETERS:
+C     myTime :: Current time in simulation
+C     myThid :: my thread ID
       _RL     myTime
       INTEGER myThid
+C     !OUTPUT PARAMETERS:
 CEOP
 
+C    !LOCAL VARIABLES:
 #ifdef ALLOW_IHOP
-C !LOCAL VARIABLES:
       INTEGER m,k,bi,bj,num_file,varid1,err
       INTEGER maxindex(Nrr, Nrd)
       _RL     ihop_modval
-#ifndef ALLOW_CTRL
+# ifndef ALLOW_CTRL
       INTEGER optimcycle
-#endif
-#ifndef ALLOW_ECCO
+# endif
+# ifndef ALLOW_ECCO
       INTEGER i,j
-#endif
-#ifdef ALLOW_AUTODIFF_TAMC
+# endif
+# ifdef ALLOW_AUTODIFF_TAMC
       INTEGER act1, act2, act3, act4
       INTEGER max1, max2, max3
       INTEGER ikey, itdkey
-#endif
+# endif
       CHARACTER*(MAX_LEN_MBUF) msgBuf
 
-#ifndef ALLOW_CTRL
+# ifndef ALLOW_CTRL
       optimcycle = 0
-#endif
-#ifdef ALLOW_AUTODIFF_TAMC
+# endif
+# ifdef ALLOW_AUTODIFF_TAMC
       itdkey = bi + (bj - 1)*nSx + (ikey_dynamics - 1)*nSx*nSy
-#endif
+# endif
 
-#ifdef ALLOW_COST
-        _BEGIN_MASTER( myThid )
+# ifdef ALLOW_COST
+      _BEGIN_MASTER( myThid )
 
-      DO bj=1,nSy
-       DO bi=1,nSx
-
-        DO num_file=1,NFILESMAX_IHOP
-         DO m=1,NOBSMAX_IHOP
-          IF (m.LE.ObsNo_tiled(num_file,bi,bj)) THEN
-
-           IF ((ihopObs_time(num_file,m,bi,bj).GE.myTime)
-     &      .AND.(ihopObs_time(num_file,m,bi,bj).LT.
-     &      (myTime+deltaTclock))) THEN
-
-#ifdef ALLOW_AUTODIFF_TAMC
+      DO bj = 1, nSy
+        DO bi = 1, nSx
+          DO num_file = 1, NFILESMAX_IHOP
+            DO m = 1, NOBSMAX_IHOP
+              IF (m.LE.ObsNo_tiled(num_file,bi,bj)) THEN
+                IF ( (ihopObs_time(num_file,m,bi,bj).GE.myTime) .AND.
+     &               (ihopObs_time(num_file,m,bi,bj).LT.
+     &                (myTime+deltaTclock)) ) THEN
+#  ifdef ALLOW_AUTODIFF_TAMC
 !$TAF STORE ihop_modval  = comlev1_bibj, key=itdkey, byte=isbyte
-#endif
+#  endif
+                  ihop_modval = 0
 
-            ihop_modval=0
+                  CALL IHOP_COST_MODVAL( ihop_modval, num_file,
+     &                 1, 1, myTime, myThid )
 
-            CALL ihop_cost_modval(ihop_modval, num_file,
-     &          1, 1, myTime, myThid)
+                  CALL ACTIVE_WRITE_IHOP_TILE( num_file,
+     &                 ihop_modval, m, optimcycle, bi, bj, myThid,
+     &                 ihop_dummy(num_file,bi,bj) )
 
-!            err = NF_INQ_VARID(fidfwd_obs(num_file,bi,bj),ihop_nameequi,
-!     &              varid1)
-!            err = NF_PUT_VARA_DOUBLE(fidfwd_obs(num_file,bi,bj), varid1,
-!     &              m, 1, ihop_modval)
-            CALL active_write_ihop_tile( num_file,
-     &         ihop_modval, m, optimcycle,bi,bj,myThid,
-     &         ihop_dummy(num_file,bi,bj) )
+                ENDIF !IF ( (ihopObs_time
+              ENDIF !IF (ObsNo_tiled(num_file,bi,bj).NE.0)
+            ENDDO !DO m
+          ENDDO !DO num_file
+        ENDDO !DO bi
+      ENDDO !DO bj
 
-           ENDIF !if ((ihopObs_time...
-          ENDIF !if (ObsNo_tiled(num_file,bi,bj).NE.0) then
-         ENDDO !do m...
-        ENDDO !do num_file=1,NFILESMAX_OBS
+      _END_MASTER( myThid )
 
-       ENDDO
-      ENDDO
-
-        _END_MASTER( myThid )
-
-#endif /* ALLOW_COST */
-#endif
+# endif /* ALLOW_COST */
+#endif /* ALLOW_IHOP */
 
       RETURN
       END

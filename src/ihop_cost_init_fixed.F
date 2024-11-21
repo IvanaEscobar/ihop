@@ -1,23 +1,20 @@
 #include "IHOP_OPTIONS.h"
 #include "AD_CONFIG.h"
 
-      subroutine ihop_cost_init_fixed( myThid )
+C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
+CBOP
+C !ROUTINE: IHOP_COST_INIT_FIXED
 
-C     ==================================================================
-C     SUBROUTINE ihop_cost_init_fixed
-C     ==================================================================
-C
-C     o Set contributions to the cost function and the cost function
-C       itself to zero. The cost function and the individual contribu-
-C       tions are defined in the header file "IHOP_COST.h".
-C
-C     ==================================================================
-C     SUBROUTINE ihop_cost_init_fixed
-C     ==================================================================
+C !INTERFACE:
+      SUBROUTINE IHOP_COST_INIT_FIXED( myThid )
 
-      implicit none
+C    !DESCRIPTION:
+C    Set contributions to cost function and the cost function
+C    itself to zero. Both are defined in header file "IHOP_COST.h".
 
-C     == global variables ==
+C    !USES:
+      IMPLICIT NONE
+C == Global Variables ===
 #include "EEPARAMS.h"
 #include "SIZE.h"
 #include "PARAMS.h"
@@ -33,13 +30,36 @@ C     == global variables ==
 #include "netcdf.inc"
 #endif
 
-!     == routine arguments ==
-      integer myThid
+C     !INPUT PARAMETERS:
+C     myThid :: my thread ID
+      INTEGER myThid
+C     !OUTPUT PARAMETERS:
+CBOP
 
+C     !FUNCTIONS:
+      INTEGER ILNBLNK
+      EXTERNAL ILNBLNK
+
+C     !LOCAL VARIABLES:
 #if ( defined (ALLOW_COST) && defined (ALLOW_IHOP) )
-!     !EXTERNAL VARIABLES:
       CHARACTER*(MAX_LEN_MBUF) :: msgBuf
-!     !LOCAL VARIABLES:
+      CHARACTER*(MAX_LEN_FNAM) IHOPObs_File, fnamedatanc
+      CHARACTER*(MAX_LEN_FNAM) fnameequinc
+      CHARACTER*(MAX_LEN_FNAM) adfnameequinc, tlfnameequinc
+      CHARACTER*(MAX_LEN_FNAM) fnameequincglo
+      CHARACTER*(MAX_LEN_FNAM) adfnameequincglo, tlfnameequincglo
+      LOGICAL exst
+      INTEGER :: iUnit
+      INTEGER :: JL, IL, err, ncid, dimid1, dimid2
+      INTEGER :: varid1a, varid1b, varid2, varid3
+      INTEGER :: varid4a, varid4b, varid4c
+      INTEGER :: varid5a, varid5b, varidEquiv(2)
+      INTEGER :: weighIhopObs, obsIsInRunTime
+      INTEGER :: ObsNo_valid, ihopObsInTile
+      INTEGER :: tmpdate(4), tmpdiff(4)
+      INTEGER :: num_file, hh, obsno_hh
+      INTEGER :: bi, bj, k, i, j, l, m
+      INTEGER :: iG, jG
       _RL :: yymmddMin,yymmddMax
       _RL :: hhmmssMin,hhmmssMax
       _RL :: tmpyymmdd(NOBSMAX_IHOP), tmphhmmss(NOBSMAX_IHOP), diffsecs
@@ -60,48 +80,26 @@ C     == global variables ==
       _RL :: depth_2
       _RL :: lon_tmp1, lon_tmp2, lat_tmp1, lat_tmp2
       _RL :: lat_fac, lon_fac, depth_fac
-      INTEGER :: iUnit
-      INTEGER :: JL, IL, err, ncid, dimid1, dimid2
-      INTEGER :: varid1a, varid1b, varid2, varid3
-      INTEGER :: varid4a, varid4b, varid4c
-      integeR :: varid5a, varid5b, varidEquiv(2)
-      INTEGER :: weighIhopObs, obsIsInRunTime
-      INTEGER :: ObsNo_valid, ihopObsInTile
-      INTEGER :: tmpdate(4), tmpdiff(4)
-      INTEGER :: num_file, hh, obsno_hh
-      INTEGER :: bi, bj, k, i, j, l, m
-      INTEGER :: iG, jG
-      CHARACTER*(MAX_LEN_FNAM) IHOPObs_File, fnamedatanc
-      CHARACTER*(MAX_LEN_FNAM) fnameequinc
-      CHARACTER*(MAX_LEN_FNAM) adfnameequinc, tlfnameequinc
-      CHARACTER*(MAX_LEN_FNAM) fnameequincglo
-      CHARACTER*(MAX_LEN_FNAM) adfnameequincglo, tlfnameequincglo
-      LOGICAL exst
 
-C ==================== External Functions ==========================
-      INTEGER ILNBLNK
-      EXTERNAL ILNBLNK
-C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
-C     == end of interface ==
+      WRITE(msgBuf,'(A,/,A)') ' ', 'iHOP COST general parameters :'
+      CALL PRINT_MESSAGE( msgBuf,
+     &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
-      WRITE(msgbuf,'(a)') ' '
-      CALL print_message( msgbuf, standardmessageunit,
-     &                    SQUEEZE_RIGHT, myThid)
-      WRITE(msgbuf,'(a)') 'ihop general parameters :'
-      JL  = ILNBLNK( IHOPObs_Dir )
+      JL = ILNBLNK( IHOPObs_Dir )
       IF (JL.NE.0) THEN
-        WRITE(msgbuf,'(2a)') '  IHOPObs_Dir ',IHOPObs_Dir(1:JL)
+        WRITE(msgBuf,'(2A)') '  IHOPObs_Dir ',IHOPObs_Dir(1:JL)
       ELSE
-        WRITE(msgbuf,'(2a)') '  IHOPObs_Dir ','./'
+        WRITE(msgBuf,'(2A)') '  IHOPObs_Dir ','./'
       ENDIF
-      CALL print_message(
-     &   msgbuf, standardmessageunit, SQUEEZE_RIGHT, myThid)
-      WRITE(msgbuf,'(a,l5)') '  ihopDoNcOutput ',ihopDoNcOutput
-      CALL print_message(
-     &   msgbuf, standardmessageunit, SQUEEZE_RIGHT, myThid)
-      WRITE(msgbuf,'(a)') ' '
-      CALL print_message( msgbuf, standardmessageunit,
-     &                    SQUEEZE_RIGHT, myThid)
+      CALL PRINT_MESSAGE( msgBuf,
+     &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
+
+      WRITE(msgBuf,'(A,L5)') '  ihopDoNcOutput ', ihopDoNcOutput
+      CALL PRINT_MESSAGE( msgBuf,
+     &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
+      WRITE(msgBuf,'(A)') ' '
+      CALL PRINT_MESSAGE( msgBuf,
+     &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
 
 !====================================
@@ -114,240 +112,208 @@ C     == end of interface ==
       hhmmssMin=modelstartdate(2)
       hhmmssMax=modelenddate(2)
 
-      DO num_file=1,NFILESMAX_IHOP
+      DO num_file = 1, NFILESMAX_IHOP
+        ObsNo_hh = 0
 
-       ObsNo_hh=0
-
-       IHOPObs_File=' '
-       IL  = ILNBLNK( IHOPObs_Files(num_file) )
-       IF (IL.NE.0) THEN
-        WRITE(IHOPObs_File,'(A)') IHOPObs_Files(num_file)(1:IL)
-        WRITE(msgbuf,'(A)') ' '
-        CALL print_message( msgbuf, standardmessageunit,
-     &                    SQUEEZE_RIGHT, myThid)
-        WRITE(msgbuf,'(A,I3,2A)')
+        IHOPObs_File=' '
+        IL = ILNBLNK( IHOPObs_Files(num_file) )
+        IF (IL.NE.0) THEN
+          WRITE(IHOPObs_File,'(A)') IHOPObs_Files(num_file)(1:IL)
+          WRITE(msgBuf,'(A,/,A,I3,2A)') ' ',
      &     'ihop file #',num_file,' is ', IHOPObs_File(1:IL)
-        CALL print_message(
-     &     msgbuf, standardmessageunit, SQUEEZE_RIGHT, myThid)
-       ENDIF
+          CALL PRINT_MESSAGE( msgBuf,
+     &         standardMessageUnit, SQUEEZE_RIGHT, myThid )
+        ENDIF
 
-       IL  = ILNBLNK( IHOPObs_File )
-       IF (IL.NE.0) THEN
-
+        IL = ILNBLNK( IHOPObs_File )
+        IF (IL.NE.0) THEN
 !===========================================================
 !       READ IHOP OBS NETCDF IDs
 !===========================================================
+          WRITE(fnamedatanc,'(2A)') IHOPObs_File(1:IL),'.nc'
+          err = NF_OPEN( fnamedatanc, NF_NOWRITE, 
+     &          fiddata_obs(num_file) )
 
-        WRITE(fnamedatanc,'(2A)') IHOPObs_File(1:IL),'.nc'
-        err = NF_OPEN(fnamedatanc, 0, fiddata_obs(num_file))
+!1) Read number of observations and available dimensions:
+          ncid = fiddata_obs(num_file)
+          err = NF_INQ_DIMID( ncid,'iOBS', dimid1 )
+          err = NF_INQ_DIMLEN( ncid, dimid1, obsNo(num_file) )
 
-! Read number of observations:
-        ncid = fiddata_obs(num_file)
-        err = NF_INQ_DIMID(ncid,'iOBS', dimid1 )
-        err = NF_INQ_DIMLEN(ncid, dimid1, obsNo(num_file) )
+          WRITE(msgBuf,'(A,I9)')
+     &       '  # of observations in file                   =',
+     &       obsNo(num_file)
+          CALL PRINT_MESSAGE( msgBuf,
+     &         standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
-        WRITE(msgbuf,'(A,I9)')
-     &     '  # of observations in file                   =',
-     &     obsNo(num_file)
-        CALL print_message(
-     &     msgbuf, standardmessageunit, SQUEEZE_RIGHT, myThid)
+          err =       NF_INQ_VARID( ncid, 'ihop_YYYYMMDD', varid1a )
+          err = err + NF_INQ_VARID( ncid, 'ihop_HHMMSS', varid1b )
+          err = err + NF_INQ_VARID( ncid, 'ihop_iter', varid2 )
 
-! Read meta info for observations:
-        err = NF_INQ_VARID(ncid,'ihop_YYYYMMDD', varid1a )
-        err = err + NF_INQ_VARID(ncid,'ihop_HHMMSS', varid1b )
-        err = err + NF_INQ_VARID(ncid,'ihop_iter', varid2 )
-
-        IF (err.NE.NF_NOERR) THEN
-         IL  = ILNBLNK( IHOPObs_File )
-         WRITE(msgBuf,'(3A)')
-     &    'IHOP_COST_INIT_FIXED: file ', IHOPObs_File(1:IL),
-     &    '.nc is not in the pkg/ihop cost format: check iter,uncert'
-         CALL PRINT_ERROR( msgBuf, myThid )
-        ENDIF
+          IF (err.NE.NF_NOERR) THEN
+            WRITE(msgBuf,'(4A)')
+     &       'IHOP_COST_INIT_FIXED: file ', IHOPObs_File(1:IL),
+     &       '.nc is not in the pkg/ihop cost format: ',
+     &       'check iter,uncert'
+            CALL PRINT_ERROR( msgBuf, myThid )
+          ENDIF
 ! Assume all ihop observations are instantaneous
 
-! Weight for each ihop obs (if missing, assume equal weights):
-        weighIhopObs=1
-        err = NF_INQ_VARID(ncid,'ihop_uncert', varid3 )
-        IF (err.NE.NF_NOERR) THEN
-         weighIhopObs=0
+!2 Weight for each ihop obs (if missing, assume equal weights):
+          weighIhopObs = 1
 
-         WRITE(msgbuf,'(2A)')
-     &     '      ihop obs file does not have uncertainties;',
-     &     '      assume all obs datum are weighed evenly '
-         CALL print_message(
-     &      msgbuf, standardmessageunit, SQUEEZE_RIGHT, myThid)
+          err = NF_INQ_VARID( ncid, 'ihop_uncert', varid3 )
+          IF (err.NE.NF_NOERR) THEN
+            WRITE(msgBuf,'(2A)')
+     &        '      ihop obs file does not have uncertainties;',
+     &        '      assume all obs datum are weighed evenly '
+            CALL PRINT_MESSAGE( msgBuf,
+     &           standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
-        ENDIF
+            weighIhopObs = 0
 
-! Read the ihop observations' positions:
-        err =       NF_INQ_VARID(ncid,'ihop_x', varid4a )
-        err = err + NF_INQ_VARID(ncid,'ihop_y', varid4b )
-        err = err + NF_INQ_VARID(ncid,'ihop_z', varid4c )
-        IF (err.NE.NF_NOERR) THEN
-         IL  = ILNBLNK( IHOPObs_File )
-         WRITE(msgBuf,'(3A)')
-     &    'IHOP_COST_INIT_FIXED: file ', IHOPObs_File(1:IL),
-     &    '.nc is not in the pkg/ihop cost format, check x,y,z'
-         CALL PRINT_ERROR( msgBuf, myThid)
-        ENDIF
+          ENDIF
 
-! Read the ihop observations' values:
-        err =       NF_INQ_VARID(ncid,'ihop_val', varid5a )
+!3 Read ihop observation positions and values:
+          err =       NF_INQ_VARID( ncid, 'ihop_x', varid4a )
+          err = err + NF_INQ_VARID( ncid, 'ihop_y', varid4b )
+          err = err + NF_INQ_VARID( ncid, 'ihop_z', varid4c )
 
-        IF (err.NE.NF_NOERR) THEN
-         IL  = ILNBLNK( IHOPObs_File )
-         WRITE(msgBuf,'(3A)')
-     &    'IHOP_COST_INIT_FIXED: file ', IHOPObs_File(1:IL),
-     &    '.nc is not in the pkg/ihop cost format, check ihop_val'
-         CALL PRINT_ERROR( msgBuf, myThid)
-        ENDIF
+          IF (err.NE.NF_NOERR) THEN
+            WRITE(msgBuf,'(3A)')
+     &       'IHOP_COST_INIT_FIXED: file ', IHOPObs_File(1:IL),
+     &       '.nc is not in the pkg/ihop cost format, check x,y,z'
+            CALL PRINT_ERROR( msgBuf, myThid )
+          ENDIF
+
+          err =       NF_INQ_VARID( ncid, 'ihop_val', varid5a )
+
+          IF (err.NE.NF_NOERR) THEN
+           WRITE(msgBuf,'(3A)')
+     &      'IHOP_COST_INIT_FIXED: file ', IHOPObs_File(1:IL),
+     &      '.nc is not in the pkg/ihop cost format, check ihop_val'
+           CALL PRINT_ERROR( msgBuf, myThid)
+          ENDIF
 
 !===========================================================
 !       SET IHOP GLOBAL EQUIV NETCDF VARIABLES
 !===========================================================
+! Variable names for model equivalent files
+          ihop_nameequi = 'mod_val'
+          ihop_namemask = 'mod_mask'
+          ihop_nameval  = 'ihop_val'
+          ihop_nameuncert = 'ihop_uncert'
 
-! Variables names for model equivalent files
-        ihop_nameequi = 'mod_val'
-        ihop_namemask = 'mod_mask'
-        ihop_nameval  = 'ihop_val'
-        ihop_nameuncert = 'ihop_uncert'
+!4 Create global file for ihop model equivalent
+          IF (myProcId.EQ.0) THEN
+            JL  = ILNBLNK( IHOPObs_Dir )
 
-! Create netcdf global file for ihop model equivalent
-        IF ( myProcId .eq. 0 ) THEN
-         JL  = ILNBLNK( IHOPObs_Dir )
+            WRITE(fnameequincglo,'(3A)')
+     &       IHOPObs_Dir(1:JL),
+     &       IHOPObs_File(1:IL),'.equi.nc'
 
-         WRITE(fnameequincglo,'(3A)')
-     &    IHOPObs_Dir(1:JL),IHOPObs_File(1:IL),'.equi.nc'
-#ifdef ALLOW_ADJOINT_RUN
-         WRITE(adfnameequincglo,'(4A)')
-     &    IHOPObs_Dir(1:JL),'ad',
-     &    IHOPObs_File(1:IL),'.equi.nc'
-#endif
-#ifdef ALLOW_TANGENTLINEAR_RUN
-         WRITE(tlfnameequincglo,'(4A)')
-     &    IHOPObs_Dir(1:JL),'tl',
-     &    IHOPObs_File(1:IL),'.equi.nc'
-#endif
+# ifdef ALLOW_ADJOINT_RUN
+            WRITE(adfnameequincglo,'(4A)')
+     &       IHOPObs_Dir(1:JL),'ad',
+     &       IHOPObs_File(1:IL),'.equi.nc'
+# endif
+# ifdef ALLOW_TANGENTLINEAR_RUN
+            WRITE(tlfnameequincglo,'(4A)')
+     &       IHOPObs_Dir(1:JL),'tl',
+     &       IHOPObs_File(1:IL),'.equi.nc'
+# endif
 
-         JL = ILNBLNK( fnameequincglo )
-         inquire( file=fnameequincglo(1:JL), exist=exst )
-         IF (.NOT.exst) THEN
-
+            JL = ILNBLNK( fnameequincglo )
+            INQUIRE( FILE = fnameequincglo(1:JL), EXIST = exst )
+            IF (.NOT.exst) THEN
 ! Create NetCDF file
-          err = NF_CREATE(fnameequincglo(1:JL),NF_CLOBBER,
-     &           fidglobal(num_file))
-          err = NF_DEF_DIM(fidglobal(num_file),'iOBS',ObsNo(num_file),
-     &           dimid1)
+              err = NF_CREATE( fnameequincglo(1:JL), NF_CLOBBER,
+     &              fidglobal(num_file) )
+              err = NF_DEF_DIM( fidglobal(num_file),'iOBS',
+     &              ObsNo(num_file), dimid1 )
 
-          err = NF_DEF_VAR(fidglobal(num_file),
-     &         'mod_val',NF_DOUBLE,
-     &         1,dimid1,varidEquiv(1))
+              err = NF_DEF_VAR( fidglobal(num_file), 'mod_val',
+     &              NF_DOUBLE, 1, dimid1, varidEquiv(1) )
+              err = NF_PUT_ATT_DOUBLE( fidglobal(num_file),
+     &              varidEquiv(1), '_FillValue',
+     &              NF_DOUBLE, 1, -9999. _d 0 )
 
-          err = NF_PUT_ATT_DOUBLE(fidglobal(num_file),
-     &         varidEquiv(1),'_FillValue',
-     &         NF_DOUBLE,1, -9999. _d 0 )
-
-          err = NF_DEF_VAR(fidglobal(num_file),
-     &         'mod_mask',NF_DOUBLE,
-     &         1,dimid1,varidEquiv(2))
-
-          err = NF_PUT_ATT_DOUBLE(fidglobal(num_file),
-     &         varidEquiv(2),'_FillValue',
-     &         NF_DOUBLE,1, -9999. _d 0 )
+              err = NF_DEF_VAR( fidglobal(num_file), 'mod_mask',
+     &              NF_DOUBLE, 1, dimid1, varidEquiv(2) )
+              err = NF_PUT_ATT_DOUBLE( fidglobal(num_file),
+     &              varidEquiv(2), '_FillValue',
+     &              NF_DOUBLE, 1, -9999. _d 0 )
 
 ! Write buffer to file, reopen file with WRITE permissions
-          err = NF_ENDDEF(fidglobal(num_file))
-          err = NF_CLOSE(fidglobal(num_file))
-          err = NF_OPEN(fnameequincglo(1:JL), NF_WRITE, 
-     &           fidglobal(num_file))
+              err = NF_ENDDEF( fidglobal(num_file) )
+              err = NF_CLOSE( fidglobal(num_file) )
+              err = NF_OPEN( fnameequincglo(1:JL), NF_WRITE, 
+     &              fidglobal(num_file) )
 
-         ELSE
-! Obtain file unit id
-          err = NF_OPEN(fnameequincglo(1:JL), NF_WRITE,
-     &           fidglobal(num_file))
-         ENDIF
+            ELSE
+! Obtain existing NetCDF file id
+              err = NF_OPEN( fnameequincglo(1:JL), NF_WRITE,
+     &              fidglobal(num_file) )
+            ENDIF
 
-#ifdef ALLOW_ADJOINT_RUN
-         JL = ILNBLNK( adfnameequincglo )
-         inquire( file=adfnameequincglo(1:JL), exist=exst )
-         IF (.NOT.exst) THEN
+# ifdef ALLOW_ADJOINT_RUN
+            JL = ILNBLNK( adfnameequincglo )
+            INQUIRE( FILE = adfnameequincglo(1:JL), EXIST = exst )
+            IF (.NOT.exst) THEN
+! Create NetCDF AD file
+              err = NF_CREATE( adfnameequincglo(1:JL), NF_CLOBBER,
+     &              fidadglobal(num_file) )
+              err = NF_DEF_DIM( fidadglobal(num_file), 'iOBS',
+     &              ObsNo(num_file), dimid1 )
 
-! Create NetCDF ad file
-          err = NF_CREATE(adfnameequincglo(1:JL),NF_CLOBBER,
-     &           fidadglobal(num_file))
-          err = NF_DEF_DIM(fidadglobal(num_file),'iOBS',
-     &           ObsNo(num_file),dimid1)
-
-          err = NF_DEF_VAR(fidadglobal(num_file),
-     &         'mod_val',NF_DOUBLE,
-     &         1,dimid1,varidEquiv(1))
-
-          err = NF_PUT_ATT_DOUBLE(fidadglobal(num_file),
-     &         varidEquiv(1),'_FillValue',
-     &         NF_DOUBLE,1, 0. _d 0 )
-
-          err = NF_DEF_VAR(fidglobal(num_file),
-     &         'mod_mask',NF_DOUBLE,
-     &         1,dimid1,varidEquiv(2))
-
-          err = NF_PUT_ATT_DOUBLE(fidglobal(num_file),
-     &         varidEquiv(2),'_FillValue',
-     &         NF_DOUBLE,1, 0. _d 0 )
+              err = NF_DEF_VAR( fidadglobal(num_file), 'mod_val',
+     &              NF_DOUBLE, 1, dimid1, varidEquiv(1) )
+              err = NF_PUT_ATT_DOUBLE( fidadglobal(num_file),
+     &              varidEquiv(1), '_FillValue',
+     &              NF_DOUBLE, 1, 0. _d 0 )
 
 ! Write buffer to file, reopen file with WRITE permissions
-          err = NF_ENDDEF(fidadglobal(num_file))
-          err = NF_CLOSE(fidadglobal(num_file))
-          err = NF_OPEN(adfnameequincglo(1:JL), NF_WRITE,
-     &         fidadglobal(num_file))
+              err = NF_ENDDEF( fidadglobal(num_file) )
+              err = NF_CLOSE( fidadglobal(num_file) )
+              err = NF_OPEN( adfnameequincglo(1:JL), NF_WRITE,
+     &              fidadglobal(num_file) )
 
-         ELSE
-! Obtain ad file unit id
-          err = NF_OPEN(adfnameequincglo(1:JL), NF_WRITE,
-     &         fidadglobal(num_file))
-         ENDIF
-#endif
+            ELSE
+! Obtain existing AD NetCDF file id
+              err = NF_OPEN( adfnameequincglo(1:JL), NF_WRITE,
+     &              fidadglobal(num_file) )
+            ENDIF
 
-#ifdef ALLOW_TANGENTLINEAR_RUN
-         JL = ILNBLNK( tlfnameequincglo )
-         inquire( file=tlfnameequincglo(1:JL), exist=exst )
-         IF (.NOT.exst) THEN
+# endif
+# ifdef ALLOW_TANGENTLINEAR_RUN
+            JL = ILNBLNK( tlfnameequincglo )
+            INQUIRE( FILE = tlfnameequincglo(1:JL), EXIST = exst )
+            IF (.NOT.exst) THEN
+! Create NetCDF TL file
+              err = NF_CREATE( tlfnameequincglo(1:JL), NF_CLOBBER,
+     &              fidftlglobal(num_file) )
+              err = NF_DEF_DIM( fidftlglobal(num_file), 'iOBS',
+     &              ObsNo(num_file), dimid1 )
 
-! Create NetCDF tl file
-          err = NF_CREATE(tlfnameequincglo(1:JL),NF_CLOBBER,
-     &           fidftlglobal(num_file))
-          err = NF_DEF_DIM(fidftlglobal(num_file),'iOBS',
-     &           ObsNo(num_file),dimid1)
-
-          err = NF_DEF_VAR(fidftlglobal(num_file),
-     &         'mod_val',NF_DOUBLE,
-     &         1,dimid1,varidEquiv(1))
-
-          err = NF_PUT_ATT_DOUBLE(fidftlglobal(num_file),
-     &         varidEquiv(1),'_FillValue',
-     &         NF_DOUBLE,1, 0. _d 0 )
-
-          err = NF_DEF_VAR(fidglobal(num_file),
-     &         'mod_mask',NF_DOUBLE,
-     &         1,dimid1,varidEquiv(2))
-
-          err = NF_PUT_ATT_DOUBLE(fidglobal(num_file),
-     &         varidEquiv(2),'_FillValue',
-     &         NF_DOUBLE,1, 0. _d 0 )
+              err = NF_DEF_VAR( fidftlglobal(num_file), 'mod_val',
+     &              NF_DOUBLE, 1, dimid1, varidEquiv(1) )
+              err = NF_PUT_ATT_DOUBLE( fidftlglobal(num_file),
+     &              varidEquiv(1), '_FillValue',
+     &              NF_DOUBLE, 1, 0. _d 0 )
 
 ! Write buffer to file, reopen file with WRITE permissions
-          err = NF_ENDDEF(fidftlglobal(num_file))
-          err = NF_CLOSE(fidftlglobal(num_file))
-          err = NF_OPEN(tlfnameequincglo(1:JL), NF_WRITE,
-     &         fidftlglobal(num_file))
+              err = NF_ENDDEF( fidftlglobal(num_file) )
+              err = NF_CLOSE( fidftlglobal(num_file) )
+              err = NF_OPEN( tlfnameequincglo(1:JL), NF_WRITE,
+     &              fidftlglobal(num_file) )
 
-         ELSE
-! Obtain tl file unit id
-          err = NF_OPEN(tlfnameequincglo(1:JL), NF_WRITE,
-     &         fidftlglobal(num_file))
-         ENDIF
-#endif
-        ENDIF
+            ELSE
+! Obtain existing TL NetCDF file id
+              err = NF_OPEN( tlfnameequincglo(1:JL), NF_WRITE,
+     &              fidftlglobal(num_file) )
+            ENDIF
+# endif
+
+          ENDIF !IF (myProcId.EQ.0)
 
 !===========================================================
 !       READ IHOP OBS NETCDF VARIABLES
@@ -355,411 +321,430 @@ C     == end of interface ==
 ! NOTE: not applying reading in chunks
 !       see pkg/profiles or pkg/obsfit for how to chunk.
 
-! default values
-        DO k=1,NOBSMAX_IHOP
-         ihopObs_ind_glob(num_file,k) = 0
-        ENDDO
-        ObsNo_valid = 0
+! Default values
+          DO k = 1, NOBSMAX_IHOP
+            ihopObs_ind_glob(num_file,k) = 0
+          ENDDO
+          ObsNo_valid = 0
 
-! read time
-        err = NF_GET_VARA_DOUBLE(ncid,varid1a,1,
-     &   ObsNo(num_file), tmpyymmdd)
-        err = NF_GET_VARA_DOUBLE(ncid,varid1b,1,
-     &   ObsNo(num_file), tmphhmmss)
+! Read time
+          err = NF_GET_VARA_DOUBLE( ncid, varid1a, 
+     &          1, ObsNo(num_file), tmpyymmdd )
+          err = NF_GET_VARA_DOUBLE(ncid,varid1b,
+     &          1, ObsNo(num_file), tmphhmmss )
 
-        IF (err.NE.NF_NOERR) THEN
-         WRITE(msgBuf,'(3A)')
-     &   'IHOP_COST_INIT_FIXED: file ', IHOPObs_File(1:IL),
-     &   '.nc was not read properly: check yyyymmdd, hhmmss.'
-         CALL PRINT_ERROR( msgBuf, myThid)
-        ENDIF
+          IF (err.NE.NF_NOERR) THEN
+            WRITE(msgBuf,'(3A)')
+     &       'IHOP_COST_INIT_FIXED: file ', IHOPObs_File(1:IL),
+     &       '.nc was not read properly: check yyyymmdd, hhmmss.'
+            CALL PRINT_ERROR( msgBuf, myThid)
+          ENDIF
 
-! loop through number of observations, in obsfit this is a 'chunk'
-        DO m=1,ObsNo(num_file)
-
+! Loop through number of observations, in obsfit this is a 'chunk'
+          DO m = 1, ObsNo(num_file)
 !AV if obs starts before model run, will be ignored even if it ends after
 !AV model starts - ok for now
-         IF (( ( tmpyymmdd(m).GT.yymmddMin ).OR.(( tmpyymmdd(m).EQ.
-     &     yymmddMin ).AND.( tmphhmmss(m).GE.hhmmssMin ))).AND.
-     &   ( ( tmpyymmdd(m).LT.yymmddMax ).OR.(( tmpyymmdd(m).EQ.
-     &     yymmddMax ).AND.( tmphhmmss(m).LE.hhmmssMax ))) ) THEN
-          hh = int(tmphhmmss(m))/10000
-          IF ( hh.LT.hoursPerDay ) THEN
-           obsIsInRunTime=1
+            IF (( (tmpyymmdd(m).GT.yymmddMin).OR.
+     &            ((tmpyymmdd(m).EQ.yymmddMin) .AND.
+     &             (tmphhmmss(m).GE.hhmmssMin)) ) .AND.
+     &          ( (tmpyymmdd(m).LT.yymmddMax).OR.
+     &            ((tmpyymmdd(m).EQ.yymmddMax) .AND.
+     &             (tmphhmmss(m).LE.hhmmssMax)) )) THEN
+              hh = INT(tmphhmmss(m)) / 10000
+
+              IF (hh.LT.hoursPerDay) THEN
+                obsIsInRunTime = 1
 #ifdef ALLOW_CAL
-           CALL cal_FullDate( int(tmpyymmdd(m)),int(tmphhmmss(m)),
-     &      tmpdate,myThid )
-           CALL cal_TimePassed( modelstartdate,tmpdate,tmpdiff,
-     &      myThid )
-           CALL cal_ToSeconds (tmpdiff,diffsecs,myThid)
-#endif /*ALLOW_CAL*/
-           diffsecs=diffsecs+nIter0*deltaTclock
-          ELSE
-! if tmphhmmss is out of range then disregard obs
-           obsIsInRunTime=0
-           diffsecs=-deltaTclock
-           ObsNo_hh=ObsNo_hh+1
-          ENDIF
-         ELSE
-          obsIsInRunTime=0
-          diffsecs=-deltaTclock
-         ENDIF
+                CALL CAL_FULLDATE( INT(tmpyymmdd(m)),
+                     INT(tmphhmmss(m)), tmpdate, myThid )
+                CALL CAL_TIMEPASSED( modelstartdate, tmpdate,
+                     tmpdiff, myThid )
+                CALL CAL_TOSECONDS( tmpdiff, diffsecs, myThid )
+#endif /* ALLOW_CAL */
 
-         IF (obsIsInRunTime.EQ.1) THEN
-! if yes then store obs index position:
-          ObsNo_valid = ObsNo_valid+1
-          ihopObs_ind_glob(num_file,ObsNo_valid) = m
+                diffsecs = diffsecs+nIter0*deltaTclock
 
-         ENDIF !if (obsIsInRunTime.EQ.1) then
+              ELSE
+! If tmphhmmss is out of range then disregard ihop obs
+                obsIsInRunTime = 0
+                diffsecs = -deltaTclock
+                ObsNo_hh = ObsNo_hh+1
 
-! regardless of whether obs is in run time or not,
-! keep track of ihop obs index position
-! and assign time to ihop obs
-         tmp_ihopObs_time(m)=diffsecs
+              ENDIF
 
-! check that maximum size was not reached:
-         IF (ObsNo(num_file).GT.NOBSMAX_IHOP) THEN
-          WRITE(msgBuf,'(3A)')
-     &     'IHOP_COST_INIT_FIXED: file ', IHOPObs_File(1:IL),
-     &     '.nc was not read properly: increase NOBSMAX_IHOP.'
-          CALL PRINT_ERROR( msgBuf, myThid)
-         ENDIF
+            ELSE
+             obsIsInRunTime = 0
+             diffsecs = -deltaTclock
 
-        ENDDO !m
+            ENDIF !IF (( (tmpyymmdd(m).GT.yymmddMin)
 
-! calibrate number of VALID obs datum
-        ObsNo(num_file) = ObsNo_valid
+            IF (obsIsInRunTime.EQ.1) THEN
+! If yes then store obs index position:
+              ObsNo_valid = ObsNo_valid+1
+              ihopObs_ind_glob(num_file,ObsNo_valid) = m
 
-! output ihop cost init info
-        WRITE(msgbuf,'(A,I9)')
-     &     '  # of ihop obs with erroneous HHMMSS values =',
-     &     ObsNo_hh
-        CALL print_message(
-     &     msgbuf, standardmessageunit, SQUEEZE_RIGHT, myThid)
+            ENDIF !IF (obsIsInRunTime.EQ.1)
 
-        WRITE(msgbuf,'(A,I9)')
-     &     '  # of ihop obs within time period  =',
-     &     ObsNo(num_file)
-        CALL print_message(
-     &     msgbuf, standardmessageunit, SQUEEZE_RIGHT, myThid)
+! Regardless of whether ihop obs is in run time or not,
+! Keep track of ihop obs index position and assign time to ihop obs
+            tmp_ihopObs_time(m) = diffsecs
+
+! Check that maximum size was not reached:
+            IF (ObsNo(num_file).GT.NOBSMAX_IHOP) THEN
+              WRITE(msgBuf,'(3A)')
+     &         'IHOP_COST_INIT_FIXED: file ', IHOPObs_File(1:IL),
+     &         '.nc was not read properly: increase NOBSMAX_IHOP.'
+              CALL PRINT_ERROR( msgBuf, myThid )
+            ENDIF
+
+          ENDDO !DO m
+
+! Calibrate number of VALID obs datum
+          ObsNo(num_file) = ObsNo_valid
+
+! Output ihop cost init info
+          WRITE(msgBuf,'(A,I9)')
+     &     '  # of ihop obs with erroneous HHMMSS values =', ObsNo_hh
+          CALL PRINT_MESSAGE( msgBuf,
+     &         standardMessageUnit, SQUEEZE_RIGHT, myThid )
+
+          WRITE(msgBuf,'(A,I9)')
+     &     '  # of ihop obs within time period  =', ObsNo(num_file)
+          CALL PRINT_MESSAGE( msgBuf,
+     &         standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
 ! ==============================================================================
 ! Initiate tiled defaults for ihopObs before reading in from netcdf
-        DO bj=1,nSy
-         DO bi=1,nSx
-          ObsNo_valid = 0
-          ObsNo_tiled(num_file,bi,bj)=ObsNo(num_file)
+          DO bj = 1, nSy
+            DO bi = 1, nSx
+              ObsNo_valid = 0
+              ObsNo_tiled(num_file,bi,bj) = ObsNo(num_file)
 
-          DO k=1,NOBSMAX_IHOP
-           ihopObs_time(num_file,k,bi,bj) =    -999. _d 0
-           ihopObs_lon(num_file,k,bi,bj)=      -999. _d 0
-           ihopObs_lat(num_file,k,bi,bj)=      -999. _d 0
-           ihopObs_depth(num_file,k,bi,bj)=    -999. _d 0
-           ihopObs_uncert(num_file,k,bi,bj)=      1. _d 0
-           ihopObs_ind_glob_tiled(num_file,k,bi,bj)=    0
-          ENDDO !k
+              DO k = 1, NOBSMAX_IHOP
+                ihopObs_time(num_file,k,bi,bj) =     -999. _d 0
+                ihopObs_lon(num_file,k,bi,bj) =      -999. _d 0
+                ihopObs_lat(num_file,k,bi,bj) =      -999. _d 0
+                ihopObs_depth(num_file,k,bi,bj) =    -999. _d 0
+                ihopObs_uncert(num_file,k,bi,bj) =      1. _d 0
+                ihopObs_ind_glob_tiled(num_file,k,bi,bj) =    0
+              ENDDO !DO k
 
 ! Read ALL info using respective varid and save to tmp, NO CHUNKS!
-          IF (weighIhopObs.EQ.1) THEN
-           err = NF_GET_VARA_DOUBLE(ncid,varid3,1,
-     &      ObsNo_tiled(num_file,bi,bj), tmp_uncert2)
-          ENDIF
-          err = NF_GET_VARA_DOUBLE(ncid,varid4a,1,
-     &     ObsNo_tiled(num_file,bi,bj), tmp_lon2)
-          err = NF_GET_VARA_DOUBLE(ncid,varid4b,1,
-     &     ObsNo_tiled(num_file,bi,bj), tmp_lat2)
-          err = NF_GET_VARA_DOUBLE(ncid,varid4c,1,
-     &     ObsNo_tiled(num_file,bi,bj), tmp_depth2)
+              IF (weighIhopObs.EQ.1) THEN
+                err = NF_GET_VARA_DOUBLE( ncid, varid3,
+                      1, ObsNo_tiled(num_file,bi,bj), tmp_uncert2)
+              ENDIF
 
-          IF (err.NE.NF_NOERR) THEN
-           WRITE(msgBuf,'(3A)')
-     &      'IHOP_COST_INIT_FIXED: file ', IHOPObs_File(1:IL),
-     &      '.nc was not read properly: check x,y,z,uncert.'
-           CALL PRINT_ERROR(msgBuf, myThid)
-          ENDIF
+              err = NF_GET_VARA_DOUBLE( ncid, varid4a,
+     &              1, ObsNo_tiled(num_file,bi,bj), tmp_lon2 )
+              err = NF_GET_VARA_DOUBLE( ncid, varid4b,
+     &              1, ObsNo_tiled(num_file,bi,bj), tmp_lat2 )
+              err = NF_GET_VARA_DOUBLE( ncid, varid4c,
+     &              1, ObsNo_tiled(num_file,bi,bj), tmp_depth2 )
+
+              IF (err.NE.NF_NOERR) THEN
+                WRITE(msgBuf,'(3A)')
+     &           'IHOP_COST_INIT_FIXED: file ', IHOPObs_File(1:IL),
+     &           '.nc was not read properly: check x,y,z,uncert.'
+                CALL PRINT_ERROR( msgBuf, myThid )
+              ENDIF
 
 ! Find obs datum in MITgcm spatial grid
-! loop through observations, NOTE: in obsfit this is a 'chunk'
-          DO m=1,ObsNo_tiled(num_file,bi,bj)
-           ihopObsInTile=1
+! Loop through observations, NOTE: in obsfit this is a 'chunk'
+              DO m = 1, ObsNo_tiled(num_file,bi,bj)
+                ihopObsInTile = 1
 
-! in a valid time?
-           IF ((tmp_ihopObs_time(m).LT.0. _d 0) .OR.
-     &        (tmp_ihopObs_time(m).GT. modelend-modelstart)) THEN
-            ihopObsInTile=0
-           ENDIF
+! In a valid time?
+                IF ( (tmp_ihopObs_time(m).LT.0. _d 0) .OR.
+     &               (tmp_ihopObs_time(m).GT.modelend-modelstart) )
+     &          THEN
+                  ihopObsInTile = 0
+                ENDIF
 
 ! Determine whether obs datum is in current tile domain
-           lon_cur=tmp_lon2(m)
-           lat_cur=tmp_lat2(m)
-           depth_cur=tmp_depth2(m)
+                lon_cur = tmp_lon2(m)
+                lat_cur = tmp_lat2(m)
+                depth_cur = tmp_depth2(m)
 
-           IF (ihopObsInTile.EQ.1) THEN
-            IF (xC(sNx+1,1,bi,bj).LT.xC(1,1,bi,bj)) THEN
-             tmp_lon=xC(sNx+1,1,bi,bj)+360. _d 0
-            ELSE
-             tmp_lon=xC(sNx+1,1,bi,bj)
-            ENDIF
+                IF (ihopObsInTile.EQ.1) THEN
+                  IF (xC(sNx+1,1,bi,bj).LT.xC(1,1,bi,bj)) THEN
+                    tmp_lon = xC(sNx+1,1,bi,bj)+360. _d 0
+                  ELSE
+                    tmp_lon = xC(sNx+1,1,bi,bj)
+                  ENDIF
 
-            IF ((xC(1,1,bi,bj).LE.lon_cur).AND.
-     &       (tmp_lon.GT.lon_cur).AND.
-     &       (yC(1,1,bi,bj).LE.lat_cur).AND.
-     &       (yC(1,sNy+1,bi,bj).GT.lat_cur) ) THEN
-!  do nothing
-            ELSEIF ((xC(sNx+1,1,bi,bj).LT.xC(1,1,bi,bj)).AND.
-     &       (xC(1,1,bi,bj).LE.lon_cur+360. _d 0).AND.
-     &       (tmp_lon.GT.lon_cur+360. _d 0).AND.
-     &       (yC(1,1,bi,bj).LE.lat_cur).AND.
-     &       (yC(1,sNy+1,bi,bj).GT.lat_cur)
-     &       ) THEN
-             lon_cur=lon_cur+360. _d 0
-            ELSE
-!  not in this tile
-             ihopObsInTile=0
-            ENDIF
+                  IF ( (xC(1,1,bi,bj).LE.lon_cur) .AND.
+     &                 (tmp_lon.GT.lon_cur) .AND.
+     &                 (yC(1,1,bi,bj).LE.lat_cur) .AND.
+     &                 (yC(1,sNy+1,bi,bj).GT.lat_cur) ) THEN
+! Do nothing
+
+                  ELSEIF ( (xC(sNx+1,1,bi,bj).LT.xC(1,1,bi,bj)) .AND.
+     &                     (xC(1,1,bi,bj).LE.lon_cur+360. _d 0) .AND.
+     &                     (tmp_lon.GT.lon_cur+360. _d 0) .AND.
+     &                     (yC(1,1,bi,bj).LE.lat_cur) .AND.
+     &                     (yC(1,sNy+1,bi,bj).GT.lat_cur) ) THEN
+                    lon_cur = lon_cur+360. _d 0
+
+                  ELSE
+! Not in this tile
+                    ihopObsInTile = 0
+
+                  ENDIF !IF ( (xC(1,1,bi,bj).LE.lon_cur)
 
 ! Determine i,j,k to the south-west-down of obs datum
-! set default values
-            ihopObs_i=-10
-            ihopObs_j=-10
-            ihopObs_k1=-10
-            ihopObs_k2=-10
-            lon_1=-10
-            lon_2=-10
-            lat_1=-10
-            lat_2=-10
-            depth_1=-10
-            depth_2=-10
+! Set default values
+                  ihopObs_i = -10
+                  ihopObs_j = -10
+                  ihopObs_k1 = -10
+                  ihopObs_k2 = -10
+                  lon_1 = -10
+                  lon_2 = -10
+                  lat_1 = -10
+                  lat_2 = -10
+                  depth_1 = -10
+                  depth_2 = -10
 
-            IF (ihopObsInTile.EQ.1) THEN
+                  IF (ihopObsInTile.EQ.1) THEN
 ! Value of k, below the data point:
-! case 1: above first depth level
-             IF (-rC(1).GT.depth_cur) THEN
-              ihopObs_k1=1
-              ihopObs_k2=1
-              depth_fac=1. _d 0
-             ENDIF
-! case 2: below last depth level
-             IF (-rC(Nr).LE.depth_cur) THEN
-              ihopObs_k1=Nr
-              ihopObs_k2=Nr
-              depth_fac=1. _d 0
-             ENDIF
-! case 3: between two depth levels
-             DO k=1,Nr-1
-              IF ((-rC(k).LE.depth_cur).AND.
-     &          (-rC(k+1).GT.depth_cur)) THEN
-               ihopObs_k1=k
-               ihopObs_k2=k+1
-               depth_1=-rC(k)
-               depth_2=-rC(k+1)
-               depth_fac=(depth_cur-depth_1)/(depth_2-depth_1)
-              ENDIF
-             ENDDO
+! Case 1: above first depth level
+                    IF (-rC(1).GT.depth_cur) THEN
+                      ihopObs_k1 = 1
+                      ihopObs_k2 = 1
+                      depth_fac = 1. _d 0
+                    ENDIF
+! Case 2: below last depth level
+                    IF (-rC(Nr).LE.depth_cur) THEN
+                      ihopObs_k1 = Nr
+                      ihopObs_k2 = Nr
+                      depth_fac = 1. _d 0
+                    ENDIF
+! Case 3: between two depth levels
+                    DO k = 1, Nr-1
+                      IF ( (-rC(k).LE.depth_cur).AND.
+     &                     (-rC(k+1).GT.depth_cur)) THEN
+                        ihopObs_k1 = k
+                        ihopObs_k2 = k+1
+                        depth_1 = -rC(k)
+                        depth_2 = -rC(k+1)
+                        depth_fac =
+     &                   (depth_cur-depth_1)/(depth_2-depth_1)
+                      ENDIF
+                    ENDDO
 
-             DO j=1,sNy+1
-              DO i=1,sNx+1
+                    DO j = 1, sNy+1
+                      DO i = 1, sNx+1
+                        lon_tmp1 = xC(i,j,bi,bj)
+                        lon_tmp2 = xC(i+1,j,bi,bj)
+                        lat_tmp1 = yC(i,j,bi,bj)
+                        lat_tmp2 = yC(i,j+1,bi,bj)
 
-               lon_tmp1=xC(i,j,bi,bj)
-               lon_tmp2=xC(i+1,j,bi,bj)
-               lat_tmp1=yC(i,j,bi,bj)
-               lat_tmp2=yC(i,j+1,bi,bj)
+! Value of j, south of obs datum:
+                        IF ( (lat_tmp1.LE.lat_cur) .AND.
+     &                       (lat_tmp2.GT.lat_cur) ) THEN
+                          ihopObs_j = j
+                          lat_1 = lat_tmp1
+                          lat_2 = lat_tmp2
+                        ENDIF
 
-! value of j, south of the obs datum:
-               IF ((lat_tmp1.LE.lat_cur).AND.
-     &          (lat_tmp2.GT.lat_cur)) THEN
-                ihopObs_j=j
-                lat_1=lat_tmp1
-                lat_2=lat_tmp2
-               ENDIF
+! Value of i, west of obs datum:
+                        IF (xC(i+1,j,bi,bj).LT.xC(1,j,bi,bj)) THEN
+                          lon_tmp2=lon_tmp2+360
+                        ENDIF
+                        IF (xC(i,j,bi,bj).LT.xC(1,j,bi,bj)) THEN
+                          lon_tmp1=lon_tmp1+360
+                        ENDIF
 
-! value of i, west of the obs datum:
-               IF (xC(i+1,j,bi,bj).LT.xC(1,j,bi,bj)) THEN
-                lon_tmp2=lon_tmp2+360
-               ENDIF
-               IF (xC(i,j,bi,bj).LT.xC(1,j,bi,bj)) THEN
-                lon_tmp1=lon_tmp1+360
-               ENDIF
+                        IF ( (lon_tmp1.LE.lon_cur) .AND.
+     &                       (lon_tmp2.GT.lon_cur) ) THEN
+                          ihopObs_i = i
+                          lon_1 = lon_tmp1
+                          lon_2 = lon_tmp2
+                        ENDIF
 
-               IF ((lon_tmp1.LE.lon_cur).AND.
-     &          (lon_tmp2.GT.lon_cur)) THEN
-                ihopObs_i=i
-                lon_1=lon_tmp1
-                lon_2=lon_tmp2
-               ENDIF
+                      ENDDO !DO i
+                    ENDDO !DO j
 
-              ENDDO !j
-             ENDDO !i
-            ENDIF !ihopObsInTile.EQ.1 2nd time
+                  ENDIF !IF (ihopObsInTile.EQ.1)
 
-            IF ( ((ihopObs_i.EQ.-10).OR.(ihopObs_j.EQ.-10)) .OR.
-     &           ((ihopObs_k1.EQ.-10).OR.(ihopObs_k2.EQ.-10)) ) THEN
-             ihopObsInTile=0
-            ENDIF
+                  IF ( ((ihopObs_i.EQ.-10).OR.(ihopObs_j.EQ.-10)) .OR.
+     &                 ((ihopObs_k1.EQ.-10).OR.(ihopObs_k2.EQ.-10)) )
+     &            THEN
+                    ihopObsInTile = 0
+                  ENDIF
 
 ! 'Reshape' observed datum to tiled structures
-            IF (ihopObsInTile.EQ.1) THEN
-             ObsNo_valid = ObsNo_valid+1
-             ihopObs_ind_glob_tiled(num_file,ObsNo_valid,bi,bj) = m
+                  IF (ihopObsInTile.EQ.1) THEN
+                    ObsNo_valid = ObsNo_valid+1
+                    ihopObs_ind_glob_tiled(num_file,
+     &               ObsNo_valid,bi,bj) = m
 
-             ihopObs_time(num_file,ObsNo_valid,bi,bj) =
-     &                                          tmp_ihopObs_time(m)
-             IF (weighIhopObs.EQ.1) THEN
-              ihopObs_uncert(num_file,ObsNo_valid,bi,bj)=tmp_uncert2(m)
-             ENDIF
-             ihopObs_lon(num_file,ObsNo_valid,bi,bj)=lon_cur
-             ihopObs_lat(num_file,ObsNo_valid,bi,bj)=lat_cur
-             ihopObs_depth(num_file,ObsNo_valid,bi,bj)=depth_cur
+                    ihopObs_time(num_file,ObsNo_valid,bi,bj) =
+     &               tmp_ihopObs_time(m)
 
-             ihopObs_i_tiled(num_file,ObsNo_valid,bi,bj) = ihopObs_i
-             ihopObs_j_tiled(num_file,ObsNo_valid,bi,bj) = ihopObs_j
-             ihopObs_k_tiled(num_file,ObsNo_valid,bi,bj) = ihopObs_k1
+                    IF (weighIhopObs.EQ.1) THEN
+                      ihopObs_uncert(num_file,ObsNo_valid,bi,bj) =
+     &                 tmp_uncert2(m)
+                    ENDIF
 
-            ENDIF !ihopObsInTile.EQ.1 3rd time
+                    ihopObs_lon(num_file,ObsNo_valid,bi,bj) = lon_cur
+                    ihopObs_lat(num_file,ObsNo_valid,bi,bj) = lat_cur
+                    ihopObs_depth(num_file,ObsNo_valid,bi,bj) =
+     &               depth_cur
 
-           ENDIF !ihopObsInTile.EQ.1 1st time
+                    ihopObs_i_tiled(num_file,ObsNo_valid,bi,bj) = 
+     &               ihopObs_i
+                    ihopObs_j_tiled(num_file,ObsNo_valid,bi,bj) =
+     &               ihopObs_j
+                    ihopObs_k_tiled(num_file,ObsNo_valid,bi,bj) =
+     &               ihopObs_k1
+
+                  ENDIF !IF (ihopObsInTile.EQ.1) 3rd time
+
+                ENDIF !IF (ihopObsInTile.EQ.1) 1st time
 
 ! ==============================================================================
 ! Check that maximum size was not reached:
-           IF (m.GE.NOBSMAX_IHOP) then
-            WRITE(msgBuf,'(3A)')
-     &       'IHOP_COST_INIT_FIXED: file ', IHOPObs_File(1:IL),
-     &       '.nc was not read properly: increase NOBSMAX_IHOP.'
-            CALL PRINT_ERROR( msgBuf, myThid)
-           ENDIF
+                IF (m.GE.NOBSMAX_IHOP) THEN
+                  WRITE(msgBuf,'(3A)')
+     &             'IHOP_COST_INIT_FIXED: file ', IHOPObs_File(1:IL),
+     &             '.nc was not read properly: increase NOBSMAX_IHOP.'
+                  CALL PRINT_ERROR( msgBuf, myThid)
+                ENDIF
 
-          ENDDO !m
+              ENDDO !DO m
 
 ! Number of valid ihop obs in the file
-          ObsNo_tiled(num_file,bi,bj) = ObsNo_valid
+              ObsNo_tiled(num_file,bi,bj) = ObsNo_valid
 
-          WRITE(msgbuf,'(2(A,I4))')
-     &       '  current tile is bi,bj                      =',
-     &       bi,',',bj
-          CALL print_message(
-     &       msgbuf, standardmessageunit, SQUEEZE_RIGHT, myThid)
+              WRITE(msgBuf,'(2(A,I4))')
+     &         '  current tile is bi,bj                      =',
+     &         bi,',',bj
+              CALL PRINT_MESSAGE( msgBuf,
+     &             standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
-          WRITE(msgbuf,'(A,I9)')
-     &       '  # of ihop obs within tile and time period  =',
-     &       ObsNo_tiled(num_file,bi,bj)
-          CALL print_message(
-     &       msgbuf, standardmessageunit, SQUEEZE_RIGHT, myThid)
+              WRITE(msgBuf,'(A,I9)')
+     &         '  # of ihop obs within tile and time period  =',
+     &         ObsNo_tiled(num_file,bi,bj)
+              CALL PRINT_MESSAGE( msgBuf,
+     &             standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
 !===========================================================
 ! Create files for model counterparts to ihop obs
 !===========================================================
+              IF (obsNo_tiled(num_file,bi,bj).GT.0) THEN
+                iG=bi+(myXGlobalLo-1)/sNx ! Kludge until unstructered tiles
+                jG=bj+(myYGlobalLo-1)/sNy ! Kludge until unstructered tiles
 
-          IF (obsNo_tiled(num_file,bi,bj).GT.0) THEN
-           iG=bi+(myXGlobalLo-1)/sNx ! Kludge until unstructered tiles
-           jG=bj+(myYGlobalLo-1)/sNy ! Kludge until unstructered tiles
-
-           JL  = ILNBLNK( IHOPObs_Dir )
-
-!IE:           IF (ihopObsDoNcOutput) THEN
+                JL = ILNBLNK( IHOPObs_Dir )
 ! ALWAYS Write to nc file
+                IF (ihopObsDoNcOutput) THEN
+                  WRITE(fnameequinc,'(3A,2(I3.3,A))')
+     &             IHOPObs_Dir(1:JL),IHOPObs_File(1:IL),
+     &             '.',iG,'.',jG,'.equi.nc'
+# ifdef ALLOW_ADJOINT_RUN
+                  WRITE(adfnameequinc,'(4A,2(I3.3,A))')
+     &             IHOPObs_Dir(1:JL),'ad',IHOPObs_File(1:IL),
+     &             '.',iG,'.',jG,'.equi.nc'
+# endif
+# ifdef ALLOW_TANGENTLINEAR_RUN
+                  WRITE(tlfnameequinc,'(4A,2(I3.3,A))')
+     &             IHOPObs_Dir(1:JL),'ad',IHOPObs_File(1:IL),
+     &             '.',iG,'.',jG,'.equi.nc'
+# endif
 
-           WRITE(fnameequinc,'(3A,2(I3.3,A))')
-     &      IHOPObs_Dir(1:JL),IHOPObs_File(1:IL),'.',iG,'.',jG,'.equi.nc'
-#ifdef ALLOW_ADJOINT_RUN
-           WRITE(adfnameequinc,'(4A,2(I3.3,A))')
-     &      IHOPObs_Dir(1:JL),'ad',
-     &      IHOPObs_File(1:IL),'.',iG,'.',jG,'.equi.nc'
-#endif
-#ifdef ALLOW_TANGENTLINEAR_RUN
-           WRITE(tlfnameequinc,'(4A,2(I3.3,A))')
-     &      IHOPObs_Dir(1:JL),'ad',
-     &      IHOPObs_File(1:IL),'.',iG,'.',jG,'.equi.nc'
-#endif
+                  JL = ILNBLNK( fnameequinc )
+                  INQUIRE( FILE = fnameequinc(1:JL), EXIST = exst )
+                  IF (.NOT.exst) THEN
+                    CALL IHOP_COST_INIT_EQUIFILES( num_file,
+     &                   fiddata_obs(num_file), fnameequinc(1:JL),
+     &                   fidfwd_obs(num_file,bi,bj),
+     &                   ObsNo_tiled(num_file,bi,bj),
+     &                   bi, bj, myThid )
+                  ELSE
+! Obtain existing NetCDF file id
+                    err = NF_OPEN( fnameequinc(1:JL), NF_WRITE,
+     &                    fidfwd_obs(num_file,bi,bj) )
+                  ENDIF
 
-           JL = ILNBLNK( fnameequinc )
-           inquire( file=fnameequinc(1:JL), exist=exst )
-           IF (.NOT.exst) THEN
-            CALL ihop_cost_init_equifiles(num_file,
-     &       fiddata_obs(num_file),fnameequinc(1:JL),
-     &       fidfwd_obs(num_file,bi,bj),
-     &       ObsNo_tiled(num_file,bi,bj),
-     &       bi,bj,myThid)
-           ELSE
-            err = NF_OPEN(fnameequinc(1:JL),NF_WRITE,
-     &        fidfwd_obs(num_file,bi,bj))
-           ENDIF
+# ifdef ALLOW_ADJOINT_RUN
+                  JL = ILNBLNK( adfnameequinc )
+                  INQUIRE( FILE = adfnameequinc(1:JL), EXIST = exst )
+                  IF (.NOT.exst) THEN
+                    CALL IHOP_COST_INIT_EQUIFILES( num_file,
+     &                   fiddata_obs(num_file), adfnameequinc(1:JL), 
+     &                   fidadj_obs(num_file,bi,bj),
+     &                   ObsNo_tiled(num_file,bi,bj),
+     &                   bi, bj, myThid )
+                  ELSE
+! Obtain existing AD NetCDF file id
+                    err = NF_OPEN( adfnameequinc(1:JL), NF_WRITE,
+     &                    fidadj_obs(num_file,bi,bj) )
+                  ENDIF
 
-#ifdef ALLOW_ADJOINT_RUN
-           JL = ILNBLNK( adfnameequinc )
-           inquire( file=adfnameequinc(1:JL), exist=exst )
-           IF (.NOT.exst) THEN
-            CALL ihop_cost_init_equifiles(num_file,
-     &       fiddata_obs(num_file),
-     &       adfnameequinc(1:JL), fidadj_obs(num_file,bi,bj),
-     &       ObsNo_tiled(num_file,bi,bj),
-     &       bi,bj,myThid)
-           ELSE
-            err = NF_OPEN(adfnameequinc(1:JL),NF_WRITE,
-     &       fidadj_obs(num_file,bi,bj))
-           ENDIF
-#endif
+# endif /* ALLOW_ADJOINT_RUN */
+# ifdef ALLOW_TANGENTLINEAR_RUN
+                  JL = ILNBLNK( tlfnameequinc )
+                  INQUIRE( FILE = tlfnameequinc(1:JL), EXIST = exst )
+                  IF (.NOT.exst) THEN
+                    CALL IHOP_COST_INIT_EQUIFILES( num_file,
+     &                   fiddata_obs(num_file),tlfnameequinc(1:JL),
+     &                   fidftl_obs(num_file,bi,bj),
+     &                   ObsNo_tiled(num_file,bi,bj),
+     &                   bi, bj, myThid )
+                  ELSE
+! Obtain existing TL NetCDF file id
+                    err = NF_OPEN( tlfnameequinc(1:JL), NF_WRITE,
+     &                    fidftl_obs(num_file,bi,bj) )
+                  ENDIF
+# endif /* ALLOW_TANGENTLINEAR_RUN */
+                ELSE
+! Write to binary files...
+                ENDIF !IF (ihopObsDoNcOutput)
 
-#ifdef ALLOW_TANGENTLINEAR_RUN
-           JL = ILNBLNK( tlfnameequinc )
-           inquire( file=tlfnameequinc(1:JL), exist=exst )
-           IF (.NOT.exst) THEN
-            CALL ihop_cost_init_equifiles(num_file,
-     &       fiddata_obs(num_file),
-     &       tlfnameequinc(1:JL), fidftl_obs(num_file,bi,bj),
-     &       ObsNo_tiled(num_file,bi,bj),
-     &       bi,bj,myThid)
-           ELSE
-            err = NF_OPEN(tlfnameequinc(1:JL),NF_WRITE,
-     &       fidftl_obs(num_file,bi,bj))
-           ENDIF
-#endif
+              ENDIF !IF (obsNo_tiled(num_file,bi,bj).GT.0)
 
-          ENDIF
-
-         ENDDO !bj
-        ENDDO !bi
+            ENDDO !DO bi
+          ENDDO !DO bj
 !===========================================================
-       ELSE !if (IL.NE.0) then
+        ELSE !IF (IL.NE.0)
+          DO bj = 1, nSy
+            DO bi = 1, nSx
+              ObsNo(num_file) = 0
+              ObsNo_tiled(num_file,bi,bj) = 0
 
-        DO bj=1,nSy
-         DO bi=1,nSx
-          ObsNo(num_file)=0
-          ObsNo_tiled(num_file,bi,bj)=0
-          DO k=1,NOBSMAX_IHOP
-           ihopObs_lon(num_file,k,bi,bj)=      -999. _d 0
-           ihopObs_lat(num_file,k,bi,bj)=      -999. _d 0
-           ihopObs_depth(num_file,k,bi,bj)=    -999. _d 0
-           ihopObs_uncert(num_file,k,bi,bj)=      1. _d 0
-           ihopObs_ind_glob_tiled(num_file,k,bi,bj)=    0
-          ENDDO
-         ENDDO !bj
-        ENDDO !bi
+              DO k = 1, NOBSMAX_IHOP
+                ihopObs_lon(num_file,k,bi,bj) =      -999. _d 0
+                ihopObs_lat(num_file,k,bi,bj) =      -999. _d 0
+                ihopObs_depth(num_file,k,bi,bj) =    -999. _d 0
+                ihopObs_uncert(num_file,k,bi,bj) =      1. _d 0
+                ihopObs_ind_glob_tiled(num_file,k,bi,bj) =    0
+              ENDDO
 
-       ENDIF !if (IL.NE.0) then
-      ENDDO !      do num_file=1,NFILESMAX_IHOP
+            ENDDO !DO bi
+          ENDDO !DO bj
+
+        ENDIF !IF (IL.NE.0)
+
+      ENDDO !DO num_file
 
       _END_MASTER( myThid )
       _BARRIER
 
 !===========================================================
-      WRITE(msgbuf,'(A)') ' '
-      CALL print_message( msgbuf, standardmessageunit,
-     &                    SQUEEZE_RIGHT, myThid)
-      WRITE(msgbuf,'(A)')
-     &'// ======================================================='
-      CALL print_message( msgbuf, standardmessageunit,
-     &                    SQUEEZE_RIGHT, myThid)
-      WRITE(msgbuf,'(A)')
-     &'// ihop cost read obs data file >>> END <<<'
-      CALL print_message( msgbuf, standardmessageunit,
-     &                    SQUEEZE_RIGHT, myThid)
-      WRITE(msgbuf,'(A)')
-     &'// ======================================================='
-      CALL print_message( msgbuf, standardmessageunit,
-     &                    SQUEEZE_RIGHT, myThid)
-      WRITE(msgbuf,'(A)') ' '
-      CALL print_message( msgbuf, standardmessageunit,
-     &                    SQUEEZE_RIGHT, myThid)
+      WRITE(msgBuf,'(A,/,A)') ' '
+     & '// ======================================================='
+      CALL PRINT_MESSAGE( msgBuf,
+     &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
+      WRITE(msgBuf,'(A)')
+     & '// ihop cost read obs data file >>> END <<<'
+      CALL PRINT_MESSAGE( msgBuf,
+     &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
+      WRITE(msgBuf,'(A,/,A)')
+     & '// =======================================================',
+     & ' '
+      CALL PRINT_MESSAGE( msgBuf,
+     &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
 #endif /* ALLOW_COST && ALLOW_IHOP*/
 
