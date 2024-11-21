@@ -43,12 +43,12 @@ C     !FUNCTIONS:
 C     !LOCAL VARIABLES:
 #if ( defined (ALLOW_COST) && defined (ALLOW_IHOP) )
       CHARACTER*(MAX_LEN_MBUF) :: msgBuf
-      CHARACTER*(MAX_LEN_FNAM) IHOPObs_File, fnamedatanc
-      CHARACTER*(MAX_LEN_FNAM) fnameequinc
-      CHARACTER*(MAX_LEN_FNAM) adfnameequinc, tlfnameequinc
-      CHARACTER*(MAX_LEN_FNAM) fnameequincglo
-      CHARACTER*(MAX_LEN_FNAM) adfnameequincglo, tlfnameequincglo
-      LOGICAL exst
+      CHARACTER*(MAX_LEN_FNAM) :: IHOPObs_File, fnamedatanc
+      CHARACTER*(MAX_LEN_FNAM) :: fnameequinc
+      CHARACTER*(MAX_LEN_FNAM) :: adfnameequinc, tlfnameequinc
+      CHARACTER*(MAX_LEN_FNAM) :: fnameequincglo
+      CHARACTER*(MAX_LEN_FNAM) :: adfnameequincglo, tlfnameequincglo
+      LOGICAL :: exst
       INTEGER :: JL, IL, err, ncid, dimId1, dimId2
       INTEGER :: varId1a, varId1b, varId2, varId3
       INTEGER :: varId4a, varId4b, varId4c
@@ -57,7 +57,7 @@ C     !LOCAL VARIABLES:
       INTEGER :: obsNo_valid, ihopObsInTile
       INTEGER :: tmpdate(4), tmpdiff(4)
       INTEGER :: num_file, hh, obsNo_hh
-      INTEGER :: bi, bj, nObs, i, j
+      INTEGER :: bi, bj, nObs, i, j, k
       INTEGER :: iG, jG
       _RL :: yymmddMin, yymmddMax
       _RL :: hhmmssMin, hhmmssMax
