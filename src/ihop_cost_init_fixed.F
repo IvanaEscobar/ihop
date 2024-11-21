@@ -656,7 +656,7 @@ C     !LOCAL VARIABLES:
                   JL = ILNBLNK( fnameequinc )
                   INQUIRE( FILE = fnameequinc(1:JL), EXIST = exst )
                   IF (.NOT.exst) THEN
-                    CALL IHOP_COST_INIT_EQUIFILES( num_file,
+                    CALL IHOP_COST_INIT_EQUI( num_file,
      &                   fiddata_obs(num_file), fnameequinc(1:JL),
      &                   fidfwd_obs(num_file,bi,bj),
      &                   ObsNo_tiled(num_file,bi,bj),
@@ -671,7 +671,7 @@ C     !LOCAL VARIABLES:
                   JL = ILNBLNK( adfnameequinc )
                   INQUIRE( FILE = adfnameequinc(1:JL), EXIST = exst )
                   IF (.NOT.exst) THEN
-                    CALL IHOP_COST_INIT_EQUIFILES( num_file,
+                    CALL IHOP_COST_INIT_EQUI( num_file,
      &                   fiddata_obs(num_file), adfnameequinc(1:JL), 
      &                   fidadj_obs(num_file,bi,bj),
      &                   ObsNo_tiled(num_file,bi,bj),
@@ -687,7 +687,7 @@ C     !LOCAL VARIABLES:
                   JL = ILNBLNK( tlfnameequinc )
                   INQUIRE( FILE = tlfnameequinc(1:JL), EXIST = exst )
                   IF (.NOT.exst) THEN
-                    CALL IHOP_COST_INIT_EQUIFILES( num_file,
+                    CALL IHOP_COST_INIT_EQUI( num_file,
      &                   fiddata_obs(num_file),tlfnameequinc(1:JL),
      &                   fidftl_obs(num_file,bi,bj),
      &                   ObsNo_tiled(num_file,bi,bj),

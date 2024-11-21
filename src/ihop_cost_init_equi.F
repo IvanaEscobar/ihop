@@ -2,10 +2,10 @@
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
-C !ROUTINE: IHOP_COST_INIT_EQUIFILES
+C !ROUTINE: IHOP_COST_INIT_EQUI
 
 C !INTERFACE:
-      SUBROUTINE IHOP_COST_INIT_EQUIFILES(
+      SUBROUTINE IHOP_COST_INIT_EQUI(
      I                               num_file,
      I                               fid1,
      I                               file2,
@@ -75,7 +75,7 @@ C Create a netcdf file
 
         ELSE
          WRITE(msgBuf,'(2A)')
-     &        'S/R IHOP_COST_INIT_EQUIFILES: no variable ',
+     &        'S/R IHOP_COST_INIT_EQUI: no variable ',
      &        ihop_nameval
          CALL PRINT_MESSAGE( msgBuf,
      &        standardMessageUnit, SQUEEZE_RIGHT, myThid )
