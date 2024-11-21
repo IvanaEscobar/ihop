@@ -81,7 +81,8 @@ C     !LOCAL VARIABLES:
       _RL :: lon_tmp1, lon_tmp2, lat_tmp1, lat_tmp2
       _RL :: lat_fac, lon_fac, depth_fac
 
-      WRITE(msgBuf,'(A,/,A)') ' ', 'iHOP COST general parameters :'
+      WRITE(msgBuf,'(A)') ''// CHAR(10) //
+     & '                    iHOP COST general parameters :'
       CALL PRINT_MESSAGE( msgBuf,
      &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
@@ -119,8 +120,9 @@ C     !LOCAL VARIABLES:
         IL = ILNBLNK( IHOPObs_Files(num_file) )
         IF (IL.NE.0) THEN
           WRITE(IHOPObs_File,'(A)') IHOPObs_Files(num_file)(1:IL)
-          WRITE(msgBuf,'(A,/,A,I3,2A)') ' ',
-     &     'ihop file #',num_file,' is ', IHOPObs_File(1:IL)
+          WRITE(msgBuf,'(A,I3,2A)') ''// CHAR(10) //
+     &     '                    ihop file #', num_file,
+     &     ' is ', IHOPObs_File(1:IL)
           CALL PRINT_MESSAGE( msgBuf,
      &         standardMessageUnit, SQUEEZE_RIGHT, myThid )
         ENDIF
@@ -356,9 +358,9 @@ C     !LOCAL VARIABLES:
                 obsIsInRunTime = 1
 #ifdef ALLOW_CAL
                 CALL CAL_FULLDATE( INT(tmpyymmdd(m)),
-                     INT(tmphhmmss(m)), tmpdate, myThid )
+     &               INT(tmphhmmss(m)), tmpdate, myThid )
                 CALL CAL_TIMEPASSED( modelstartdate, tmpdate,
-                     tmpdiff, myThid )
+     &               tmpdiff, myThid )
                 CALL CAL_TOSECONDS( tmpdiff, diffsecs, myThid )
 #endif /* ALLOW_CAL */
 
@@ -432,7 +434,7 @@ C     !LOCAL VARIABLES:
 ! Read ALL info using respective varid and save to tmp, NO CHUNKS!
               IF (weighIhopObs.EQ.1) THEN
                 err = NF_GET_VARA_DOUBLE( ncid, varid3,
-                      1, ObsNo_tiled(num_file,bi,bj), tmp_uncert2)
+     &                1, ObsNo_tiled(num_file,bi,bj), tmp_uncert2 )
               ENDIF
 
               err = NF_GET_VARA_DOUBLE( ncid, varid4a,
@@ -638,7 +640,7 @@ C     !LOCAL VARIABLES:
 
                 JL = ILNBLNK( IHOPObs_Dir )
 ! ALWAYS Write to nc file
-                IF (ihopObsDoNcOutput) THEN
+                IF (ihopDoNcOutput) THEN
                   WRITE(fnameequinc,'(3A,2(I3.3,A))')
      &             IHOPObs_Dir(1:JL),IHOPObs_File(1:IL),
      &             '.',iG,'.',jG,'.equi.nc'
@@ -700,7 +702,7 @@ C     !LOCAL VARIABLES:
 # endif /* ALLOW_TANGENTLINEAR_RUN */
                 ELSE
 ! Write to binary files...
-                ENDIF !IF (ihopObsDoNcOutput)
+                ENDIF !IF (ihopDoNcOutput)
 
               ENDIF !IF (obsNo_tiled(num_file,bi,bj).GT.0)
 
@@ -732,7 +734,8 @@ C     !LOCAL VARIABLES:
       _BARRIER
 
 !===========================================================
-      WRITE(msgBuf,'(A,/,A)') ' '
+      WRITE(msgBuf,'(A)') ' '// CHAR(10) //
+     & '                    '//
      & '// ======================================================='
       CALL PRINT_MESSAGE( msgBuf,
      &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
@@ -740,9 +743,9 @@ C     !LOCAL VARIABLES:
      & '// ihop cost read obs data file >>> END <<<'
       CALL PRINT_MESSAGE( msgBuf,
      &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(A,/,A)')
-     & '// =======================================================',
-     & ' '
+      WRITE(msgBuf,'(A)')
+     & '// ======================================================='
+     & // CHAR(10) //'                    '
       CALL PRINT_MESSAGE( msgBuf,
      &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
 

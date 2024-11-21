@@ -66,20 +66,21 @@ C Initialize global cost fxn contributions.
         num_ihop(num_file)  = 0. _d 0
         objf_ihop(num_file) = 0. _d 0
         ihop_globaldummy(num_file) = 0. _d 0
+
 # ifdef ALLOW_GRDCHK
          IF (obsNo(num_file).GT.0) THEN
 C Sync global .equi file so data in buffer is not lost when run finishes
           err = NF_SYNC( fidglobal(num_file) )
          ENDIF
-# endif /* ALLOW_GRDCHK */
 
+# endif /* ALLOW_GRDCHK */
       ENDDO !DO num_file
 
 C Initialize global variables for ihop_read_obs.F
       ihop_curfile_buff = 0
       DO l = 1, 1000
-       ihop_data_buff(l) = 0. _d 0
-       ihop_uncert_buff(l) = 0. _d 0
+        ihop_data_buff(l) = 0. _d 0
+        ihop_uncert_buff(l) = 0. _d 0
       ENDDO
 
       _BARRIER

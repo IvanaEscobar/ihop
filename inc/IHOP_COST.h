@@ -72,17 +72,17 @@
      &                ihopObs_modmask, ihopObs_modmask_tiled
 
 !    IHOP cost filenames
-!     ihopObsDir    :: directory where ihop observations are found
-!     ihopObsFiles  :: file name for ihop observations
+!     IHOPObs_Dir   :: directory where ihop observations are found
+!     IHOPObs_Files :: file name for ihop observations
 
-      CHARACTER*(MAX_LEN_FNAM) ihopObsDir
-      CHARACTER*(MAX_LEN_FNAM) ihopObsFiles(NFILESMAX_IHOP)
+      CHARACTER*(MAX_LEN_FNAM) IHOPObs_Dir
+      CHARACTER*(MAX_LEN_FNAM) IHOPObs_Files(NFILESMAX_IHOP)
       CHARACTER*(8)  ihop_nameval
       CHARACTER*(8)  ihop_namemask
       CHARACTER*(11) ihop_nameuncert
       CHARACTER*(7)  ihop_nameequi
       COMMON /IHOP_COST_C/                                                                                                          &
-     &                ihopObsDir, ihopObsFiles,                                                                                     &
+     &                IHOPObs_Dir, IHOPObs_Files,                                                                                   &
      &                ihop_nameval, ihop_namemask,                                                                                  &
      &                ihop_nameuncert, ihop_nameequi
 

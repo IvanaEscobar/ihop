@@ -47,7 +47,7 @@ C     == Global variables ===
 # include "IHOP_SIZE.h"
 # ifdef ALLOW_COST
 #  include "IHOP_COST.h"
-# ENDIF
+# endif
 #endif
 
 C     !INPUT PARAMETERS:
@@ -215,7 +215,7 @@ C     == Global variables ===
 # include "IHOP_SIZE.h"
 # ifdef ALLOW_COST
 #  include "IHOP_COST.h"
-# ENDIF
+# endif
 #endif
 
 C     !INPUT PARAMETERS:
@@ -301,7 +301,7 @@ C Add active_var to data.
 #endif
 
 C Add active_var from appropriate location to data.
-          active_data = active_data + active_var_t
+          active_var = active_var + active_data_t
           active_data_t = 0. _d 0
 
 C Store the result on disk.
@@ -378,7 +378,7 @@ C     == Global variables ===
 # include "IHOP_SIZE.h"
 # ifdef ALLOW_COST
 #  include "IHOP_COST.h"
-# ENDIF
+# endif
 #endif
 
 C     !INPUT PARAMETERS:
@@ -499,7 +499,7 @@ C     == Global variables ===
 # include "IHOP_SIZE.h"
 # ifdef ALLOW_COST
 #  include "IHOP_COST.h"
-# ENDIF
+# endif
 #endif
 
 C     !INPUT PARAMETERS:

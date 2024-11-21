@@ -130,7 +130,7 @@ CEOP
       CALL ACTIVE_WRITE_IHOP_TILE_RL(
      &     fidadj_obs(active_num_file,bi,bj),
      &     active_num_file,
-     &     adactive_var, irec
+     &     adactive_var, irec,
      &     ihopObs_ind_glob_tiled(active_num_file,irec,bi,bj),
      &     REVERSE_SIMULATION, myIter, bi, bj, myThid )
 

@@ -646,10 +646,10 @@ c # if no_ihop has a non zero value, print f_ihop and no_ihop
         IF (useIHOP) THEN
          DO num_file_ihop=1,NFILESMAX_ihop
           IF ( no_ihop(num_file_ihop).GT.zeroRL ) THEN
-           IL  = ILNBLNK( ihopObsfiles(num_file_ihop) )
+           IL  = ILNBLNK( IHOPObs_Files(num_file_ihop) )
            IL  = max(IL,30)
            WRITE(ifc,'(4A,2D22.15)')
-     &          ihopObsfiles(num_file_ihop)(1:IL),' ',
+     &          IHOPObs_Files(num_file_ihop)(1:IL),' ',
      &          ihop_nameval, ' = ',
      &          f_ihop(num_file_ihop),
      &          no_ihop(num_file_ihop)
