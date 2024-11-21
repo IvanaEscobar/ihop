@@ -101,6 +101,7 @@ C File maintenance
      &           (ihopDoNcOutput) ) THEN
 C Sync tiled file so data is not lost in buffer
               err = NF_SYNC( ncidFWD(num_file,bi,bj) )
+        CALL IHOP_COST_NF_ERROR('cost_ihop 1',err,bi,bj,myThid)
 
             ENDIF
 
@@ -167,6 +168,7 @@ C Write to global netcdf file
 
 C Sync global obs
           err = NF_SYNC( ncidGLOB(num_file) )
+        CALL IHOP_COST_NF_ERROR('cost_ihop 2',err,bi,bj,myThid)
 
           DO iObs = 1, NOBSMAX_IHOP
             IF (iObs.LE.ObsNo(num_file)) THEN

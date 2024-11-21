@@ -38,8 +38,8 @@ C     !EXTERNAL VARIABLES:
       CHARACTER*(MAX_LEN_MBUF) :: msgBuf
 C     !LOCAL VARIABLES:
       INTEGER :: iUnit
-      INTEGER :: IL, err, ncid, dimid1, dimid2
-      INTEGER :: varid1, varid2, varid3, varid4
+      INTEGER :: IL, err, ncid, dimId1, dimId2
+      INTEGER :: varId1, varId2, varId3, varId4
       INTEGER :: k, i, j
       _RS :: data1vec( IHOP_MAX_NC_SIZE )
       _RS :: data2vec( IHOP_MAX_NC_SIZE*IHOP_MAX_NC_SIZE )
@@ -62,6 +62,7 @@ C Read NetCDF input: setting the acoustic domain
           ihop_file = IHOP_interpfile
       END IF
       err = NF_OPEN(ihop_file, NF_NOWRITE, ncid)
+        CALL IHOP_COST_NF_ERROR('init_fixed 1',err,1,1,myThid)
       IF (err .NE. NF_NOERR) THEN
         WRITE(msgBuf, '(2A)') 'S/R IHOP_INIT_FIXED: ',
      &  'NetCDF IHOP input file NOT found'
@@ -70,11 +71,15 @@ C Read NetCDF input: setting the acoustic domain
       END IF
 
 C Get dimension IDs and lengths
-      err = NF_INQ_DIMID( ncid, 'nrange', dimid1 )
-      err = NF_INQ_DIMLEN( ncid, dimid1, IHOP_npts_range )
+      err = NF_INQ_DIMID( ncid, 'nrange', dimId1 )
+        CALL IHOP_COST_NF_ERROR('init_fixed 2',err,1,1,myThid)
+      err = NF_INQ_DIMLEN( ncid, dimId1, IHOP_npts_range )
 
-      err = NF_INQ_DIMID( ncid, 'nidw', dimid2 )
-      err = NF_INQ_DIMLEN( ncid, dimid2, IHOP_npts_idw )
+        CALL IHOP_COST_NF_ERROR('init_fixed 3',err,1,1,myThid)
+      err = NF_INQ_DIMID( ncid, 'nidw', dimId2 )
+        CALL IHOP_COST_NF_ERROR('init_fixed 4',err,1,1,myThid)
+      err = NF_INQ_DIMLEN( ncid, dimId2, IHOP_npts_idw )
+        CALL IHOP_COST_NF_ERROR('init_fixed 5',err,1,1,myThid)
 
       IF ( IHOP_npts_range>IHOP_MAX_RANGE .OR.
      &     IHOP_npts_idw>IHOP_MAX_IDW ) THEN
@@ -85,10 +90,14 @@ C Get dimension IDs and lengths
       END IF
 
 C Get data variable IDs
-      err = NF_INQ_VARID( ncid, 'ihop_ranges', varid1 )
-      err = NF_INQ_VARID( ncid, 'ihop_xc', varid2 )
-      err = NF_INQ_VARID( ncid, 'ihop_yc', varid3 )
-      err = NF_INQ_VARID( ncid, 'ihop_idw_weights', varid4 )
+      err = NF_INQ_VARID( ncid, 'ihop_ranges', varId1 )
+        CALL IHOP_COST_NF_ERROR('init_fixed 6',err,1,1,myThid)
+      err = NF_INQ_VARID( ncid, 'ihop_xc', varId2 )
+        CALL IHOP_COST_NF_ERROR('init_fixed 7',err,1,1,myThid)
+      err = NF_INQ_VARID( ncid, 'ihop_yc', varId3 )
+        CALL IHOP_COST_NF_ERROR('init_fixed 8',err,1,1,myThid)
+      err = NF_INQ_VARID( ncid, 'ihop_idw_weights', varId4 )
+        CALL IHOP_COST_NF_ERROR('init_fixed 9',err,1,1,myThid)
 
       IF (err .NE. NF_NOERR) THEN
         WRITE(msgBuf, '(2A)') 'S/R IHOP_INIT_FIXED: ',
@@ -98,10 +107,14 @@ C Get data variable IDs
       END IF
 
 C get data variables
-      err = NF_GET_VAR( ncid, varid1, data1vec )
-      err = NF_GET_VAR( ncid, varid2, data2vec )
-      err = NF_GET_VAR( ncid, varid3, data3vec )
-      err = NF_GET_VAR( ncid, varid4, data4vec )
+      err = NF_GET_VAR( ncid, varId1, data1vec )
+        CALL IHOP_COST_NF_ERROR('init_fixed10',err,1,1,myThid)
+      err = NF_GET_VAR( ncid, varId2, data2vec )
+        CALL IHOP_COST_NF_ERROR('init_fixed11',err,1,1,myThid)
+      err = NF_GET_VAR( ncid, varId3, data3vec )
+        CALL IHOP_COST_NF_ERROR('init_fixed12',err,1,1,myThid)
+      err = NF_GET_VAR( ncid, varId4, data4vec )
+        CALL IHOP_COST_NF_ERROR('init_fixed13',err,1,1,myThid)
 
       IF (err .NE. NF_NOERR) THEN
         WRITE(msgBuf, '(2A)') 'S/R IHOP_INIT_FIXED: ',
@@ -124,6 +137,7 @@ C 'reshape' data variables to 2D arrays
 
 C Close NetCDF file
       err = NF_CLOSE( ncid )
+        CALL IHOP_COST_NF_ERROR('init_fixed14',err,1,1,myThid)
       IF (err .NE. NF_NOERR) THEN
         WRITE(msgBuf, '(3A)') 'S/R IHOP_INIT_FIXED: ',
      &  'NetCDF ERROR: Cannot close file ', IHOP_interpfile(1:IL)
