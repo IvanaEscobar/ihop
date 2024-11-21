@@ -16,13 +16,13 @@
       INTEGER ObsNo_tiled(NFILESMAX_IHOP,nsx,nsy)
       INTEGER ihopObs_ind_glob(NFILESMAX_IHOP,NOBSMAX_IHOP)
       INTEGER ihopObs_ind_glob_tiled(NFILESMAX_IHOP,NOBSMAX_IHOP,nsx,nsy)
-      INTEGER fidfwd_obs(NFILESMAX_IHOP,nsx,nsy)
-      INTEGER fidftl_obs(NFILESMAX_IHOP,nsx,nsy)
-      INTEGER fidadj_obs(NFILESMAX_IHOP,nsx,nsy)
-      INTEGER fiddata_obs(NFILESMAX_IHOP)
-      INTEGER fidglobal(NFILESMAX_IHOP)
-      INTEGER fidftlglobal(NFILESMAX_IHOP)
-      INTEGER fidadglobal(NFILESMAX_IHOP)
+      INTEGER ncidFWD(NFILESMAX_IHOP,nsx,nsy)
+      INTEGER ncidTL(NFILESMAX_IHOP,nsx,nsy)
+      INTEGER ncidAD(NFILESMAX_IHOP,nsx,nsy)
+      INTEGER ncidData(NFILESMAX_IHOP)
+      INTEGER ncidGLOB(NFILESMAX_IHOP)
+      INTEGER ncidTLGLOB(NFILESMAX_IHOP)
+      INTEGER ncidADGLOB(NFILESMAX_IHOP)
       INTEGER ihopObs_i_tiled(NFILESMAX_IHOP,NOBSMAX_IHOP,nsx,nsy)
       INTEGER ihopObs_j_tiled(NFILESMAX_IHOP,NOBSMAX_IHOP,nsx,nsy)
       INTEGER ihopObs_k_tiled(NFILESMAX_IHOP,NOBSMAX_IHOP,nsx,nsy)
@@ -30,9 +30,9 @@
       COMMON /ihop_cost_i/                                                                                                          &
      &                  ObsNo, ObsNo_tiled,                                                                                         &
      &                  ihopObs_ind_glob, ihopObs_ind_glob_tiled,                                                                   &
-     &                  fidfwd_obs, fidadj_obs, fidftl_obs,                                                                         &
-     &                  fidglobal, fidadglobal, fidftlglobal,                                                                       &
-     &                  fiddata_obs,                                                                                                &
+     &                  ncidFWD, ncidAD, ncidTL,                                                                                    &
+     &                  ncidGLOB, ncidADGLOB, ncidTLGLOB,                                                                           &
+     &                  ncidData,                                                                                                   &
      &                  ihopObs_i_tiled, ihopObs_j_tiled, ihopObs_k_tiled,                                                          &
      &                  ihopObs_sample1_ind
 

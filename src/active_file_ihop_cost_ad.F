@@ -66,7 +66,7 @@ CEOP
 #if (defined ALLOW_IHOP) && (defined ALLOW_COST)
 
       CALL ACTIVE_READ_IHOP_TILE_RL(
-     &     fidadj_obs(active_num_file,bi,bj),
+     &     ncidAD(active_num_file,bi,bj),
      &     active_num_file,
      &     adactive_var, lAdInit, irec,
      &     ihopObs_ind_glob_tiled(active_num_file,irec,bi,bj),
@@ -128,7 +128,7 @@ CEOP
 #if (defined ALLOW_IHOP) && (defined ALLOW_COST)
 
       CALL ACTIVE_WRITE_IHOP_TILE_RL(
-     &     fidadj_obs(active_num_file,bi,bj),
+     &     ncidAD(active_num_file,bi,bj),
      &     active_num_file,
      &     adactive_var, irec,
      &     ihopObs_ind_glob_tiled(active_num_file,irec,bi,bj),
@@ -188,7 +188,7 @@ CEOP
 #if (defined ALLOW_IHOP) && (defined ALLOW_COST)
 
       CALL ACTIVE_READ_IHOP_GLOB_RL(
-     &     fidadglobal(active_num_file),
+     &     ncidADGLOB(active_num_file),
      &     active_num_file,
      &     adactive_var, lAdInit, irec,
      &     ihopObs_ind_glob(active_num_file,irec),
@@ -246,7 +246,7 @@ CEOP
 #if (defined ALLOW_IHOP) && (defined ALLOW_COST)
 
       CALL ACTIVE_WRITE_IHOP_GLOB_RL(
-     &     fidadglobal(active_num_file),
+     &     ncidADGLOB(active_num_file),
      &     active_num_file,
      &     adactive_var, irec,
      &     ihopObs_ind_glob(active_num_file,irec),

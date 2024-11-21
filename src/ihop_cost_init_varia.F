@@ -53,7 +53,7 @@ C Initialize tiled cost fxn contributions.
             IF ( (obsNo_tiled(num_file,bi,bj).GT.0) .AND.
      &           (ihopDoNcOutput) ) THEN
 C Sync tiled .equi file so data in buffer is not lost
-              err = NF_SYNC( fidfwd_obs(num_file,bi,bj) )
+              err = NF_SYNC( ncidFWD(num_file,bi,bj) )
             ENDIF
 # endif /* ALLOW_GRDCHK */
 
@@ -70,7 +70,7 @@ C Initialize global cost fxn contributions.
 # ifdef ALLOW_GRDCHK
          IF (obsNo(num_file).GT.0) THEN
 C Sync global .equi file so data in buffer is not lost
-          err = NF_SYNC( fidglobal(num_file) )
+          err = NF_SYNC( ncidGLOB(num_file) )
          ENDIF
 
 # endif /* ALLOW_GRDCHK */

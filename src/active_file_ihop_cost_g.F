@@ -71,14 +71,14 @@ CEOP
 #if (defined ALLOW_IHOP) && (defined ALLOW_COST)
 
       CALL ACTIVE_READ_IHOP_TILE_RL(
-     &     fidfwd_obs(active_num_file,bi,bj),
+     &     ncidFWD(active_num_file,bi,bj),
      &     active_num_file,
      &     active_var, lAdInit, irec,
      &     ihopObs_ind_glob_tiled(active_num_file,irec,bi,bj),
      &     FORWARD_SIMULATION, myOptimIter, bi, bj, myThid )
 
       CALL ACTIVE_READ_IHOP_TILE_RL(
-     &     fidftl_obs(active_num_file,bi,bj),
+     &     ncidTL(active_num_file,bi,bj),
      &     active_num_file,
      &     g_active_var, lAdInit, irec,
      &     ihopObs_ind_glob_tiled(active_num_file,irec,bi,bj),
@@ -143,14 +143,14 @@ CEOP
 #if (defined ALLOW_IHOP) && (defined ALLOW_COST)
 
       CALL ACTIVE_WRITE_IHOP_TILE_RL(
-     &     fidfwd_obs(active_num_file,bi,bj),
+     &     ncidFWD(active_num_file,bi,bj),
      &     active_num_file,
      &     active_var, irec,
      &     ihopObs_ind_glob_tiled(active_num_file,irec,bi,bj),
      &     FORWARD_SIMULATION, myOptimIter, bi, bj, myThid )
 
       CALL ACTIVE_WRITE_IHOP_TILE_RL(
-     &     fidftl_obs(active_num_file,bi,bj),
+     &     ncidTL(active_num_file,bi,bj),
      &     active_num_file,
      &     g_active_var, irec, 
      &     ihopObs_ind_glob_tiled(active_num_file,irec,bi,bj),
@@ -215,14 +215,14 @@ CEOP
 #if (defined ALLOW_IHOP) && (defined ALLOW_COST)
 
       CALL ACTIVE_READ_IHOP_GLOB_RL(
-     &     fidglobal(active_num_file),
+     &     ncidGLOB(active_num_file),
      &     active_num_file,
      &     active_var, lAdInit, irec, 
      &     ihopObs_ind_glob(active_num_file,irec),
      &     FORWARD_SIMULATION, myOptimIter, myThid )
 
       CALL ACTIVE_READ_IHOP_GLOB_RL(
-     &     fidftlglobal(active_num_file),
+     &     ncidTLGLOB(active_num_file),
      &     active_num_file,
      &     g_active_var, lAdInit, irec, 
      &     ihopObs_ind_glob(active_num_file,irec),
@@ -285,14 +285,14 @@ CEOP
 #if (defined ALLOW_IHOP) && (defined ALLOW_COST)
 
       CALL ACTIVE_WRITE_IHOP_GLOB_RL(
-     &     fidglobal(active_num_file),
+     &     ncidGLOB(active_num_file),
      &     active_num_file,
      &     active_var, irec, 
      &     ihopObs_ind_glob(active_num_file,irec),
      &     FORWARD_SIMULATION, myOptimIter, myThid )
 
       CALL ACTIVE_WRITE_IHOP_GLOB_RL(
-     &     fidftlglobal(active_num_file),
+     &     ncidTLGLOB(active_num_file),
      &     active_num_file,
      &     g_active_var, irec, 
      &     ihopObs_ind_glob(active_num_file,irec),

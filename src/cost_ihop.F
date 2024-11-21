@@ -100,7 +100,7 @@ C File maintenance
             IF ( (ObsNo_tiled(num_file,bi,bj).GT.0) .AND.
      &           (ihopDoNcOutput) ) THEN
 C Sync tiled file so data is not lost in buffer
-              err = NF_SYNC( fidfwd_obs(num_file,bi,bj) )
+              err = NF_SYNC( ncidFWD(num_file,bi,bj) )
 
             ENDIF
 
@@ -166,7 +166,7 @@ C Write to global netcdf file
           ENDDO !DO iObs
 
 C Sync global obs
-          err = NF_SYNC( fidglobal(num_file) )
+          err = NF_SYNC( ncidGLOB(num_file) )
 
           DO iObs = 1, NOBSMAX_IHOP
             IF (iObs.LE.ObsNo(num_file)) THEN

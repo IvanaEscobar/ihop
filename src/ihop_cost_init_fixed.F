@@ -131,10 +131,10 @@ C     !LOCAL VARIABLES:
 !===========================================================
           WRITE(fnamedatanc,'(2A)') IHOPObs_File(1:IL),'.nc'
           err = NF_OPEN( fnamedatanc, NF_NOWRITE, 
-     &          fiddata_obs(num_file) )
+     &          ncidData(num_file) )
 
 !1) Read number of observations and available dimensions:
-          ncid = fiddata_obs(num_file)
+          ncid = ncidData(num_file)
           err = NF_INQ_DIMID( ncid,'iOBS', dimId1 )
           err = NF_INQ_DIMLEN( ncid, dimId1, obsNo(num_file) )
 
@@ -226,32 +226,32 @@ C     !LOCAL VARIABLES:
             IF (.NOT.exst) THEN
 ! Create NetCDF file
               err = NF_CREATE( fnameequincglo(1:JL), NF_CLOBBER,
-     &              fidglobal(num_file) )
-              err = NF_DEF_DIM( fidglobal(num_file),'iOBS',
+     &              ncidGLOB(num_file) )
+              err = NF_DEF_DIM( ncidGLOB(num_file),'iOBS',
      &              obsNo(num_file), dimId1 )
 
-              err = NF_DEF_VAR( fidglobal(num_file), 'mod_val',
+              err = NF_DEF_VAR( ncidGLOB(num_file), 'mod_val',
      &              NF_DOUBLE, 1, dimId1, varIdEquiv(1) )
-              err = NF_PUT_ATT_DOUBLE( fidglobal(num_file),
+              err = NF_PUT_ATT_DOUBLE( ncidGLOB(num_file),
      &              varIdEquiv(1), '_FillValue',
      &              NF_DOUBLE, 1, -9999. _d 0 )
 
-              err = NF_DEF_VAR( fidglobal(num_file), 'mod_mask',
+              err = NF_DEF_VAR( ncidGLOB(num_file), 'mod_mask',
      &              NF_DOUBLE, 1, dimId1, varIdEquiv(2) )
-              err = NF_PUT_ATT_DOUBLE( fidglobal(num_file),
+              err = NF_PUT_ATT_DOUBLE( ncidGLOB(num_file),
      &              varIdEquiv(2), '_FillValue',
      &              NF_DOUBLE, 1, -9999. _d 0 )
 
 ! Write buffer to file, reopen file with WRITE permissions
-              err = NF_ENDDEF( fidglobal(num_file) )
-              err = NF_CLOSE( fidglobal(num_file) )
+              err = NF_ENDDEF( ncidGLOB(num_file) )
+              err = NF_CLOSE( ncidGLOB(num_file) )
               err = NF_OPEN( fnameequincglo(1:JL), NF_WRITE, 
-     &              fidglobal(num_file) )
+     &              ncidGLOB(num_file) )
 
             ELSE
 ! Obtain existing NetCDF file id
               err = NF_OPEN( fnameequincglo(1:JL), NF_WRITE,
-     &              fidglobal(num_file) )
+     &              ncidGLOB(num_file) )
             ENDIF
 
 # ifdef ALLOW_ADJOINT_RUN
@@ -260,26 +260,26 @@ C     !LOCAL VARIABLES:
             IF (.NOT.exst) THEN
 ! Create NetCDF AD file
               err = NF_CREATE( adfnameequincglo(1:JL), NF_CLOBBER,
-     &              fidadglobal(num_file) )
-              err = NF_DEF_DIM( fidadglobal(num_file), 'iOBS',
+     &              ncidADGLOB(num_file) )
+              err = NF_DEF_DIM( ncidADGLOB(num_file), 'iOBS',
      &              obsNo(num_file), dimId1 )
 
-              err = NF_DEF_VAR( fidadglobal(num_file), 'mod_val',
+              err = NF_DEF_VAR( ncidADGLOB(num_file), 'mod_val',
      &              NF_DOUBLE, 1, dimId1, varIdEquiv(1) )
-              err = NF_PUT_ATT_DOUBLE( fidadglobal(num_file),
+              err = NF_PUT_ATT_DOUBLE( ncidADGLOB(num_file),
      &              varIdEquiv(1), '_FillValue',
      &              NF_DOUBLE, 1, 0. _d 0 )
 
 ! Write buffer to file, reopen file with WRITE permissions
-              err = NF_ENDDEF( fidadglobal(num_file) )
-              err = NF_CLOSE( fidadglobal(num_file) )
+              err = NF_ENDDEF( ncidADGLOB(num_file) )
+              err = NF_CLOSE( ncidADGLOB(num_file) )
               err = NF_OPEN( adfnameequincglo(1:JL), NF_WRITE,
-     &              fidadglobal(num_file) )
+     &              ncidADGLOB(num_file) )
 
             ELSE
 ! Obtain existing AD NetCDF file id
               err = NF_OPEN( adfnameequincglo(1:JL), NF_WRITE,
-     &              fidadglobal(num_file) )
+     &              ncidADGLOB(num_file) )
             ENDIF
 
 # endif
@@ -289,26 +289,26 @@ C     !LOCAL VARIABLES:
             IF (.NOT.exst) THEN
 ! Create NetCDF TL file
               err = NF_CREATE( tlfnameequincglo(1:JL), NF_CLOBBER,
-     &              fidftlglobal(num_file) )
-              err = NF_DEF_DIM( fidftlglobal(num_file), 'iOBS',
+     &              ncidTLGLOB(num_file) )
+              err = NF_DEF_DIM( ncidTLGLOB(num_file), 'iOBS',
      &              obsNo(num_file), dimId1 )
 
-              err = NF_DEF_VAR( fidftlglobal(num_file), 'mod_val',
+              err = NF_DEF_VAR( ncidTLGLOB(num_file), 'mod_val',
      &              NF_DOUBLE, 1, dimId1, varIdEquiv(1) )
-              err = NF_PUT_ATT_DOUBLE( fidftlglobal(num_file),
+              err = NF_PUT_ATT_DOUBLE( ncidTLGLOB(num_file),
      &              varIdEquiv(1), '_FillValue',
      &              NF_DOUBLE, 1, 0. _d 0 )
 
 ! Write buffer to file, reopen file with WRITE permissions
-              err = NF_ENDDEF( fidftlglobal(num_file) )
-              err = NF_CLOSE( fidftlglobal(num_file) )
+              err = NF_ENDDEF( ncidTLGLOB(num_file) )
+              err = NF_CLOSE( ncidTLGLOB(num_file) )
               err = NF_OPEN( tlfnameequincglo(1:JL), NF_WRITE,
-     &              fidftlglobal(num_file) )
+     &              ncidTLGLOB(num_file) )
 
             ELSE
 ! Obtain existing TL NetCDF file id
               err = NF_OPEN( tlfnameequincglo(1:JL), NF_WRITE,
-     &              fidftlglobal(num_file) )
+     &              ncidTLGLOB(num_file) )
             ENDIF
 # endif
 
@@ -657,14 +657,14 @@ C     !LOCAL VARIABLES:
                   INQUIRE( FILE = fnameequinc(1:JL), EXIST = exst )
                   IF (.NOT.exst) THEN
                     CALL IHOP_COST_INIT_EQUI( num_file,
-     &                   fiddata_obs(num_file), fnameequinc(1:JL),
-     &                   fidfwd_obs(num_file,bi,bj),
+     &                   ncidData(num_file), fnameequinc(1:JL),
+     &                   ncidFWD(num_file,bi,bj),
      &                   obsNo_tiled(num_file,bi,bj),
      &                   bi, bj, myThid )
                   ELSE
 ! Obtain existing NetCDF file id
                     err = NF_OPEN( fnameequinc(1:JL), NF_WRITE,
-     &                    fidfwd_obs(num_file,bi,bj) )
+     &                    ncidFWD(num_file,bi,bj) )
                   ENDIF
 
 # ifdef ALLOW_ADJOINT_RUN
@@ -672,14 +672,14 @@ C     !LOCAL VARIABLES:
                   INQUIRE( FILE = adfnameequinc(1:JL), EXIST = exst )
                   IF (.NOT.exst) THEN
                     CALL IHOP_COST_INIT_EQUI( num_file,
-     &                   fiddata_obs(num_file), adfnameequinc(1:JL), 
-     &                   fidadj_obs(num_file,bi,bj),
+     &                   ncidData(num_file), adfnameequinc(1:JL), 
+     &                   ncidAD(num_file,bi,bj),
      &                   obsNo_tiled(num_file,bi,bj),
      &                   bi, bj, myThid )
                   ELSE
 ! Obtain existing AD NetCDF file id
                     err = NF_OPEN( adfnameequinc(1:JL), NF_WRITE,
-     &                    fidadj_obs(num_file,bi,bj) )
+     &                    ncidAD(num_file,bi,bj) )
                   ENDIF
 
 # endif /* ALLOW_ADJOINT_RUN */
@@ -688,14 +688,14 @@ C     !LOCAL VARIABLES:
                   INQUIRE( FILE = tlfnameequinc(1:JL), EXIST = exst )
                   IF (.NOT.exst) THEN
                     CALL IHOP_COST_INIT_EQUI( num_file,
-     &                   fiddata_obs(num_file),tlfnameequinc(1:JL),
-     &                   fidftl_obs(num_file,bi,bj),
+     &                   ncidData(num_file),tlfnameequinc(1:JL),
+     &                   ncidTL(num_file,bi,bj),
      &                   obsNo_tiled(num_file,bi,bj),
      &                   bi, bj, myThid )
                   ELSE
 ! Obtain existing TL NetCDF file id
                     err = NF_OPEN( tlfnameequinc(1:JL), NF_WRITE,
-     &                    fidftl_obs(num_file,bi,bj) )
+     &                    ncidTL(num_file,bi,bj) )
                   ENDIF
 # endif /* ALLOW_TANGENTLINEAR_RUN */
                 ELSE

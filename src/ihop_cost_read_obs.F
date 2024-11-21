@@ -57,8 +57,8 @@ C tmpObsNo :: number of obs in the file
       IF ( (irec.LT.ihop_minind_buff) .OR.
      &     (irec.GT.ihop_maxind_buff) .OR.
      &     (ihop_curfile_buff.NE.fNb) ) THEN
-        err = NF_INQ_DIMID( fiddata_obs(fNb), 'iOBS', varId1 )
-        err = NF_INQ_DIMLEN( fiddata_obs(fNb), varId1, tmpObsNo )
+        err = NF_INQ_DIMID( ncidData(fNb), 'iOBS', varId1 )
+        err = NF_INQ_DIMLEN( ncidData(fNb), varId1, tmpObsNo )
 
         IF (ihop_curfile_buff.NE.fNb) THEN
 C No asumption on whether a forward or a backward loop is calling
@@ -91,14 +91,14 @@ C Implies that a forward loop is calling
         vec_start = ihop_minind_buff
         vec_count = ihop_maxind_buff-ihop_minind_buff+1
 
-        err = NF_INQ_VARID( fiddata_obs(fNb), ihop_nameval,
+        err = NF_INQ_VARID( ncidData(fNb), ihop_nameval,
      &        varId1 )
-        err = NF_GET_VARA_DOUBLE(fiddata_obs(fNb), varId1,
+        err = NF_GET_VARA_DOUBLE(ncidData(fNb), varId1,
      &        vec_start, vec_count, vec_tmp1 )
 
-        err = NF_INQ_VARID( fiddata_obs(fNb), ihop_nameuncert,
+        err = NF_INQ_VARID( ncidData(fNb), ihop_nameuncert,
      &        varId1 )
-        err = NF_GET_VARA_DOUBLE(fiddata_obs(fNb), varId1,
+        err = NF_GET_VARA_DOUBLE(ncidData(fNb), varId1,
      &        vec_start, vec_count, vec_tmp2 )
 
         IF (err.NE.NF_NOERR) THEN
