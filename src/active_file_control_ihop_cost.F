@@ -1,6 +1,6 @@
 #include "IHOP_OPTIONS.h"
 
-C     ==================================================================
+C     ================================================================
 C     active_file_control_cost_ihop.F: Routines that handle I/O of
 C                                      tiled and global active 
 C                                      variables for adjoint
@@ -12,7 +12,7 @@ C     o active_read_ihop_tile_rl  - Read an active 1D record from file
 C     o active_write_ihop_tile_rl - Write an active 1D record to file
 C     o active_read_ihop_glob_rl  - Read an active 1D record from file
 C     o active_write_ihop_glob_rl - Write an active 1D record to file
-C     ==================================================================
+C     ================================================================
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP

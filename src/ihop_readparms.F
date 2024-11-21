@@ -146,7 +146,8 @@ C     Check paramters of IHOP_PARM01
        STOP 'ABNORMAL END: S/R IHOP_READPARMS'
       ENDIF
       IF ( IHOP_title.EQ.'ihop' ) THEN
-       WRITE(msgBuf, '(2A)') '**WARNING** IHOP_READPARMS: "IHOP_title"',
+       WRITE(msgBuf, '(2A)') 
+     &  '**WARNING** IHOP_READPARMS: "IHOP_title"',
      &  ' using default title name'
        CALL PRINT_MESSAGE( msgBuf, errorMessageUnit,
      &                     SQUEEZE_RIGHT, myThid )
@@ -196,7 +197,8 @@ C     Check paramters of IHOP_PARM02
      &     IHOP_topopt(1:1) .NE. 'Q' .AND.
      &     IHOP_topopt(1:1) .NE. 'A'      ) THEN
 
-       WRITE(msgBuf, '(2A)') 'S/R IHOP_READPARMS: "IHOP_topopt(1:1)" ',
+       WRITE(msgBuf, '(2A)') 
+     &  'S/R IHOP_READPARMS: "IHOP_topopt(1:1)" ',
      &  'unknown option for SSP approximation'
        CALL PRINT_ERROR( msgBuf, myThid )
        STOP 'ABNORMAL END: S/R IHOP_READPARMS'
@@ -210,7 +212,8 @@ C     Check paramters of IHOP_PARM02
      &     IHOP_topopt(2:2) .NE. 'W' .AND.
      &     IHOP_topopt(2:2) .NE. 'P'      ) THEN
 
-       WRITE(msgBuf, '(2A)') 'S/R IHOP_READPARMS: "IHOP_topopt(2:2)" ',
+       WRITE(msgBuf, '(2A)') 
+     &  'S/R IHOP_READPARMS: "IHOP_topopt(2:2)" ',
      &  'unknown top boundary condition type'
        CALL PRINT_ERROR( msgBuf, myThid )
        STOP 'ABNORMAL END: S/R IHOP_READPARMS'
@@ -223,7 +226,8 @@ C     Check paramters of IHOP_PARM02
      &     IHOP_topopt(3:3) .NE. 'Q' .AND.
      &     IHOP_topopt(3:3) .NE. 'L'      ) THEN
 
-       WRITE(msgBuf, '(2A)') 'S/R IHOP_READPARMS: "IHOP_topopt(3:3)" ',
+       WRITE(msgBuf, '(2A)')
+     &  'S/R IHOP_READPARMS: "IHOP_topopt(3:3)" ',
      &  'unknown attenuation units'
        CALL PRINT_ERROR( msgBuf, myThid )
        STOP 'ABNORMAL END: S/R IHOP_READPARMS'
@@ -237,7 +241,8 @@ C     Check paramters of IHOP_PARM02
      &     IHOP_botopt(1:1) .NE. 'W' .AND.
      &     IHOP_botopt(1:1) .NE. 'P'      ) THEN
 
-       WRITE(msgBuf, '(2A)') 'S/R IHOP_READPARMS: "IHOP_botopt(1:1)" ',
+       WRITE(msgBuf, '(2A)') 
+     &  'S/R IHOP_READPARMS: "IHOP_botopt(1:1)" ',
      &  'unknown bottom boundary condition type'
        CALL PRINT_ERROR( msgBuf, myThid )
        STOP 'ABNORMAL END: S/R IHOP_READPARMS'
@@ -247,7 +252,8 @@ C     Check paramters of IHOP_PARM02
      &     IHOP_botopt(2:2) .NE. '*' .AND.
      &     IHOP_botopt(2:2) .NE. '~'      ) THEN
 
-       WRITE(msgBuf, '(2A)') 'S/R IHOP_READPARMS: "IHOP_botopt(2:2)" ',
+       WRITE(msgBuf, '(2A)')
+     &  'S/R IHOP_READPARMS: "IHOP_botopt(2:2)" ',
      &  'either select or deselect bathymetry file'
        CALL PRINT_ERROR( msgBuf, myThid )
        STOP 'ABNORMAL END: S/R IHOP_READPARMS'
@@ -303,7 +309,7 @@ C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 C     Read parameters from open data file: IHOP_COST_NML
       READ(UNIT=iUnit,NML=IHOP_COST_NML)
       WRITE(msgBuf,'(A)')
-     &    'IHOP_READPARMS: finished reading IHOP_COST_NML in data.ihop'
+     & 'IHOP_READPARMS: finished reading IHOP_COST_NML in data.ihop'
       CALL PRINT_MESSAGE( msgBuf, standardMessageUnit,
      &                    SQUEEZE_RIGHT, myThid )
 
@@ -314,7 +320,7 @@ C     Check paramters of IHOP_COST_NML
         fname = IHOPObs_Files(num_file)(1:IL)//'.nc'
         INQUIRE( FILE=fname, EXIST=exst )
         IF ( .NOT.exst ) THEN
-         WRITE(msgBuf, '(2A)') 'S/R IHOP_READPARMS: "IHOPObs_Files " ',
+         WRITE(msgBuf,'(2A)') 'S/R IHOP_READPARMS: "IHOPObs_Files " ',
      &    'Provide observations file name for ihop package'
          CALL PRINT_ERROR( msgBuf, myThid )
          STOP 'ABNORMAL END: S/R IHOP_READPARMS'

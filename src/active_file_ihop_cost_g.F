@@ -1,18 +1,18 @@
 #include "IHOP_OPTIONS.h"
 
-C     ==================================================================
-C     active_file_cost_ihop_g.F: Routines that handle I/O of
-C                                tiled and global active 
-C                                variables for adjoint
-C                                calculations, related to NetCDF
-C                                iHOP data files
+C   ==================================================================
+C   active_file_cost_ihop_g.F: Routines that handle I/O of
+C                              tiled and global active 
+C                              variables for adjoint
+C                              calculations, related to NetCDF
+C                              iHOP data files
 C
-C     Routines:
-C     o g_active_read_ihop_tile  - Read a TL active 1D record from file
-C     o g_active_write_ihop_tile - Write a TL active 1D record to file
-C     o g_active_read_ihop_glob  - Read a TL active 1D record from file
-C     o g_active_write_ihop_glob - Write a TL active 1D record to file
-C     ==================================================================
+C   Routines:
+C   o g_active_read_ihop_tile  - Read a TL active 1D record from file
+C   o g_active_write_ihop_tile - Write a TL active 1D record to file
+C   o g_active_read_ihop_glob  - Read a TL active 1D record from file
+C   o g_active_write_ihop_glob - Write a TL active 1D record to file
+C   ==================================================================
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
@@ -33,7 +33,7 @@ C !INTERFACE:
 
 C     !DESCRIPTION:
 C     Tangent linear of active_read_ihop_tile
-C     Read an active record and its TL from iHOP .equi tiled NetCDF or 
+C     Read an active record and its TL from iHOP .equi tiled NetCDF or
 C     Binary files
 
 C     !USES:
@@ -107,8 +107,8 @@ C !INTERFACE:
 
 C     !DESCRIPTION:
 C     Tangent linear of active_write_ihop_tile
-C     Write an active record and its TL from iHOP .equi tiled NetCDF or 
-C     Binary files
+C     Write an active record and its TL from iHOP .equi tiled NetCDF
+C     or Binary files
 
 C     !USES:
       IMPLICIT NONE

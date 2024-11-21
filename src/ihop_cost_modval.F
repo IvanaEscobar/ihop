@@ -66,7 +66,7 @@ C     !LOCAL VARIABLES:
       _RL     maxarrval, arrval(MaxNArr)
       COMPLEX*8 arrival_amplitude(MaxNArr)
 
-! ======================================================================
+! ===================================================================
 ! Apply parameter-to-observable map on predicted datum
 ! Want to find arrival amplitude, A:
 !       A = 1/sqrt(r) * Amp * exp(oneCMPLX*rad2deg*phase)
@@ -76,7 +76,7 @@ C     !LOCAL VARIABLES:
 !       tau_predicted = tau(ia)
 
 ! Added uses of modules above, have access to Arr and Pos
-! ======================================================================
+! ===================================================================
 
 ! Are ri and rj contained in Nrr AND Nrd
       IF ( (ri.GT.Nrr).AND.(rj.gt.Nrd) ) THEN
@@ -95,7 +95,7 @@ C     !LOCAL VARIABLES:
       ENDDO !DO ii
 
 !$TAF init ihop_modval = 'ihop_cost_modval'
-! Find index of maximum amplitude for each ri,rj arrival, custom maxloc 
+! Find index of max amplitude for each ri,rj arrival, custom maxloc 
       maxarrval = arrval(1)
       maxindex  = 1
 

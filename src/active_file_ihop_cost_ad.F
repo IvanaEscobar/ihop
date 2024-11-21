@@ -1,18 +1,18 @@
 #include "IHOP_OPTIONS.h"
 
-C     ==================================================================
-C     active_file_cost_ihop_ad.F: Routines that handle I/O of
-C                                 tiled and global active 
-C                                 variables for adjoint
-C                                 calculations, related to NetCDF
-C                                 iHOP data files
+C   ==================================================================
+C   active_file_cost_ihop_ad.F: Routines that handle I/O of
+C                               tiled and global active 
+C                               variables for adjoint
+C                               calculations, related to NetCDF
+C                               iHOP data files
 C
-C     Routines:
-C     o adactive_read_ihop_tile  - Read an AD active 1D record from file
-C     o adactive_write_ihop_tile - Write an AD active 1D record to file
-C     o adactive_read_ihop_glob  - Read an AD active 1D record from file
-C     o adactive_write_ihop_glob - Write an AD active 1D record to file
-C     ==================================================================
+C   Routines:
+C   o adactive_read_ihop_tile  - Read an AD active 1D record from file
+C   o adactive_write_ihop_tile - Write an AD active 1D record to file
+C   o adactive_read_ihop_glob  - Read an AD active 1D record from file
+C   o adactive_write_ihop_glob - Write an AD active 1D record to file
+C   ==================================================================
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
@@ -31,7 +31,7 @@ C !INTERFACE:
 
 C     !DESCRIPTION:
 C     Adjoint of active_read_ihop_tile
-C     Read an adjoint active record from an iHOP .equi tiled NetCDF or 
+C     Read an adjoint active record from an iHOP .equi tiled NetCDF or
 C     Binary file
 
 C     !USES:
@@ -95,8 +95,8 @@ C !INTERFACE:
 
 C     !DESCRIPTION:
 C     Adjoint of active_write_ihop_tile
-C     Write an adjoint active record from an iHOP .equi tiled NetCDF or 
-C     Binary file
+C     Write an adjoint active record from an iHOP .equi tiled NetCDF
+C     or Binary file
 
 C     !USES:
       IMPLICIT NONE
@@ -204,11 +204,6 @@ CBOP
 C !ROUTINE: ADACTIVE_WRITE_IHOP_GLOB
 
 C !INTERFACE:
-C     ==================================================================
-
-CBOP
-C     !ROUTINE: ADACTIVE_WRITE_IHOP_GLOB
-C     !INTERFACE:
       SUBROUTINE ADACTIVE_WRITE_IHOP_GLOB(
      I                                  active_num_file,
      I                                  adactive_var,

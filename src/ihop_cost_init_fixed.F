@@ -62,9 +62,11 @@ C     !LOCAL VARIABLES:
       INTEGER :: iG, jG
       _RL :: yymmddMin,yymmddMax
       _RL :: hhmmssMin,hhmmssMax
-      _RL :: tmpyymmdd(NOBSMAX_IHOP), tmphhmmss(NOBSMAX_IHOP), diffsecs
+      _RL :: tmpyymmdd(NOBSMAX_IHOP), tmphhmmss(NOBSMAX_IHOP)
+      _RL :: diffsecs
       _RL :: tmp_ihopObs_time(NOBSMAX_IHOP)
-      _RL :: tmp_lon, tmp_lon2(NOBSMAX_IHOP), tmp_lat2(NOBSMAX_IHOP)
+      _RL :: tmp_lon, tmp_lon2(NOBSMAX_IHOP)
+      _RL :: tmp_lat2(NOBSMAX_IHOP)
       _RL :: lon_cur, lat_cur
       _RL :: tmp_depth2(NOBSMAX_IHOP), depth_cur
       _RL :: tmp_uncert2(NOBSMAX_IHOP)
@@ -344,8 +346,8 @@ C     !LOCAL VARIABLES:
 
 ! Loop through number of observations, in obsfit this is a 'chunk'
           DO m = 1, ObsNo(num_file)
-!AV if obs starts before model run, will be ignored even if it ends after
-!AV model starts - ok for now
+!AV If obs starts before model run, will be ignored even if 
+!AV it ends after model starts - ok for now
             IF (( (tmpyymmdd(m).GT.yymmddMin).OR.
      &            ((tmpyymmdd(m).EQ.yymmddMin) .AND.
      &             (tmphhmmss(m).GE.hhmmssMin)) ) .AND.
@@ -415,7 +417,7 @@ C     !LOCAL VARIABLES:
           CALL PRINT_MESSAGE( msgBuf,
      &         standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
-! ==============================================================================
+! ====================================================================
 ! Initiate tiled defaults for ihopObs before reading in from netcdf
           DO bj = 1, nSy
             DO bi = 1, nSx
@@ -605,7 +607,7 @@ C     !LOCAL VARIABLES:
 
                 ENDIF !IF (ihopObsInTile.EQ.1) 1st time
 
-! ==============================================================================
+! ====================================================================
 ! Check that maximum size was not reached:
                 IF (m.GE.NOBSMAX_IHOP) THEN
                   WRITE(msgBuf,'(3A)')
@@ -635,8 +637,9 @@ C     !LOCAL VARIABLES:
 ! Create files for model counterparts to ihop obs
 !===========================================================
               IF (obsNo_tiled(num_file,bi,bj).GT.0) THEN
-                iG=bi+(myXGlobalLo-1)/sNx ! Kludge until unstructered tiles
-                jG=bj+(myYGlobalLo-1)/sNy ! Kludge until unstructered tiles
+! Kludge until unstructered tiles
+                iG=bi+(myXGlobalLo-1)/sNx
+                jG=bj+(myYGlobalLo-1)/sNy
 
                 JL = ILNBLNK( IHOPObs_Dir )
 ! ALWAYS Write to nc file
