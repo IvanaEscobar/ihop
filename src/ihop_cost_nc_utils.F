@@ -101,10 +101,10 @@ C     bi,bj :: Tile indices
       CHARACTER*(MAX_LEN_MBUF) msgBuf
 
       IF (ihopDoNcOutput) THEN
-! CLose tiled files
+! Close tiled files
         DO bj = myByLo(myThid), myByHi(myThid)
           DO bi = myBxLo(myThid), myBxHi(myThid)
-            DO numFile = 1, NFILESPROFMAX
+            DO numFile = 1, NFILESMAX_IHOP
               IL = ILNBLNK( ihopObs_Files(numFile) )
 
               IF (IL.NE.0) THEN
@@ -147,15 +147,15 @@ C Tangent linear equivalent (.equi) file
           ENDDO !DO bi 
         ENDDO !DO bj
 
-! CLose global files
-        DO numFile = 1, NFILESPROFMAX
+! Close global files
+        DO numFile = 1, NFILESMAX_IHOP
           IL = ILNBLNK( ihopObs_Files(numFile) )
 
           IF (IL.NE.0) THEN
             WRITE(msgBuf,'(A,A,5(1X,I8))')
      &       'S/R IHOP_COST_NC_CLOSE:',
      &       ' Closing '//ihopObs_Files(numFile)(1:IL), numFile,
-     &       ncidData(numFile), ncidFWDGLOB(numFile),
+     &       ncidData(numFile), ncidGLOB(numFile),
      &       ncidADGLOB(numFile), ncidTLGLOB(numFile)
             CALL PRINT_MESSAGE( msgBuf, standardMessageUnit,
      &           SQUEEZE_RIGHT, myThid )
@@ -168,10 +168,10 @@ C Data file
      &           1, 1, myThid )
 
 C Forwaruivalent (.equi) file
-            STATUS = NF_CLOSE( ncidFWDGLOB(numFile) )
+            STATUS = NF_CLOSE( ncidGLOB(numFile) )
             WRITE(msgBuf,'(A,I3,I8)')
      &       'NC_CLOSE: NF_CLOSE fwd unit',
-     &       numFile, ncidFWDGLOB(numFile)
+     &       numFile, ncidGLOB(numFile)
             CALL IHOP_COST_NF_ERROR( msgBuf, STATUS,
      &           1, 1, myThid )
 # ifdef W_ADJOINT_RUN

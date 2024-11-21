@@ -868,7 +868,7 @@ CONTAINS
 
 
   !     == Local Arguments ==
-    INTEGER                     :: iostat, ierr
+    INTEGER                     :: iostat
   ! For MPI writing: inspo from eeboot_minimal.F
     CHARACTER*(MAX_LEN_FNAM)    :: fNam
     CHARACTER*(6)               :: fmtStr
@@ -909,7 +909,7 @@ CONTAINS
             ENDIF
 
             IF ( IHOP_dumpfreq .GE. 0) &
-             OPEN(PRTFile, FILE=fNam, STATUS='UNKNOWN', IOSTAT=iostat )
+             OPEN(PRTFile, FILE = fNam, STATUS = 'UNKNOWN', IOSTAT = iostat )
             IF ( iostat /= 0 ) THEN
                 WRITE(*,*) 'ihop: IHOP_fileroot not recognized, ', &
                     TRIM(IHOP_fileroot)

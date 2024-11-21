@@ -51,9 +51,10 @@ CEOP
 
 C    !LOCAL VARIABLES:
 #ifdef ALLOW_IHOP
-      INTEGER m,k,bi,bj,num_file,varid1,err
-      INTEGER maxindex(Nrr, Nrd)
-      _RL     ihop_modval
+      INTEGER bi,bj
+      INTEGER num_file, nObs
+      INTEGER maxindex(nRR, nRD)
+      _RL     ihop_modVal
 # ifndef ALLOW_CTRL
       INTEGER optimcycle
 # endif
@@ -80,26 +81,27 @@ C    !LOCAL VARIABLES:
       DO bj = 1, nSy
         DO bi = 1, nSx
           DO num_file = 1, NFILESMAX_IHOP
-            DO m = 1, NOBSMAX_IHOP
-              IF (m.LE.ObsNo_tiled(num_file,bi,bj)) THEN
-                IF ( (ihopObs_time(num_file,m,bi,bj).GE.myTime) .AND.
-     &               (ihopObs_time(num_file,m,bi,bj).LT.
+            DO nObs = 1, NOBSMAX_IHOP
+              IF (nObs.LE.ObsNo_tiled(num_file,bi,bj)) THEN
+                IF ( (ihopObs_time(num_file,nObs,bi,bj).GE.
+     &                myTime) .AND.
+     &               (ihopObs_time(num_file,nObs,bi,bj).LT.
      &                (myTime+deltaTclock)) ) THEN
 #  ifdef ALLOW_AUTODIFF_TAMC
-!$TAF STORE ihop_modval  = comlev1_bibj, key=itdkey, byte=isbyte
+!$TAF STORE ihop_modVal  = comlev1_bibj, key=itdkey, byte=isbyte
 #  endif
-                  ihop_modval = 0
+                  ihop_modVal = 0
 
-                  CALL IHOP_COST_MODVAL( ihop_modval, num_file,
+                  CALL IHOP_COST_MODVAL( ihop_modVal, num_file,
      &                 1, 1, myTime, myThid )
 
                   CALL ACTIVE_WRITE_IHOP_TILE( num_file,
-     &                 ihop_modval, m, optimcycle, bi, bj, myThid,
+     &                 ihop_modVal, nObs, optimcycle, bi, bj, myThid,
      &                 ihop_dummy(num_file,bi,bj) )
 
                 ENDIF !IF ( (ihopObs_time
               ENDIF !IF (ObsNo_tiled(num_file,bi,bj).NE.0)
-            ENDDO !DO m
+            ENDDO !DO nObs
           ENDDO !DO num_file
         ENDDO !DO bi
       ENDDO !DO bj
