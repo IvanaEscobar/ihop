@@ -152,6 +152,12 @@ c     == end of interface ==
        f_profiles_mean(num_var)= 0. _d 0
       ENDDO
 #endif
+#ifdef ALLOW_IHOP
+! Already the global sum (see pkg/obsfit)
+      DO num_file_ihop = 1, NFILESMAX_IHOP
+        f_ihop(num_file) = obj_ihop(num_file_ihop)
+      ENDDO
+#endif
 #ifdef ALLOW_GENCOST_CONTRIBUTION
       DO num_var=1,NGENCOST
        f_gencost(num_var)= 0. _d 0
@@ -191,9 +197,9 @@ c     == end of interface ==
       ENDDO
 #endif
 #ifdef ALLOW_IHOP
-      DO num_file_ihop=1,NFILESMAX_IHOP
-cav this is already global sum
-       no_ihop(num_file_ihop)= num_ihop(num_file_ihop)
+      DO num_file_ihop = 1, NFILESMAX_IHOP
+! Already global sum (see pkg/obsfit)
+       no_ihop(num_file_ihop) = num_ihop(num_file_ihop)
       ENDDO
 #endif
 #ifdef ALLOW_GENCOST_CONTRIBUTION
@@ -246,13 +252,14 @@ c--   Sum up all contributions.
         ENDDO
 #endif
 #ifdef ALLOW_IHOP
-c # loop over available misfits and add to the tile level obj
-c # fxn. this is the same loop you would do in cost_final.F
-        DO num_file_ihop=1,NFILESMAX_IHOP
-         tile_fc(bi,bj) = tile_fc(bi,bj)
-     &           + mult_ihop(num_file_ihop)
-     &           *objf_ihop(num_file_ihop)
-        ENDDO
+! no need to add tile-wise, already in global file (see pkg/obsfit)
+!c # loop over available misfits and add to the tile level obj
+!c # fxn. this is the same loop you would do in cost_final.F
+!        DO num_file_ihop=1,NFILESMAX_IHOP
+!         tile_fc(bi,bj) = tile_fc(bi,bj)
+!     &           + mult_ihop(num_file_ihop)
+!     &           *objf_ihop(num_file_ihop)
+!        ENDDO
 #endif
 #ifdef ALLOW_GENCOST_CONTRIBUTION
         DO num_var=1,NGENCOST
@@ -304,6 +311,13 @@ c # fxn. this is the same loop you would do in cost_final.F
      &           +objf_profiles_mean(num_var,bi,bj)
         ENDDO
 #endif
+#ifdef ALLOW_IHOP
+! Already global sum (see pkg/obsfit)
+!! done above
+!      DO num_file_ihop = 1, NFILESMAX_IHOP
+!        f_ihop(num_file_ihop) = f_ihop(num_file) + obj_ihop(num_file) 
+!      ENDDO
+#endif
 #ifdef ALLOW_GENCOST_CONTRIBUTION
         DO num_var=1,NGENCOST
          f_gencost(num_var)=f_gencost(num_var)
@@ -351,7 +365,7 @@ c # fxn. this is the same loop you would do in cost_final.F
         ENDDO
 #endif
 #ifdef ALLOW_IHOP
-c # loop over available misfits and add to whatever no_ihop is...
+! Already global sum of no_ihop (see pkg/obsfit)
 #endif
 #ifdef ALLOW_GENCOST_CONTRIBUTION
         DO num_var=1,NGENCOST
@@ -514,7 +528,7 @@ c--   Do global summation for each part of the cost function
 #ifdef ALLOW_IHOP
 ! print f_ihop to standard output 
       IF (useIHOP) THEN
-       DO num_file_ihop=1,NFILESMAX_IHOP
+       DO num_file_ihop = 1, NFILESMAX_IHOP
         IF ( no_ihop(num_file_ihop).GT.zeroRL ) THEN
          WRITE(msgBuf,'(A,D22.15,i2.0)')
      &     ' --> f_ihop =',f_ihop(num_file_ihop),
