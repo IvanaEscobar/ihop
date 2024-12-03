@@ -17,8 +17,7 @@
 
 !-- Forcing code options:
 
-! o Shortwave heating as extra term in external_forcing.F
-! Note: this should be a run-time option
+! o Shortwave heating as extra term in APPLY_FORCING_T (apply_forcing.F)
 #undef SHORTWAVE_HEATING
 
 ! o Include/exclude Geothermal Heat Flux at the bottom of the ocean
@@ -141,28 +140,9 @@
 
 !-- Retired code options:
 
-! o ALLOW isotropic scaling of harmonic and bi-harmonic terms when
-!   using an locally isotropic spherical grid with (dlambda) x (dphi*cos(phi))
-! *only for use on a lat-lon grid*
-!   Setting this flag here affects both momentum and tracer equation unless
-!   it is set/unset again in other header fields (e.g., GAD_OPTIONS.h).
-!   The definition of the flag is commented to avoid interference with
-!   such other header files.
-!   The preferred method is specifying a value for viscAhGrid or viscA4Grid
-!   in data which is then automatically scaled by the grid size;
-!   the old method of specifying viscAh/viscA4 and this flag is provided
-!   for completeness only (and for use with the adjoint).
-!#define ISOTROPIC_COS_SCALING
-
-! o This flag selects the form of COSINE(lat) scaling of bi-harmonic term.
-! *only for use on a lat-lon grid*
-!   Has no effect if ISOTROPIC_COS_SCALING is undefined.
-!   Has no effect on vector invariant momentum equations.
-!   Setting this flag here affects both momentum and tracer equation unless
-!   it is set/unset again in other header fields (e.g., GAD_OPTIONS.h).
-!   The definition of the flag is commented to avoid interference with
-!   such other header files.
-!#define COSINEMETH_III
+!-  These 2 flags: ISOTROPIC_COS_SCALING & COSINEMETH_III have no effect
+!   here as they are reset in GAD_OPTIONS.h and in MOM_COMMON_OPTIONS.h
+!   for tracer diffusivity and momentum viscosity respectively
 
 ! o Use "OLD" UV discretisation near boundaries (*not* recommended)
 !   Note - only works with pkg/mom_fluxform and "no_slip_sides=.FALSE."
@@ -182,14 +162,6 @@
 ! o Execution environment support options
 #include "CPP_EEOPTIONS.h"
 
-! o Include/exclude single header file containing multiple packages options
-!   (AUTODIFF, COST, CTRL, ECCO, EXF ...) instead of the standard way where
-!   each of the above pkg get its own options from its specific option file.
-!   Although this method, inherited from ECCO setup, has been traditionally
-!   used for all adjoint built, work is in progress to allow to use the
-!   standard method also for adjoint built.
-!#ifdef PACKAGES_CONFIG_H
-!# include "ECCO_CPPOPTIONS.h"
-!#endif
+!-  Place where multi-pkg header file ECCO_CPPOPTIONS.h used to be included
 
 #endif /* CPP_OPTIONS_H */

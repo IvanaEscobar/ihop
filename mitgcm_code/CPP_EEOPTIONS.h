@@ -76,10 +76,6 @@
 !--   Flag to turn off the writing of error message to ioUnit zero
 #undef DISABLE_WRITE_TO_UNIT_ZERO
 
-!--   Alternative formulation of BYTESWAP, faster than
-!     compiler flag -byteswapio on the Altix.
-#undef FAST_BYTESWAP
-
 !--   Flag to turn on old default of opening scratch files with the
 !     STATUS='SCRATCH' option. This method, while perfectly FORTRAN-standard,
 !     caused filename conflicts on some multi-node/multi-processor platforms
@@ -136,7 +132,7 @@
 
 !--   Alternative way of doing global sum on a single CPU
 !     to eliminate tiling-dependent roundoff errors. Note: This is slow.
-#undef  CG2D_SINGLECPU_SUM
+#undef CG2D_SINGLECPU_SUM
 
 !=== Other options (to add/remove pieces of code) ===
 !--   Flag to turn on checking for errors from all threads and procs
