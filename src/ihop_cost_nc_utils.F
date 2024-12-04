@@ -55,12 +55,13 @@ C     !LOCAL VARIABLES:
      &       SQUEEZE_RIGHT, myThid )
         CALL PRINT_ERROR( msgBuf, myThid )
       ENDIF
-      IF (STATUS.EQ.NF_NOERR .AND. ILNBLNK(message).GT.0 ) THEN
-        IL = ILNBLNK(message)
-        WRITE(msgBuf,'(2A)') "NF IHOP NOERR: ", message(1:IL)
-        CALL PRINT_MESSAGE( msgBuf, standardMessageUnit,
-     &       SQUEEZE_RIGHT, myThid )
-      ENDIF
+! Print if there are no errors
+!      IF (STATUS.EQ.NF_NOERR .AND. ILNBLNK(message).GT.0 ) THEN
+!        IL = ILNBLNK(message)
+!        WRITE(msgBuf,'(2A)') "NF IHOP NOERR: ", message(1:IL)
+!        CALL PRINT_MESSAGE( msgBuf, standardMessageUnit,
+!     &       SQUEEZE_RIGHT, myThid )
+!      ENDIF
 #endif /* ALLOW_IHOP */
 
       RETURN
