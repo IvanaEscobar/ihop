@@ -194,6 +194,8 @@ C Read observation and uncertainty
      &             ihopObs_ind_glob(num_file,iObs),
      &             ihop_uncert, myThid )
 
+              IF (ihop_data.EQ.-9999) ihop_uncert = 0.
+
               IF (ihop_uncert.GT.0.) THEN
                 ihop_weight = 1. / (ihop_uncert*ihop_uncert)
 

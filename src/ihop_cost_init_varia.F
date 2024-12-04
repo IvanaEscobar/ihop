@@ -68,7 +68,7 @@ C Initialize global cost fxn contributions.
         ihop_globaldummy(num_file) = 0. _d 0
 
 # ifdef ALLOW_GRDCHK
-         IF (obsNo(num_file).GT.0) THEN
+         IF (obsNo(num_file).GT.0 .AND. ihopDoNcOutput) THEN
 C Sync global .equi file so data in buffer is not lost
           err = NF_SYNC( ncidGLOB(num_file) )
          ENDIF

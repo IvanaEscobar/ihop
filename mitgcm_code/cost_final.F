@@ -39,6 +39,11 @@ c     == global variables ==
 # include "profiles.h"
 #endif
 
+#ifdef ALLOW_OBSFIT
+# include "OBSFIT_SIZE.h"
+# include "OBSFIT.h"
+#endif
+
 #ifdef ALLOW_IHOP
 # include "IHOP_SIZE.h"
 # include "IHOP_COST.h"
@@ -51,8 +56,14 @@ c     == routine arguments ==
 c     == local variables ==
       INTEGER bi,bj
       _RL glob_fc, loc_fc
-#if ((defined ALLOW_PROFILES) || (defined ALLOW_IHOP))
+#ifdef ALLOW_PROFILES
       INTEGER num_file,num_var
+#endif
+#ifdef ALLOW_OBSFIT
+      INTEGER num_file_obs
+#endif
+#ifdef ALLOW_IHOP
+      INTEGER num_file_ihop
 #endif
       CHARACTER*(MAX_LEN_MBUF) msgBuf
 
@@ -178,16 +189,19 @@ c--   Sum up all contributions.
           ENDDO
          ENDIF
 #endif
-
 #ifdef ALLOW_IHOP
-         IF (.NOT.useECCO) THEN
-          DO num_file=1,NFILESMAX_IHOP
-           tile_fc(bi,bj) = tile_fc(bi,bj)
-     &           + mult_ihop(num_file)
-     &           *objf_ihop(num_file)
-          ENDDO
-         ENDIF
+! No need to add tile-wise, already in global file (see pkg/obsfit)
+!  Uncommenting this will double ihop_cost contributions on the global
+!  cost fxn
+!         IF (.NOT.useECCO) THEN
+!          DO num_file_ihop = 1, NFILESMAX_IHOP
+!           tile_fc(bi,bj) = tile_fc(bi,bj)
+!     &           + mult_ihop(num_file_ihop)
+!     &           *objf_ihop(num_file_ihop)
+!          ENDDO
+!         ENDIF
 #endif
+
          loc_fc = loc_fc + tile_fc(bi,bj)
 
        ENDDO
@@ -202,6 +216,25 @@ c--   Do global summation.
       _BEGIN_MASTER( myThid )
       fc = fc + glob_fc
       _END_MASTER( myThid )
+
+#ifdef ALLOW_OBSFIT
+      IF (.NOT.useECCO) THEN
+       DO num_file_obs=1,NFILESMAX_OBS
+        glofc = glofc
+     &          +  mult_obsfit(num_file_obs)
+     &            *objf_obsfit(num_file_obs)
+       ENDDO
+      ENDIF
+#endif
+#ifdef ALLOW_IHOP
+      IF (.NOT.useECCO) THEN
+       DO num_file_ihop = 1, NFILESMAX_IHOP
+        glofc = glofc
+     &          +  mult_ihop(num_file_ihop)
+     &            *objf_ihop(num_file_ihop)
+       ENDDO
+      ENDIF
+#endif
 
 c--   Add contributions from global mean constraints
       _BEGIN_MASTER( myThid )
