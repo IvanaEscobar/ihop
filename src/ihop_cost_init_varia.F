@@ -54,6 +54,9 @@ C Initialize tiled cost fxn contributions.
      &           (ihopDoNcOutput) ) THEN
 C Sync tiled .equi file so data in buffer is not lost
               err = NF_SYNC( ncidFWD(num_file,bi,bj) )
+              CALL IHOP_COST_NF_ERROR(
+     &             'INIT_VARIA: NF_SYNC ncidFWD',
+     &             err,1,1,myThid )
             ENDIF
 # endif /* ALLOW_GRDCHK */
 
@@ -68,10 +71,21 @@ C Initialize global cost fxn contributions.
         ihop_globaldummy(num_file) = 0. _d 0
 
 # ifdef ALLOW_GRDCHK
-         IF (obsNo(num_file).GT.0 .AND. ihopDoNcOutput) THEN
+        IF (obsNo(num_file).GT.0 .AND. ihopDoNcOutput) THEN
 C Sync global .equi file so data in buffer is not lost
           err = NF_SYNC( ncidGLOB(num_file) )
-         ENDIF
+          CALL IHOP_COST_NF_ERROR(
+     &         'INIT_VARIA: NF_SYNC ncidGLOB',
+     &         err,1,1,myThid )
+#  ifdef ALLOW_TANGENTLINEAR_RUN
+          IF (TANGENT_SIMULATION) THEN
+            err = NF_SYNC( ncidTLGLOB(num_file) ) 
+            CALL IHOP_COST_NF_ERROR(
+     &           'INIT_VARIA: NF_SYNC ncidTLGLOB',
+     &           err,1,1,myThid )
+          ENDIF
+#  endif /* ALLOW_TANGENTLINEAR_RUN */
+        ENDIF
 
 # endif /* ALLOW_GRDCHK */
       ENDDO !DO num_file
