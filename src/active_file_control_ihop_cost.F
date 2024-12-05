@@ -65,7 +65,7 @@ CEOP
 
 C     !LOCAL VARIABLES:
 #if (defined ALLOW_IHOP) && (defined ALLOW_COST)
-      INTEGER  err, varId1
+      INTEGER  err, varId
       INTEGER  vec_start, vec_count
       _RL      active_data_t
       REAL*8   vec_tmp(2)
@@ -74,7 +74,7 @@ C     !LOCAL VARIABLES:
         vec_start = irec
         vec_count = 1
 
-        err = NF_INQ_VARID( fid, ihop_nameequi, varId1 )
+        err = NF_INQ_VARID( fid, ihop_nameequi, varId )
         CALL IHOP_COST_NF_ERROR('act_file_c 1',err,bi,bj,myThid)
 
       ENDIF
@@ -88,7 +88,7 @@ C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
         _BEGIN_MASTER( myThid )
 
         IF (ihopDoNcOutput) THEN
-          err = NF_GET_VARA_DOUBLE( fid, varId1, 
+          err = NF_GET_VARA_DOUBLE( fid, varId, 
      &          vec_start, vec_count, active_var )
         CALL IHOP_COST_NF_ERROR('act_file_c 2',err,bi,bj,myThid)
 
@@ -114,7 +114,7 @@ C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
         _BEGIN_MASTER( myThid )
 
         IF (ihopDoNcOutput) THEN
-          err = NF_GET_VARA_DOUBLE( fid, varId1, 
+          err = NF_GET_VARA_DOUBLE( fid, varId, 
      &          vec_start, vec_count, active_data_t )
         CALL IHOP_COST_NF_ERROR('act_file_c 3',err,bi,bj,myThid)
 
@@ -122,7 +122,7 @@ C Add active_var from appropriate location to data.
           active_data_t = active_data_t + active_var
 
 C Store the result on disk.
-          err = NF_PUT_VARA_DOUBLE(fid, varId1, 
+          err = NF_PUT_VARA_DOUBLE(fid, varId, 
      &          vec_start, vec_count, active_data_t )
         CALL IHOP_COST_NF_ERROR('act_file_c 4',err,bi,bj,myThid)
 
@@ -164,7 +164,7 @@ C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
         _BEGIN_MASTER( myThid )
 
         IF (ihopDoNcOutput) THEN
-        err = NF_GET_VARA_DOUBLE( fid, varId1,
+        err = NF_GET_VARA_DOUBLE( fid, varId,
      &        vec_start, vec_count, active_var )
         CALL IHOP_COST_NF_ERROR('act_file_c 5',err,bi,bj,myThid)
 
@@ -408,7 +408,7 @@ CEOP
 
 C     !LOCAL VARIABLES:
 #if (defined ALLOW_IHOP) && (defined ALLOW_COST)
-      INTEGER  err, varId1
+      INTEGER  err, varId
       INTEGER  vec_start, vec_count
       _RL      active_data_t
       REAL*8   vec_tmp(2)
@@ -417,7 +417,7 @@ C     !LOCAL VARIABLES:
         vec_start = irecglob
         vec_count = 1
 
-        err = NF_INQ_VARID( fid, ihop_nameequi, varId1 )
+        err = NF_INQ_VARID( fid, ihop_nameequi, varId )
         CALL IHOP_COST_NF_ERROR('act_file_c13',err,1,1,myThid)
 
       ENDIF
@@ -430,7 +430,7 @@ C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
 
         _BEGIN_MASTER( myThid )
 
-        err = NF_GET_VARA_DOUBLE( fid, varId1, 
+        err = NF_GET_VARA_DOUBLE( fid, varId, 
      &        vec_start, vec_count, active_var )
         CALL IHOP_COST_NF_ERROR('act_file_c14',err,1,1,myThid)
 
@@ -446,7 +446,7 @@ C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
 
         _BEGIN_MASTER( myThid )
 
-        err = NF_GET_VARA_DOUBLE( fid, varId1,
+        err = NF_GET_VARA_DOUBLE( fid, varId,
      &        vec_start, vec_count, active_data_t )
         CALL IHOP_COST_NF_ERROR('act_file_c15',err,1,1,myThid)
 
@@ -455,7 +455,7 @@ C Add active_var from appropriate location to data.
 C Store the result on disk.
         vec_start=irec
 
-        err = NF_PUT_VARA_DOUBLE( fid, varId1,
+        err = NF_PUT_VARA_DOUBLE( fid, varId,
      &        vec_start, vec_count, active_data_t )
         CALL IHOP_COST_NF_ERROR('act_file_c16',err,1,1,myThid)
 
@@ -474,7 +474,7 @@ C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
 
         _BEGIN_MASTER( myThid )
 
-        err = NF_GET_VARA_DOUBLE( fid, varId1, 
+        err = NF_GET_VARA_DOUBLE( fid, varId, 
      &        vec_start, vec_count, active_var )
         CALL IHOP_COST_NF_ERROR('act_file_c17',err,1,1,myThid)
 
@@ -533,7 +533,7 @@ CEOP
 
 C     !LOCAL VARIABLES:
 #if (defined ALLOW_IHOP) && (defined ALLOW_COST)
-      INTEGER  err, varId1
+      INTEGER  err, varId
       INTEGER  vec_start, vec_count
       _RL      active_data_t
       REAL*8   vec_tmp(2)
@@ -542,7 +542,7 @@ C     !LOCAL VARIABLES:
         vec_start = irecglob
         vec_count = 1
 
-        err = NF_INQ_VARID( fid, ihop_nameequi, varId1 )
+        err = NF_INQ_VARID( fid, ihop_nameequi, varId )
         CALL IHOP_COST_NF_ERROR('act_file_c18',err,1,1,myThid)
 
       ENDIF
@@ -555,7 +555,7 @@ C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
 
         _BEGIN_MASTER( myThid )
 
-        err = NF_PUT_VARA_DOUBLE( fid, varId1, 
+        err = NF_PUT_VARA_DOUBLE( fid, varId, 
      &        vec_start, vec_count, active_var )
         CALL IHOP_COST_NF_ERROR('act_file_c19',err,1,1,myThid)
 
@@ -572,7 +572,7 @@ C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
         _BEGIN_MASTER( myThid )
 
         vec_start = irec
-        err = NF_GET_VARA_DOUBLE( fid, varId1,
+        err = NF_GET_VARA_DOUBLE( fid, varId,
      &        vec_start, vec_count, active_data_t )
         CALL IHOP_COST_NF_ERROR('act_file_c20',err,1,1,myThid)
 
@@ -581,7 +581,7 @@ C       Add active_var to data.
         active_data_t = 0. _d 0
 
         vec_start = irecglob
-        err = NF_PUT_VARA_DOUBLE( fid, varId1,
+        err = NF_PUT_VARA_DOUBLE( fid, varId,
      &        vec_start, vec_count, active_data_t )
         CALL IHOP_COST_NF_ERROR('act_file_c21',err,1,1,myThid)
 
@@ -597,7 +597,7 @@ C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
 
         _BEGIN_MASTER( myThid )
 
-        err = NF_PUT_VARA_DOUBLE( fid, varId1, 
+        err = NF_PUT_VARA_DOUBLE( fid, varId, 
      &        vec_start, vec_count, active_var )
         CALL IHOP_COST_NF_ERROR('act_file_c22',err,1,1,myThid)
 
