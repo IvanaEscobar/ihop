@@ -31,7 +31,7 @@ C o I/O and pack settings
 C   This option is only relevant (for pack/unpack) with OBCS_CONTROL:
 #undef ALLOW_NONDIMENSIONAL_CONTROL_IO
 #define EXCLUDE_CTRL_PACK
-#undef ALLOW_PACKUNPACK_METHOD2
+#define ALLOW_PACKUNPACK_METHOD2
 #undef CTRL_DO_PACK_UNPACK_ONLY
 #undef CTRL_PACK_PRECISE
 #undef CTRL_UNPACK_PRECISE

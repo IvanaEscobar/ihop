@@ -18,7 +18,7 @@ CEOP
 #ifdef ALLOW_GMREDI
 C     Package-specific Options & Macros go here
 
-C Designed to simplify the Ajoint code:
+C Designed to simplify the Adjoint code:
 C #define GMREDI_WITH_STABLE_ADJOINT
 C -- exclude the clipping/tapering part of the code that is not used
 #define GM_EXCLUDE_CLIPPING
