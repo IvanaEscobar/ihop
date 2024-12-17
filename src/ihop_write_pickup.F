@@ -3,14 +3,14 @@
 CBOP
 C !ROUTINE: IHOP_WRITE_PICKUP
 
-C !INTERFACE: ==========================================================
+C !INTERFACE:
       SUBROUTINE IHOP_WRITE_PICKUP( permPickup,
      &                    suff, myTime, myIter, myThid )
 
 C !DESCRIPTION:
 C     Writes current state of passive tracers to a pickup file
 
-C !USES: ===============================================================
+C !USES:
       IMPLICIT NONE
 #include "SIZE.h"
 #include "EEPARAMS.h"
@@ -18,9 +18,9 @@ C !USES: ===============================================================
 #include "IHOP_SIZE.h"
 #include "IHOP.h"
 
-C !INPUT PARAMETERS: ===================================================
+C !INPUT PARAMETERS:
 C     permPickup      :: write a permanent pickup
-C     suff            :: suffix for pickup file (eg. ckptA or 0000000010)
+C     suff            :: suffix for pickup file (eg. ckptA)
 C     myTime          :: model time
 C     myIter          :: time-step number
 C     myThid          :: thread number
@@ -30,7 +30,7 @@ C     myThid          :: thread number
       INTEGER myIter
       INTEGER myThid
 
-C !OUTPUT PARAMETERS: ==================================================
+C !OUTPUT PARAMETERS:
 C  none
 
 #ifdef ALLOW_IHOP
@@ -40,7 +40,7 @@ C     === Functions ====
       INTEGER  ILNBLNK
       EXTERNAL ILNBLNK
 
-C !LOCAL VARIABLES: ====================================================
+C !LOCAL VARIABLES:
 C     j           :: loop index / field number
 C     nj          :: record number
 C     fp          :: pickup-file precision
@@ -99,7 +99,7 @@ C--------------------------
           STOP 'ABNORMAL END: S/R IHOP_WRITE_PICKUP (list-size Pb)'
         ENDIF
 #ifdef ALLOW_MDSIO
-C     uses this specific S/R to write (with more informations) only meta files
+C Uses this specific S/R to write only meta files
         j  = 1
         nj = ABS(nj)
         IF ( nWrFlds*Nr .EQ. nj ) THEN

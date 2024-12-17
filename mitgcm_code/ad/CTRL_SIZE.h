@@ -18,16 +18,16 @@
 !     maxCtrlTim2D :: number of 2-D generic time-varying ctrl variables
 !     maxCtrlProc  :: number of pre-processing options per ctrl variable
 
-      integer     maxCtrlArr2D
-      parameter ( maxCtrlArr2D = 1 )
+      INTEGER     maxCtrlArr2D
+      PARAMETER ( maxCtrlArr2D = 1 )
 
-      integer     maxCtrlArr3D
-      parameter ( maxCtrlArr3D = 1 )
+      INTEGER     maxCtrlArr3D
+      PARAMETER ( maxCtrlArr3D = 8 )
 
-      integer     maxCtrlTim2D
-      parameter ( maxCtrlTim2D = 1 )
+      INTEGER     maxCtrlTim2D
+      PARAMETER ( maxCtrlTim2D = 1 )
 
-      integer     maxCtrlProc
-      parameter ( maxCtrlProc = 1 )
+      INTEGER     maxCtrlProc
+      PARAMETER ( maxCtrlProc = 1 )
 
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|

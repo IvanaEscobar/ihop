@@ -1,7 +1,7 @@
 #include "IHOP_OPTIONS.h"
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
-CBOP 0
+CBOP
 C !ROUTINE: IHOP_INIT_VARIA
 
 C !INTERFACE:
@@ -55,10 +55,6 @@ C- end bi,bj loops
 
       IF ( startTime.EQ.baseTime .AND. nIter0.EQ.0
      &                           .AND. pickupSuff.EQ.' ' ) THEN
-
-C     Prevent loading of new data before everyone has finished initialisation
-C     this is done within IO routines => no longer needed
-c      _BARRIER
 
 #ifdef IHOP_3D_STATE
 #endif /* IHOP_3D_STATE */

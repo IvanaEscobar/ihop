@@ -1,5 +1,4 @@
 #include "IHOP_OPTIONS.h"
-C--  File ihop_cost_read_obs.F: Routines to read IHOP input files
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
@@ -13,11 +12,11 @@ C !INTERFACE:
      O                      vec_loc,
      I                      myThid )
 
-C !DESCRIPTION:
-C Reads an observation and its uncertainty from a netcdf ihop
-C input file
+C     !DESCRIPTION:
+C     Reads an observation and its uncertainty from a NetCDF ihop
+C     input file
 
-C !USES:
+C     !USES:
       IMPLICIT NONE
 C == Global variables ===
 #include "SIZE.h"
@@ -34,94 +33,103 @@ C == Global variables ===
 # endif
 #endif
 
-C !INPUT/OUTPUT PARAMETERS:
-C fNb, vNb  ::
-C irec      ::
-C myThid    :: my Thread Id number
-C vec_loc   ::
-      INTEGER fNb, vNb
-      INTEGER irec, myThid
+C     !INPUT PARAMETERS:
+C     fNb, vNb  ::
+C     irec      ::
+C     myThid    :: my thread ID
+      INTEGER fNb
+      INTEGER vNb
+      INTEGER irec
+      INTEGER myThid
+C     !OUTPUT PARAMETERS:
+C     vec_loc   ::
       _RL     vec_loc
 CEOP
 
+C     !LOCAL VARIABLES:
 #if (defined ALLOW_IHOP) && (defined ALLOW_COST)
+C tmpObsNo :: number of obs in the file
+      CHARACTER*(MAX_LEN_MBUF) msgBuf
+      INTEGER v1, err, varId1, tmpObsNo
+      INTEGER vec_start, vec_count
+      _RL     vec_tmp1(1000), vec_tmp2(1000)
 
-C !LOCAL VARIABLES:
-c tmpObsNo :: number of obs in the file
-      INTEGER k, kk, err, varid1, tmpObsNo
-      INTEGER vec_start,vec_count
-      _RL     vec_tmp1(1000),vec_tmp2(1000)
-      CHARACTER*(max_len_mbuf) msgbuf
+      IF ( (irec.LT.ihop_minind_buff) .OR.
+     &     (irec.GT.ihop_maxind_buff) .OR.
+     &     (ihop_curfile_buff.NE.fNb) ) THEN
+        err = NF_INQ_DIMID( ncidData(fNb), 'iOBS', varId1 )
+        CALL IHOP_COST_NF_ERROR('read_obs 1',err,1,1,myThid)
+        err = NF_INQ_DIMLEN( ncidData(fNb), varId1, tmpObsNo )
+        CALL IHOP_COST_NF_ERROR('read_obs 2',err,1,1,myThid)
 
-C     ==================================================================
+        IF (ihop_curfile_buff.NE.fNb) THEN
+C No asumption on whether a forward or a backward loop is calling
+          ihop_minind_buff = MAX(1,irec-500+1)
+          ihop_maxind_buff = MIN(tmpObsNo,irec+500)
 
-      IF ( (irec.LT.ihop_minind_buff).OR.
-     &  (irec.GT.ihop_maxind_buff).OR.
-     & (ihop_curfile_buff.NE.fNb) ) THEN
-       err = NF_INQ_DIMID(fiddata_obs(fNb),'iOBS', varid1)
-       err = NF_INQ_DIMLEN(fiddata_obs(fNb), varid1, tmpObsNo)
+        ELSEIF (irec.LT.ihop_minind_buff) THEN
+C Implies that a backward loop is calling
+          ihop_minind_buff = MAX(1,irec-999)
+          ihop_maxind_buff = irec
 
-       IF (ihop_curfile_buff.NE.fNb) THEN
-c no asumption on whether a forward or a backward loop is calling
-        ihop_minind_buff=max(1,irec-500+1)
-        ihop_maxind_buff=min(tmpObsNo,irec+500)
-       ELSEIF (irec.LT.ihop_minind_buff) THEN
-c implies that a backward loop is calling
-        ihop_minind_buff=max(1,irec-999)
-        ihop_maxind_buff=irec
-       ELSE
-c implies that a forward loop is calling
-        ihop_minind_buff=irec
-        ihop_maxind_buff=min(tmpObsNo,irec+999)
-       ENDIF
+        ELSE
+C Implies that a forward loop is calling
+          ihop_minind_buff = irec
+          ihop_maxind_buff = MIN(tmpObsNo,irec+999)
+
+       ENDIF !IF (ihop_curfile_buff.NE.fNb)
 
 #ifdef ALLOW_DEBUG
-       IF ( debugLevel .GE. debLevD ) THEN
-        WRITE(msgbuf,'(a,5I9)')
-     &    'buffer readobsfile ',
-     &    ihop_minind_buff, ihop_maxind_buff,
-     &    irec, ObsNo(fNb), tmpObsNo
-        CALL print_message(
-     &    msgbuf, standardmessageunit, SQUEEZE_RIGHT, myThid)
-       ENDIF
+        IF (debugLevel.GE.debLevD) THEN
+          WRITE(msgBuf,'(A,5I9)')
+     &     'buffer readobsfile ',
+     &     ihop_minind_buff, ihop_maxind_buff,
+     &     irec, ObsNo(fNb), tmpObsNo
+          CALL PRINT_MESSAGE( msgBuf,
+     &      standardmessageunit, SQUEEZE_RIGHT, myThid )
+        ENDIF
 #endif
 
-       vec_start=ihop_minind_buff
-       vec_count=ihop_maxind_buff-ihop_minind_buff+1
+        vec_start = ihop_minind_buff
+        vec_count = ihop_maxind_buff-ihop_minind_buff+1
 
-         err = NF_INQ_VARID(fiddata_obs(fNb),ihop_nameval,
-     &    varid1 )
-         err = NF_GET_VARA_DOUBLE(fiddata_obs(fNb), varid1, vec_start,
-     &    vec_count, vec_tmp1)
-         err = NF_INQ_VARID(fiddata_obs(fNb),ihop_nameuncert
-     &    , varid1 )
-         err = NF_GET_VARA_DOUBLE(fiddata_obs(fNb), varid1, vec_start,
-     &    vec_count, vec_tmp2)
+        err = NF_INQ_VARID( ncidData(fNb), ihop_nameval,
+     &        varId1 )
+        CALL IHOP_COST_NF_ERROR('read_obs 3',err,1,1,myThid)
+        err = NF_GET_VARA_DOUBLE(ncidData(fNb), varId1,
+     &        vec_start, vec_count, vec_tmp1 )
+        CALL IHOP_COST_NF_ERROR('read_obs 4',err,1,1,myThid)
 
-       IF (err.NE.NF_NOERR) THEN
+        err = NF_INQ_VARID( ncidData(fNb), ihop_nameuncert,
+     &        varId1 )
+        CALL IHOP_COST_NF_ERROR('read_obs 5',err,1,1,myThid)
+        err = NF_GET_VARA_DOUBLE(ncidData(fNb), varId1,
+     &        vec_start, vec_count, vec_tmp2 )
+        CALL IHOP_COST_NF_ERROR('read_obs 6',err,1,1,myThid)
+
+        IF (err.NE.NF_NOERR) THEN
           WRITE(errorMessageUnit,'(A)')
      &     'WARNING in ihop_read_obs: record not found!!'
-       ENDIF
+        ENDIF
 
-        DO kk=1,vec_count
-          ihop_data_buff(kk)=vec_tmp1(kk)
-          ihop_uncert_buff(kk)=vec_tmp2(kk)
+        DO v1 = 1, vec_count
+          ihop_data_buff(v1) = vec_tmp1(v1)
+          ihop_uncert_buff(v1) = vec_tmp2(v1)
         ENDDO
 
-       ihop_curfile_buff=fNb
-      ENDIF
+        ihop_curfile_buff = fNb
+      ENDIF !IF ( (irec.LT.ihop_minind_buff)
 
-cgf ...now, get vec_loc from the buffer
+C Get vec_loc from the buffer
       IF (vNb.LT.0) THEN
-       vec_loc=ihop_uncert_buff
-     &   (irec-ihop_minind_buff+1)
+        vec_loc = ihop_uncert_buff(irec-ihop_minind_buff+1)
 
       ELSE
-       vec_loc=ihop_data_buff
-     &   (irec-ihop_minind_buff+1)
+        vec_loc = ihop_data_buff(irec-ihop_minind_buff+1)
+
       ENDIF
 
-#endif
+#endif /* ALLOW_IHOP */
 
       RETURN
       END

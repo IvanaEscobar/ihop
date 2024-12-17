@@ -83,13 +83,13 @@ CONTAINS
        ELSE
           ! you're letting ME choose? OK: ideas based on an isospeed ocean
           ! limit based on phase of adjacent beams at maximum range
-          Angles%Nalpha = MAX( INT( 0.3*Pos%Rr( Pos%NRr )*IHOP_freq/c0 ), 300 )
+          Angles%Nalpha = MAX( INT( 0.3*Pos%RR( Pos%nRR )*IHOP_freq/c0 ), 300 )
 
           ! limit based on having beams that are thin with respect to the water
           ! depth assumes also a full 360 degree angular spread of rays should
           ! check which Depth is used here, in case where there is a variable
           ! bathymetry
-          d_theta_recommended = ATAN( Depth / ( 10.0*Pos%Rr( Pos%NRr ) ) )
+          d_theta_recommended = ATAN( Depth / ( 10.0*Pos%RR( Pos%nRR ) ) )
           Angles%Nalpha = MAX( INT( PI / d_theta_recommended ), Angles%Nalpha )
        END IF
     END IF
@@ -197,7 +197,7 @@ CONTAINS
           ! For a ray trace plot, we don't want too many rays ...
           Angles%Nbeta = 50
        ELSE
-          Angles%Nbeta = MAX( INT( 0.1*Pos%rr( Pos%NRr )*IHOP_freq / c0 ), 300 )
+          Angles%Nbeta = MAX( INT( 0.1*Pos%RR( Pos%nRR )*IHOP_freq / c0 ), 300 )
        END IF
     END IF
 
@@ -237,7 +237,7 @@ CONTAINS
 #endif /* IHOP_WRITE_OUT */
        DEALLOCATE( Angles%beta )
 
-       Angles%Nbeta = Pos%Ntheta
+       Angles%Nbeta = Pos%nTheta
        ALLOCATE( Angles%beta( MAX( 3, Angles%Nbeta ) ), STAT = iAllocStat )
         IF ( iAllocStat /= 0 ) THEN
 #ifdef IHOP_WRITE_OUT
@@ -249,7 +249,7 @@ CONTAINS
         END IF
 
        ! Nbeta should = Ntheta
-       Angles%beta( 1 : Angles%Nbeta ) = Pos%theta( 1 : Pos%Ntheta )
+       Angles%beta( 1 : Angles%Nbeta ) = Pos%theta( 1 : Pos%nTheta )
     END IF
 
 #ifdef IHOP_WRITE_OUT

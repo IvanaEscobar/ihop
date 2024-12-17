@@ -43,7 +43,7 @@ MODULE srpos_mod
 
   TYPE Position
      INTEGER              :: NSx = 1, NSy = 1, NSz = 1, & ! # of x,y,z coords
-                             NRz = 1, NRr = 1, Ntheta = 1 ! # of z,r,theta coord`s
+                             NRz = 1, NRr = 1, nTheta = 1 ! # of z,r,theta coord`s
      REAL                 :: Delta_r, Delta_theta
      INTEGER,           ALLOCATABLE :: iSz( : ), iRz( : )
      REAL (KIND=_RL90), ALLOCATABLE :: Sx( : ), Sy( : ), Sz( : )          ! Source x, y, z coordinates
@@ -128,12 +128,12 @@ CONTAINS
   !     == Local Variables ==
 
 #ifdef IHOP_THREED
-    CALL ReadVector( Pos%NSx, Pos%Sx, 'source   x-coordinates, Sx', 'km', &
+    CALL ReadVector( Pos%nSX, Pos%SX, 'source   x-coordinates, Sx', 'km', &
                     myThid )
-    CALL ReadVector( Pos%NSy, Pos%Sy, 'source   y-coordinates, Sy', 'km', &
+    CALL ReadVector( Pos%nSY, Pos%SY, 'source   y-coordinates, Sy', 'km', &
                     myThid )
 #else /* IHOP_THREED */
-    ALLOCATE( Pos%Sx( 1 ), Pos%Sy( 1 ), Stat=IAllocStat)
+    ALLOCATE( Pos%SX( 1 ), Pos%SY( 1 ), Stat=IAllocStat)
     IF (IAllocStat/=0) THEN
 #ifdef IHOP_WRITE_OUT
         WRITE(msgBuf, *) 'allocation failed', IAllocStat
@@ -142,8 +142,8 @@ CONTAINS
         STOP 'ABNORMAL END: S/R ReadSxSy'
     END IF
 
-    Pos%Sx( 1 ) = 0.
-    Pos%Sy( 1 ) = 0.
+    Pos%SX( 1 ) = 0.
+    Pos%SY( 1 ) = 0.
 #endif /* IHOP_THREED */
   RETURN
   END !SUBROUTINE ReadSxSy
@@ -166,30 +166,30 @@ CONTAINS
     REAL(KIND=_RL90),    INTENT( IN ) :: zMin, zMax
     INTEGER :: posShift
 
-    CALL ReadVector( Pos%NSz, Pos%Sz, 'Source   depths, Sz', 'm', &
+    CALL ReadVector( Pos%nSZ, Pos%SZ, 'Source   depths, Sz', 'm', &
                     myThid )
-    CALL ReadVector( Pos%NRz, Pos%Rz, 'Receiver depths, Rz', 'm', &
+    CALL ReadVector( Pos%nRZ, Pos%RZ, 'Receiver depths, Rz', 'm', &
                     myThid )
 
     ! *** Check for Sz/Rz in water column ***
     posShift = 0
-    IF ( ANY( Pos%Sz( 1:Pos%NSz ) < zMin ) ) THEN
-      WHERE ( Pos%Sz < zMin ) Pos%Sz = zMin
+    IF ( ANY( Pos%SZ( 1:Pos%nSZ ) < zMin ) ) THEN
+      WHERE ( Pos%SZ < zMin ) Pos%SZ = zMin
       posShift = 1
     END IF
 
-    IF ( ANY( Pos%Sz( 1:Pos%NSz ) > zMax ) ) THEN
-      WHERE( Pos%Sz > zMax ) Pos%Sz = zMax
+    IF ( ANY( Pos%SZ( 1:Pos%nSZ ) > zMax ) ) THEN
+      WHERE( Pos%SZ > zMax ) Pos%SZ = zMax
       posShift = 2
     END IF
 
-    IF ( ANY( Pos%Rz( 1:Pos%NRz ) < zMin ) ) THEN
-      WHERE( Pos%Rz < zMin ) Pos%Rz = zMin
+    IF ( ANY( Pos%RZ( 1:Pos%nRZ ) < zMin ) ) THEN
+      WHERE( Pos%RZ < zMin ) Pos%RZ = zMin
       posShift = 3
     END IF
 
-    IF ( ANY( Pos%Rz( 1:Pos%NRz ) > zMax ) ) THEN
-      WHERE( Pos%Rz > zMax ) Pos%Rz = zMax
+    IF ( ANY( Pos%RZ( 1:Pos%nRZ ) > zMax ) ) THEN
+      WHERE( Pos%RZ > zMax ) Pos%RZ = zMax
       posShift = 4
     END IF
 
@@ -223,7 +223,7 @@ CONTAINS
 #endif /* IHOP_WRITE_OUT */
 
     IF ( ALLOCATED( Pos%ws ) ) DEALLOCATE( Pos%ws, Pos%iSz )
-    ALLOCATE( Pos%ws( Pos%NSz ), Pos%iSz( Pos%NSz ), Stat = IAllocStat )
+    ALLOCATE( Pos%ws( Pos%nSZ ), Pos%iSz( Pos%nSZ ), Stat = IAllocStat )
     IF ( IAllocStat /= 0 ) THEN
 #ifdef IHOP_WRITE_OUT
         WRITE(msgBuf,'(A)') 'SRPOSITIONS ReadSzRz: Too many sources'
@@ -233,7 +233,7 @@ CONTAINS
     END IF
 
     IF ( ALLOCATED( Pos%wr ) ) DEALLOCATE( Pos%wr, Pos%iRz )
-    ALLOCATE( Pos%wr( Pos%NRz ), Pos%iRz( Pos%NRz ), Stat = IAllocStat  )
+    ALLOCATE( Pos%wr( Pos%nRZ ), Pos%iRz( Pos%nRZ ), Stat = IAllocStat  )
     IF ( IAllocStat /= 0 ) THEN
 #ifdef IHOP_WRITE_OUT
         WRITE(msgBuf,'(A)') 'SRPOSITIONS ReadSzRz: Too many receivers'
@@ -264,14 +264,14 @@ CONTAINS
   !     == Local Variables ==
 
     ! IESCO22: assuming receiver positions are equally spaced
-    CALL ReadVector( Pos%NRr, Pos%Rr, 'Receiver ranges, Rr', 'km', myThid )
+    CALL ReadVector( Pos%nRR, Pos%RR, 'Receiver ranges, Rr', 'km', myThid )
 
     ! calculate range spacing
     Pos%delta_r = 0.0
     ! IESCO24: Assumes uniform spacing in ranges btwn receivers
-    IF ( Pos%NRr /= 1 ) Pos%delta_r = Pos%Rr( Pos%NRr ) - Pos%Rr( Pos%NRr-1 )
+    IF ( Pos%nRR /= 1 ) Pos%delta_r = Pos%RR( Pos%nRR ) - Pos%RR( Pos%nRR-1 )
 
-    IF ( .NOT. monotonic( Pos%Rr, Pos%NRr ) ) THEN
+    IF ( .NOT. monotonic( Pos%RR, Pos%nRR ) ) THEN
 #ifdef IHOP_WRITE_OUT
         WRITE(msgBuf,'(2A)') 'SRPOSITIONS ReadRcvrRanges: ', &
                              'Receiver ranges are not monotonically increasing'
@@ -297,22 +297,22 @@ CONTAINS
   !     == Local Variables ==
 
 ! IEsco23: NOT SUPPORTED IN ihop
-    CALL ReadVector( Pos%Ntheta, Pos%theta, 'receiver bearings, theta', &
+    CALL ReadVector( Pos%nTheta, Pos%theta, 'receiver bearings, theta', &
         'degrees', myThid )
 
     ! full 360-degree sweep? remove duplicate angle
-    IF ( Pos%Ntheta > 1 ) THEN
-       IF ( ABS( MOD( Pos%theta( Pos%Ntheta ) - Pos%theta( 1 ), 360.0 ) ) &
+    IF ( Pos%nTheta > 1 ) THEN
+       IF ( ABS( MOD( Pos%theta( Pos%nTheta ) - Pos%theta( 1 ), 360.0 ) ) &
            < 10.0 * TINY( 1.0D0 ) ) &
-          Pos%Ntheta = Pos%Ntheta - 1
+          Pos%nTheta = Pos%nTheta - 1
     END IF
 
     ! calculate angular spacing
     Pos%Delta_theta = 0.0
-    IF ( Pos%Ntheta /= 1 ) Pos%Delta_theta = Pos%theta( Pos%Ntheta ) &
-                                           - Pos%theta( Pos%Ntheta - 1 )
+    IF ( Pos%nTheta /= 1 ) Pos%Delta_theta = Pos%theta( Pos%nTheta ) &
+                                           - Pos%theta( Pos%nTheta - 1 )
 
-    IF ( .NOT. monotonic( Pos%theta, Pos%Ntheta ) ) THEN
+    IF ( .NOT. monotonic( Pos%theta, Pos%nTheta ) ) THEN
 #ifdef IHOP_WRITE_OUT
         WRITE(msgBuf,'(2A)') 'SRPOSITIONS ReadRcvrBearings: ', &
                             'Receiver bearings are not monotonically increasing'
@@ -444,9 +444,9 @@ CONTAINS
 
 #ifdef IHOP_THREED
 #ifdef IHOP_WRITE_OUT
-    CALL WriteVector( Pos%NSx, Pos%Sx, 'source   x-coordinates, Sx', 'km', &
+    CALL WriteVector( Pos%nSX, Pos%SX, 'source   x-coordinates, Sx', 'km', &
                     myThid )
-    CALL WriteVector( Pos%NSy, Pos%Sy, 'source   y-coordinates, Sy', 'km', &
+    CALL WriteVector( Pos%nSY, Pos%SY, 'source   y-coordinates, Sy', 'km', &
                     myThid )
 #endif /* IHOP_WRITE_OUT */
 #endif /* IHOP_THREED */
@@ -469,9 +469,9 @@ CONTAINS
   !     == Local Variables ==
 
 #ifdef IHOP_WRITE_OUT
-    CALL WriteVector( Pos%NSz, Pos%Sz, 'Source depths,   Sz', 'm', &
+    CALL WriteVector( Pos%nSZ, Pos%SZ, 'Source depths,   Sz', 'm', &
                     myThid )
-    CALL WriteVector( Pos%NRz, Pos%Rz, 'Receiver depths, Rz', 'm', &
+    CALL WriteVector( Pos%nRZ, Pos%RZ, 'Receiver depths, Rz', 'm', &
                     myThid )
 
 #endif /* IHOP_WRITE_OUT */
@@ -489,13 +489,13 @@ CONTAINS
     INTEGER, INTENT( IN )   :: myThid
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
 
-    REAL(KIND=_RL90) :: x(SIZE(Pos%Rr))
+    REAL(KIND=_RL90) :: x(SIZE(Pos%RR))
 
-    x = Pos%Rr / 1000.0
+    x = Pos%RR / 1000.0
 
 #ifdef IHOP_WRITE_OUT
     ! IESCO22: assuming receiver positions are equally spaced
-    CALL WriteVector( Pos%NRr, x, 'Receiver ranges, Rr', 'km', myThid )
+    CALL WriteVector( Pos%nRR, x, 'Receiver ranges, Rr', 'km', myThid )
 #endif
 
     RETURN
@@ -515,7 +515,7 @@ CONTAINS
   !     == Local Variables ==
 
 ! IEsco23: NOT SUPPORTED IN ihop
-    CALL WriteVector( Pos%Ntheta, Pos%theta, 'receiver bearings, theta', &
+    CALL WriteVector( Pos%nTheta, Pos%theta, 'receiver bearings, theta', &
         'degrees', myThid )
 
     RETURN

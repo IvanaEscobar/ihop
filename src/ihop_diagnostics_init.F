@@ -1,7 +1,7 @@
 #include "IHOP_OPTIONS.h"
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
-CBOP 0
+CBOP
 C !ROUTINE: IHOP_DIAGNOSTICS_INIT
 
 C !INTERFACE:
@@ -25,13 +25,12 @@ CEOP
 #ifdef ALLOW_DIAGNOSTICS
 C     !LOCAL VARIABLES:
 C     === Local variables ===
-C     diagNum   :: diagnostics number in the (long) list of available diag.
-C     diagMate  :: diag. mate number in the (long) list of available diag.
+C     diagNum   :: diagnostics number in list of available diag
+C     diagMate  :: diag. mate number in list of available diag
 C     diagName  :: local short name (8c) of a diagnostics
-C     diagCode  :: local parser field with characteristics of the diagnostics
-C              cf head of S/R DIAGNOSTICS_INIT_EARLY or DIAGNOSTICS_MAIN_INIT
-C     diagUnits :: local string (16c): physical units of a diagnostic field
-C     diagTitle :: local string (80c): description of field in diagnostic
+C     diagCode  :: local parser field with characteristics of diags
+C     diagUnits :: local string (16c): physical units of a diag
+C     diagTitle :: local string (80c): description of field in diag
       INTEGER       diagNum
       INTEGER       diagMate
       CHARACTER*8   diagName

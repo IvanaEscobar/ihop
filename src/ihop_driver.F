@@ -3,17 +3,17 @@
 CBOP
 C !ROUTINE: IHOP_DRIVER
 
-C !INTERFACE: ==========================================================
+C !INTERFACE:
       SUBROUTINE IHOP_DRIVER( myTime, myIter, myThid )
 
 C !DESCRIPTION:
 C Calculate ray travel times, tau
 
-C !FORTRAN90 USE MODULES: ===============================================
+C !FORTRAN90 USE MODULES:
       USE ihop, only: ihop_main
 
       IMPLICIT NONE
-C !GLOBAL VARIABLES: ===============================================
+C !GLOBAL VARIABLES:
 #ifdef ALLOW_IHOP
 !   == Global variables ==
 # include "SIZE.h"
@@ -25,16 +25,16 @@ C !GLOBAL VARIABLES: ===============================================
 # include "IHOP.h"
 #endif /* ALLOW_IHOP */
 
-C !INPUT PARAMETERS: ===================================================
+C !INPUT PARAMETERS:
 C  myTime   :: Current time in simulation
 C  myIter   :: Current time-step number
 C  myThid   :: my Thread Id number
       _RL     myTime
       INTEGER myIter, myThid
 
-C !OUTPUT PARAMETERS: ==================================================
+C !OUTPUT PARAMETERS:
 
-C !LOCAL VARIABLES: ====================================================
+C !LOCAL VARIABLES:
       INTEGER t
 CEOP
 

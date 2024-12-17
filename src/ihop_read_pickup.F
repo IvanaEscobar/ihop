@@ -31,10 +31,10 @@ C     !LOCAL VARIABLES:
 C     fn          :: character buffer for creating filename
 C     fp          :: precision of pickup files
 C     filePrec    :: pickup-file precision (read from meta file)
-C     nbFields    :: number of fields in pickup file (read from meta file)
-C     missFldList :: List of missing fields   (attempted to read but not found)
-C     missFldDim  :: Dimension of missing fields list array: missFldList
-C     nMissing    :: Number of missing fields (attempted to read but not found)
+C     nbFields    :: number of fields in pickup file
+C     missFldList :: List of missing fields
+C     missFldDim  :: Dim of missing fields list array: missFldList
+C     nMissing    :: Number of missing fields
 C     j           :: loop index
 C     nj          :: record number
 C     ioUnit      :: temp for writing msg unit

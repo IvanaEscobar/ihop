@@ -2,8 +2,7 @@
 # ECCO controlvariables
 # *********************
  &CTRL_NML
- ctrlDir = 'ctrl_variables',
-#doinitxx =.FALSE.,
+ ctrlDir = 'CTRL',
  &
 #
 # *********************

@@ -42,6 +42,12 @@ c     == global variables ==
 # include "PROFILES_SIZE.h"
 # include "profiles.h"
 #endif
+cav(
+#ifdef ALLOW_OBSFIT
+# include "OBSFIT_SIZE.h"
+# include "OBSFIT.h"
+#endif
+cav)
 #ifdef ALLOW_IHOP
 # include "IHOP_SIZE.h"
 # include "IHOP_COST.h"
@@ -69,6 +75,12 @@ C     == local variables ==
       INTEGER NVARMAX
       PARAMETER (NVARMAX=1)
 #endif
+cav(
+#ifndef ALLOW_OBSFIT
+      INTEGER NFILESMAX_OBS
+      PARAMETER (NFILESMAX_OBS=1)
+#endif
+cav)
 #ifndef ALLOW_IHOP
       INTEGER NFILESMAX_IHOP
       PARAMETER (NFILESMAX_IHOP=1)
@@ -89,6 +101,11 @@ c the adjoint, pkg/autodiff most likely require cost though.
       _RL f_profiles(NFILESPROFMAX,NVARMAX)
       _RL f_profiles_mean(NVARMAX)
 #endif
+cav(
+#ifdef ALLOW_OBSFIT
+      _RL f_obsfit(NFILESMAX_OBS)
+#endif
+cav)
 #ifdef ALLOW_IHOP
       _RL f_ihop(NFILESMAX_IHOP)
 #endif
@@ -110,6 +127,12 @@ c the adjoint, pkg/autodiff most likely require cost though.
       _RL no_profiles(NFILESPROFMAX,NVARMAX)
       _RL no_profiles_mean(NVARMAX)
 #endif
+cav(
+#ifdef ALLOW_OBSFIT
+      INTEGER num_file_obs
+      _RL no_obsfit(NFILESMAX_OBS)
+#endif
+cav)
 #ifdef ALLOW_IHOP
       INTEGER num_file_ihop
       _RL no_ihop(NFILESMAX_IHOP)
@@ -152,6 +175,21 @@ c     == end of interface ==
        f_profiles_mean(num_var)= 0. _d 0
       ENDDO
 #endif
+cav(
+#ifdef ALLOW_OBSFIT
+      DO num_file_obs = 1, NFILESMAX_OBS
+cav this is already global sum
+        f_obsfit(num_file_obs)= 
+     &          objf_obsfit(num_file_obs)
+      ENDDO
+#endif
+cav)
+#ifdef ALLOW_IHOP
+! Already the global sum (see pkg/obsfit)
+      DO num_file_ihop = 1, NFILESMAX_IHOP
+        f_ihop(num_file_ihop) = objf_ihop(num_file_ihop)
+      ENDDO
+#endif
 #ifdef ALLOW_GENCOST_CONTRIBUTION
       DO num_var=1,NGENCOST
        f_gencost(num_var)= 0. _d 0
@@ -190,10 +228,19 @@ c     == end of interface ==
        no_profiles_mean(num_var)= 0. _d 0
       ENDDO
 #endif
-#ifdef ALLOW_IHOP
-      DO num_file_ihop=1,NFILESMAX_IHOP
+cav(
+#ifdef ALLOW_OBSFIT
+      DO num_file_obs = 1, NFILESMAX_OBS
 cav this is already global sum
-       no_ihop(num_file_ihop)= num_ihop(num_file_ihop)
+        no_obsfit(num_file_obs)= 
+     &           num_obsfit(num_file_obs)
+      ENDDO
+#endif
+cav)
+#ifdef ALLOW_IHOP
+      DO num_file_ihop = 1, NFILESMAX_IHOP
+! Already global sum (see pkg/obsfit)
+        no_ihop(num_file_ihop) = num_ihop(num_file_ihop)
       ENDDO
 #endif
 #ifdef ALLOW_GENCOST_CONTRIBUTION
@@ -245,14 +292,27 @@ c--   Sum up all contributions.
      &           *objf_profiles_mean(num_var,bi,bj)
         ENDDO
 #endif
+cav(
+#ifdef ALLOW_OBSFIT
+cav don't add to all tiles
+c      do num_file=1,NFILESMAX_OBS
+c       do num_var=1,NVARMAX
+c          tile_fc(bi,bj) = tile_fc(bi,bj)
+c     &            + mult_obsfit(num_file,num_var)
+c     &            *objf_obsfit(num_file,num_var)
+c       enddo
+c      enddo
+#endif
+cav)
 #ifdef ALLOW_IHOP
-c # loop over available misfits and add to the tile level obj
-c # fxn. this is the same loop you would do in cost_final.F
-        DO num_file_ihop=1,NFILESMAX_IHOP
-         tile_fc(bi,bj) = tile_fc(bi,bj)
-     &           + mult_ihop(num_file_ihop)
-     &           *objf_ihop(num_file_ihop)
-        ENDDO
+! No need to add tile-wise, already in global file (see pkg/obsfit)
+!  Uncommenting this will double ihop_cost contributions on the global
+!  cost fxn
+!        DO num_file_ihop=1,NFILESMAX_IHOP
+!         tile_fc(bi,bj) = tile_fc(bi,bj)
+!     &           + mult_ihop(num_file_ihop)
+!     &           *objf_ihop(num_file_ihop)
+!        ENDDO
 #endif
 #ifdef ALLOW_GENCOST_CONTRIBUTION
         DO num_var=1,NGENCOST
@@ -304,6 +364,25 @@ c # fxn. this is the same loop you would do in cost_final.F
      &           +objf_profiles_mean(num_var,bi,bj)
         ENDDO
 #endif
+cav(
+#ifdef ALLOW_OBSFIT
+cav do this outside of bi,bj loops
+c      do num_file=1,NFILESMAX_OBS
+c       do num_var=1,NVARMAX
+c          f_obsfit(num_file,num_var)=f_obsfit(num_file,num_var)
+c     &            +objf_obsfit(num_file,num_var)
+c       enddo
+c      enddo
+#endif
+cav)
+#ifdef ALLOW_IHOP
+! Already global sum (see pkg/obsfit)
+!! done above
+!      DO num_file_ihop = 1, NFILESMAX_IHOP
+!        f_ihop(num_file_ihop) = f_ihop(num_file_ihop) +
+!   &     objf_ihop(num_file_ihop) 
+!      ENDDO
+#endif
 #ifdef ALLOW_GENCOST_CONTRIBUTION
         DO num_var=1,NGENCOST
          f_gencost(num_var)=f_gencost(num_var)
@@ -350,8 +429,19 @@ c # fxn. this is the same loop you would do in cost_final.F
      &           +num_profiles_mean(num_var,bi,bj)
         ENDDO
 #endif
+cav(
+#ifdef ALLOW_OBSFIT
+cav do this outside of bi,bj loops
+c      do num_file=1,NFILESMAX_OBS
+c       do num_var=1,NVARMAX
+c          no_obsfit(num_file,num_var)=no_obsfit(num_file,num_var)
+c     &            +num_obsfit(num_file,num_var)
+c       enddo
+c      enddo
+#endif
+cav)
 #ifdef ALLOW_IHOP
-c # loop over available misfits and add to whatever no_ihop is...
+! Already global sum of no_ihop (see pkg/obsfit)
 #endif
 #ifdef ALLOW_GENCOST_CONTRIBUTION
         DO num_var=1,NGENCOST
@@ -412,6 +502,15 @@ c--   Do global summation for each part of the cost function
        _GLOBAL_SUM_RL(f_profiles_mean(num_var), myThid )
       ENDDO
 #endif
+cav(
+#ifdef ALLOW_OBSFIT
+c      do num_file_obs=1,NFILESMAX_OBS
+c       do num_var_obs=1,NVARMAX_OBS
+c        _GLOBAL_SUM_RL(f_obsfit(num_file_obs,num_var_obs), myThid )
+c       enddo
+c      enddo
+#endif
+cav)
 #ifdef ALLOW_GENCOST_CONTRIBUTION
       DO num_var=1,NGENCOST
        _GLOBAL_SUM_RL(f_gencost(num_var), myThid )
@@ -452,6 +551,15 @@ c--   Do global summation for each part of the cost function
        _GLOBAL_SUM_RL(no_profiles_mean(num_var), myThid )
       ENDDO
 #endif
+cav(
+#ifdef ALLOW_OBSFIT
+c      do num_file=1,NFILESMAX_OBS
+c       do num_var=1,NVARMAX
+c        _GLOBAL_SUM_RL(f_obsfit(num_file,num_var), myThid )
+c       enddo
+c      enddo
+#endif
+cav)
 #ifdef ALLOW_GENCOST_CONTRIBUTION
       DO num_var=1,NGENCOST
        _GLOBAL_SUM_RL(no_gencost(num_var), myThid )
@@ -511,18 +619,34 @@ c--   Do global summation for each part of the cost function
        ENDDO
       ENDIF
 #endif
+cav(
+#ifdef ALLOW_OBSFIT
+      IF (useOBSFIT) THEN
+      DO num_file_obs = 1, NFILESMAX_OBS
+        IF ( no_obsfit(num_file_obs).GT.zeroRL ) THEN
+         WRITE(msgBuf,'(A,D22.15,I2.0)')
+     &     ' --> f_obsfit =',f_obsfit(num_file_obs),
+     &      num_file_obs
+         CALL PRINT_MESSAGE( msgBuf, standardMessageUnit,
+     &                       SQUEEZE_RIGHT , myThid)
+        endif
+c       enddo
+      enddo
+      endif
+#endif
+cav)
 #ifdef ALLOW_IHOP
 ! print f_ihop to standard output 
       IF (useIHOP) THEN
-       DO num_file_ihop=1,NFILESMAX_IHOP
-        IF ( no_ihop(num_file_ihop).GT.zeroRL ) THEN
-         WRITE(msgBuf,'(A,D22.15,i2.0)')
-     &     ' --> f_ihop =',f_ihop(num_file_ihop),
-     &      num_file_ihop
-         CALL PRINT_MESSAGE( msgBuf, standardmessageunit,
-     &                       SQUEEZE_RIGHT , mythid)
-        ENDIF
-       ENDDO
+        DO num_file_ihop = 1, NFILESMAX_IHOP
+          IF ( no_ihop(num_file_ihop).GT.zeroRL ) THEN
+            WRITE(msgBuf,'(A,D22.15,I2.0)')
+     &       ' --> f_ihop =', f_ihop(num_file_ihop),
+     &       num_file_ihop
+            CALL PRINT_MESSAGE( msgBuf,
+     &           standardMessageUnit, SQUEEZE_RIGHT, myThid )
+          ENDIF
+        ENDDO
       ENDIF
 #endif
 #ifdef ALLOW_GENCOST_CONTRIBUTION
@@ -577,6 +701,24 @@ cgf this sum is now done in cost_final if allow_cost
       fc = fc + glofc
 #endif
 
+cav(
+cost.h:c     glofc      - contributions from global mean constraints
+#ifdef ALLOW_OBSFIT
+      DO num_file_obs = 1, NFILESMAX_OBS
+        glofc = glofc
+     &          +  mult_obsfit(num_file_obs)
+     &            *objf_obsfit(num_file_obs)
+      ENDDO
+#endif
+cav)
+#ifdef ALLOW_IHOP
+      DO num_file_ihop = 1, NFILESMAX_IHOP
+        glofc = glofc
+     &          +  mult_ihop(num_file_ihop)
+     &            *objf_ihop(num_file_ihop)
+      ENDDO
+#endif
+
       locfc=locfc+glofc
 
 C     only master thread of master CPU open and write to file
@@ -587,9 +729,9 @@ C     only master thread of master CPU open and write to file
        CALL PRINT_MESSAGE( msgBuf, standardMessageUnit,
      &                     SQUEEZE_RIGHT, myThid )
 
-       WRITE(cfname,'(A,i4.4)') 'costfunction',eccoiter
+       WRITE(cfname,'(A,I4.4)') 'costfunction',eccoiter
        IF ( eccoWriteCostFunction ) THEN
-        WRITE(msgBuf,'(A,A)')
+        WRITE(msgBuf,'(2A)')
      &           'Writing cost function info to ', cfname(1:16)
         CALL PRINT_MESSAGE( msgBuf, standardMessageUnit,
      &                      SQUEEZE_RIGHT, myThid )
@@ -641,20 +783,38 @@ C     only master thread of master CPU open and write to file
          ENDDO
         ENDIF
 #endif
+cav(
+#ifdef ALLOW_OBSFIT
+      if (useOBSFIT) then
+      do num_file_obs=1,NFILESMAX_OBS
+c       do num_var_obs=1,NVARMAX_OBS
+        if ( no_obsfit(num_file_obs).GT.zeroRL ) then
+         IL  = ILNBLNK( obsfitfiles(num_file_obs) )
+         IL  = max (IL,30)
+         write(ifc,'(4A,2D22.15)')
+     &    obsfitfiles(num_file_obs)(1:IL),' ',
+     &    obsfit_nameval, ' = ',
+     &    f_obsfit(num_file_obs),
+     &    no_obsfit(num_file_obs)
+        endif
+c       enddo
+      enddo
+      endif
+#endif
+cav)
 #ifdef ALLOW_IHOP
-c # if no_ihop has a non zero value, print f_ihop and no_ihop
+C If no_ihop is non zero, print f_ihop and no_ihop
         IF (useIHOP) THEN
-         DO num_file_ihop=1,NFILESMAX_ihop
-          IF ( no_ihop(num_file_ihop).GT.zeroRL ) THEN
-           IL  = ILNBLNK( ihopObsfiles(num_file_ihop) )
-           IL  = max(IL,30)
-           WRITE(ifc,'(4A,2D22.15)')
-     &          ihopObsfiles(num_file_ihop)(1:IL),' ',
-     &          ihop_nameval, ' = ',
-     &          f_ihop(num_file_ihop),
-     &          no_ihop(num_file_ihop)
-          ENDIF
-         ENDDO
+          DO num_file_ihop = 1, NFILESMAX_IHOP
+            IF (no_ihop(num_file_ihop).GT.zeroRL) THEN
+              IL = ILNBLNK( IHOPObs_Files(num_file_ihop) )
+              IL = MAX(IL,30)
+              WRITE(ifc,'(4A,2D22.15)')
+     &         IHOPObs_Files(num_file_ihop)(1:IL),' ',
+     &         ihop_nameval, ' = ',
+     &         f_ihop(num_file_ihop), no_ihop(num_file_ihop)
+            ENDIF
+          ENDDO
         ENDIF
 #endif
 #ifdef ALLOW_GENCOST_CONTRIBUTION
