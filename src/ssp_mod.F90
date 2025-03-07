@@ -1115,9 +1115,10 @@ SUBROUTINE writeSSP( myThid )
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 
     ssptmp = 0.0
+    WRITE(fmtStr,'(A,I10,A)') '(',SSP%Nr+1, 'F10.2)'
     DO iz = 1, SSP%Nz
       ssptmp = ssp%cMat( iz,: )
-      WRITE(msgBuf,'(12F10.2)') SSP%z( iz ), ssptmp
+      WRITE(msgBuf,fmtStr) SSP%z( iz ), ssptmp
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
     END DO
 
