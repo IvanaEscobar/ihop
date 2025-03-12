@@ -55,12 +55,8 @@ C
 
 C     !LOCAL VARIABLES:
 C     == Local variables ==
-      CHARACTER*(MAX_LEN_MBUF) msgBuf
       INTEGER bi,bj
       INTEGER i,j,k
-      INTEGER ii, jj, kk, bii,bjj
-      _RL c0,cw,a,b,d
-      _RL pres,sal,temp
       LOGICAL calc_soundSpeed
 CEOP
 
