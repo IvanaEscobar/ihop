@@ -78,8 +78,8 @@ c#endif
        DO bj=myByLo(myThid),myByHi(myThid)
         DO bi=myBxLo(myThid),myBxHi(myThid)
          DO k=1,Nr
-          DO j=1,sNy
-           DO i=1,sNx
+          DO j=1-OLy,sNy+OLy
+           DO i=1-OLx,sNx+OLx
             ihop_ssp(i,j,k,bi,bj) = 0.0 _d 0
            ENDDO
           ENDDO
