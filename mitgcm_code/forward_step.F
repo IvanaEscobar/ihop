@@ -1148,8 +1148,12 @@ CADJ STORE pTracer     = comlev1, key = ikey_dynamics, kind = isbyte
 
 #ifdef ALLOW_IHOP
 C--   Acoustical physics
-      CALL IHOP_SOUND_SPEED( myThid )
-      CALL IHOP_DRIVER( myTime,myIter,myThid )
+      IF ( useIHOP ) THEN
+       CALL IHOP_SOUND_SPEED( myThid )
+       CALL TIMER_START('IHOP_DRIVER           [FORWARD_STEP]',myThid)
+       CALL IHOP_DRIVER( myTime,myIter,myThid )
+       CALL TIMER_STOP ('IHOP_DRIVER           [FORWARD_STEP]',myThid)
+      ENDIF
 #endif /* ALLOW_IHOP */
 
 #ifdef ALLOW_DIAGNOSTICS

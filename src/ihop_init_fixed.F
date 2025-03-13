@@ -83,7 +83,7 @@ C Get dimension IDs and lengths
 
       IF ( IHOP_npts_range>IHOP_MAX_RANGE .OR.
      &     IHOP_npts_idw>IHOP_MAX_IDW ) THEN
-        WRITE(msgBuf, '(2A)') 'S/R IHOP_INIT_FIXED: reading dims',
+        WRITE(msgBuf, '(2A)') 'S/R IHOP_INIT_FIXED: reading dims ',
      &  'NetCDF Dimensions exceed maximum allowable size'
         CALL PRINT_ERROR( msgBuf, myThid )
         STOP 'ABNORMAL END: S/R IHOP_INIT_FIXED'

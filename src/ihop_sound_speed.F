@@ -55,12 +55,8 @@ C
 
 C     !LOCAL VARIABLES:
 C     == Local variables ==
-      CHARACTER*(MAX_LEN_MBUF) msgBuf
       INTEGER bi,bj
       INTEGER i,j,k
-      INTEGER ii, jj, kk, bii,bjj
-      _RL c0,cw,a,b,d
-      _RL pres,sal,temp
       LOGICAL calc_soundSpeed
 CEOP
 
@@ -82,8 +78,8 @@ c#endif
        DO bj=myByLo(myThid),myByHi(myThid)
         DO bi=myBxLo(myThid),myBxHi(myThid)
          DO k=1,Nr
-          DO j=1,sNy
-           DO i=1,sNx
+          DO j=1-OLy,sNy+OLy
+           DO i=1-OLx,sNx+OLx
             ihop_ssp(i,j,k,bi,bj) = 0.0 _d 0
            ENDDO
           ENDDO
