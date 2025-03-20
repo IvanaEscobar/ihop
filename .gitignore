@@ -9,3 +9,6 @@
 
 #-- vim --
 *.swp
+
+#-- jupyter notebooks --
+.ipynb_checkpoints/
