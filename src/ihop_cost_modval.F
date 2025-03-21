@@ -87,7 +87,7 @@ C     !LOCAL VARIABLES:
 
 ! Calc arrival amplitude with cylindrical spreading to receiver range
       DO ii = 1, nArr(ri,rj)
-        arrAmplitude(ii) = Arr(ii,ri,rj)%A / SQRT( Pos%Rr(ri) )
+        arrAmplitude(ii) = Arr(ii,ri,rj)%A / SQRT( Pos%RR(ri) )
      &   * EXP( CMPLX(0,1)*rad2deg*Arr(ii,ri,rj)%Phase )
 
         arrVal(ii) = ABS( arrAmplitude(ii) )
