@@ -127,7 +127,7 @@ C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 C--   Default values for IHOP_PARM01
       IHOP_fileroot = ''
       IHOP_title    = 'ihop'
-      IHOP_MNC      = .false.
+      IHOP_MNC      = useMNC
       IHOP_dumpFreq = dumpFreq
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
@@ -337,19 +337,19 @@ C     Close the open data file
       CLOSE(iUnit,STATUS='DELETE')
 #endif /* SINGLE_DISK_IO */
 
-CC     Make sure that we locally honor the global MNC on/off flag
-C      IHOP_MNC = IHOP_MNC .AND. useMNC
-C#ifndef ALLOW_MNC
-CC     Fix to avoid running without getting any output:
-C      IHOP_MNC = .FALSE.
-C#endif
-C      IHOP_MDSIO = (.NOT. IHOP_MNC) .OR. outputTypesInclusive
+C     Make sure that we locally honor the global MNC on/off flag
+      IHOP_MNC = IHOP_MNC .AND. useMNC
+#ifndef ALLOW_MNC
+C     Fix to avoid running without getting any output:
+      IHOP_MNC = .FALSE.
+#endif
+      IHOP_MDSIO = (.NOT. IHOP_MNC) .OR. outputTypesInclusive
 
       _END_MASTER(myThid)
+
 C--   Everyone else must wait for the parameters to be loaded
       _BARRIER
 
 #endif /* ALLOW_IHOP */
-
       RETURN
       END

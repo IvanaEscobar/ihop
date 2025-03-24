@@ -22,36 +22,24 @@ C     !INPUT PARAMETERS:
       INTEGER myThid
 CEOP
 
-#ifdef ALLOW_IHOP
-#ifdef ALLOW_MNC
-
-      IF (useMNC) THEN
-
-        CALL MNC_CW_ADD_VNAME('ihop_ssp',
-     &      'Cen_xy_Hn__L__t', 4,5,myThid)
-        CALL MNC_CW_ADD_VATTR_TEXT('ihop_ssp',
-     &      'units','[m/s]', myThid)
-        CALL MNC_CW_ADD_VATTR_TEXT('ihop_ssp','description',
-     &      'scalar state variable ihop_ssp',myThid)
-
-        CALL MNC_CW_ADD_VNAME('myPa_Surf1',
-     &      'Cen_xy_Hn__-__t', 3,4,myThid)
-        CALL MNC_CW_ADD_VATTR_TEXT('myPa_Surf1',
-     &      'units','[unit]', myThid)
-        CALL MNC_CW_ADD_VATTR_TEXT('myPa_Surf1','description',
-     &       'Surface scalar field myPa_Surf1',myThid)
-
-        CALL MNC_CW_ADD_VNAME('myPa_Surf2',
-     &      'Cen_xy_Hn__-__t', 3,4,myThid)
-        CALL MNC_CW_ADD_VATTR_TEXT('myPa_Surf2',
-     &      'units','[unit]', myThid)
-        CALL MNC_CW_ADD_VATTR_TEXT('myPa_Surf2','description',
-     &       'Surface scalar field myPa_Surf2',myThid)
-
-      ENDIF
-
-#endif /* ALLOW_MNC */
-#endif /* ALLOW_IHOP */
+C#ifdef ALLOW_IHOP
+C#ifdef ALLOW_MNC
+C
+C      IF (useMNC) THEN
+C
+C        CALL MNC_CW_ADD_VNAME('ihop_soundSpeed',
+C     &      'Cen_xy_Hn__L__t', 4, 5, myThid)
+C        CALL MNC_CW_ADD_VATTR_TEXT('ihop_soundSpeed',
+C     &      'units','[m/s]', myThid)
+C        CALL MNC_CW_ADD_VATTR_TEXT('ihop_soundSpeed', 'description',
+C     &      'speed of sound in sea water', myThid)
+C        CALL MNC_CW_ADD_VATTR_TEXT('ihop_soundSpeed', 'long_name',
+C     &      'sound speed', myThid)
+C
+C      ENDIF
+C
+C#endif /* ALLOW_MNC */
+C#endif /* ALLOW_IHOP */
 
       RETURN
       END

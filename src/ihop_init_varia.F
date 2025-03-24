@@ -33,12 +33,12 @@ C     === Local variables ===
       DO bj = myByLo(myThid), myByHi(myThid)
        DO bi = myBxLo(myThid), myBxHi(myThid)
 
-C--   Initialize arrays in common blocks :
+C     Initialize arrays in common blocks :
 C     3-dim.
 #ifdef IHOP_3D_STATE
         DO k=1,Nr
-         DO j=1-Oly,sNy+OLy
-          DO i=1-Olx,sNx+Olx
+         DO j=1-OLy,sNy+OLy
+          DO i=1-OLx,sNx+OLx
            ihop_ssp(i,j,k,bi,bj) = 0. _d 0
           ENDDO
          ENDDO
