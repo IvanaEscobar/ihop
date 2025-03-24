@@ -22,24 +22,24 @@ C     !INPUT PARAMETERS:
       INTEGER myThid
 CEOP
 
-#ifdef ALLOW_IHOP
-#ifdef ALLOW_MNC
-
-      IF (useMNC) THEN
-
-        CALL MNC_CW_ADD_VNAME('ihop_soundSpeed',
-     &      'Cen_xy_Hn__L__t', 4, 5, myThid)
-        CALL MNC_CW_ADD_VATTR_TEXT('ihop_soundSpeed',
-     &      'units','[m/s]', myThid)
-        CALL MNC_CW_ADD_VATTR_TEXT('ihop_soundSpeed', 'description',
-     &      'speed of sound in sea water', myThid)
-        CALL MNC_CW_ADD_VATTR_TEXT('ihop_soundSpeed', 'long_name',
-     &      'sound speed', myThid)
-
-      ENDIF
-
-#endif /* ALLOW_MNC */
-#endif /* ALLOW_IHOP */
+C#ifdef ALLOW_IHOP
+C#ifdef ALLOW_MNC
+C
+C      IF (useMNC) THEN
+C
+C        CALL MNC_CW_ADD_VNAME('ihop_soundSpeed',
+C     &      'Cen_xy_Hn__L__t', 4, 5, myThid)
+C        CALL MNC_CW_ADD_VATTR_TEXT('ihop_soundSpeed',
+C     &      'units','[m/s]', myThid)
+C        CALL MNC_CW_ADD_VATTR_TEXT('ihop_soundSpeed', 'description',
+C     &      'speed of sound in sea water', myThid)
+C        CALL MNC_CW_ADD_VATTR_TEXT('ihop_soundSpeed', 'long_name',
+C     &      'sound speed', myThid)
+C
+C      ENDIF
+C
+C#endif /* ALLOW_MNC */
+C#endif /* ALLOW_IHOP */
 
       RETURN
       END

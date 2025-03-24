@@ -50,18 +50,19 @@ cccccccccccccccccccccc
         ELSE
           pf(1:1) = 'R'
         ENDIF
-        CALL MNC_CW_SET_UDIM('ihop', -1, myThid)
-        CALL MNC_CW_RL_W_S('D','ihop',0,0,'T', myTime, myThid)
-        CALL MNC_CW_SET_UDIM('ihop', 0, myThid)
-        CALL MNC_CW_I_W_S('I','ihop',0,0,'iter', myIter, myThid)
-        CALL MNC_CW_RL_W_S('D','ihop',0,0,'model_time',
-     &       myTime,myThid)
-
-        CALL MNC_CW_RL_W( pf, 'ihop', 0, 0,
-     &       'ihop_soundSpeed', ihop_ssp, myThid )
+C        CALL MNC_CW_SET_UDIM('ihop', -1, myThid)
+C        CALL MNC_CW_RL_W_S('D','ihop',0,0,'T', myTime, myThid)
+C        CALL MNC_CW_SET_UDIM('ihop', 0, myThid)
+C        CALL MNC_CW_I_W_S('I','ihop',0,0,'iter', myIter, myThid)
+C        CALL MNC_CW_RL_W_S('D','ihop',0,0,'model_time',
+C     &       myTime,myThid)
+C
+C        CALL MNC_CW_RL_W( pf, 'ihop', 0, 0,
+C     &       'ihop_soundSpeed', ihop_ssp, myThid )
 
        ENDIF ! IF ( IHOP_MNC ) THEN
 # endif /* ALLOW_MNC */
+
        IF ( IHOP_MDSIO ) THEN 
         IF ( rwSuffixType.EQ.0 ) THEN
           WRITE(suff,'(I10.10)') myIter
