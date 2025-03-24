@@ -34,20 +34,6 @@ CEOP
         CALL MNC_CW_ADD_VATTR_TEXT('ihop_ssp','description',
      &      'scalar state variable ihop_ssp',myThid)
 
-        CALL MNC_CW_ADD_VNAME('myPa_Surf1',
-     &      'Cen_xy_Hn__-__t', 3,4,myThid)
-        CALL MNC_CW_ADD_VATTR_TEXT('myPa_Surf1',
-     &      'units','[unit]', myThid)
-        CALL MNC_CW_ADD_VATTR_TEXT('myPa_Surf1','description',
-     &       'Surface scalar field myPa_Surf1',myThid)
-
-        CALL MNC_CW_ADD_VNAME('myPa_Surf2',
-     &      'Cen_xy_Hn__-__t', 3,4,myThid)
-        CALL MNC_CW_ADD_VATTR_TEXT('myPa_Surf2',
-     &      'units','[unit]', myThid)
-        CALL MNC_CW_ADD_VATTR_TEXT('myPa_Surf2','description',
-     &       'Surface scalar field myPa_Surf2',myThid)
-
       ENDIF
 
 #endif /* ALLOW_MNC */

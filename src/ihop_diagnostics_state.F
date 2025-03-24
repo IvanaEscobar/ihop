@@ -7,19 +7,23 @@ C     !INTERFACE:
      I             myTime,myIter, myThid )
 
 C     !DESCRIPTION:
-C     Provide the information for the diagnostics
+C     Provide the information for iHOP diagnostics
 
 C     !USES:
       IMPLICIT NONE
+C     == Global variables ===
 #include "SIZE.h"
 #include "EEPARAMS.h"
 #include "PARAMS.h"
 #ifdef ALLOW_IHOP
-#include "IHOP_SIZE.h"
-#include "IHOP.h"
+# include "IHOP_SIZE.h"
+# include "IHOP.h"
 #endif
 
 C     !INPUT PARAMETERS:
+C     myTime   :: Current time of simulation ( s )
+C     myIter   :: Current iteration number in simulation
+C     myThid   :: my Thread Id number
       _RL     myTime
       INTEGER myIter, myThid
 CEOP
@@ -32,10 +36,11 @@ C     !LOCAL VARIABLES:
 
 #ifdef IHOP_3D_STATE
        CALL DIAGNOSTICS_FILL( ihop_ssp,'ihop_ssp',
-     &                        0,Nr, 0, 1, 1, myThid )
+     &                        0, Nr, 0, 1, 1, myThid )
 #endif /* IHOP_3D_STATE */
       ENDIF
 #endif /* ALLOW_DIAGNOSTICS */
+
 #endif /* ALLOW_IHOP */
 
       RETURN

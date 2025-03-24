@@ -27,7 +27,7 @@
       LOGICAL writeDelay
       LOGICAL useSSPFile
 
-      COMMON /IHOP_PARAMS_L/                                                                                                             &
+      COMMON /IHOP_PARAMS_L/                                                                                                            &
      &      writeDelay, useSSPFile
 
 !-- COMMON /IHOP_PARAMS_C/ IHOP Character-type parameters:
@@ -45,9 +45,9 @@
       CHARACTER*(2) IHOP_botopt
       CHARACTER*(7) IHOP_runopt
 
-      COMMON /IHOP_PARAMS_C/                                                                                                             &
-     &      IHOP_fileroot, IHOP_title,                                                                                                   &
-     &      IHOP_topopt, IHOP_botopt, IHOP_runopt,                                                                                       &
+      COMMON /IHOP_PARAMS_C/                                                                                                            &
+     &      IHOP_fileroot, IHOP_title,                                                                                                  &
+     &      IHOP_topopt, IHOP_botopt, IHOP_runopt,                                                                                      &
      &      IHOP_interpfile
 
 !-- COMMON /IHOP_PARAMS_I/ IHOP Integer-type parameters:
@@ -118,7 +118,7 @@
 #ifdef IHOP_3D_STATE
 !C     IHOP 3-dim. fields
       _RL ihop_ssp(1-OLx:sNx+OLx,1-OLy:sNy+OLy,Nr,nSx,nSy)
-      COMMON /IHOP_STATE_3D/                                                                                                             &
+      COMMON /IHOP_STATE_3D/                                                                                                            &
      &    ihop_ssp
 #endif /* IHOP_3D_STATE */
 
@@ -130,6 +130,4 @@
 
 #endif /* ALLOW_IHOP */
 
-!EH3 ;;; Local Variables: ***
-!EH3 ;;; mode:fortran ***
-!EH3 ;;; End: ***
+!---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
