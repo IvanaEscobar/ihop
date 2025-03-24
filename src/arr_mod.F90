@@ -244,7 +244,7 @@ CONTAINS
              ! However, you'll need to make sure you keep adequate precision
              WRITE( ARRFile, * ) &
              SNGL( factor ) * Arr( iArr, ir, iz )%A,             &
-             SNGL( rad2deg ) *Arr( iArr, ir, iz )%Phase,        &
+             SNGL( rad2deg ) *Arr( iArr, ir, iz )%Phase,         &
                         REAL( Arr( iArr, ir, iz )%delay ),       &
                        AIMAG( Arr( iArr, ir, iz )%delay ),       &
                               Arr( iArr, ir, iz )%SrcDeclAngle,  &
