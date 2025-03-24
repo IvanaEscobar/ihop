@@ -115,8 +115,8 @@ C     &                         1, timList, oneRL,
 C     &                         nj, myIter, myThid )
 C#endif /* ALLOW_MDSIO */
 CC--------------------------
-C
-C#endif /* IHOP_3D_STATE or IHOP_2D_STATE */
+
+#endif /* IHOP_3D_STATE or IHOP_2D_STATE */
 #endif /* ALLOW_IHOP */
 
       RETURN
