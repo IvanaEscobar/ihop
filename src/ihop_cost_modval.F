@@ -109,7 +109,9 @@ C     !LOCAL VARIABLES:
 
 ! Save predicted travel time according to max index
       modVal = REAL( Arr( maxID,ri,rj )%delay )
+
 ! ray storage of top arrival...
+
 #endif /* ALLOW_IHOP */
 
       RETURN
