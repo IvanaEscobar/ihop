@@ -13,9 +13,6 @@ C     Initialize list of all available diagnostics
 C     !USES:
       IMPLICIT NONE
 #include "EEPARAMS.h"
-#include "SIZE.h"
-#include "IHOP_SIZE.h"
-#include "IHOP.h"
 
 C     !INPUT/OUTPUT PARAMETERS:
 C     myThid ::  my Thread Id number
@@ -44,7 +41,7 @@ c     IF ( useDiagnotics ) THEN
 
 #ifdef IHOP_3D_STATE
         diagName  = 'ihop_ssp'
-        diagTitle = 'Sound speed from package IHOP'
+        diagTitle = 'Sound speed from pkg/ihop'
         diagUnits = 'm/s             '
         diagCode  = 'SMR     MR      '
         CALL DIAGNOSTICS_ADDTOLIST( diagNum,

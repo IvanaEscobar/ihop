@@ -149,11 +149,14 @@ C Only do I/O if in the main thread
       _END_MASTER( myThid )
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
+
       DO k = 1,IHOP_MAX_NC_SIZE !Nr
         DO i=1,IHOP_MAX_RANGE !IHOP_npts_range
           ihop_sumweights(i,k) = -1.0
         END DO
       END DO
+
+C Pass info to f90 ihop domain grid
       CALL init_fixed_env( myThid )
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 
@@ -164,6 +167,7 @@ C       Initialize the MNC variable types for IHOP
       ENDIF
 #endif /* ALLOW_MNC */
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
+
 #ifdef ALLOW_DIAGNOSTICS
       IF ( useDiagnostics ) THEN
         CALL IHOP_DIAGNOSTICS_INIT( myThid )

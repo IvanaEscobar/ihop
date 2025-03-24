@@ -35,6 +35,7 @@ C     !LOCAL VARIABLES:
       IF ( useDiagnostics ) THEN
 
 #ifdef IHOP_3D_STATE
+C sound speed [m/s]
        CALL DIAGNOSTICS_FILL( ihop_ssp,'ihop_ssp',
      &                        0, Nr, 0, 1, 1, myThid )
 #endif /* IHOP_3D_STATE */
