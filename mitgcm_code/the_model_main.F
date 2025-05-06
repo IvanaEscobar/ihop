@@ -777,12 +777,12 @@ C       Close all open NetCDF files
 #endif
 
 #ifdef ALLOW_PROFILES
-      IF ( useProfiles ) THEN
-C       Close all open NetCDF files
-        _BEGIN_MASTER( myThid )
-        CALL PROFILES_NC_CLOSE( myThid )
-        _END_MASTER( myThid )
-      ENDIF
+C      IF ( useProfiles ) THEN
+CC       Close all open NetCDF files
+C        _BEGIN_MASTER( myThid )
+C        CALL PROFILES_NC_CLOSE( myThid )
+C        _END_MASTER( myThid )
+C      ENDIF
 #endif
 
 #ifdef ALLOW_IHOP
