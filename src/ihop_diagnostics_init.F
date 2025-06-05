@@ -40,7 +40,7 @@ C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 c     IF ( useDiagnotics ) THEN
 
 #ifdef IHOP_3D_STATE
-        diagName  = 'ihop_ssp'
+        diagName  = 'SVEL    '
         diagTitle = 'Sound speed from pkg/ihop'
         diagUnits = 'm/s             '
         diagCode  = 'SMR     MR      '

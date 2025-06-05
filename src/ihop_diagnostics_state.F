@@ -36,7 +36,7 @@ C     !LOCAL VARIABLES:
 
 #ifdef IHOP_3D_STATE
 C sound speed [m/s]
-       CALL DIAGNOSTICS_FILL( ihop_ssp,'ihop_ssp',
+       CALL DIAGNOSTICS_FILL( ihop_ssp,'SVEL    ',
      &                        0, Nr, 0, 1, 1, myThid )
 #endif /* IHOP_3D_STATE */
       ENDIF

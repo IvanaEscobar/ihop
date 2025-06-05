@@ -70,7 +70,7 @@ C     &       'ihop_soundSpeed', ihop_ssp, myThid )
           CALL RW_GET_SUFFIX( suff, myTime, myIter, myThid )
         ENDIF
 
-        CALL WRITE_FLD_XYZ_RL('ihop_ssp.',suff,ihop_ssp,myIter,myThid)
+        CALL WRITE_FLD_XYZ_RL('SVEL.',suff,ihop_ssp,myIter,myThid)
 
        ENDIF ! IF ( IHOP_MDSIO ) THEN
 

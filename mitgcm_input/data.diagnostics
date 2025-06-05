@@ -1,6 +1,6 @@
  &DIAGNOSTICS_LIST
   fileName(1)     = 'diags/ssp',
-  fields(1:1,1)   = 'ihop_ssp',
+  fields(1:1,1)   = 'SVEL    ',
   frequency(1)    = 2592000.,
 
   fileName(2)     = 'diags/dynDiag',
