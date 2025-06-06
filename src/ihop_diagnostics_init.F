@@ -47,6 +47,13 @@ c     IF ( useDiagnotics ) THEN
         CALL DIAGNOSTICS_ADDTOLIST( diagNum,
      I          diagName, diagCode, diagUnits, diagTitle, 0, myThid )
 #endif /* IHOP_3D_STATE */
+
+        diagName  = 'SLD     '
+        diagTitle = 'Sonic layer depth (>0) from pkg/ihop'
+        diagUnits = 'm               '
+        diagCode  = 'SM      M1      '
+        CALL DIAGNOSTICS_ADDTOLIST( diagNum,
+     I          diagName, diagCode, diagUnits, diagTitle, 0, myThid )
 c     ENDIF
 
 #endif /* ALLOW_DIAGNOSTICS */
