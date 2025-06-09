@@ -39,6 +39,9 @@ C sound speed [m/s]
        CALL DIAGNOSTICS_FILL( ihop_ssp,'SVEL    ',
      &                        0, Nr, 0, 1, 1, myThid )
 #endif /* IHOP_3D_STATE */
+C sonic layer depth [m]
+       CALL DIAGNOSTICS_FILL( ihop_sld,'SLD     ',
+     &                        0, 1, 1, 1, 1, myThid )
       ENDIF
 #endif /* ALLOW_DIAGNOSTICS */
 

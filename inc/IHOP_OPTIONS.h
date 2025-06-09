@@ -19,18 +19,21 @@
 
 #define IHOP_WRITE_OUT
 
-! Only consider 2D propagation
+! Three-dimensional sound propagation
 #undef IHOP_THREED
 
 ! to reduce memory storage, disable unused array with those CPP flags :
 #define IHOP_3D_STATE
 #define IHOP_2D_STATE
-#define IHOP_TENDENCY
+#undef IHOP_TENDENCY
 
+! a time-series of sound source propagation
 #define IHOP_MULTIPLE_TIMES
 
+! multiple sound sources
 #undef IHOP_MULTIPLE_SOURCES
 
+! multiple sound receivers; e.g. a VLA
 #undef IHOP_MULTIPLE_RECEIVER_DEPTHS
 #undef IHOP_MULTIPLE_RECEIVER_RANGES
 
