@@ -47,6 +47,11 @@ C     3-dim.
 
 C     2-dim.
 #ifdef IHOP_2D_STATE
+        DO j=1-OLy,sNy+OLy
+         DO i=1-OLx,sNx+OLx
+          ihop_sld(i,j,bi,bj) = 0. _d 0
+         ENDDO
+        ENDDO
 #endif /* IHOP_2D_STATE */
 
 C- end bi,bj loops
