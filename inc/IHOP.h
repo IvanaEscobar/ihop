@@ -36,7 +36,7 @@
 !   IHOP_interpfile :: File name for reading NetCDF inputs
 !   IHOP_topopt     :: SSP interpolation, top boundary type
 !   IHOP_botopt     :: bottom boundary type
-!   IHOP_runopt     :: run type (R/E/A)
+!   IHOP_runopt     :: run type [R/E/A]
 
       CHARACTER*(MAX_LEN_FNAM) IHOP_fileroot
       CHARACTER*(MAX_LEN_FNAM) IHOP_title
@@ -55,7 +55,7 @@
 !   IHOP_nts    :: No. of sample times
 !   IHOP_nsd    :: No. of source depths [m]
 !   IHOP_nrd    :: No. of receiver depths [m]
-!   IHOP_nrr    :: No. of receiver ranges (km)
+!   IHOP_nrr    :: No. of receiver ranges [km]
 !   IHOP_iter   :: GCM iteration to run ihop
 
       INTEGER IHOP_nalpha
@@ -75,17 +75,17 @@
 
 !-- COMMON /IHOP_PARAMS_R/ IHOP Real-type parameters:
 !   IHOP_dumpfreq       :: frequency of output dump to run directory
-!   IHOP_freq           :: frequency (Hz)
+!   IHOP_freq           :: frequency [Hz]
 !   IHOP_depth          :: depth of bottom [m]
-!   IHOP_bcsound        :: bottom sound speed (m/s)
-!   IHOP_bcsoundshear   :: shear bottom sound speed (m/s)
-!   IHOP_bcsoundI       :: IMAG bottom sound speed (m/s)
-!   IHOP_bcsoundshearI  :: IMAG shear bottom sound speed (m/s)
-!   IHOP_brho           :: bottom density (kg/m^3)
+!   IHOP_bcsound        :: bottom sound speed [m/s]
+!   IHOP_bcsoundshear   :: shear bottom sound speed [m/s]
+!   IHOP_bcsoundI       :: IMAG bottom sound speed [m/s]
+!   IHOP_bcsoundshearI  :: IMAG shear bottom sound speed [m/s]
+!   IHOP_brho           :: bottom density [kg/m^3]
 !   IHOP_sd             :: source depth [m]
 !   IHOP_rd             :: receiver depth [m]
-!   IHOP_rr             :: receiver ranges (km)
-!   IHOP_alpha          :: bearing launch angles (degrees)
+!   IHOP_rr             :: receiver ranges [km]
+!   IHOP_alpha          :: bearing launch angles [degrees]
 !   IHOP_step           :: step length [m]
 
       _RL IHOP_dumpfreq
