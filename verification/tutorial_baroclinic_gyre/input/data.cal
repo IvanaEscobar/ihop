@@ -1,0 +1,10 @@
+#
+# *******************
+# Calendar Parameters
+# *******************
+# Escobar: dummy date for COST compatibility
+ &CAL_NML
+ TheCalendar='gregorian',
+ startDate_1=20210101,
+ startDate_2=000000,
+ &

@@ -1,0 +1,36 @@
+# ***********************
+# IHOP package parameters
+# ***********************
+ &IHOP_PARM01
+ IHOP_fileroot='bcg.hd',
+ IHOP_title='bcg+ihop 1/12deg',
+ &
+
+ &IHOP_PARM02
+ IHOP_freq=350.0,
+ IHOP_topopt='QVF',
+
+ IHOP_botopt='A*',
+ IHOP_bcsound=1650.0,
+ IHOP_brho=1.80,
+
+# sd and rd [m]
+ IHOP_sd=1000.0,
+ IHOP_rd=1000.0,
+# rr + ihop_step < ihop_ranges(end) [km]
+ IHOP_rr=348.7,
+# e: eigenrays; G: Hat spreading
+ IHOP_runopt='eG',
+ IHOP_nalpha=52,
+ IHOP_alpha=-26.0, 26.0,
+ &
+
+ &IHOP_PARM03
+ IHOP_interpfile = 'bcg.hd_ihopGrid_30pts',
+ ihop_iter = 1, 2, 3, 4,
+ &
+
+ &IHOP_COST_NML
+# IHOPObs_Dir      = 'IHOP_obs/',
+# IHOPObs_Files(1) = 'bcg_tau_obs',
+ &

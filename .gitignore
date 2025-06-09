@@ -12,3 +12,7 @@
 
 #-- jupyter notebooks --
 .ipynb_checkpoints/
+
+#-- MITgcm verification --
+/verification/*/tr_run.*
+/verification/*/run/*

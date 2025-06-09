@@ -1,0 +1,1 @@
+../../../mitgcm_code/do_statevars_diags.F
