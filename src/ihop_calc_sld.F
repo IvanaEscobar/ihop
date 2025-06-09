@@ -131,10 +131,13 @@ C step 3: save depth where maximum ssp exists, making SLD
 C         a grid dependent diagnostic 
 C IESCO25: update to determine depth of maximum SSP between
 C         k levels... see calc_oce_mxlayer.F
+C a) calc ssp(rC_UP/DOWN)
+C b) line search max ssp UP/DOWN
+C c) store depth of max ssp
         DO j=1-OLy,sNy+OLy
          DO i=1-OLx,sNx+OLx
           kMax = ihop_kMax(i,j)
-          ihop_sld(i,j,bi,bj) = ihop_ssp(i,j,kMax,bi,bj) 
+          ihop_sld(i,j,bi,bj) = gravitySign * rC(kMax) 
      &                          * maskC(i,j,kMax,bi,bj)
 
          ENDDO
