@@ -53,8 +53,8 @@
 !-- COMMON /IHOP_PARAMS_I/ IHOP Integer-type parameters:
 !   IHOP_nalpha :: No. of rays to propagate
 !   IHOP_nts    :: No. of sample times
-!   IHOP_nsd    :: No. of source depths (m)
-!   IHOP_nrd    :: No. of receiver depths (m)
+!   IHOP_nsd    :: No. of source depths [m]
+!   IHOP_nrd    :: No. of receiver depths [m]
 !   IHOP_nrr    :: No. of receiver ranges (km)
 !   IHOP_iter   :: GCM iteration to run ihop
 
@@ -76,17 +76,17 @@
 !-- COMMON /IHOP_PARAMS_R/ IHOP Real-type parameters:
 !   IHOP_dumpfreq       :: frequency of output dump to run directory
 !   IHOP_freq           :: frequency (Hz)
-!   IHOP_depth          :: depth of bottom (m)
+!   IHOP_depth          :: depth of bottom [m]
 !   IHOP_bcsound        :: bottom sound speed (m/s)
 !   IHOP_bcsoundshear   :: shear bottom sound speed (m/s)
 !   IHOP_bcsoundI       :: IMAG bottom sound speed (m/s)
 !   IHOP_bcsoundshearI  :: IMAG shear bottom sound speed (m/s)
 !   IHOP_brho           :: bottom density (kg/m^3)
-!   IHOP_sd             :: source depth (m)
-!   IHOP_rd             :: receiver depth (m)
+!   IHOP_sd             :: source depth [m]
+!   IHOP_rd             :: receiver depth [m]
 !   IHOP_rr             :: receiver ranges (km)
 !   IHOP_alpha          :: bearing launch angles (degrees)
-!   IHOP_step           :: step length (m)
+!   IHOP_step           :: step length [m]
 
       _RL IHOP_dumpfreq
       _RL IHOP_freq
@@ -117,6 +117,8 @@
 
 #ifdef IHOP_3D_STATE
 !C     IHOP 3-dim. fields
+!   IHOP_ssp            :: speed of sound [m/s]
+!                          (for diagnostic + ihop AD model)
       _RL ihop_ssp(1-OLx:sNx+OLx,1-OLy:sNy+OLy,Nr,nSx,nSy)
       COMMON /IHOP_STATE_3D/                                                                                                            &
      &    ihop_ssp
@@ -124,6 +126,8 @@
 
 #ifdef IHOP_2D_STATE
 !C     IHOP 2-dim. fields
+!   IHOP_sld            :: sonic layer depth [m]
+!                          (for diagnostic)
       _RL ihop_sld(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       COMMON /IHOP_STATE_2D/                                                                                                            &
      &    ihop_sld
