@@ -1,5 +1,6 @@
-#include "PACKAGES_CONFIG.h"
-#include "CPP_OPTIONS.h"
+#include "IHOP_OPTIONS.h"
+C#include "PACKAGES_CONFIG.h"
+C#include "CPP_OPTIONS.h"
 
 CBOP
 C     !ROUTINE: IHOP_CALC_SLD
@@ -28,6 +29,7 @@ C     == Global variables ==
 # include "GMREDI.h"
 #endif
 #ifdef ALLOW_IHOP
+# include "IHOP_SIZE.h"
 # include "IHOP.h"
 #endif
 
@@ -142,11 +144,10 @@ C         k levels... see calc_oce_mxlayer.F
          DO i=1-OLx,sNx+OLx
           kMax = ihop_kMax(i,j)
           ihop_sld(i,j,bi,bj) = ihop_ssp(i,j,kMax,bi,bj) 
-                                * maskC(i,j,kMax,bi,bj)
+     &                          * maskC(i,j,kMax,bi,bj)
 
          ENDDO
         ENDDO
-
 
 #ifdef ALLOW_DIAGNOSTICS
        IF ( useDiagnostics ) THEN
