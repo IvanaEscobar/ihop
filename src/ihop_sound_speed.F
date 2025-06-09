@@ -70,7 +70,8 @@ c#endif
 #ifdef ALLOW_DIAGNOSTICS
       IF ( useDiagnostics ) THEN
         calc_soundSpeed = calc_soundSpeed
-     &               .OR. DIAGNOSTICS_IS_ON( 'ihop_ssp', myThid )
+     &               .OR. DIAGNOSTICS_IS_ON( 'SVEL    ', myThid )
+     &               .OR. DIAGNOSTICS_IS_ON( 'SLD     ', myThid )
       ENDIF
 #endif /* ALLOW_DIAGNOSTICS */
 
@@ -98,6 +99,18 @@ c#endif
 
 C-    end-if calc_soundSpeed
       ENDIF
+
+#ifdef ALLOW_DIAGNOSTICS
+      IF ( useDiagnostics
+     &     .AND.DIAGNOSTICS_IS_ON( 'SLD     ', myThid) ) THEN
+       DO bj=myByLo(myThid),myByHi(myThid)
+        DO bi=myBxLo(myThid),myBxHi(myThid)
+         CALL IHOP_CALC_SLD(bi,bj,myThid)
+
+        ENDDO
+       ENDDO
+      ENDIF
+#endif /* ALLOW_DIAGNOSTICS */
 
 #endif /* ALLOW_IHOP */
 

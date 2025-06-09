@@ -6,8 +6,7 @@ CBOP
 C     !ROUTINE: IHOP_CALC_SLD
 C     !INTERFACE:
       SUBROUTINE IHOP_CALC_SLD(
-     I                       rhoSurf, sigmaR,
-     I                       bi, bj, myTime, myIter, myThid )
+     I                       bi, bj, myThid )
 C     !DESCRIPTION: \bv
 C     *==========================================================*
 C     | S/R IHOP_CALC_SLD
@@ -35,17 +34,9 @@ C     == Global variables ==
 
 C     !INPUT/OUTPUT PARAMETERS:
 C     == Routine Arguments ==
-C     rhoSurf   :: Surface density anomaly
-C     sigmaR    :: Vertical gradient of potential density
 C     bi,bj     :: tile indices
-C     myTime    :: Current time in simulation
-C     myIter    :: Current iteration number in simulation
 C     myThid    :: my Thread Id number
-      _RL     rhoSurf(1-OLx:sNx+OLx,1-OLy:sNy+OLy)
-      _RL     sigmaR (1-OLx:sNx+OLx,1-OLy:sNy+OLy,Nr)
       INTEGER bi, bj
-      _RL     myTime
-      INTEGER myIter
       INTEGER myThid
 
 C     === Functions ====
