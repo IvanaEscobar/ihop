@@ -480,7 +480,7 @@ CONTAINS
     END IF
 
     ! Check that x is inside the box where the sound speed is defined
-    IF ( x(1) < SSP%Seg%r( 1 ) .OR. x(1) > SSP%Seg%r( SSP%Nr ) ) THEN
+    IF ( x(1) < SSP%Seg%R( 1 ) .OR. x(1) > SSP%Seg%R( SSP%Nr ) ) THEN
 #ifdef IHOP_WRITE_OUT
      ! In adjoint mode we do not write output besides on the first run
      IF (IHOP_dumpfreq.GE.0) THEN
@@ -497,12 +497,12 @@ CONTAINS
       STOP 'ABNORMAL END: S/R Quad'
     END IF
 
-    ! find range-segment where x(1) in [ SSP%Seg%r( iSegr ), SSP%Seg%r( iSegr+1 ) )
+    ! find range-segment where x(1) in [ SSP%Seg%R( iSegr ), SSP%Seg%R( iSegr+1 ) )
     iSegr = 1           !RG
-    IF ( x(1) < SSP%Seg%r( iSegr ) .OR. x(1) >= SSP%Seg%r( iSegr+1 ) ) THEN
+    IF ( x(1) < SSP%Seg%R( iSegr ) .OR. x(1) >= SSP%Seg%R( iSegr+1 ) ) THEN
       foundr=.false.
       DO irT = 2, SSP%Nr   ! Search for bracketting segment ranges
-        IF ( x(1) < SSP%Seg%r( irT ) .and. .not. foundr ) THEN
+        IF ( x(1) < SSP%Seg%R( irT ) .and. .not. foundr ) THEN
           iSegr = irT - 1
           foundr=.true.
         END IF
@@ -531,8 +531,8 @@ CONTAINS
     c2 = SSP%cMat( iSegz, iSegr+1 ) + s2*cz2
 
     ! s1 = proportional distance of x(1) in range
-    delta_r = SSP%Seg%r( iSegr+1 ) - SSP%Seg%r( iSegr )
-    s1 = ( x(1) - SSP%Seg%r( iSegr ) ) / delta_r
+    delta_r = SSP%Seg%R( iSegr+1 ) - SSP%Seg%R( iSegr )
+    s1 = ( x(1) - SSP%Seg%R( iSegr ) ) / delta_r
     ! piecewise constant extrapolation for ranges outside SSP box
     s1 = MIN( s1, 1.0D0 )
     s1 = MAX( s1, 0.0D0 )
@@ -606,7 +606,7 @@ CONTAINS
 
     ALLOCATE( SSP%cMat( SSP%Nz, SSP%Nr ), &
               SSP%czMat( SSP%Nz-1, SSP%Nr ), &
-              SSP%Seg%r( SSP%Nr ), &
+              SSP%Seg%R( SSP%Nr ), &
               STAT = iallocstat )
     IF ( iallocstat /= 0 ) THEN
 #ifdef IHOP_WRITE_OUT
@@ -622,8 +622,8 @@ CONTAINS
     SSP%czMat = -99.0 _d 0
 
     ! Set SSP contents
-    READ( SSPFile,  * ) SSP%Seg%r( 1:SSP%Nr )
-    SSP%Seg%r = 1000.0 * SSP%Seg%r   ! convert km to m
+    READ( SSPFile,  * ) SSP%Seg%R( 1:SSP%Nr )
+    SSP%Seg%R = 1000.0 * SSP%Seg%R   ! convert km to m
 
     READ( SSPFile,  * ) SSP%z( 1:SSP%Nz )
 
@@ -689,7 +689,7 @@ CONTAINS
 !**********************************************************************!
 SUBROUTINE init_fixed_ssp( myThid )
   ! Initiate parameters that don't change within a time series
-  ! Sets SSP%Nr,Nz,Seg%r, and ihop_sumweights
+  ! Sets SSP%Nr,Nz,Seg%R, and ihop_sumweights
   USE bdry_mod, only: Bdry
 
   ! == Routine Arguments ==
@@ -728,9 +728,9 @@ SUBROUTINE init_fixed_ssp( myThid )
   SSP%z( 2:(SSP%Nz-1) ) = rkSign*rC( 1:Nr )
   SSP%z( SSP%Nz )       = Bdry%Bot%HS%Depth ! rkSign*rF(Nr+1)*1.05
 
-  ! set SSP%Seg%r from data.ihop -> ihop_ranges
-  !IF (ALLOCATED(SSP%Seg%r)) DEALLOCATE(SSP%Seg%r)
-  ALLOCATE( SSP%Seg%r( SSP%Nr ), STAT = iallocstat )
+  ! set SSP%Seg%R from data.ihop -> ihop_ranges
+  !IF (ALLOCATED(SSP%Seg%R)) DEALLOCATE(SSP%Seg%R)
+  ALLOCATE( SSP%Seg%R( SSP%Nr ), STAT = iallocstat )
   IF ( iallocstat /= 0 ) THEN
 # ifdef IHOP_WRITE_OUT
     WRITE(msgBuf,'(2A)') 'SSPMOD init_fixed_SSP: ', &
@@ -740,9 +740,9 @@ SUBROUTINE init_fixed_ssp( myThid )
       STOP 'ABNORMAL END: S/R init_fixed_SSP'
   END IF
 
-  SSP%Seg%r( 1:SSP%Nr ) = ihop_ranges( 1:SSP%Nr )
+  SSP%Seg%R( 1:SSP%Nr ) = ihop_ranges( 1:SSP%Nr )
   ! Modify from [m] to [km]
-  SSP%Seg%r = 1000.0 * SSP%Seg%r
+  SSP%Seg%R = 1000.0 * SSP%Seg%R
 
   ! ONLY ALLOCATE cmat and czmat, to be filled per ihop run
   ALLOCATE( SSP%cMat( SSP%Nz, SSP%Nr ), &

@@ -56,7 +56,7 @@ CONTAINS
     ! Primarily, the parameters are related to the acoustic grid:
     ! - From initenvihop.F90:initEnv
     !   - Bdry%Top, Bdry%Bot,
-    !     SSP%AttenUnit,Type,Nr,Nz,z,SSP%Seg%r,
+    !     SSP%AttenUnit,Type,Nr,Nz,z,SSP%Seg%R,
     !     Pos%SX,SY,nSZ,nRZ,SZ,Rz,Ws,ISZ,Wr,Irz,nRR,Rr,Delta_r,
     !     Beam%RunType,Deltas,Nimage,iBeamWindow,Component,Multiplier,rloop,
     !     Beam%Box%r,Box%z,Type,

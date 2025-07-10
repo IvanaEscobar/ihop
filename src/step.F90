@@ -215,8 +215,8 @@ CONTAINS
 !$TAF store rseg = reducestep2d
 
     IF ( SSP%Type == 'Q' ) THEN ! Quad: 2D range-dependent SSP
-       rSeg( 1 ) = MAX( rSeg( 1 ), SSP%Seg%r( iSegr0     ) )
-       rSeg( 2 ) = MIN( rSeg( 2 ), SSP%Seg%r( iSegr0 + 1 ) )
+       rSeg( 1 ) = MAX( rSeg( 1 ), SSP%Seg%R( iSegr0     ) )
+       rSeg( 2 ) = MIN( rSeg( 2 ), SSP%Seg%R( iSegr0 + 1 ) )
     END IF
 
     ! interface crossing in range
