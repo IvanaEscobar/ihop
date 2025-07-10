@@ -78,7 +78,7 @@ MODULE ssp_mod
 
   ! SSP
   TYPE SSPStructure
-    INTEGER                 :: NPts, Nr, Nx, Ny, Nz
+    INTEGER                 :: nPts, nR, nX, nY, nZ
     REAL    (KIND=_RL90)    :: z( MaxSSP ), rho( MaxSSP )
     COMPLEX (KIND=_RL90)    :: c( MaxSSP ), cz( MaxSSP )
     REAL    (KIND=_RL90), ALLOCATABLE   :: cMat( :, : ), czMat( :, : )
@@ -154,11 +154,11 @@ CONTAINS
     ! Populate rest of SSP derived type based on SSP interpolation scheme
     SELECT CASE ( SSP%Type )
     CASE ( 'N' )  !  N2-linear profile option
-       n2( 1:SSP%NPts ) = 1.0 / SSP%c( 1:SSP%NPts )**2
-       !IEsco23 Test this: n2(  1:SSP%Nz ) = 1.0 / SSP%c( 1:SSP%Nz )**2
+       n2( 1:SSP%nPts ) = 1.0 / SSP%c( 1:SSP%nPts )**2
+       !IEsco23 Test this: n2(  1:SSP%nZ ) = 1.0 / SSP%c( 1:SSP%nZ )**2
 
        ! compute gradient, n2z
-       DO iz = 2, SSP%Npts
+       DO iz = 2, SSP%nPts
           n2z( iz-1 ) = (  n2(   iz ) - n2(    iz-1 ) ) / &
                         ( SSP%Z( iz ) - SSP%Z( iz-1 ) )
        END DO
@@ -168,24 +168,24 @@ CONTAINS
        !                                                               2      3
        ! compute coefficients of std cubic polynomial: c0 + c1*x + c2*x + c3*x
        !
-       CALL PCHIP( SSP%Z, SSP%c, SSP%NPts, cCoef, cSpln )
+       CALL PCHIP( SSP%Z, SSP%c, SSP%nPts, cCoef, cSpln )
 !IEsco23 Test this:
-!       CALL PCHIP( SSP%Z, SSP%c, SSP%Nz, cCoef, cSpln )
+!       CALL PCHIP( SSP%Z, SSP%c, SSP%nZ, cCoef, cSpln )
 
     CASE ( 'S' )  !  Cubic spline profile option
-       cSpln( 1, 1:SSP%NPts ) = SSP%c( 1:SSP%NPts )
+       cSpln( 1, 1:SSP%nPts ) = SSP%c( 1:SSP%nPts )
 !IEsco23 Test this:
-!       cSpln( 1, 1 : SSP%Nz ) = SSP%c( 1 : SSP%Nz )
+!       cSpln( 1, 1 : SSP%nZ ) = SSP%c( 1 : SSP%nZ )
 
        ! Compute spline coefs
-       CALL cSpline( SSP%Z, cSpln( 1, 1 ), SSP%NPts, 0, 0, SSP%NPts )
+       CALL cSpline( SSP%Z, cSpln( 1, 1 ), SSP%nPts, 0, 0, SSP%nPts )
 !IEsco23 Test this:
-!      CALL CSpline( SSP%Z, cSpln( 1,1 ), SSP%Nz,iBCBeg, iBCEnd, SSP%Nz )
+!      CALL CSpline( SSP%Z, cSpln( 1,1 ), SSP%nZ,iBCBeg, iBCEnd, SSP%nZ )
 
     CASE ( 'Q' )
        ! calculate cz
-       DO ir = 1, SSP%Nr
-         DO iz = 2, SSP%Nz
+       DO ir = 1, SSP%nR
+         DO iz = 2, SSP%nZ
            ! delta_z = ( SSP%Z( iz2 ) - SSP%Z( iz2-1 ) )
            SSP%czMat( iz-1, ir ) = ( SSP%cMat( iz,   ir ) - &
                                      SSP%cMat( iz-1, ir ) ) / &
@@ -273,8 +273,8 @@ CONTAINS
     IF ( x( 2 ) < SSP%Z( iSegz ) .OR. x( 2 ) > SSP%Z( iSegz+1 ) ) THEN
       foundz=.false.
 !IEsco23 Test this:
-!     DO iz = 2, SSP%Nz   ! Search for bracketting Depths
-      DO iz = 2, SSP%NPts   ! Search for bracketting Depths
+!     DO iz = 2, SSP%nZ   ! Search for bracketting Depths
+      DO iz = 2, SSP%nPts   ! Search for bracketting Depths
         IF ( x( 2 ) < SSP%Z( iz ) .and. .not. foundz ) THEN
           iSegz  = iz - 1
           foundz = .true.
@@ -316,8 +316,8 @@ CONTAINS
     IF ( x(2) < SSP%Z( iSegz ) .OR. x(2) > SSP%Z( iSegz+1 ) ) THEN
        foundz=.false.
 !IEsco23 Test this:
-!      DO iz = 2, SSP%Nz   ! Search for bracketting Depths
-       DO iz = 2, SSP%NPts   ! Search for bracketting Depths
+!      DO iz = 2, SSP%nZ   ! Search for bracketting Depths
+       DO iz = 2, SSP%nPts   ! Search for bracketting Depths
           IF ( x(2) < SSP%Z( iz ) .and. .not. foundz ) THEN
              iSegz  = iz - 1
              foundz = .true.
@@ -361,8 +361,8 @@ CONTAINS
     IF ( x(2) < SSP%Z( iSegz ) .OR. x(2) > SSP%Z( iSegz+1 ) ) THEN
        foundz=.false.
 !IEsco23 Test this:
-!      DO iz = 2, SSP%Nz   ! Search for bracketting Depths
-       DO iz = 2, SSP%NPts   ! Search for bracketting Depths
+!      DO iz = 2, SSP%nZ   ! Search for bracketting Depths
+       DO iz = 2, SSP%nPts   ! Search for bracketting Depths
           IF ( x(2) < SSP%Z( iz ) .and. .not. foundz ) THEN
              iSegz  = iz - 1
              foundz = .true.
@@ -419,8 +419,8 @@ CONTAINS
      IF ( x(2) < SSP%Z( iSegz ) .OR. x(2) > SSP%Z( iSegz+1 ) ) THEN
         foundz=.false.
 !IEsco23 Test this:
-!       DO iz = 2, SSP%Nz   ! Search for bracketting Depths
-        DO iz = 2, SSP%NPts   ! Search for bracketting Depths
+!       DO iz = 2, SSP%nZ   ! Search for bracketting Depths
+        DO iz = 2, SSP%nPts   ! Search for bracketting Depths
            IF ( x(2) < SSP%Z( iz ) .and. .not. foundz ) THEN
               iSegz  = iz - 1
               foundz = .true.
@@ -471,7 +471,7 @@ CONTAINS
     iSegz = 1                   !RG
     IF ( x(2) < SSP%Z( iSegz ) .OR. x(2) > SSP%Z( iSegz+1 ) ) THEN
        foundz=.false.
-       DO iz = 2, SSP%Nz   ! Search for bracketting Depths
+       DO iz = 2, SSP%nZ   ! Search for bracketting Depths
           IF ( x(2) < SSP%Z( iz ) .and. .not. foundz ) THEN
              iSegz  = iz - 1
              foundz = .true.
@@ -480,7 +480,7 @@ CONTAINS
     END IF
 
     ! Check that x is inside the box where the sound speed is defined
-    IF ( x(1) < SSP%Seg%R( 1 ) .OR. x(1) > SSP%Seg%R( SSP%Nr ) ) THEN
+    IF ( x(1) < SSP%Seg%R( 1 ) .OR. x(1) > SSP%Seg%R( SSP%nR ) ) THEN
 #ifdef IHOP_WRITE_OUT
      ! In adjoint mode we do not write output besides on the first run
      IF (IHOP_dumpfreq.GE.0) THEN
@@ -501,7 +501,7 @@ CONTAINS
     iSegr = 1           !RG
     IF ( x(1) < SSP%Seg%R( iSegr ) .OR. x(1) >= SSP%Seg%R( iSegr+1 ) ) THEN
       foundr=.false.
-      DO irT = 2, SSP%Nr   ! Search for bracketting segment ranges
+      DO irT = 2, SSP%nR   ! Search for bracketting segment ranges
         IF ( x(1) < SSP%Seg%R( irT ) .and. .not. foundr ) THEN
           iSegr = irT - 1
           foundr=.true.
@@ -602,11 +602,11 @@ CONTAINS
         STOP 'ABNORMAL END: S/R ReadSSP'
     END IF
 
-    READ( SSPFile,  * ) SSP%Nr, SSP%Nz
+    READ( SSPFile,  * ) SSP%nR, SSP%nZ
 
-    ALLOCATE( SSP%cMat( SSP%Nz, SSP%Nr ), &
-              SSP%czMat( SSP%Nz-1, SSP%Nr ), &
-              SSP%Seg%R( SSP%Nr ), &
+    ALLOCATE( SSP%cMat( SSP%nZ, SSP%nR ), &
+              SSP%czMat( SSP%nZ-1, SSP%nR ), &
+              SSP%Seg%R( SSP%nR ), &
               STAT = iallocstat )
     IF ( iallocstat /= 0 ) THEN
 #ifdef IHOP_WRITE_OUT
@@ -622,17 +622,17 @@ CONTAINS
     SSP%czMat = -99.0 _d 0
 
     ! Set SSP contents
-    READ( SSPFile,  * ) SSP%Seg%R( 1:SSP%Nr )
+    READ( SSPFile,  * ) SSP%Seg%R( 1:SSP%nR )
     SSP%Seg%R = 1000.0 * SSP%Seg%R   ! convert km to m
 
-    READ( SSPFile,  * ) SSP%Z( 1:SSP%Nz )
+    READ( SSPFile,  * ) SSP%Z( 1:SSP%nZ )
 
-    DO iz = 1, SSP%Nz
+    DO iz = 1, SSP%nZ
        READ(  SSPFile, * ) SSP%cMat( iz, : )
     END DO
     CLOSE( SSPFile )
 
-    SSP%NPts = 1
+    SSP%nPts = 1
     DO iz = 1, MaxSSP
        alphaR = SSP%cMat( iz, 1 )
 
@@ -658,7 +658,7 @@ CONTAINS
 
        ! Did we read the last point?
        IF ( ABS( SSP%Z( iz ) - Depth ) < 100. * EPSILON( 1.0e0 ) ) THEN
-          IF ( SSP%NPts == 1 ) THEN
+          IF ( SSP%nPts == 1 ) THEN
 #ifdef IHOP_WRITE_OUT
                 WRITE(msgBuf,'(2A)') 'SSPMOD ReadSSP: ', &
                                      'The SSP must have at least 2 points'
@@ -670,7 +670,7 @@ CONTAINS
           RETURN
        ENDIF
 
-       SSP%NPts = SSP%NPts + 1
+       SSP%nPts = SSP%nPts + 1
     END DO
 
     ! Fall through means too many points in the profile
@@ -689,7 +689,7 @@ CONTAINS
 !**********************************************************************!
 SUBROUTINE init_fixed_ssp( myThid )
   ! Initiate parameters that don't change within a time series
-  ! Sets SSP%Nr,Nz,Seg%R, and ihop_sumweights
+  ! Sets SSP%nR,nZ,Seg%R, and ihop_sumweights
   USE bdry_mod, only: Bdry
 
   ! == Routine Arguments ==
@@ -712,25 +712,25 @@ SUBROUTINE init_fixed_ssp( myThid )
   tolerance  = 5 _d -5
 
   ! init default SSP values (only fixed memory vars)
-  SSP%NPts = -1
+  SSP%nPts = -1
   SSP%Z    = -999.0
   SSP%rho  = -999.0
   SSP%c    = (-999.0, 0.0)
   SSP%cz   = (-999.0, 0.0)
 
   ! set ihop SSP grid size
-  SSP%Nz = Nr+2 ! add z=0 z=Depth layers to GCM Nr
-  SSP%Nr = IHOP_NPTS_RANGE
-  SSP%NPts = SSP%Nz
+  SSP%nZ = Nr+2 ! add z=0 z=Depth layers to GCM Nr
+  SSP%nR = IHOP_NPTS_RANGE
+  SSP%nPts = SSP%nZ
 
   ! set SSP%Z from rC, rkSign=-1 used bc ihop uses +ive depths
   SSP%Z( 1 )            = 0.0 _d 0
-  SSP%Z( 2:(SSP%Nz-1) ) = rkSign*rC( 1:Nr )
-  SSP%Z( SSP%Nz )       = Bdry%Bot%HS%Depth ! rkSign*rF(Nr+1)*1.05
+  SSP%Z( 2:(SSP%nZ-1) ) = rkSign*rC( 1:Nr )
+  SSP%Z( SSP%nZ )       = Bdry%Bot%HS%Depth ! rkSign*rF(Nr+1)*1.05
 
   ! set SSP%Seg%R from data.ihop -> ihop_ranges
   !IF (ALLOCATED(SSP%Seg%R)) DEALLOCATE(SSP%Seg%R)
-  ALLOCATE( SSP%Seg%R( SSP%Nr ), STAT = iallocstat )
+  ALLOCATE( SSP%Seg%R( SSP%nR ), STAT = iallocstat )
   IF ( iallocstat /= 0 ) THEN
 # ifdef IHOP_WRITE_OUT
     WRITE(msgBuf,'(2A)') 'SSPMOD init_fixed_SSP: ', &
@@ -740,13 +740,13 @@ SUBROUTINE init_fixed_ssp( myThid )
       STOP 'ABNORMAL END: S/R init_fixed_SSP'
   END IF
 
-  SSP%Seg%R( 1:SSP%Nr ) = ihop_ranges( 1:SSP%Nr )
+  SSP%Seg%R( 1:SSP%nR ) = ihop_ranges( 1:SSP%nR )
   ! Modify from [m] to [km]
   SSP%Seg%R = 1000.0 * SSP%Seg%R
 
   ! ONLY ALLOCATE cmat and czmat, to be filled per ihop run
-  ALLOCATE( SSP%cMat( SSP%Nz, SSP%Nr ), &
-            SSP%czMat( SSP%Nz-1, SSP%Nr ), &
+  ALLOCATE( SSP%cMat( SSP%nZ, SSP%nR ), &
+            SSP%czMat( SSP%nZ-1, SSP%nR ), &
             STAT = iallocstat )
   IF ( iallocstat /= 0 ) THEN
 # ifdef IHOP_WRITE_OUT
@@ -764,7 +764,7 @@ SUBROUTINE init_fixed_ssp( myThid )
   ! IDW Interpolate: COMPARING with LAT LONs (xC, yC)
   !==================================================
   ! Sum IDW weights
-  DO ii = 1, SSP%Nr
+  DO ii = 1, SSP%nR
     ihop_sumweights(ii,:) = sum(ihop_idw_weights(ii,:))
   END DO
 
@@ -773,7 +773,7 @@ SUBROUTINE init_fixed_ssp( myThid )
     DO bi=myBxLo(myThid),myBxHi(myThid)
       DO j=1,sNy
         DO i=1,sNx
-          DO ii=1, SSP%Nr
+          DO ii=1, SSP%nR
             skip_range = .FALSE.
 
             DO jj=1,IHOP_npts_idw
@@ -861,9 +861,9 @@ SUBROUTINE gcmSSP( myThid )
 
   IF(ALLOCATED(tileSSP)) DEALLOCATE(tileSSP)
   IF(ALLOCATED(globSSP)) DEALLOCATE(globSSP)
-!  ALLOCATE( tileSSP(SSP%Nz,SSP%Nr,nSx,nSy), STAT = iallocstat )
-  ALLOCATE( tileSSP(SSP%Nz,SSP%Nr,nSx,nSy), tmpSSP(nSx,nSy,SSP%Nz*SSP%Nr), &
-            globSSP(SSP%Nz*SSP%Nr), STAT = iallocstat )
+!  ALLOCATE( tileSSP(SSP%nZ,SSP%nR,nSx,nSy), STAT = iallocstat )
+  ALLOCATE( tileSSP(SSP%nZ,SSP%nR,nSx,nSy), tmpSSP(nSx,nSy,SSP%nZ*SSP%nR), &
+            globSSP(SSP%nZ*SSP%nR), STAT = iallocstat )
   IF ( iallocstat /= 0 ) THEN
 # ifdef IHOP_WRITE_OUT
     WRITE(msgBuf,'(2A)') 'SSPMOD gcmSSP: ', &
@@ -906,11 +906,11 @@ SUBROUTINE gcmSSP( myThid )
 
 #ifdef ALLOW_AUTODIFF_TAMC
 #endif
-                DO iz = 1, SSP%Nz - 1
+                DO iz = 1, SSP%nZ - 1
 #ifdef ALLOW_AUTODIFF_TAMC
                   hkey = jj + (ii-1)*IHOP_npts_idw + (ijkey-1)*sNy*sNx*nSy*nSx
-                  lockey = iz + (hkey-1)*(SSP%Nz-1)*IHOP_npts_idw*IHOP_npts_range*sNx*sNy*nSx*nSy
-!                  + ((jj-1) + ((ii-1) + (ijkey-1)*IHOP_npts_range)*IHOP_npts_idw)*(SSP%Nz-1)
+                  lockey = iz + (hkey-1)*(SSP%nZ-1)*IHOP_npts_idw*IHOP_npts_range*sNx*sNy*nSx*nSy
+!                  + ((jj-1) + ((ii-1) + (ijkey-1)*IHOP_npts_range)*IHOP_npts_idw)*(SSP%nZ-1)
 !$TAF store njj(ii) = loctape_ihop_gcmssp_bibj_ij_iijj_k, key=lockey, kind=isbyte
 #endif
 
@@ -919,7 +919,7 @@ SUBROUTINE gcmSSP( myThid )
       tileSSP(1, ii, bi, bj) = tileSSP(1, ii, bi, bj) + &
         CHEN_MILLERO(i, j, 0, bi, bj, myThid) * &
         ihop_idw_weights(ii, jj) / ihop_sumweights(ii, iz)
-    ELSE ! 2:(SSP%Nz-1)
+    ELSE ! 2:(SSP%nZ-1)
       ! Middle depth layers, only when not already underground
       IF (ihop_sumweights(ii, iz-1) .GT. 0.0) THEN
         ! isolate njj increments for TAF 
@@ -946,20 +946,20 @@ SUBROUTINE gcmSSP( myThid )
       END IF
 
       ! Extrapolate through bathymetry; don't interpolate
-      IF (iz .EQ. SSP%Nz-1 .OR. ihop_sumweights(ii, iz-1) .EQ. 0.0) THEN
+      IF (iz .EQ. SSP%nZ-1 .OR. ihop_sumweights(ii, iz-1) .EQ. 0.0) THEN
         k = iz
 
         IF (njj(ii) .GE. IHOP_npts_idw) THEN
           ! Determine if you are at the last vlevel
-          IF (iz .EQ. SSP%Nz-1 .AND. ihop_sumweights(ii, iz-1) .NE. 0.0) &
+          IF (iz .EQ. SSP%nZ-1 .AND. ihop_sumweights(ii, iz-1) .NE. 0.0) &
               k = k + 1
 
           ! Calc depth gradient
           dcdz = (tileSSP(k-1, ii, bi, bj) - tileSSP(k-2, ii, bi, bj)) / &
                  (SSP%Z(k-1) - SSP%Z(k-2))
           ! Extrapolate
-          tileSSP(k:SSP%Nz, ii, bi, bj) = &
-            tileSSP(k-1, ii, bi, bj) + dcdz * SSP%Z(k:SSP%Nz)
+          tileSSP(k:SSP%nZ, ii, bi, bj) = &
+            tileSSP(k-1, ii, bi, bj) + dcdz * SSP%Z(k:SSP%nZ)
           ! Move to next range point, ii
           interp_finished = .TRUE.
 
@@ -982,8 +982,8 @@ SUBROUTINE gcmSSP( myThid )
   DO bj=myByLo(myThid),myByHi(myThid)
     DO bi=myBxLo(myThid),myBxHi(myThid)
       k = 1
-      DO jj = 1,SSP%Nr
-        DO ii = 1,SSP%Nz
+      DO jj = 1,SSP%nR
+        DO ii = 1,SSP%nZ
           tmpSSP(bi,bj,k) = tileSSP(ii,jj,bi,bj)
           k = k + 1
         END DO
@@ -992,14 +992,14 @@ SUBROUTINE gcmSSP( myThid )
   END DO
 
 !IESCO c68s: IF ((nPx.GT.1) .OR. (nPy.GT.1)) THEN
-!IESCO c68s:   CALL GLOBAL_VEC_SUM_R8(SSP%Nz*SSP%Nr,SSP%Nz*SSP%Nr,tileSSP,myThid)
+!IESCO c68s:   CALL GLOBAL_VEC_SUM_R8(SSP%nZ*SSP%nR,SSP%nZ*SSP%nR,tileSSP,myThid)
 !IESCO c68s: ENDIF
-  CALL GLOBAL_SUM_VECTOR_RL(SSP%Nz*SSP%Nr,tmpSSP,globSSP,myThid)
+  CALL GLOBAL_SUM_VECTOR_RL(SSP%nZ*SSP%nR,tmpSSP,globSSP,myThid)
 
   ! reshape ssp to matrix
   k = 1
-  DO jj = 1,SSP%Nr
-    DO ii = 1,SSP%Nz
+  DO jj = 1,SSP%nR
+    DO ii = 1,SSP%nZ
       SSP%cMat(ii,jj) = globSSP(k)
       k = k + 1
     END DO
@@ -1016,7 +1016,7 @@ SUBROUTINE gcmSSP( myThid )
 
   ! set vector structured c, rho, and cz for first range point
   IF (.not. useSSPFile ) THEN ! if usessp, these have already been set
-    DO iz = 1,SSP%Nz
+    DO iz = 1,SSP%nZ
       alphaR = SSP%cMat( iz, 1 )
 
       SSP%c(iz) = CRCI( SSP%Z(iz), alphaR, alphaI, SSP%AttenUnit, bPower, fT, &
@@ -1057,7 +1057,7 @@ SUBROUTINE writeSSP( myThid )
   ! == Local Variables ==
   INTEGER           :: iz
   CHARACTER*(80)    :: fmtstr
-  REAL (KIND=_RL90) :: ssptmp(SSP%Nr)
+  REAL (KIND=_RL90) :: ssptmp(SSP%nR)
 
   ! init local vars
   ssptmp = 0.0
@@ -1084,26 +1084,26 @@ SUBROUTINE writeSSP( myThid )
     WRITE(msgBuf,'(A)')
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 
-    IF (SSP%Nr .GT. 1) THEN
+    IF (SSP%nR .GT. 1) THEN
       WRITE(msgBuf,'(A)') 'Using range-dependent sound speed'
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
     END IF
-    IF (SSP%Nr .EQ. 1) THEN
+    IF (SSP%nR .EQ. 1) THEN
       WRITE(msgBuf,'(A)') 'Using range-independent sound speed'
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
     END IF
 
-    WRITE(msgBuf,'(A,I10)') 'Number of SSP ranges = ', SSP%Nr
+    WRITE(msgBuf,'(A,I10)') 'Number of SSP ranges = ', SSP%nR
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(A,I10)') 'Number of SSP depths = ', SSP%Nz
+    WRITE(msgBuf,'(A,I10)') 'Number of SSP depths = ', SSP%nZ
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 
     WRITE(msgBuf,'(A)')
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
     WRITE(msgBuf,'(A)') 'Profile ranges [km]:'
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(fmtStr,'(A,I10,A)') '(T11,',SSP%Nr, 'F10.2)'
-    ssptmp = SSP%Seg%R( 1:SSP%Nr ) / 1000.0
+    WRITE(fmtStr,'(A,I10,A)') '(T11,',SSP%nR, 'F10.2)'
+    ssptmp = SSP%Seg%R( 1:SSP%nR ) / 1000.0
     WRITE(msgBuf,fmtStr) ssptmp
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 
@@ -1115,8 +1115,8 @@ SUBROUTINE writeSSP( myThid )
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 
     ssptmp = 0.0
-    WRITE(fmtStr,'(A,I10,A)') '(',SSP%Nr+1, 'F10.2)'
-    DO iz = 1, SSP%Nz
+    WRITE(fmtStr,'(A,I10,A)') '(',SSP%nR+1, 'F10.2)'
+    DO iz = 1, SSP%nZ
       ssptmp = ssp%cMat( iz,: )
       WRITE(msgBuf,fmtStr) SSP%Z( iz ), ssptmp
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
@@ -1140,7 +1140,7 @@ SUBROUTINE writeSSP( myThid )
       WRITE(msgBuf,'(A)')
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 
-      DO iz = 1, SSP%NPts
+      DO iz = 1, SSP%nPts
          WRITE(msgBuf,'( F10.2, 3X, 2F10.2, 3X, F6.2, 3X, 2F10.4)') &
              SSP%Z( iz ), SSP%cMat(iz,1), betaR, rhoR, alphaI, betaI
          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )

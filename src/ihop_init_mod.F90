@@ -56,7 +56,7 @@ CONTAINS
     ! Primarily, the parameters are related to the acoustic grid:
     ! - From initenvihop.F90:initEnv
     !   - Bdry%Top, Bdry%Bot,
-    !     SSP%AttenUnit,Type,Nr,Nz,z,SSP%Seg%R,
+    !     SSP%AttenUnit,Type,nR,nZ,z,SSP%Seg%R,
     !     Pos%SX,SY,nSZ,nRZ,SZ,Rz,Ws,ISZ,Wr,Irz,nRR,Rr,Delta_r,
     !     Beam%RunType,Deltas,Nimage,iBeamWindow,Component,Multiplier,rloop,
     !     Beam%Box%R,Box%Z,Type,
@@ -547,7 +547,7 @@ CONTAINS
         IF ( Pos%nRZ /= Pos%nRR ) THEN
 #ifdef IHOP_WRITE_OUT
           WRITE(msgBuf,'(2A)') 'INIT_FIXED_ENV ReadRunType: ', &
-                  'Irregular grid option selected with nRZ not equal to Nr'
+                  'Irregular grid option selected with nRZ != nRR'
           CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
           STOP 'ABNORMAL END: S/R ReadRunType'

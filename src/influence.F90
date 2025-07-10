@@ -621,14 +621,14 @@ CONTAINS
 
 ! **********************************************************************!
 
-  SUBROUTINE ScalePressure( Dalpha, c, r, U, NRz, Nr, RunType, freq )
+  SUBROUTINE ScalePressure( Dalpha, c, r, U, nRz, nR, RunType, freq )
 
     ! Scale the pressure field
 
-    INTEGER,           INTENT( IN    ) :: NRz, Nr
-    REAL (KIND=_RL90), INTENT( IN    ) :: r( Nr )   ! Rr ranges
+    INTEGER,           INTENT( IN    ) :: nRz, nR
+    REAL (KIND=_RL90), INTENT( IN    ) :: r( nR )   ! Rr ranges
     REAL (KIND=_RL90), INTENT( IN    ) :: Dalpha, freq, c ! angular spacing between rays, source frequency, nominal sound speed
-    COMPLEX,           INTENT( INOUT ) :: U( NRz, Nr )    ! Pressure field
+    COMPLEX,           INTENT( INOUT ) :: U( nRz, nR )    ! Pressure field
     CHARACTER (LEN=5), INTENT( IN    ) :: RunType
     REAL (KIND=_RL90)                  :: const, factor
 
@@ -646,7 +646,7 @@ CONTAINS
     IF ( RunType( 1 : 1 ) /= 'C' ) U = SQRT( REAL( U ) )
 
     ! scale and/or incorporate cylindrical spreading
-    Ranges: DO ir = 1, Nr
+    Ranges: DO ir = 1, nR
        IF ( RunType( 4 : 4 ) == 'X' ) THEN   ! line source
           factor = -4.0 * SQRT( PI ) * const
        ELSE                                  ! point source
