@@ -190,6 +190,16 @@
 !                           = 1: implicit on provisional velocity
 !                                (i.e., before grad.Eta increment)
 !                           = 2: fully implicit (combined with Impl Surf.Press)
+!     selectPenetratingSW :: select treatment of penetrating shortwave radiation
+!                            (requires to define SHORTWAVE_HEATING):
+!                           = 0: no shortwave penetration
+!                           = 1: constant in time and horizontally uniform
+!                                fraction of shortwave penetration (default)
+!                           = 2: constant in time, but non-uniform fraction of
+!                                shortwave penetration (not yet coded)
+!                           > 2: time varying fraction of shortwave penetration
+!                                according to external function (e.g. BGC model,
+!                                not yet coded)
 !     momForcingOutAB     :: =1: take momentum forcing contribution
 !                            out of (=0: in) Adams-Bashforth time stepping.
 !     tracForcingOutAB    :: =1: take tracer (Temp,Salt,pTracers) forcing contribution
@@ -239,7 +249,7 @@
      &        saltAdvScheme, saltVertAdvScheme,                                                                                     &
      &        selectKEscheme, selectVortScheme, selectMetricTerms,                                                                  &
      &        selectCoriScheme, select3dCoriScheme,                                                                                 &
-     &        selectBotDragQuadr, pCellMix_select,                                                                                  &
+     &        selectBotDragQuadr, selectPenetratingSW, pCellMix_select,                                                             &
      &        readBinaryPrec, writeBinaryPrec,                                                                                      &
      &        rwSuffixType, monitorSelect, debugLevel, plotLevel
       INTEGER cg2dMaxIters
@@ -270,6 +280,7 @@
       INTEGER selectCoriScheme
       INTEGER select3dCoriScheme
       INTEGER selectBotDragQuadr
+      INTEGER selectPenetratingSW
       INTEGER pCellMix_select
       INTEGER readBinaryPrec
       INTEGER writeBinaryPrec
@@ -562,11 +573,11 @@
 
 !--   COMMON /PARM_R/ "Real" valued parameters used by the model.
 !     cg2dTargetResidual
-!          :: Target residual for cg2d solver; no unit (RHS normalisation)
+!          :: Target residual for cg2d solver ; no unit (RHS normalisation)
 !     cg2dTargetResWunit
-!          :: Target residual for cg2d solver; W unit (No RHS normalisation)
+!          :: Target residual for cg2d solver ; W unit (No RHS normalisation)
 !     cg3dTargetResidual
-!               :: Target residual for cg3d solver.
+!          :: Target residual for cg3d solver ; no unit (RHS normalisation)
 !     cg3dTargetResWunit
 !          :: Target residual for cg3d solver ; W unit (No RHS normalisation)
 !     cg2dpcOffDFac :: Averaging weight for preconditioner off-diagonal.
