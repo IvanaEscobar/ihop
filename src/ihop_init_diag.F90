@@ -164,10 +164,10 @@ CONTAINS
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 #else /* not IHOP_THREED */
       ranges = Beam%Box%R / 1000.0
-      WRITE(msgBuf,'(A,G11.4,A)') &
+      WRITE(msgBuf,'(A,G11.6,A)') &
           ' Maximum ray range, Box%R = ', ranges,' km'
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(A,G11.4,A)') &
+      WRITE(msgBuf,'(A,G11.6,A)') &
           ' Maximum ray depth, Box%Z = ', Beam%Box%Z,' m'
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 #endif /* not IHOP_THREED */
