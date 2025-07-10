@@ -160,7 +160,7 @@ CONTAINS
        ! compute gradient, n2z
        DO iz = 2, SSP%Npts
           n2z( iz-1 ) = (  n2(   iz ) - n2(    iz-1 ) ) / &
-                        ( SSP%z( iz ) - SSP%z( iz-1 ) )
+                        ( SSP%Z( iz ) - SSP%Z( iz-1 ) )
        END DO
 
     CASE ( 'C' )  !  C-linear profile option
@@ -168,9 +168,9 @@ CONTAINS
        !                                                               2      3
        ! compute coefficients of std cubic polynomial: c0 + c1*x + c2*x + c3*x
        !
-       CALL PCHIP( SSP%z, SSP%c, SSP%NPts, cCoef, cSpln )
+       CALL PCHIP( SSP%Z, SSP%c, SSP%NPts, cCoef, cSpln )
 !IEsco23 Test this:
-!       CALL PCHIP( SSP%z, SSP%c, SSP%Nz, cCoef, cSpln )
+!       CALL PCHIP( SSP%Z, SSP%c, SSP%Nz, cCoef, cSpln )
 
     CASE ( 'S' )  !  Cubic spline profile option
        cSpln( 1, 1:SSP%NPts ) = SSP%c( 1:SSP%NPts )
@@ -178,18 +178,18 @@ CONTAINS
 !       cSpln( 1, 1 : SSP%Nz ) = SSP%c( 1 : SSP%Nz )
 
        ! Compute spline coefs
-       CALL cSpline( SSP%z, cSpln( 1, 1 ), SSP%NPts, 0, 0, SSP%NPts )
+       CALL cSpline( SSP%Z, cSpln( 1, 1 ), SSP%NPts, 0, 0, SSP%NPts )
 !IEsco23 Test this:
-!      CALL CSpline( SSP%z, cSpln( 1,1 ), SSP%Nz,iBCBeg, iBCEnd, SSP%Nz )
+!      CALL CSpline( SSP%Z, cSpln( 1,1 ), SSP%Nz,iBCBeg, iBCEnd, SSP%Nz )
 
     CASE ( 'Q' )
        ! calculate cz
        DO ir = 1, SSP%Nr
          DO iz = 2, SSP%Nz
-           ! delta_z = ( SSP%z( iz2 ) - SSP%z( iz2-1 ) )
+           ! delta_z = ( SSP%Z( iz2 ) - SSP%Z( iz2-1 ) )
            SSP%czMat( iz-1, ir ) = ( SSP%cMat( iz,   ir ) - &
                                      SSP%cMat( iz-1, ir ) ) / &
-                                   ( SSP%z( iz ) - SSP%z( iz-1 ) )
+                                   ( SSP%Z( iz ) - SSP%Z( iz-1 ) )
          END DO
        END DO
 
@@ -270,19 +270,19 @@ CONTAINS
 
 
     iSegz = 1                   !RG
-    IF ( x( 2 ) < SSP%z( iSegz ) .OR. x( 2 ) > SSP%z( iSegz+1 ) ) THEN
+    IF ( x( 2 ) < SSP%Z( iSegz ) .OR. x( 2 ) > SSP%Z( iSegz+1 ) ) THEN
       foundz=.false.
 !IEsco23 Test this:
 !     DO iz = 2, SSP%Nz   ! Search for bracketting Depths
       DO iz = 2, SSP%NPts   ! Search for bracketting Depths
-        IF ( x( 2 ) < SSP%z( iz ) .and. .not. foundz ) THEN
+        IF ( x( 2 ) < SSP%Z( iz ) .and. .not. foundz ) THEN
           iSegz  = iz - 1
           foundz = .true.
         END IF
       END DO
     END IF
 
-    W = ( x( 2 ) - SSP%z( iSegz ) ) / ( SSP%z( iSegz+1 ) - SSP%z( iSegz ) )
+    W = ( x( 2 ) - SSP%Z( iSegz ) ) / ( SSP%Z( iSegz+1 ) - SSP%Z( iSegz ) )
 
     c     = REAL(  1.0D0 / SQRT( ( 1.0D0-W ) * n2( iSegz ) &
             + W * n2( iSegz+1 ) ) )
@@ -313,26 +313,26 @@ CONTAINS
     REAL (KIND=_RL90), INTENT( OUT ) :: c, cimag, gradc(2), crr, crz, czz, rho
 
     iSegz = 1                   !RG
-    IF ( x(2) < SSP%z( iSegz ) .OR. x(2) > SSP%z( iSegz+1 ) ) THEN
+    IF ( x(2) < SSP%Z( iSegz ) .OR. x(2) > SSP%Z( iSegz+1 ) ) THEN
        foundz=.false.
 !IEsco23 Test this:
 !      DO iz = 2, SSP%Nz   ! Search for bracketting Depths
        DO iz = 2, SSP%NPts   ! Search for bracketting Depths
-          IF ( x(2) < SSP%z( iz ) .and. .not. foundz ) THEN
+          IF ( x(2) < SSP%Z( iz ) .and. .not. foundz ) THEN
              iSegz  = iz - 1
              foundz = .true.
           END IF
        END DO
     END IF
 
-    c     = REAL(  SSP%c( iSegz ) + ( x(2) - SSP%z( iSegz ) ) * SSP%cz( iSegz ) )
-    cimag = AIMAG( SSP%c( iSegz ) + ( x(2) - SSP%z( iSegz ) ) * SSP%cz( iSegz ) )
+    c     = REAL(  SSP%c( iSegz ) + ( x(2) - SSP%Z( iSegz ) ) * SSP%cz( iSegz ) )
+    cimag = AIMAG( SSP%c( iSegz ) + ( x(2) - SSP%Z( iSegz ) ) * SSP%cz( iSegz ) )
     gradc = [ 0.0D0, REAL( SSP%cz( iSegz ) ) ]
     crr   = 0.0d0
     crz   = 0.0d0
     czz   = 0.0d0
 
-    W     = ( x(2) - SSP%z( iSegz ) ) / ( SSP%z( iSegz+1 ) - SSP%z( iSegz ) )
+    W     = ( x(2) - SSP%Z( iSegz ) ) / ( SSP%Z( iSegz+1 ) - SSP%Z( iSegz ) )
     rho   = ( 1.0D0-W ) * SSP%rho( iSegz ) + W * SSP%rho( iSegz+1 )
 
   RETURN
@@ -358,19 +358,19 @@ CONTAINS
 
 
     iSegz = 1                   !RG
-    IF ( x(2) < SSP%z( iSegz ) .OR. x(2) > SSP%z( iSegz+1 ) ) THEN
+    IF ( x(2) < SSP%Z( iSegz ) .OR. x(2) > SSP%Z( iSegz+1 ) ) THEN
        foundz=.false.
 !IEsco23 Test this:
 !      DO iz = 2, SSP%Nz   ! Search for bracketting Depths
        DO iz = 2, SSP%NPts   ! Search for bracketting Depths
-          IF ( x(2) < SSP%z( iz ) .and. .not. foundz ) THEN
+          IF ( x(2) < SSP%Z( iz ) .and. .not. foundz ) THEN
              iSegz  = iz - 1
              foundz = .true.
           END IF
        END DO
     END IF
 
-    xt = x( 2 ) - SSP%z( iSegz )
+    xt = x( 2 ) - SSP%Z( iSegz )
     c_cmplx = cCoef( 1, iSegz ) &
           + ( cCoef( 2, iSegz ) &
           + ( cCoef( 3, iSegz ) &
@@ -388,7 +388,7 @@ CONTAINS
     czz   = REAL( 2.0D0 * cCoef( 3, iSegz ) + &
                   6.0D0 * cCoef( 4, iSegz ) * xt )   ! dgradc(2)/dxt
 
-    W     = ( x(2) - SSP%z( iSegz ) ) / ( SSP%z( iSegz+1 ) - SSP%z( iSegz ) )
+    W     = ( x(2) - SSP%Z( iSegz ) ) / ( SSP%Z( iSegz+1 ) - SSP%Z( iSegz ) )
     ! linear interp of density
     rho   = ( 1.0D0-W ) * SSP%rho( iSegz ) + W * SSP%rho( iSegz+1 )
 
@@ -416,19 +416,19 @@ CONTAINS
     ! *** Section to return SSP info ***
 
     iSegz = 1                   !RG
-     IF ( x(2) < SSP%z( iSegz ) .OR. x(2) > SSP%z( iSegz+1 ) ) THEN
+     IF ( x(2) < SSP%Z( iSegz ) .OR. x(2) > SSP%Z( iSegz+1 ) ) THEN
         foundz=.false.
 !IEsco23 Test this:
 !       DO iz = 2, SSP%Nz   ! Search for bracketting Depths
         DO iz = 2, SSP%NPts   ! Search for bracketting Depths
-           IF ( x(2) < SSP%z( iz ) .and. .not. foundz ) THEN
+           IF ( x(2) < SSP%Z( iz ) .and. .not. foundz ) THEN
               iSegz  = iz - 1
               foundz = .true.
            END IF
         END DO
      END IF
 
-    hSpline = x(2) - SSP%z( iSegz )
+    hSpline = x(2) - SSP%Z( iSegz )
 
     CALL SplineALL( cSpln( 1, iSegz ), hSpline, c_cmplx, cz_cmplx, czz_cmplx )
 
@@ -440,7 +440,7 @@ CONTAINS
     crz   = 0.0d0
 
     ! linear interpolation for density
-    W   = ( x(2) - SSP%z( iSegz ) ) / ( SSP%z( iSegz+1 ) - SSP%z( iSegz ) )
+    W   = ( x(2) - SSP%Z( iSegz ) ) / ( SSP%Z( iSegz+1 ) - SSP%Z( iSegz ) )
     rho = ( 1.0D0-W ) * SSP%rho( iSegz ) + W * SSP%rho( iSegz+1 )
 
   RETURN
@@ -467,12 +467,12 @@ CONTAINS
     ! *** Section to return SSP info ***
 
     ! IESCO22: iSegz is the depth index containing x depth
-    ! find depth-layer where x(2) in ( SSP%z( iSegz ), SSP%z( iSegz+1 ) )
+    ! find depth-layer where x(2) in ( SSP%Z( iSegz ), SSP%Z( iSegz+1 ) )
     iSegz = 1                   !RG
-    IF ( x(2) < SSP%z( iSegz ) .OR. x(2) > SSP%z( iSegz+1 ) ) THEN
+    IF ( x(2) < SSP%Z( iSegz ) .OR. x(2) > SSP%Z( iSegz+1 ) ) THEN
        foundz=.false.
        DO iz = 2, SSP%Nz   ! Search for bracketting Depths
-          IF ( x(2) < SSP%z( iz ) .and. .not. foundz ) THEN
+          IF ( x(2) < SSP%Z( iz ) .and. .not. foundz ) THEN
              iSegz  = iz - 1
              foundz = .true.
           END IF
@@ -514,14 +514,14 @@ CONTAINS
     cz2 = SSP%czMat( iSegz, iSegr+1 )
 
     !IESCO22: s2 is distance btwn field point, x(2), and ssp depth @ iSegz
-    s2      = x(2)             - SSP%z( iSegz )
-    delta_z = SSP%z( iSegz+1 ) - SSP%z( iSegz )
+    s2      = x(2)             - SSP%Z( iSegz )
+    delta_z = SSP%Z( iSegz+1 ) - SSP%Z( iSegz )
     IF (delta_z <= 0 .OR. s2 > delta_z) THEN
 #ifdef IHOP_WRITE_OUT
-      WRITE(msgBuf, *) delta_z, s2, iSegz, SSP%z(iSegz)
+      WRITE(msgBuf, *) delta_z, s2, iSegz, SSP%Z(iSegz)
       CALL PRINT_ERROR( msgBuf,myThid )
       WRITE(msgBuf,'(2A)') 'SSPMOD Quad: ', &
-        'depth is not monotonically increasing in SSP%z'
+        'depth is not monotonically increasing in SSP%Z'
       CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
       STOP 'ABNORMAL END: S/R Quad'
@@ -554,7 +554,7 @@ CONTAINS
     czz   = 0.0
 
     ! linear interpolation for density
-    W   = ( x(2) - SSP%z( iSegz ) ) / ( SSP%z( iSegz+1 ) - SSP%z( iSegz ) )
+    W   = ( x(2) - SSP%Z( iSegz ) ) / ( SSP%Z( iSegz+1 ) - SSP%Z( iSegz ) )
     rho = ( 1.0D0-W ) * SSP%rho( iSegz ) + W * SSP%rho( iSegz+1 )
 
     !IESCO22: for thesis, czz=crr=0, and rho=1 at all times
@@ -625,7 +625,7 @@ CONTAINS
     READ( SSPFile,  * ) SSP%Seg%R( 1:SSP%Nr )
     SSP%Seg%R = 1000.0 * SSP%Seg%R   ! convert km to m
 
-    READ( SSPFile,  * ) SSP%z( 1:SSP%Nz )
+    READ( SSPFile,  * ) SSP%Z( 1:SSP%Nz )
 
     DO iz = 1, SSP%Nz
        READ(  SSPFile, * ) SSP%cMat( iz, : )
@@ -636,16 +636,16 @@ CONTAINS
     DO iz = 1, MaxSSP
        alphaR = SSP%cMat( iz, 1 )
 
-       SSP%c(iz) = CRCI( SSP%z(iz), alphaR, alphaI, SSP%AttenUnit, bPower, fT, &
+       SSP%c(iz) = CRCI( SSP%Z(iz), alphaR, alphaI, SSP%AttenUnit, bPower, fT, &
                            myThid )
        SSP%rho(iz) = rhoR !IEsco22: set to a default value of 1
 
        ! verify depths are monotone increasing
        IF ( iz > 1 ) THEN
-          IF ( SSP%z( iz ) .LE. SSP%z( iz-1 ) ) THEN
+          IF ( SSP%Z( iz ) .LE. SSP%Z( iz-1 ) ) THEN
 #ifdef IHOP_WRITE_OUT
             WRITE(msgBuf,'(2A,F10.2)') 'SSPMOD ReadSSP: ', &
-                  'The depths in the SSP must be monotone increasing', SSP%z(iz)
+                  'The depths in the SSP must be monotone increasing', SSP%Z(iz)
             CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
             STOP 'ABNORMAL END: S/R ReadSSP'
@@ -654,10 +654,10 @@ CONTAINS
 
        ! compute gradient, cz
        IF ( iz > 1 ) SSP%cz( iz-1 )  = ( SSP%c( iz ) - SSP%c( iz-1 ) ) / &
-                                       ( SSP%z( iz ) - SSP%z( iz-1 ) )
+                                       ( SSP%Z( iz ) - SSP%Z( iz-1 ) )
 
        ! Did we read the last point?
-       IF ( ABS( SSP%z( iz ) - Depth ) < 100. * EPSILON( 1.0e0 ) ) THEN
+       IF ( ABS( SSP%Z( iz ) - Depth ) < 100. * EPSILON( 1.0e0 ) ) THEN
           IF ( SSP%NPts == 1 ) THEN
 #ifdef IHOP_WRITE_OUT
                 WRITE(msgBuf,'(2A)') 'SSPMOD ReadSSP: ', &
@@ -713,7 +713,7 @@ SUBROUTINE init_fixed_ssp( myThid )
 
   ! init default SSP values (only fixed memory vars)
   SSP%NPts = -1
-  SSP%z    = -999.0
+  SSP%Z    = -999.0
   SSP%rho  = -999.0
   SSP%c    = (-999.0, 0.0)
   SSP%cz   = (-999.0, 0.0)
@@ -723,10 +723,10 @@ SUBROUTINE init_fixed_ssp( myThid )
   SSP%Nr = IHOP_NPTS_RANGE
   SSP%NPts = SSP%Nz
 
-  ! set SSP%z from rC, rkSign=-1 used bc ihop uses +ive depths
-  SSP%z( 1 )            = 0.0 _d 0
-  SSP%z( 2:(SSP%Nz-1) ) = rkSign*rC( 1:Nr )
-  SSP%z( SSP%Nz )       = Bdry%Bot%HS%Depth ! rkSign*rF(Nr+1)*1.05
+  ! set SSP%Z from rC, rkSign=-1 used bc ihop uses +ive depths
+  SSP%Z( 1 )            = 0.0 _d 0
+  SSP%Z( 2:(SSP%Nz-1) ) = rkSign*rC( 1:Nr )
+  SSP%Z( SSP%Nz )       = Bdry%Bot%HS%Depth ! rkSign*rF(Nr+1)*1.05
 
   ! set SSP%Seg%R from data.ihop -> ihop_ranges
   !IF (ALLOCATED(SSP%Seg%R)) DEALLOCATE(SSP%Seg%R)
@@ -956,10 +956,10 @@ SUBROUTINE gcmSSP( myThid )
 
           ! Calc depth gradient
           dcdz = (tileSSP(k-1, ii, bi, bj) - tileSSP(k-2, ii, bi, bj)) / &
-                 (SSP%z(k-1) - SSP%z(k-2))
+                 (SSP%Z(k-1) - SSP%Z(k-2))
           ! Extrapolate
           tileSSP(k:SSP%Nz, ii, bi, bj) = &
-            tileSSP(k-1, ii, bi, bj) + dcdz * SSP%z(k:SSP%Nz)
+            tileSSP(k-1, ii, bi, bj) + dcdz * SSP%Z(k:SSP%Nz)
           ! Move to next range point, ii
           interp_finished = .TRUE.
 
@@ -1019,12 +1019,12 @@ SUBROUTINE gcmSSP( myThid )
     DO iz = 1,SSP%Nz
       alphaR = SSP%cMat( iz, 1 )
 
-      SSP%c(iz) = CRCI( SSP%z(iz), alphaR, alphaI, SSP%AttenUnit, bPower, fT, &
+      SSP%c(iz) = CRCI( SSP%Z(iz), alphaR, alphaI, SSP%AttenUnit, bPower, fT, &
                           myThid )
       SSP%rho(iz) = rhoR
 
       IF ( iz > 1 ) THEN
-        IF ( SSP%z( iz ) .LE. SSP%z( iz-1 ) ) THEN
+        IF ( SSP%Z( iz ) .LE. SSP%Z( iz-1 ) ) THEN
 #ifdef IHOP_WRITE_OUT
           WRITE( msgBuf,'(2A)' ) 'SSPMOD gcmSSP: ', &
             'The depths in the SSP must be monotone increasing'
@@ -1036,7 +1036,7 @@ SUBROUTINE gcmSSP( myThid )
 
       ! Compute gradient, cz
       IF ( iz>1 ) SSP%cz( iz-1 ) = ( SSP%c( iz ) - SSP%c( iz-1 ) ) / &
-                                   ( SSP%z( iz ) - SSP%z( iz-1 ) )
+                                   ( SSP%Z( iz ) - SSP%Z( iz-1 ) )
     END DO
   END IF
 
@@ -1118,7 +1118,7 @@ SUBROUTINE writeSSP( myThid )
     WRITE(fmtStr,'(A,I10,A)') '(',SSP%Nr+1, 'F10.2)'
     DO iz = 1, SSP%Nz
       ssptmp = ssp%cMat( iz,: )
-      WRITE(msgBuf,fmtStr) SSP%z( iz ), ssptmp
+      WRITE(msgBuf,fmtStr) SSP%Z( iz ), ssptmp
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
     END DO
 
@@ -1142,7 +1142,7 @@ SUBROUTINE writeSSP( myThid )
 
       DO iz = 1, SSP%NPts
          WRITE(msgBuf,'( F10.2, 3X, 2F10.2, 3X, F6.2, 3X, 2F10.4)') &
-             SSP%z( iz ), SSP%cMat(iz,1), betaR, rhoR, alphaI, betaI
+             SSP%Z( iz ), SSP%cMat(iz,1), betaR, rhoR, alphaI, betaI
          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
       END DO
     END IF

@@ -182,10 +182,10 @@ CONTAINS
     ! interface crossing in depth
     hInt = huge( hInt ) ! Largest _RL90 number available
     IF ( ABS( urayt( 2 ) ) > EPSILON( hInt ) ) THEN
-       IF        ( SSP%z( iSegz0   ) > x(  2 ) ) THEN
-          hInt = ( SSP%z( iSegz0   ) - x0( 2 ) ) / urayt( 2 )
-       ELSE IF   ( SSP%z( iSegz0+1 ) < x(  2 ) ) THEN
-          hInt = ( SSP%z( iSegz0+1 ) - x0( 2 ) ) / urayt( 2 )
+       IF        ( SSP%Z( iSegz0   ) > x(  2 ) ) THEN
+          hInt = ( SSP%Z( iSegz0   ) - x0( 2 ) ) / urayt( 2 )
+       ELSE IF   ( SSP%Z( iSegz0+1 ) < x(  2 ) ) THEN
+          hInt = ( SSP%Z( iSegz0+1 ) - x0( 2 ) ) / urayt( 2 )
        ELSE
           ! Do nothing
           hInt = hInt
@@ -236,8 +236,8 @@ CONTAINS
     hBoxr    = huge( hBoxr )
     hBoxz    = huge( hBoxz )
 
-    IF ( ABS( x( 1 ) ) > Beam%Box%r ) hBoxr = ( Beam%Box%r - ABS( x0( 1 ) ) ) / ABS( urayt( 1 ) )
-    IF ( ABS( x( 2 ) ) > Beam%Box%z ) hBoxz = ( Beam%Box%z - ABS( x0( 2 ) ) ) / ABS( urayt( 2 ) )
+    IF ( ABS( x( 1 ) ) > Beam%Box%R ) hBoxr = ( Beam%Box%R - ABS( x0( 1 ) ) ) / ABS( urayt( 1 ) )
+    IF ( ABS( x( 2 ) ) > Beam%Box%Z ) hBoxz = ( Beam%Box%Z - ABS( x0( 2 ) ) ) / ABS( urayt( 2 ) )
 
     h = MIN( h, hInt, hTop, hBot, hSeg, hBoxr, hBoxz )  ! take limit set by shortest distance to a crossing
     IF ( h < 1.0d-4 * Beam%deltas ) THEN   ! is it taking an infinitesimal step?

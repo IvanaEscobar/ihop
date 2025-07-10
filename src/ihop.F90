@@ -589,12 +589,12 @@ CONTAINS
              ! or exceeded storage limit?
              ! IESCO22: Rewriting for debugging with gcov
              WRITE(msgBuf,'(A)') ' '
-             IF ( ray2D( is+1 )%x( 1 ) > Beam%Box%r ) THEN
-                WRITE(msgBuf,'(A)') 'TraceRay2D: ray left Box%r'
+             IF ( ray2D( is+1 )%x( 1 ) > Beam%Box%R ) THEN
+                WRITE(msgBuf,'(A)') 'TraceRay2D: ray left Box%R'
              ELSE IF ( ray2D( is+1 )%x( 1 ) < 0 ) THEN
                 WRITE(msgBuf,'(A)') 'TraceRay2D: ray left Box r=0'
-             ELSE IF ( ray2D( is+1 )%x( 2 ) > Beam%Box%z ) THEN
-                WRITE(msgBuf,'(A)') 'TraceRay2D: ray left Box%z'
+             ELSE IF ( ray2D( is+1 )%x( 2 ) > Beam%Box%Z ) THEN
+                WRITE(msgBuf,'(A)') 'TraceRay2D: ray left Box%Z'
              ELSE IF ( ABS( ray2D( is+1 )%Amp ) < 0.005 ) THEN
                 WRITE(msgBuf,'(A)') 'TraceRay2D: ray lost energy'
              ELSE IF ( DistBegTop < 0.0 .AND. DistEndTop < 0.0 ) THEN
@@ -609,9 +609,9 @@ CONTAINS
              END IF
 
 #ifdef IHOP_WRITE_OUT
-             IF ( ( ray2D( is+1 )%x( 1 ) > Beam%Box%r ) .OR. &
+             IF ( ( ray2D( is+1 )%x( 1 ) > Beam%Box%R ) .OR. &
                   ( ray2D( is+1 )%x( 1 ) < 0 ) .OR. &
-                  ( ray2D( is+1 )%x( 2 ) > Beam%Box%z ) .OR. &
+                  ( ray2D( is+1 )%x( 2 ) > Beam%Box%Z ) .OR. &
                   ( ABS( ray2D( is+1 )%Amp ) < 0.005 ) .OR. &
                   ( DistBegTop < 0.0 .AND. DistEndTop < 0.0 ) .OR. &
                   ( DistBegBot < 0.0 .AND. DistEndBot < 0.0 ) .OR. &

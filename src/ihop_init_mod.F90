@@ -59,7 +59,7 @@ CONTAINS
     !     SSP%AttenUnit,Type,Nr,Nz,z,SSP%Seg%R,
     !     Pos%SX,SY,nSZ,nRZ,SZ,Rz,Ws,ISZ,Wr,Irz,nRR,Rr,Delta_r,
     !     Beam%RunType,Deltas,Nimage,iBeamWindow,Component,Multiplier,rloop,
-    !     Beam%Box%r,Box%z,Type,
+    !     Beam%Box%R,Box%Z,Type,
     !     Angles%nAlpha,alpha,
     ! - From bdry_mod.F90:initATI
     !   - Top%Natipts,x,
@@ -91,7 +91,7 @@ CONTAINS
     SSP%nX = -1.
     SSP%nY = -1.
     SSP%nZ = -1.
-    SSP%z = -1.
+    SSP%Z = -1.
     SSP%rho = -1.
     SSP%c = -1.
     SSP%Type = ''
@@ -149,8 +149,8 @@ CONTAINS
     ! *** SSP parameters ***
     CALL initSSP( myThid )
 
-    ! set Bdry%Top%HS%Depth from first SSP%z
-    Bdry%Top%HS%Depth = SSP%z(1)
+    ! set Bdry%Top%HS%Depth from first SSP%Z
+    Bdry%Top%HS%Depth = SSP%Z(1)
     ! set water column depth
     Depth = Bdry%Bot%HS%Depth - Bdry%Top%HS%Depth
 
