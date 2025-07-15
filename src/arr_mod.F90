@@ -216,9 +216,12 @@ CONTAINS
     CHARACTER (LEN=1), INTENT( IN ) :: SourceType   ! Beam%RunType(4:4)
     INTEGER             :: ir, iz, iArr
     REAL (KIND=_RL90)   :: factor
+    CHARACTER (LEN=36)  :: arrFMT
 
     ! In adjoint mode we do not write output besides on the first run
     IF (IHOP_dumpfreq.LT.0) RETURN
+
+    arrFMT='(G14.6,F10.2,F12.4,G10.2,2F14.6,2I6)'
 
 #ifdef IHOP_WRITE_OUT
     WRITE( ARRFile, * ) MAXVAL( nArr( 1:nRR, 1:Nrz ) )
@@ -239,11 +242,8 @@ CONTAINS
 #ifdef IHOP_WRITE_OUT
           WRITE( ARRFile, * ) nArr( ir, iz )
           DO iArr = 1, nArr( ir, iz )
-             ! You can compress the output file a lot by putting in an explicit
-             ! format statement here ...
-             ! However, you'll need to make sure you keep adequate precision
-             WRITE( ARRFile, * ) &
-             SNGL( factor ) * Arr( iArr, ir, iz )%A,             &
+             WRITE( ARRFile, arrFMT ) &
+             SNGL( factor )  *Arr( iArr, ir, iz )%A,             &
              SNGL( rad2deg ) *Arr( iArr, ir, iz )%Phase,         &
                         REAL( Arr( iArr, ir, iz )%delay ),       &
                        AIMAG( Arr( iArr, ir, iz )%delay ),       &

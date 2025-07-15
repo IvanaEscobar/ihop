@@ -15,7 +15,8 @@
       INTEGER ObsNo(NFILESMAX_IHOP)
       INTEGER ObsNo_tiled(NFILESMAX_IHOP,nsx,nsy)
       INTEGER ihopObs_ind_glob(NFILESMAX_IHOP,NOBSMAX_IHOP)
-      INTEGER ihopObs_ind_glob_tiled(NFILESMAX_IHOP,NOBSMAX_IHOP,nsx,nsy)
+      INTEGER ihopObs_ind_glob_tiled(                                                                                               &
+     &                        NFILESMAX_IHOP,NOBSMAX_IHOP,nsx,nsy)
       INTEGER ncidFWD(NFILESMAX_IHOP,nsx,nsy)
       INTEGER ncidTL(NFILESMAX_IHOP,nsx,nsy)
       INTEGER ncidAD(NFILESMAX_IHOP,nsx,nsy)
@@ -33,7 +34,8 @@
      &                  ncidFWD, ncidAD, ncidTL,                                                                                    &
      &                  ncidGLOB, ncidADGLOB, ncidTLGLOB,                                                                           &
      &                  ncidData,                                                                                                   &
-     &                  ihopObs_i_tiled, ihopObs_j_tiled, ihopObs_k_tiled,                                                          &
+     &                  ihopObs_i_tiled, ihopObs_j_tiled,                                                                           &
+     &                  ihopObs_k_tiled,                                                                                            &
      &                  ihopObs_sample1_ind
 
 !    IHOP buffers
@@ -67,7 +69,8 @@
      &                objf_ihop,                                                                                                    &
      &                num_ihop,                                                                                                     &
      &                mult_ihop,                                                                                                    &
-     &                ihopObs_time, ihopObs_lat, ihopObs_lon, ihopObs_depth,                                                        &
+     &                ihopObs_time, ihopObs_lat, ihopObs_lon,                                                                       &
+     &                ihopObs_depth,                                                                                                &
      &                ihopObs_uncert,                                                                                               &
      &                ihopObs_modmask, ihopObs_modmask_tiled
 
