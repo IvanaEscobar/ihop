@@ -540,18 +540,18 @@ CONTAINS
 #ifdef IHOP_WRITE_OUT
        OPEN ( FILE = TRIM( fullName ) // '.ray', UNIT = RAYFile, &
               FORM = 'FORMATTED' )
-       WRITE( RAYFile, * ) '''', Title( 1 : 50 ), ''''
-       WRITE( RAYFile, * ) IHOP_freq
-       WRITE( RAYFile, * ) Pos%nSX, Pos%nSY, Pos%nSZ
-       WRITE( RAYFile, * ) Angles%nAlpha
-       WRITE( RAYFile, * ) Bdry%Top%HS%Depth
-       WRITE( RAYFile, * ) Bdry%Bot%HS%Depth
+       WRITE( RAYFile, '(3A)' )    '''', Title( 1:50 ), ''''
+       WRITE( RAYFile, '(F10.3)' ) IHOP_freq
+       WRITE( RAYFile, '(3I6)' )   Pos%nSX, Pos%nSY, Pos%nSZ
+       WRITE( RAYFile, '(I)' )     Angles%nAlpha
+       WRITE( RAYFile, '(F10.4)' ) Bdry%Top%HS%Depth
+       WRITE( RAYFile, '(F10.4)' ) Bdry%Bot%HS%Depth
 
 #ifdef IHOP_THREED
-       WRITE( RAYFile, * ) Angles%nAlpha, Angles%nBeta
-       WRITE( RAYFile, * ) '''xyz'''
+       WRITE( RAYFile, '(2I)' ) Angles%nAlpha, Angles%nBeta
+       WRITE( RAYFile, '(A)' ) '''xyz'''
 #else /* IHOP_THREED */
-       WRITE( RAYFile, * ) '''rz'''
+       WRITE( RAYFile, '(A)' ) '''rz'''
 #endif /* IHOP_THREED */
 
 #endif /* IHOP_WRITE_OUT */
@@ -559,18 +559,18 @@ CONTAINS
        IF (writeDelay) THEN
         OPEN ( FILE = TRIM( fullName ) // '.delay', UNIT = DELFile, &
                FORM = 'FORMATTED' )
-        WRITE( DELFile, * ) '''', Title( 1 : 50 ), ''''
-        WRITE( DELFile, * ) IHOP_freq
-        WRITE( DELFile, * ) Pos%nSX, Pos%nSY, Pos%nSZ
-        WRITE( DELFile, * ) Angles%nAlpha
-        WRITE( DELFile, * ) Bdry%Top%HS%Depth
-        WRITE( DELFile, * ) Bdry%Bot%HS%Depth
+        WRITE( DELFile, '(3A)' )    '''', Title( 1:50 ), ''''
+        WRITE( DELFile, '(F10.3)' ) IHOP_freq
+        WRITE( DELFile, '(3I6)' )   Pos%nSX, Pos%nSY, Pos%nSZ
+        WRITE( DELFile, '(I)' )     Angles%nAlpha
+        WRITE( DELFile, '(F10.4)' ) Bdry%Top%HS%Depth
+        WRITE( DELFile, '(F10.4)' ) Bdry%Bot%HS%Depth
 
 #ifdef IHOP_THREED
-        WRITE( DELFile, * ) Angles%nAlpha, Angles%nBeta
-        WRITE( DELFile, * ) '''xyz'''
+        WRITE( DELFile, '(2I)' ) Angles%nAlpha, Angles%nBeta
+        WRITE( DELFile, '(A)' ) '''xyz'''
 # else /* IHOP_THREED */
-        WRITE( DELFile, * ) '''rz'''
+        WRITE( DELFile, '(A)' ) '''rz'''
 # endif /* IHOP_THREED */
        ENDIF
 
@@ -583,12 +583,12 @@ CONTAINS
               FORM = 'FORMATTED' )
 
 # ifdef IHOP_THREED
-       WRITE( ARRFile, * ) '''3D'''
+       WRITE( ARRFile, '(A)' ) '''3D'''
 # else /* IHOP_THREED */
-       WRITE( ARRFile, * ) '''2D'''
+       WRITE( ARRFile, '(A)' ) '''2D'''
 # endif /* IHOP_THREED */
 
-       WRITE( ARRFile, * ) IHOP_freq
+       WRITE( ARRFile, '(F10.4)' ) IHOP_freq
 
        ! write source locations
 # ifdef IHOP_THREED
@@ -609,35 +609,35 @@ CONTAINS
        ! IEsco22: add erays to arrivals output
        OPEN ( FILE = TRIM( fullName ) // '.ray', UNIT = RAYFile, &
               FORM = 'FORMATTED' )
-       WRITE( RAYFile, * ) '''', Title( 1 : 50 ), ''''
-       WRITE( RAYFile, * ) IHOP_freq
-       WRITE( RAYFile, * ) Pos%nSX, Pos%nSY, Pos%nSZ
-       WRITE( RAYFile, * ) Angles%nAlpha
-       WRITE( RAYFile, * ) Bdry%Top%HS%Depth
-       WRITE( RAYFile, * ) Bdry%Bot%HS%Depth
+       WRITE( RAYFile, '(3A)' )    '''', Title( 1:50 ), ''''
+       WRITE( RAYFile, '(F10.3)' ) IHOP_freq
+       WRITE( RAYFile, '(3I6)' )   Pos%nSX, Pos%nSY, Pos%nSZ
+       WRITE( RAYFile, '(I)' )     Angles%nAlpha
+       WRITE( RAYFile, '(F10.4)' ) Bdry%Top%HS%Depth
+       WRITE( RAYFile, '(F10.4)' ) Bdry%Bot%HS%Depth
 
 # ifdef IHOP_THREED
-       WRITE( RAYFile, * ) Angles%nAlpha, Angles%nBeta
-       WRITE( RAYFile, * ) '''xyz'''
+       WRITE( RAYFile, '(2I)' ) Angles%nAlpha, Angles%nBeta
+       WRITE( RAYFile, '(A)' ) '''xyz'''
 # else /* IHOP_THREED */
-       WRITE( RAYFile, * ) '''rz'''
+       WRITE( RAYFile, '(A)' ) '''rz'''
 # endif /* IHOP_THREED */
 
        IF (writeDelay) THEN
         OPEN ( FILE = TRIM( fullName ) // '.delay', UNIT = DELFile, &
                FORM = 'FORMATTED' )
-        WRITE( DELFile, * ) '''', Title( 1 : 50 ), ''''
-        WRITE( DELFile, * ) IHOP_freq
-        WRITE( DELFile, * ) Pos%nSX, Pos%nSY, Pos%nSZ
-        WRITE( DELFile, * ) Angles%nAlpha
-        WRITE( DELFile, * ) Bdry%Top%HS%Depth
-        WRITE( DELFile, * ) Bdry%Bot%HS%Depth
+        WRITE( DELFile, '(3A)' )    '''', Title( 1:50 ), ''''
+        WRITE( DELFile, '(F10.3)' ) IHOP_freq
+        WRITE( DELFile, '(3I6)' )   Pos%nSX, Pos%nSY, Pos%nSZ
+        WRITE( DELFile, '(I)' )     Angles%nAlpha
+        WRITE( DELFile, '(F10.4)' ) Bdry%Top%HS%Depth
+        WRITE( DELFile, '(F10.4)' ) Bdry%Bot%HS%Depth
 
 #ifdef IHOP_THREED
-        WRITE( DELFile, * ) Angles%nAlpha, Angles%nBeta
-        WRITE( DELFile, * ) '''xyz'''
+        WRITE( DELFile, '(2I)' ) Angles%nAlpha, Angles%nBeta
+        WRITE( DELFile, '(A)' ) '''xyz'''
 # else /* IHOP_THREED */
-        WRITE( DELFile, * ) '''rz'''
+        WRITE( DELFile, '(A)' ) '''rz'''
 # endif /* IHOP_THREED */
        ENDIF
 
@@ -689,18 +689,18 @@ CONTAINS
 
        ! write source locations
 # ifdef IHOP_THREED
-       WRITE( ARRFile    ) Pos%nSX,    Pos%SX(    1 : Pos%nSX )
-       WRITE( ARRFile    ) Pos%nSY,    Pos%SY(    1 : Pos%nSY )
-       WRITE( ARRFile    ) Pos%nSZ,    Pos%SZ(    1 : Pos%nSZ )
+       WRITE( ARRFile,*    ) Pos%nSX,    Pos%SX(    1 : Pos%nSX )
+       WRITE( ARRFile,*    ) Pos%nSY,    Pos%SY(    1 : Pos%nSY )
+       WRITE( ARRFile,*    ) Pos%nSZ,    Pos%SZ(    1 : Pos%nSZ )
 # else /* IHOP_THREED */
-       WRITE( ARRFile    ) Pos%nSZ,    Pos%SZ(    1 : Pos%nSZ )
+       WRITE( ARRFile,*    ) Pos%nSZ,    Pos%SZ(    1 : Pos%nSZ )
 # endif /* IHOP_THREED */
 
        ! write receiver locations
-       WRITE( ARRFile       ) Pos%nRZ,    Pos%RZ(    1 : Pos%nRZ )
-       WRITE( ARRFile       ) Pos%nRR,    Pos%RR(    1 : Pos%nRR )
+       WRITE( ARRFile,*       ) Pos%nRZ,    Pos%RZ(    1 : Pos%nRZ )
+       WRITE( ARRFile,*       ) Pos%nRR,    Pos%RR(    1 : Pos%nRR )
 # ifdef IHOP_THREED
-       WRITE( ARRFile    ) Pos%nTheta, Pos%theta( 1 : Pos%nTheta )
+       WRITE( ARRFile,*    ) Pos%nTheta, Pos%theta( 1 : Pos%nTheta )
 # endif /* IHOP_THREED */
        FLUSH( ARRFile )
 #endif /* IHOP_WRITE_OUT */
@@ -710,7 +710,7 @@ CONTAINS
 
        ! following to set PlotType has alread been done in READIN if that was
        ! used for input
-       SELECT CASE ( Beam%RunType( 5 : 5 ) )
+       SELECT CASE ( Beam%RunType( 5:5 ) )
        CASE ( 'R' )
           PlotType = 'rectilin  '
        CASE ( 'I' )
