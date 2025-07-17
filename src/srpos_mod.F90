@@ -554,7 +554,7 @@ CONTAINS
       WRITE(msgBuf,'(A,I10)') 'Number of ' // Description // ' = ', Nx
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 
-      WRITE(msgBuf,'(A)') Description // ' (' // Units // ')'
+      WRITE(msgBuf,'(A)') Description // ' [' // Units // ']'
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 
 
