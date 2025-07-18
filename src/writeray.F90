@@ -48,7 +48,6 @@ CONTAINS
     INTEGER,           INTENT( IN ) :: funit, nSteps, tBnc, bBnc
     REAL (KIND=_RL90), INTENT( IN ) :: col1In(:), col2In(:)
     REAL (KIND=_RL90) :: col1(nSteps), col2(nSteps)
-    REAL (KIND=_RL90) :: alpha   ! take-off angle of this ray
 
     ! In adjoint mode we do not write output besides on the first run
     IF (IHOP_dumpfreq.LT.0) RETURN
