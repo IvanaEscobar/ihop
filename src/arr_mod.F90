@@ -134,8 +134,9 @@ CONTAINS
   END !SUBROUTINE initArr( myThid )
 
 ! **************************************************************************** !
-  SUBROUTINE AddArr( afreq, iz, ir, Amp, Phase, delay, SrcDeclAngle, &
+  SUBROUTINE AddArr( afreq, iz, ir, Amp, Phase, delay, &
                      RcvrDeclAngle, NumTopBnc, NumBotBnc )
+    USE ihop_mod, only: SrcDeclAngle
 
     ! ADDs the amplitude and delay for an ARRival into a matrix of same.
     ! Extra logic included to keep only the strongest arrivals.
@@ -143,7 +144,7 @@ CONTAINS
     ! arrivals with essentially the same phase are grouped into one
     REAL,   PARAMETER                  :: PhaseTol = 0.05
     INTEGER,              INTENT( IN ) :: NumTopBnc, NumBotBnc, iz, ir
-    REAL    (KIND=_RL90), INTENT( IN ) :: afreq, Amp, Phase, SrcDeclAngle, &
+    REAL    (KIND=_RL90), INTENT( IN ) :: afreq, Amp, Phase, &
                                           RcvrDeclAngle
     COMPLEX (KIND=_RL90), INTENT( IN ) :: delay
     LOGICAL              :: NewRay
@@ -168,23 +169,23 @@ CONTAINS
        IF ( Nt >= maxnArr ) THEN       ! space available to add an arrival?
           iArr = MINLOC( Arr( :, ir, iz )%A )   ! no: replace weakest arrival
           IF ( Amp > Arr( iArr(1), ir, iz )%A ) THEN
-             Arr( iArr(1), ir, iz )%A             = SNGL( Amp )       ! amplitude
-             Arr( iArr(1), ir, iz )%Phase         = SNGL( Phase )     ! phase
-             Arr( iArr(1), ir, iz )%delay         = CMPLX( delay )    ! delay time
-             Arr( iArr(1), ir, iz )%SrcDeclAngle  = SNGL( SrcDeclAngle )  ! angle
-             Arr( iArr(1), ir, iz )%RcvrDeclAngle = SNGL( RcvrDeclAngle ) ! angle
-             Arr( iArr(1), ir, iz )%NTopBnc       = NumTopBnc         ! # top bounces
-             Arr( iArr(1), ir, iz )%NBotBnc       = NumBotBnc         ! # bottom bounces
+             Arr( iArr(1), ir, iz)%A             = SNGL( Amp )       ! amplitude
+             Arr( iArr(1), ir, iz)%Phase         = SNGL( Phase )     ! phase
+             Arr( iArr(1), ir, iz)%delay         = CMPLX( delay )    ! delay time
+             Arr( iArr(1), ir, iz)%SrcDeclAngle  = SNGL( SrcDeclAngle)  ! angle
+             Arr( iArr(1), ir, iz)%RcvrDeclAngle = SNGL(RcvrDeclAngle) ! angle
+             Arr( iArr(1), ir, iz)%NTopBnc       = NumTopBnc         ! # top bounces
+             Arr( iArr(1), ir, iz)%NBotBnc       = NumBotBnc         ! # bottom bounces
           ENDIF
        ELSE
           nArr( ir, iz       )               = Nt + 1              ! # arrivals
-          Arr( Nt + 1, ir, iz)%A             = SNGL( Amp )         ! amplitude
-          Arr( Nt + 1, ir, iz)%Phase         = SNGL( Phase )       ! phase
-          Arr( Nt + 1, ir, iz)%delay         = CMPLX( delay )      ! delay time
-          Arr( Nt + 1, ir, iz)%SrcDeclAngle  = SNGL( SrcDeclAngle )    ! angle
-          Arr( Nt + 1, ir, iz)%RcvrDeclAngle = SNGL( RcvrDeclAngle )   ! angle
-          Arr( Nt + 1, ir, iz)%NTopBnc       = NumTopBnc           ! # top bounces
-          Arr( Nt + 1, ir, iz)%NBotBnc       = NumBotBnc           ! # bottom bounces
+          Arr( Nt+1, ir, iz)%A             = SNGL( Amp )         ! amplitude
+          Arr( Nt+1, ir, iz)%Phase         = SNGL( Phase )       ! phase
+          Arr( Nt+1, ir, iz)%delay         = CMPLX( delay )      ! delay time
+          Arr( Nt+1, ir, iz)%SrcDeclAngle  = SNGL( SrcDeclAngle )    ! angle
+          Arr( Nt+1, ir, iz)%RcvrDeclAngle = SNGL( RcvrDeclAngle )   ! angle
+          Arr( Nt+1, ir, iz)%NTopBnc       = NumTopBnc           ! # top bounces
+          Arr( Nt+1, ir, iz)%NBotBnc       = NumBotBnc           ! # bottom bounces
        ENDIF
     ELSE      ! not a new ray
        ! calculate weightings of old ray information vs. new, based on

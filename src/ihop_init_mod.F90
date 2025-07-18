@@ -159,6 +159,10 @@ CONTAINS
     CALL ReadSXSY( myThid ) ! Read source/receiver x-y coordinates
 
     Pos%nSZ = IHOP_nsd
+    IF (Pos%nSZ .GE. 1) THEN
+        Pos%nSX = Pos%nSZ
+        Pos%nSY = Pos%nSZ
+    ENDIF
     Pos%nRZ = IHOP_nrd
 
     CALL AllocatePos( Pos%nSZ, Pos%SZ, IHOP_sd, myThid )

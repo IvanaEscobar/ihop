@@ -46,9 +46,8 @@ CONTAINS
     USE bdry_mod, only: Bdry
 
     INTEGER,           INTENT( IN ) :: funit, nSteps, tBnc, bBnc
-    REAL (KIND=_RL90), INTENT( IN ) :: col1In(:), col2In(:)
-    REAL (KIND=_RL90) :: col1(nSteps), col2(nSteps)
-    REAL (KIND=_RL90) :: alpha   ! take-off angle of this ray
+    REAL (KIND=_RL90), INTENT( IN ) :: col1In(nSteps), col2In(nSteps)
+    REAL (KIND=_RL90) :: col1(nSteps+1), col2(nSteps+1)
 
     ! In adjoint mode we do not write output besides on the first run
     IF (IHOP_dumpfreq.LT.0) RETURN
@@ -66,14 +65,14 @@ CONTAINS
       ! only for flat bdry)
       IF ( MIN( Bdry%Bot%HS%Depth - col2In( is ),  &
                 col2In( is ) - Bdry%Top%HS%Depth ) < 0.2 .OR. &
-           MOD( is, iSkip ) == 0 .OR. is == nSteps ) THEN
+           MOD( is, iSkip ) == 0 .OR. is==nSteps ) THEN
         N2 = N2 + 1
         col1(N2) = col1In(is)
         col2(N2) = col2In(is)
 
-      ELSE
-        col1(is) = col1In(is)
-        col2(is) = col2In(is)
+!      ELSE ! IESCO22 debugging
+!        col1(is) = col1In(is)
+!        col2(is) = col2In(is)
 
       END IF
     END DO Stepping

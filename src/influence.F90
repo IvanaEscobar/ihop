@@ -571,26 +571,29 @@ CONTAINS
       CASE ( 'E' )                ! eigenrays
         U=U
         tmpDelay = 0.
-        CALL WriteRayOutput( RAYFile, iS, ray2D%x(1), ray2D%x(2), &
+        CALL WriteRayOutput( RAYFile, iS,           &
+            ray2D(1:iS)%x(1), ray2D(1:iS)%x(2),     &
             ray2D(iS)%NumTopBnc, ray2D(iS)%NumBotBnc )
       CASE ( 'e' )                ! eigenrays AND arrivals
         U=U
         tmpDelay = 0.
-        CALL WriteRayOutput( RAYFile, iS, ray2D%x(1), ray2D%x(2), &
+        CALL WriteRayOutput( RAYFile, iS,           &
+            ray2D(1:iS)%x(1), ray2D(1:iS)%x(2),     &
             ray2D(iS)%NumTopBnc, ray2D(iS)%NumBotBnc )
         IF (writeDelay) THEN
-          tmpDelay = REAL(ray2D%tau)
-          CALL WriteRayOutput( DELFile, iS, tmpDelay, ray2D%x(2), &
+          tmpDelay = REAL(ray2D(1:iS)%tau)
+          CALL WriteRayOutput( DELFile, iS,             &
+              tmpDelay, ray2D(1:iS)%x(2),               &
               ray2D(iS)%NumTopBnc, ray2D(iS)%NumBotBnc )
         END IF
 
-        CALL AddArr( afreq, iz, ir, Amp, phaseInt, delay, SrcDeclAngle, &
+        CALL AddArr( afreq, iz, ir, Amp, phaseInt, delay,  &
                      RcvrDeclAngle, ray2D( iS )%NumTopBnc, &
                      ray2D( iS )%NumBotBnc )
       CASE ( 'A', 'a' )           ! arrivals
         U=U
         tmpDelay = 0.
-        CALL AddArr( afreq, iz, ir, Amp, phaseInt, delay, SrcDeclAngle, &
+        CALL AddArr( afreq, iz, ir, Amp, phaseInt, delay,  &
                      RcvrDeclAngle, ray2D( iS )%NumTopBnc, &
                      ray2D( iS )%NumBotBnc )
       CASE ( 'C' )                ! coherent TL

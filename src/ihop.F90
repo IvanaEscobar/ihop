@@ -196,7 +196,7 @@ CONTAINS
 
   !     == Local Variables ==
     INTEGER           :: IBPvec(1), ibp, is, iBeamWindow2, Irz1, Irec, &
-                         nAlphaOpt
+                         nAlphaOpt, nSteps
     REAL(KIND=_RL90) :: Amp0, DalphaOpt, xs(2), RadMax, s, &
                          c, cimag, gradc(2), crr, crz, czz, rho
     REAL(KIND=_RL90) :: tmpDelay(maxN)
@@ -301,14 +301,15 @@ CONTAINS
 
              ! Write the ray trajectory to RAYFile
              IF ( Beam%RunType(1:1) == 'R') THEN
-                CALL WriteRayOutput( RAYFile, Beam%nSteps, &
-                    ray2D%x(1),ray2D%x(2), &
-                    ray2D(Beam%nSteps)%NumTopBnc,ray2D(Beam%nSteps)%NumBotBnc )
+                nSteps = Beam%nSteps
+                CALL WriteRayOutput( RAYFile, nSteps, &
+                    ray2D(1:nSteps)%x(1), ray2D(1:nSteps)%x(2), &
+                    ray2D(nSteps)%NumTopBnc,ray2D(nSteps)%NumBotBnc )
                 IF (writeDelay) THEN
-                  tmpDelay = REAL(ray2D%tau)
-                  CALL WriteRayOutput( DELFile, Beam%nSteps, &
-                    tmpDelay,ray2D%x(2), &
-                    ray2D(Beam%nSteps)%NumTopBnc,ray2D(Beam%nSteps)%NumBotBnc )
+                  tmpDelay = REAL(ray2D(1:nSteps)%tau)
+                  CALL WriteRayOutput( DELFile, nSteps, &
+                    tmpDelay, ray2D(1:nSteps)%x(2), &
+                    ray2D(nSteps)%NumTopBnc,ray2D(nSteps)%NumBotBnc )
                 ENDIF
 
              ELSE ! Compute the contribution to the field
