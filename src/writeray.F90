@@ -70,9 +70,9 @@ CONTAINS
         col1(N2) = col1In(is)
         col2(N2) = col2In(is)
 
-      ELSE
-        col1(is) = col1In(is)
-        col2(is) = col2In(is)
+!      ELSE ! IESCO22 debugging
+!        col1(is) = col1In(is)
+!        col2(is) = col2In(is)
 
       END IF
     END DO Stepping

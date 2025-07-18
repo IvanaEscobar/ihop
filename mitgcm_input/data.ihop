@@ -20,7 +20,7 @@
  IHOP_rr=2542.0,
 # e: eigenrays; G: Hat spreading
  IHOP_runopt='eG',
- IHOP_nalpha=4,
+ IHOP_nalpha=40,
  IHOP_alpha=-20.0, 20.0,
  &
 
@@ -32,6 +32,6 @@
  &
 
  &IHOP_COST_NML
- IHOPObs_Dir      = 'IHOP_obs/',
- IHOPObs_Files(1) = 'bcg_tau_obs_3',
+# IHOPObs_Dir      = 'IHOP_obs/',
+# IHOPObs_Files(1) = 'bcg_tau_obs_3',
  &

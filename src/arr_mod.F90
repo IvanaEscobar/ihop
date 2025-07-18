@@ -134,8 +134,9 @@ CONTAINS
   END !SUBROUTINE initArr( myThid )
 
 ! **************************************************************************** !
-  SUBROUTINE AddArr( afreq, iz, ir, Amp, Phase, delay, SrcDeclAngle, &
+  SUBROUTINE AddArr( afreq, iz, ir, Amp, Phase, delay, &
                      RcvrDeclAngle, NumTopBnc, NumBotBnc )
+    USE ihop_mod, only: SrcDeclAngle
 
     ! ADDs the amplitude and delay for an ARRival into a matrix of same.
     ! Extra logic included to keep only the strongest arrivals.
@@ -143,7 +144,7 @@ CONTAINS
     ! arrivals with essentially the same phase are grouped into one
     REAL,   PARAMETER                  :: PhaseTol = 0.05
     INTEGER,              INTENT( IN ) :: NumTopBnc, NumBotBnc, iz, ir
-    REAL    (KIND=_RL90), INTENT( IN ) :: afreq, Amp, Phase, SrcDeclAngle, &
+    REAL    (KIND=_RL90), INTENT( IN ) :: afreq, Amp, Phase, &
                                           RcvrDeclAngle
     COMPLEX (KIND=_RL90), INTENT( IN ) :: delay
     LOGICAL              :: NewRay
