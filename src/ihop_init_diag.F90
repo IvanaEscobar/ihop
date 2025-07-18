@@ -526,6 +526,7 @@ CONTAINS
     INTEGER             :: IL
     REAL               :: atten
     CHARACTER (LEN=10) :: PlotType
+    CHARACTER (LEN=20) :: fmtstr
 
     ! add time step to filename
     IF (myIter.GE.0) THEN
@@ -592,18 +593,25 @@ CONTAINS
 
        ! write source locations
 # ifdef IHOP_THREED
-       WRITE( ARRFile, * ) Pos%nSX,    Pos%SX(    1 : Pos%nSX )
-       WRITE( ARRFile, * ) Pos%nSY,    Pos%SY(    1 : Pos%nSY )
-       WRITE( ARRFile, * ) Pos%nSZ,    Pos%SZ(    1 : Pos%nSZ )
+       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSX, 'G16.10)'
+       WRITE( ARRFile, fmtstr    ) Pos%nSX, Pos%SX( 1:Pos%nSX )
+       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSY, 'G16.10)'
+       WRITE( ARRFile, fmtstr    ) Pos%nSY, Pos%SY( 1:Pos%nSY )
+       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSZ, 'G16.10)'
+       WRITE( ARRFile, fmtstr    ) Pos%nSZ, Pos%SZ( 1:Pos%nSZ )
 # else /* IHOP_THREED */
-       WRITE( ARRFile, * ) Pos%nSZ,    Pos%SZ(    1 : Pos%nSZ )
+       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSZ, 'G16.10)'
+       WRITE( ARRFile, fmtstr    ) Pos%nSZ, Pos%SZ( 1:Pos%nSZ )
 # endif /* IHOP_THREED */
 
        ! write receiver locations
-       WRITE( ARRFile, *    ) Pos%nRZ,    Pos%RZ(    1 : Pos%nRZ )
-       WRITE( ARRFile, *    ) Pos%nRR,    Pos%RR(    1 : Pos%nRR )
+       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nRZ, 'G16.10)'
+       WRITE( ARRFile, fmtstr    ) Pos%nRZ, Pos%RZ( 1:Pos%nRZ )
+       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nRR, 'G16.10)'
+       WRITE( ARRFile, fmtstr    ) Pos%nRR, Pos%RR( 1:Pos%nRR )
 # ifdef IHOP_THREED
-       WRITE( ARRFile, * ) Pos%nTheta, Pos%theta( 1 : Pos%nTheta )
+       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nTheta, 'G16.10)'
+       WRITE( ARRFile, fmtstr    ) Pos%nTheta, Pos%theta( 1:Pos%nTheta )
 # endif /* IHOP_THREED */
 
        ! IEsco22: add erays to arrivals output
@@ -641,6 +649,7 @@ CONTAINS
 # endif /* IHOP_THREED */
        ENDIF
 
+       ! IESCO25 Flush all files
        FLUSH( RAYFile )
        IF (writeDelay) FLUSH( DELFile )
        FLUSH( ARRFile )
@@ -652,26 +661,36 @@ CONTAINS
               FORM = 'FORMATTED' )
 
 # ifdef IHOP_THREED
-       WRITE( ARRFile, * ) '''3D'''
+       WRITE( ARRFile, '(A)' ) '''3D'''
 # else /* IHOP_THREED */
-       WRITE( ARRFile, * ) '''2D'''
+       WRITE( ARRFile, '(A)' ) '''2D'''
 # endif /* IHOP_THREED */
 
-       WRITE( ARRFile, * ) IHOP_freq
+       WRITE( ARRFile, '(F10.4)' ) IHOP_freq
 
        ! write source locations
 # ifdef IHOP_THREED
-       WRITE( ARRFile, * ) Pos%nSX,    Pos%SX(    1 : Pos%nSX )
-       WRITE( ARRFile, * ) Pos%nSY,    Pos%SY(    1 : Pos%nSY )
+       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSX, 'G16.10)'
+       WRITE( ARRFile, fmtstr    ) Pos%nSX, Pos%SX( 1:Pos%nSX )
+       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSY, 'G16.10)'
+       WRITE( ARRFile, fmtstr    ) Pos%nSY, Pos%SY( 1:Pos%nSY )
+       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSZ, 'G16.10)'
+       WRITE( ARRFile, fmtstr    ) Pos%nSZ, Pos%SZ( 1:Pos%nSZ )
+# else /* IHOP_THREED */
+       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSZ, 'G16.10)'
+       WRITE( ARRFile, fmtstr    ) Pos%nSZ, Pos%SZ( 1:Pos%nSZ )
 # endif /* IHOP_THREED */
-       WRITE( ARRFile, * ) Pos%nSZ,    Pos%SZ(    1 : Pos%nSZ )
 
        ! write receiver locations
-       WRITE( ARRFile, *    ) Pos%nRZ,    Pos%RZ(    1 : Pos%nRZ )
-       WRITE( ARRFile, *    ) Pos%nRR,    Pos%RR(    1 : Pos%nRR )
+       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nRZ, 'G16.10)'
+       WRITE( ARRFile, fmtstr    ) Pos%nRZ, Pos%RZ( 1:Pos%nRZ )
+       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nRR, 'G16.10)'
+       WRITE( ARRFile, fmtstr    ) Pos%nRR, Pos%RR( 1:Pos%nRR )
 # ifdef IHOP_THREED
-       WRITE( ARRFile, * ) Pos%nTheta, Pos%theta( 1 : Pos%nTheta )
+       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nTheta, 'G16.10)'
+       WRITE( ARRFile, fmtstr    ) Pos%nTheta, Pos%theta( 1:Pos%nTheta )
 # endif /* IHOP_THREED */
+
        FLUSH( ARRFile )
 #endif /* IHOP_WRITE_OUT */
     CASE ( 'a' )        ! arrival file in binary format
@@ -680,28 +699,36 @@ CONTAINS
               FORM = 'UNFORMATTED' )
 
 # ifdef IHOP_THREED
-       WRITE( ARRFile ) '''3D'''
+       WRITE( ARRFile, '(A)' ) '''3D'''
 # else /* IHOP_THREED */
-       WRITE( ARRFile ) '''2D'''
+       WRITE( ARRFile, '(A)' ) '''2D'''
 # endif /* IHOP_THREED */
 
-       WRITE( ARRFile    ) SNGL( IHOP_freq )
+       WRITE( ARRFile, '(F10.4)' ) IHOP_freq
 
        ! write source locations
 # ifdef IHOP_THREED
-       WRITE( ARRFile,*    ) Pos%nSX,    Pos%SX(    1 : Pos%nSX )
-       WRITE( ARRFile,*    ) Pos%nSY,    Pos%SY(    1 : Pos%nSY )
-       WRITE( ARRFile,*    ) Pos%nSZ,    Pos%SZ(    1 : Pos%nSZ )
+       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSX, 'G16.10)'
+       WRITE( ARRFile, fmtstr    ) Pos%nSX, Pos%SX( 1:Pos%nSX )
+       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSY, 'G16.10)'
+       WRITE( ARRFile, fmtstr    ) Pos%nSY, Pos%SY( 1:Pos%nSY )
+       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSZ, 'G16.10)'
+       WRITE( ARRFile, fmtstr    ) Pos%nSZ, Pos%SZ( 1:Pos%nSZ )
 # else /* IHOP_THREED */
-       WRITE( ARRFile,*    ) Pos%nSZ,    Pos%SZ(    1 : Pos%nSZ )
+       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSZ, 'G16.10)'
+       WRITE( ARRFile, fmtstr    ) Pos%nSZ, Pos%SZ( 1:Pos%nSZ )
 # endif /* IHOP_THREED */
 
        ! write receiver locations
-       WRITE( ARRFile,*       ) Pos%nRZ,    Pos%RZ(    1 : Pos%nRZ )
-       WRITE( ARRFile,*       ) Pos%nRR,    Pos%RR(    1 : Pos%nRR )
+       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nRZ, 'G16.10)'
+       WRITE( ARRFile, fmtstr    ) Pos%nRZ, Pos%RZ( 1:Pos%nRZ )
+       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nRR, 'G16.10)'
+       WRITE( ARRFile, fmtstr    ) Pos%nRR, Pos%RR( 1:Pos%nRR )
 # ifdef IHOP_THREED
-       WRITE( ARRFile,*    ) Pos%nTheta, Pos%theta( 1 : Pos%nTheta )
+       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nTheta, 'G16.10)'
+       WRITE( ARRFile, fmtstr    ) Pos%nTheta, Pos%theta( 1:Pos%nTheta )
 # endif /* IHOP_THREED */
+
        FLUSH( ARRFile )
 #endif /* IHOP_WRITE_OUT */
 
