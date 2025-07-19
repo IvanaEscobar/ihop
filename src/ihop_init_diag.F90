@@ -554,6 +554,7 @@ CONTAINS
 #else /* IHOP_THREED */
        WRITE( RAYFile, '(A)' ) '''rz'''
 #endif /* IHOP_THREED */
+       FLUSH( RAYFile )
 
 #endif /* IHOP_WRITE_OUT */
 
@@ -573,10 +574,8 @@ CONTAINS
 # else /* IHOP_THREED */
         WRITE( DELFile, '(A)' ) '''rz'''
 # endif /* IHOP_THREED */
+        FLUSH( DELFile )
        ENDIF
-
-       FLUSH( RAYFile )
-       IF (writeDelay) FLUSH( DELFile )
 
     CASE ( 'e' )        ! eigenrays + arrival file in ascii format
 #ifdef IHOP_WRITE_OUT
@@ -613,6 +612,7 @@ CONTAINS
        WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nTheta, 'G16.10)'
        WRITE( ARRFile, fmtstr    ) Pos%nTheta, Pos%theta( 1:Pos%nTheta )
 # endif /* IHOP_THREED */
+       FLUSH( ARRFile )
 
        ! IEsco22: add erays to arrivals output
        OPEN ( FILE = TRIM( fullName ) // '.ray', UNIT = RAYFile, &
@@ -630,6 +630,7 @@ CONTAINS
 # else /* IHOP_THREED */
        WRITE( RAYFile, '(A)' ) '''rz'''
 # endif /* IHOP_THREED */
+       FLUSH( RAYFile )
 
        IF (writeDelay) THEN
         OPEN ( FILE = TRIM( fullName ) // '.delay', UNIT = DELFile, &
@@ -647,12 +648,9 @@ CONTAINS
 # else /* IHOP_THREED */
         WRITE( DELFile, '(A)' ) '''rz'''
 # endif /* IHOP_THREED */
+        FLUSH( DELFile )
        ENDIF
 
-       ! IESCO25 Flush all files
-       FLUSH( RAYFile )
-       IF (writeDelay) FLUSH( DELFile )
-       FLUSH( ARRFile )
 #endif /* IHOP_WRITE_OUT */
 
     CASE ( 'A' )        ! arrival file in ascii format
@@ -693,6 +691,7 @@ CONTAINS
 
        FLUSH( ARRFile )
 #endif /* IHOP_WRITE_OUT */
+
     CASE ( 'a' )        ! arrival file in binary format
 #ifdef IHOP_WRITE_OUT
        OPEN ( FILE = TRIM( fullName ) // '.arr', UNIT = ARRFile, &
