@@ -79,7 +79,7 @@ CONTAINS
 
     ! write to output file
 #ifdef IHOP_WRITE_OUT
-    WRITE( fUnit, '(F14.6)' ) SrcDeclAngle 
+    WRITE( fUnit, '(F12.6)' ) SNGL( SrcDeclAngle )
     WRITE( fUnit, '(3I10)' ) N2, tBnc, bBnc
 
     DO is = 1, N2

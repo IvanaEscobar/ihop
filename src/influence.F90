@@ -574,6 +574,7 @@ CONTAINS
         CALL WriteRayOutput( RAYFile, iS,           &
             ray2D(1:iS)%x(1), ray2D(1:iS)%x(2),     &
             ray2D(iS)%NumTopBnc, ray2D(iS)%NumBotBnc )
+
       CASE ( 'e' )                ! eigenrays AND arrivals
         U=U
         tmpDelay = 0.
@@ -590,6 +591,7 @@ CONTAINS
         CALL AddArr( afreq, iz, ir, Amp, phaseInt, delay,  &
                      RcvrDeclAngle, ray2D( iS )%NumTopBnc, &
                      ray2D( iS )%NumBotBnc )
+
       CASE ( 'A', 'a' )           ! arrivals
         U=U
         tmpDelay = 0.
