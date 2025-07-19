@@ -527,6 +527,7 @@ CONTAINS
     REAL               :: atten
     CHARACTER (LEN=10) :: PlotType
     CHARACTER (LEN=20) :: fmtstr
+    LOGICAL :: isOpen
 
     ! add time step to filename
     IF (myIter.GE.0) THEN
@@ -539,6 +540,8 @@ CONTAINS
     SELECT CASE ( Beam%RunType( 1:1 ) )
     CASE ( 'R', 'E' )   ! Ray trace or Eigenrays
 #ifdef IHOP_WRITE_OUT
+       INQUIRE(UNIT=RAYFile, OPENED=isOpen)
+       IF (isOpen) CLOSE(RAYFile)
        OPEN ( FILE = TRIM( fullName ) // '.ray', UNIT = RAYFile, &
               FORM = 'FORMATTED' )
        WRITE( RAYFile, '(3A)' )    '''', Title( 1:50 ), ''''
@@ -559,6 +562,8 @@ CONTAINS
 #endif /* IHOP_WRITE_OUT */
 
        IF (writeDelay) THEN
+        INQUIRE(UNIT=DELFile, OPENED=isOpen)
+        IF (isOpen) CLOSE(DELFile)
         OPEN ( FILE = TRIM( fullName ) // '.delay', UNIT = DELFile, &
                FORM = 'FORMATTED' )
         WRITE( DELFile, '(3A)' )    '''', Title( 1:50 ), ''''
@@ -579,6 +584,8 @@ CONTAINS
 
     CASE ( 'e' )        ! eigenrays + arrival file in ascii format
 #ifdef IHOP_WRITE_OUT
+       INQUIRE(UNIT=ARRFile, OPENED=isOpen)
+       IF (isOpen) CLOSE(ARRFile)
        OPEN ( FILE = TRIM( fullName ) // '.arr', UNIT = ARRFile, &
               FORM = 'FORMATTED' )
 
@@ -615,6 +622,8 @@ CONTAINS
        FLUSH( ARRFile )
 
        ! IEsco22: add erays to arrivals output
+       INQUIRE(UNIT=RAYFile, OPENED=isOpen)
+       IF (isOpen) CLOSE(RAYFile)
        OPEN ( FILE = TRIM( fullName ) // '.ray', UNIT = RAYFile, &
               FORM = 'FORMATTED' )
        WRITE( RAYFile, '(3A)' )    '''', Title( 1:50 ), ''''
@@ -633,6 +642,8 @@ CONTAINS
        FLUSH( RAYFile )
 
        IF (writeDelay) THEN
+        INQUIRE(UNIT=DELFile, OPENED=isOpen)
+        IF (isOpen) CLOSE(DELFile)
         OPEN ( FILE = TRIM( fullName ) // '.delay', UNIT = DELFile, &
                FORM = 'FORMATTED' )
         WRITE( DELFile, '(3A)' )    '''', Title( 1:50 ), ''''
@@ -655,6 +666,8 @@ CONTAINS
 
     CASE ( 'A' )        ! arrival file in ascii format
 #ifdef IHOP_WRITE_OUT
+       INQUIRE(UNIT=ARRFile, OPENED=isOpen)
+       IF (isOpen) CLOSE(ARRFile)
        OPEN ( FILE = TRIM( fullName ) // '.arr', UNIT = ARRFile, &
               FORM = 'FORMATTED' )
 
@@ -694,6 +707,8 @@ CONTAINS
 
     CASE ( 'a' )        ! arrival file in binary format
 #ifdef IHOP_WRITE_OUT
+       INQUIRE(UNIT=ARRFile, OPENED=isOpen)
+       IF (isOpen) CLOSE(ARRFile)
        OPEN ( FILE = TRIM( fullName ) // '.arr', UNIT = ARRFile, &
               FORM = 'UNFORMATTED' )
 
