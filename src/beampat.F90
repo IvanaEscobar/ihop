@@ -24,9 +24,9 @@ MODULE beamPat
     public NSBPPts, SrcBmPat, SBPFlag, readPat, writePat
 !=======================================================================
 
-  INTEGER                    :: NSBPPts ! Number of source beam-pattern points
+  INTEGER       :: NSBPPts ! Number of source beam-pattern points
   REAL (KIND=_RL90), ALLOCATABLE :: SrcBmPat( :, : )
-  CHARACTER (LEN=1)          :: SBPFlag ! '*' or 'O' to indicate a directional or omni pattern
+  CHARACTER*(1) :: SBPFlag ! '*' or 'O' to indicate a directional or omni pattern
 
 CONTAINS
 ! **************************************************************************** !
@@ -44,24 +44,24 @@ CONTAINS
 
     IF (ALLOCATED(SrcBmPat)) DEALLOCATE(SrcBmPat)
 
-    IF ( SBPFlag == '*' ) THEN
-      OPEN( UNIT = SBPFile, FILE = TRIM( IHOP_fileroot ) // '.sbp', &
-            STATUS = 'OLD', IOSTAT = IOStat, ACTION = 'READ' )
-      IF ( IOStat /= 0 ) THEN
+    IF ( SBPFlag=='*' ) THEN
+      OPEN( UNIT=SBPFile, FILE=TRIM( IHOP_fileroot ) // '.sbp', &
+            STATUS='OLD', IOSTAT=IOStat, ACTION='READ' )
+      IF ( IOStat/=0 ) THEN
 #ifdef IHOP_WRITE_OUT
         ! In adjoint mode we do not write output besides on the first run
         IF (IHOP_dumpfreq.GE.0) &
-        WRITE(msgBuf,'(2A)') 'BEAMPATTERN ReadPat: ', &
-                             'Unable to open source beampattern file'
+          WRITE(msgBuf,'(2A)') 'BEAMPATTERN ReadPat: ', &
+                               'Unable to open source beampattern file'
         CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
         STOP 'ABNORMAL END: S/R ReadPat'
       END IF
 
-      READ(  SBPFile, * ) NSBPPts
+      READ( SBPFile, * ) NSBPPts
 
-      ALLOCATE( SrcBmPat( NSBPPts, 2 ), Stat = IAllocStat )
-      IF ( IAllocStat /= 0 ) THEN
+      ALLOCATE( SrcBmPat( NSBPPts, 2 ), Stat=IAllocStat )
+      IF ( IAllocStat/=0 ) THEN
 #ifdef IHOP_WRITE_OUT
         WRITE(msgBuf,'(2A)') 'BEAMPATTERN ReadPat: ', &
         'Insufficient memory for beam pattern data: reduce # SBP points'
@@ -71,7 +71,7 @@ CONTAINS
       END IF
 
       DO I = 1, NSBPPts
-        READ(  SBPFile, * ) SrcBmPat( I, : )
+        READ( SBPFile, * ) SrcBmPat( I, : )
       END DO
 
     ELSE   ! no pattern given, use omni source pattern
