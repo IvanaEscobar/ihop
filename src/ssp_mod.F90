@@ -1077,6 +1077,9 @@ SUBROUTINE writeSSP( myThid )
   CHARACTER*(80)    :: fmtstr
   REAL (KIND=_RL90) :: ssptmp(SSP%nR)
 
+  ! In adjoint mode we do not write output besides on the first run
+  IF ( IHOP_dumpfreq.LT.0) RETURN
+
   ! init local vars
   ssptmp = 0.0
 
@@ -1084,95 +1087,92 @@ SUBROUTINE writeSSP( myThid )
   _BEGIN_MASTER(myThid)
 
 #ifdef IHOP_WRITE_OUT
-  ! In adjoint mode we do not write output besides on the first run
-  IF (IHOP_dumpfreq.GE.0) THEN
-    ! Write relevant diagnostics
-    WRITE(msgBuf,'(2A)')'________________________________________________', &
-      '___________'
+  ! Write relevant diagnostics
+  WRITE(msgBuf,'(2A)')'________________________________________________', &
+    '___________'
+  CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+  WRITE(msgBuf,'(A)')
+  CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+  WRITE(msgBuf,'(A)') "Sound Speed Field"
+  CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+  WRITE(msgBuf,'(A)')
+  CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+
+  WRITE(msgBuf,'(2A)') 'Profile option: ', SSP%Type
+  CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+  WRITE(msgBuf,'(A)')
+  CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+
+  IF (SSP%nR .GT. 1) THEN
+    WRITE(msgBuf,'(A)') 'Using range-dependent sound speed'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+  END IF
+  IF (SSP%nR .EQ. 1) THEN
+    WRITE(msgBuf,'(A)') 'Using range-independent sound speed'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+  END IF
+
+  WRITE(msgBuf,'(A,I10)') 'Number of SSP ranges = ', SSP%nR
+  CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+  WRITE(msgBuf,'(A,I10)') 'Number of SSP depths = ', SSP%nZ
+  CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+
+  WRITE(msgBuf,'(A)')
+  CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+  WRITE(msgBuf,'(A)') 'Profile ranges [km]:'
+  CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+  WRITE(fmtStr,'(A,I10,A)') '(T11,',SSP%nR, 'F10.2)'
+  ssptmp = SSP%Seg%R( 1:SSP%nR ) / 1000.0
+  WRITE(msgBuf,fmtStr) ssptmp
+  CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+
+  WRITE(msgBuf,'(A)')
+  CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+  WRITE(msgBuf,'(A)') 'Sound speed matrix:'
+  CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+  WRITE(msgBuf,'(A)') ' Depth [m ]     Soundspeed [m/s]'
+  CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+
+  ssptmp = 0.0
+  WRITE(fmtStr,'(A,I10,A)') '(',SSP%nR+1, 'F10.2)'
+  DO iz = 1, SSP%nZ
+    ssptmp = ssp%cMat( iz,: )
+    WRITE(msgBuf,fmtStr) SSP%Z( iz ), ssptmp
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+  END DO
+
+  IF (useSSPFile) THEN
+    WRITE(msgBuf,'(A)')
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(A)') 'Sound speed profile:'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(2A)')'      z         alphaR      betaR     rho      ', &
+                        '  alphaI     betaI'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(2A)')'     [m]         [m/s]      [m/s]   [g/cm^3]   ', &
+                        '   [m/s]     [m/s]'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+
+    WRITE(msgBuf,'(2A)')'_______________________________________________', &
+                        '____________'
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
     WRITE(msgBuf,'(A)')
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(A)') "Sound Speed Field"
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(A)')
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 
-    WRITE(msgBuf,'(2A)') 'Profile option: ', SSP%Type
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(A)')
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-
-    IF (SSP%nR .GT. 1) THEN
-      WRITE(msgBuf,'(A)') 'Using range-dependent sound speed'
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    END IF
-    IF (SSP%nR .EQ. 1) THEN
-      WRITE(msgBuf,'(A)') 'Using range-independent sound speed'
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    END IF
-
-    WRITE(msgBuf,'(A,I10)') 'Number of SSP ranges = ', SSP%nR
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(A,I10)') 'Number of SSP depths = ', SSP%nZ
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-
-    WRITE(msgBuf,'(A)')
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(A)') 'Profile ranges [km]:'
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(fmtStr,'(A,I10,A)') '(T11,',SSP%nR, 'F10.2)'
-    ssptmp = SSP%Seg%R( 1:SSP%nR ) / 1000.0
-    WRITE(msgBuf,fmtStr) ssptmp
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-
-    WRITE(msgBuf,'(A)')
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(A)') 'Sound speed matrix:'
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(A)') ' Depth [m ]     Soundspeed [m/s]'
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-
-    ssptmp = 0.0
-    WRITE(fmtStr,'(A,I10,A)') '(',SSP%nR+1, 'F10.2)'
-    DO iz = 1, SSP%nZ
-      ssptmp = ssp%cMat( iz,: )
-      WRITE(msgBuf,fmtStr) SSP%Z( iz ), ssptmp
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    DO iz = 1, SSP%nPts
+       WRITE(msgBuf,'( F10.2, 3X, 2F10.2, 3X, F6.2, 3X, 2F10.4)') &
+           SSP%Z( iz ), SSP%cMat(iz,1), betaR, rhoR, alphaI, betaI
+       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
     END DO
+  END IF
 
-    IF (useSSPFile) THEN
-      WRITE(msgBuf,'(A)')
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(A)') 'Sound speed profile:'
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(2A)')'      z         alphaR      betaR     rho      ', &
-                          '  alphaI     betaI'
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(2A)')'     [m]         [m/s]      [m/s]   [g/cm^3]   ', &
-                          '   [m/s]     [m/s]'
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-
-      WRITE(msgBuf,'(2A)')'_______________________________________________', &
-                          '____________'
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(A)')
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-
-      DO iz = 1, SSP%nPts
-         WRITE(msgBuf,'( F10.2, 3X, 2F10.2, 3X, F6.2, 3X, 2F10.4)') &
-             SSP%Z( iz ), SSP%cMat(iz,1), betaR, rhoR, alphaI, betaI
-         CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      END DO
-    END IF
-
-    WRITE(msgBuf,'(2A)')'_____________________________________________', &
-                        '______________'
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(A)')
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-
-ENDIF ! don't write in adjoint mode
+  WRITE(msgBuf,'(2A)')'_____________________________________________', &
+                      '______________'
+  CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+  WRITE(msgBuf,'(A)')
+  CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 #endif /* IHOP_WRITE_OUT */
+
   ! I/O on main thread only
   _END_MASTER(myThid)
   _BARRIER
