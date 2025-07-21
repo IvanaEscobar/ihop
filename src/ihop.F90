@@ -84,6 +84,13 @@ CONTAINS
     ! Reset memory and default values: REQUIRED
     CALL resetMemory()
 
+    ! Only do IO and computation on a single process!
+#ifdef ALLOW_USE_MPI
+    IF ( usingMPI ) THEN
+
+    ENDIF ! IF ( usingMPI )
+#endif ALLOW_USE_MPI
+
     ! save data.ihop, open PRTFile: REQUIRED
     CALL initPRTFile( myTime, myIter, myThid )
 
@@ -96,14 +103,15 @@ CONTAINS
     ! Source Beam Pattern: OPTIONAL, default is omni source pattern
     CALL writePat( myThid )
 
+    ! open output files: only on first adjoint forward pass
+    IF ( IHOP_dumpfreq.GE.0 ) &
+      CALL OpenOutputFiles( IHOP_fileroot, myTime, myIter, myThid )
+
 
     ! set SSP%cmat from gcm SSP: REQUIRED
     CALL setSSP( myThid )
 
 
-! open output files: only on first adjoint forward pass
-    IF ( IHOP_dumpfreq.GE.0 ) &
-      CALL OpenOutputFiles( IHOP_fileroot, myTime, myIter, myThid )
 
     ! Run IHOP solver on a single processor
     IF ( numberOfProcs.GT.1 ) THEN
