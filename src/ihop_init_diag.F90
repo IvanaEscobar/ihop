@@ -102,7 +102,6 @@ CONTAINS
 
       CALL writeBdry( Bdry%Bot%HS, myThid )
 
-
       CALL WriteSxSy( myThid )
       CALL WriteSzRz( myThid )
       CALL WriteRcvrRanges( myThid )
@@ -153,13 +152,13 @@ CONTAINS
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 
 #ifdef IHOP_THREED
-      WRITE(msgBuf,'(A,G11.4,A)') &
+      WRITE(msgBuf,'(A,G11.6,A)') &
           ' Maximum ray x-range, Box%X = ', Beam%Box%X,' m'
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(A,G11.4,A)') &
+      WRITE(msgBuf,'(A,G11.6,A)') &
           ' Maximum ray y-range, Box%Y = ', Beam%Box%Y,' m'
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(A,G11.4,A)') &
+      WRITE(msgBuf,'(A,G11.6,A)') &
           ' Maximum ray z-range, Box%Z = ', Beam%Box%Z,' m'
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 #else /* not IHOP_THREED */
@@ -194,6 +193,136 @@ CONTAINS
 
   !**********************************************************************!
 
+  SUBROUTINE openPRTFile ( myTime, myIter, myThid )
+    USE ihop_mod, only: PRTFile, Title
+
+  !     == Routine Arguments ==
+  !     myThid :: Thread number. Unused by IESCO
+  !     myTime :: Current time in simulation
+  !     myIter :: Current time-step number
+  !     msgBuf :: Used to build messages for printing.
+    _RL, INTENT(IN)     ::  myTime
+    INTEGER, INTENT(IN) ::  myIter, myThid
+    CHARACTER*(MAX_LEN_MBUF):: msgBuf
+
+
+  !     == Local Arguments ==
+    INTEGER                     :: iostat
+  ! For MPI writing: inspo from eeboot_minimal.F
+    CHARACTER*(MAX_LEN_FNAM)    :: fNam
+    CHARACTER*(6)               :: fmtStr
+    INTEGER                     :: mpiRC, IL
+#ifdef ALLOW_CAL
+    INTEGER :: mydate(4)
+#endif
+
+    ! Open the print file: template from eeboot_minimal.F
+#ifdef IHOP_WRITE_OUT
+    IF ( .NOT.usingMPI ) THEN
+      WRITE(myProcessStr, '(I10.10)') myIter
+      IL=ILNBLNK( myProcessStr )
+      WRITE(fNam,'(4A)') TRIM(IHOP_fileroot),'.',myProcessStr(1:IL),'.prt'
+      IF ( IHOP_dumpfreq.GE.0 ) &
+        OPEN( PRTFile, FILE=fNam, STATUS='UNKNOWN', IOSTAT=iostat )
+#ifdef ALLOW_USE_MPI
+    ELSE ! using MPI
+      CALL MPI_COMM_RANK( MPI_COMM_MODEL, mpiMyId, mpiRC )
+      myProcId = mpiMyId
+      IL = MAX(4,1+INT(LOG10(DFLOAT(nPx*nPy))))
+      WRITE(fmtStr,'(2(A,I1),A)') '(I',IL,'.',IL,')'
+      WRITE(myProcessStr,fmtStr) myProcId
+      IL = ILNBLNK( myProcessStr )
+      mpiPidIo = myProcId
+      pidIO    = mpiPidIo
+
+      IF( mpiPidIo.EQ.myProcId ) THEN
+#  ifdef SINGLE_DISK_IO
+        IF( myProcId.EQ.0 ) THEN
+#  endif
+        IF ( myIter.GE.0 ) THEN
+          WRITE(fNam,'(4A,I10.10,A)') &
+            TRIM(IHOP_fileroot),'.',myProcessStr(1:IL),'.',myIter,'.prt'
+        ELSE
+          WRITE(fNam,'(4A)') &
+            TRIM(IHOP_fileroot),'.',myProcessStr(1:IL),'.prt'
+        ENDIF
+
+        IF ( IHOP_dumpfreq.GE.0 ) &
+          OPEN(PRTFile, FILE=fNam, STATUS='UNKNOWN', IOSTAT=iostat )
+        IF ( iostat/=0 ) THEN
+          WRITE(*,*) 'ihop: IHOP_fileroot not recognized, ', &
+            TRIM(IHOP_fileroot)
+          WRITE(msgBuf,'(A)') 'IHOP_INIT: Unable to recognize file'
+          CALL PRINT_ERROR( msgBuf, myThid )
+          STOP 'ABNORMAL END: S/R IHOP_INIT'
+        END IF
+#  ifdef SINGLE_DISK_IO
+        END IF
+#  endif
+      END IF
+# endif /* ALLOW_USE_MPI */
+    END IF
+#endif /* IHOP_WRITE_OUT */
+
+    !   Only do I/O in the main thread
+    _BARRIER
+    _BEGIN_MASTER(myThid)
+
+    ! In adjoint mode we do not write output besides on the first run
+    IF (IHOP_dumpfreq.LT.0) RETURN
+
+#ifdef IHOP_WRITE_OUT
+    WRITE(msgbuf,'(A)') 'iHOP Print File'
+    CALL PRINT_MESSAGE( msgBuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgbuf,'(A)')
+    CALL PRINT_MESSAGE( msgBuf, PRTFile, SQUEEZE_RIGHT, myThid )
+#endif /* IHOP_WRITE_OUT */
+
+    ! *** TITLE ***
+#ifdef IHOP_THREED
+    WRITE(msgBuf,'(2A)') 'IHOP_INIT_DIAG openPRTFile: ', &
+                         '3D not supported in ihop'
+    CALL PRINT_ERROR( msgBuf,myThid )
+    STOP 'ABNORMAL END: S/R openPRTFile'
+    Title( 1 :11 ) = 'iHOP3D - '
+    Title( 12:80 ) = IHOP_title
+#else /* not IHOP_THREED */
+    Title( 1:9   ) = 'iHOP - '
+    Title( 10:80 ) = IHOP_title
+#endif /* IHOP_THREED */
+
+#ifdef IHOP_WRITE_OUT
+    WRITE(msgbuf,'(A)') Title ! , ACHAR(10)
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(2A)')'___________________________________________________', &
+                        '________'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgbuf,'(A)')
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE( msgBuf, '(A,I10,A,F20.2,A)') 'GCM iter ', myIter,' at time = ', &
+                                        myTime,' [sec]'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+# ifdef ALLOW_CAL
+    CALL CAL_GETDATE( myIter,myTime,mydate,myThid )
+    WRITE (msgBuf,'(A,I8,I6,I3,I4)') 'GCM cal date ', mydate(1), mydate(2), &
+                                     mydate(3), mydate(4)
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+# endif /* ALLOW_CAL */
+    WRITE(msgbuf,'(A)')
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE( msgBuf, '(A,F11.4,A)' )'Frequency ', IHOP_freq, ' [Hz]'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(2A)')'___________________________________________________', &
+                        '________'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+#endif /* IHOP_WRITE_OUT */
+
+    !   Only do I/O in the main thread
+    _END_MASTER(myThid)
+
+  END !SUBROUTINE openPRTFile
+
+!**********************************************************************!
   SUBROUTINE WriteTopOpt( myThid )
     USE ihop_mod,  only: PRTFile
     USE ssp_mod,   only: SSP
@@ -206,7 +335,7 @@ CONTAINS
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
 
   !     == Local Variables ==
-    CHARACTER (LEN= 1) :: BC ! Boundary condition type
+    CHARACTER*(1) :: BC ! Boundary condition type
 
     BC = IHOP_TopOpt( 2:2 )
 
@@ -529,6 +658,9 @@ CONTAINS
     REAL           :: atten
     LOGICAL        :: isOpen
 
+    ! In adjoint mode we do not write output besides on the first run
+    IF (IHOP_dumpfreq.LT.0) RETURN
+
     IF (myIter.GE.0) THEN
       ! add time step to filename
       IL=ILNBLNK( fName )
@@ -768,7 +900,6 @@ CONTAINS
   END !SUBROUTINE openOutputFiles
 
   !**********************************************************************!
-
   SUBROUTINE WriteSHDHeader( FileName, Title, freq0, Atten, PlotType )
 
     USE srPos_mod,  only: Pos, Nfreq, freqVec
@@ -895,136 +1026,6 @@ CONTAINS
   END !SUBROUTINE AllocatePos
 
   !**********************************************************************!
-  SUBROUTINE openPRTFile ( myTime, myIter, myThid )
-    USE ihop_mod, only: PRTFile, Title
-
-  !     == Routine Arguments ==
-  !     myThid :: Thread number. Unused by IESCO
-  !     myTime :: Current time in simulation
-  !     myIter :: Current time-step number
-  !     msgBuf :: Used to build messages for printing.
-    _RL, INTENT(IN)     ::  myTime
-    INTEGER, INTENT(IN) ::  myIter, myThid
-    CHARACTER*(MAX_LEN_MBUF):: msgBuf
-
-
-  !     == Local Arguments ==
-    INTEGER                     :: iostat
-  ! For MPI writing: inspo from eeboot_minimal.F
-    CHARACTER*(MAX_LEN_FNAM)    :: fNam
-    CHARACTER*(6)               :: fmtStr
-    INTEGER                     :: mpiRC, IL
-#ifdef ALLOW_CAL
-    INTEGER :: mydate(4)
-#endif
-
-    ! Open the print file: template from eeboot_minimal.F
-#ifdef IHOP_WRITE_OUT
-    IF ( .NOT.usingMPI ) THEN
-        WRITE(myProcessStr, '(I10.10)') myIter
-        IL=ILNBLNK( myProcessStr )
-        WRITE(fNam,'(4A)') TRIM(IHOP_fileroot),'.',myProcessStr(1:IL),'.prt'
-        IF ( IHOP_dumpfreq.GE.0 ) &
-         OPEN( PRTFile, FILE = fNam, STATUS = 'UNKNOWN', IOSTAT = iostat )
-#ifdef ALLOW_USE_MPI
-    ELSE ! using MPI
-        CALL MPI_COMM_RANK( MPI_COMM_MODEL, mpiMyId, mpiRC )
-        myProcId = mpiMyId
-        IL = MAX(4,1+INT(LOG10(DFLOAT(nPx*nPy))))
-        WRITE(fmtStr,'(2(A,I1),A)') '(I',IL,'.',IL,')'
-        WRITE(myProcessStr,fmtStr) myProcId
-        IL = ILNBLNK( myProcessStr )
-        mpiPidIo = myProcId
-        pidIO    = mpiPidIo
-
-        IF( mpiPidIo.EQ.myProcId ) THEN
-#  ifdef SINGLE_DISK_IO
-         IF( myProcId.eq.0 ) THEN
-#  endif
-            IF (myIter.GE.0) THEN
-                WRITE(fNam,'(4A,I10.10,A)') &
-                    TRIM(IHOP_fileroot),'.',myProcessStr(1:IL),'.',myIter,'.prt'
-            ELSE
-                WRITE(fNam,'(4A)') &
-                    TRIM(IHOP_fileroot),'.',myProcessStr(1:IL),'.prt'
-            ENDIF
-
-            IF ( IHOP_dumpfreq .GE. 0) &
-             OPEN(PRTFile, FILE = fNam, STATUS = 'UNKNOWN', IOSTAT = iostat )
-            IF ( iostat /= 0 ) THEN
-                WRITE(*,*) 'ihop: IHOP_fileroot not recognized, ', &
-                    TRIM(IHOP_fileroot)
-                WRITE(msgBuf,'(A)') 'IHOP_INIT: Unable to recognize file'
-                CALL PRINT_ERROR( msgBuf, myThid )
-                STOP 'ABNORMAL END: S/R IHOP_INIT'
-            END IF
-#  ifdef SINGLE_DISK_IO
-         END IF
-#  endif
-        END IF
-# endif /* ALLOW_USE_MPI */
-    END IF
-#endif /* IHOP_WRITE_OUT */
-
-    !   Only do I/O in the main thread
-    _BARRIER
-    _BEGIN_MASTER(myThid)
-
-    ! In adjoint mode we do not write output besides on the first run
-    IF (IHOP_dumpfreq.LT.0) RETURN
-
-#ifdef IHOP_WRITE_OUT
-    WRITE(msgbuf,'(A)') 'iHOP Print File'
-    CALL PRINT_MESSAGE( msgBuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgbuf,'(A)')
-    CALL PRINT_MESSAGE( msgBuf, PRTFile, SQUEEZE_RIGHT, myThid )
-#endif /* IHOP_WRITE_OUT */
-
-    ! *** TITLE ***
-#ifdef IHOP_THREED
-    WRITE(msgBuf,'(2A)') 'IHOP_INIT_DIAG openPRTFile: ', &
-                         '3D not supported in ihop'
-    CALL PRINT_ERROR( msgBuf,myThid )
-    STOP 'ABNORMAL END: S/R openPRTFile'
-    Title( 1 :11 ) = 'iHOP3D - '
-    Title( 12:80 ) = IHOP_title
-#else /* not IHOP_THREED */
-    Title( 1 : 9 ) = 'iHOP - '
-    Title( 10:80 ) = IHOP_title
-#endif /* IHOP_THREED */
-
-#ifdef IHOP_WRITE_OUT
-    WRITE(msgbuf,'(A)') Title ! , ACHAR(10)
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(2A)')'___________________________________________________', &
-                        '________'
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgbuf,'(A)')
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE( msgBuf, '(A,I10,A,F20.2,A)') 'GCM iter ', myIter,' at time = ', &
-        myTime,' [sec]'
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-# ifdef ALLOW_CAL
-    CALL CAL_GETDATE( myIter,myTime,mydate,myThid )
-    WRITE (msgBuf,'(A,I8,I6,I3,I4)') 'GCM cal date ', mydate(1), mydate(2), &
-                                                       mydate(3), mydate(4)
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-# endif /* ALLOW_CAL */
-    WRITE(msgbuf,'(A)')
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE( msgBuf, '(A,F11.4,A)' )'Frequency ', IHOP_freq, ' [Hz]'
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(2A)')'___________________________________________________', &
-                        '________'
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-#endif /* IHOP_WRITE_OUT */
-
-    !   Only do I/O in the main thread
-    _END_MASTER(myThid)
-
-  END !SUBROUTINE openPRTFile
-
-!**********************************************************************!
 
   SUBROUTINE resetMemory()
     USE arr_mod,    only: nArr, Arr, U
