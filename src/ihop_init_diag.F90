@@ -8,7 +8,6 @@ MODULE IHOP_INIT_DIAG
 
   ! mbp 12/2018, based on much older subroutine
 
-  USE ssp_mod,   only: SSP
   USE bdry_mod,  only: Bdry, HSInfo
   USE atten_mod, only: CRCI
 
@@ -45,7 +44,7 @@ CONTAINS
     USE angle_mod, only: Angles
     USE srpos_mod, only: WriteSxSy, WriteSzRz, WriteRcvrRanges, WriteFreqVec
 
-    ! I/O routine for acoustic fixed inputS
+  ! I/O routine for acoustic fixed inputS
 
   ! == Routine Arguments ==
   ! myTime  :: Current time in simulation
@@ -54,14 +53,11 @@ CONTAINS
   ! msgBuf  :: Used to build messages for printing.
     _RL, INTENT(IN)     ::  myTime
     INTEGER, INTENT(IN) ::  myIter, myThid
-    CHARACTER*(MAX_LEN_MBUF):: msgBuf
+    CHARACTER*(MAX_LEN_MBUF) :: msgBuf
 
   ! == Local Variables ==
     INTEGER, PARAMETER :: Number_to_Echo = 10
-!    REAL (KIND=_RL90),  PARAMETER :: c0 = 1500.0
-!    REAL (KIND=_RL90)  :: x(2), c, cimag, gradc(2), crz, czz, rho, Depth
     REAL (KIND=_RL90)  :: ranges
-!    CHARACTER (LEN=10) :: PlotType
 
     ! *** ihop info to PRTFile ***
     CALL openPRTFile( myTime, myIter, myThid )
@@ -85,7 +81,7 @@ CONTAINS
       WRITE(msgBuf,'(2A)') 'Top options: ', Bdry%Top%HS%Opt
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 
-      CALL writeBdry( Bdry%Top%HS, myThid )
+      CALL WriteBdry( Bdry%Top%HS, myThid )
 
       WRITE(msgBuf,'(A)')
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
@@ -100,7 +96,7 @@ CONTAINS
         CASE DEFAULT
       END SELECT
 
-      CALL writeBdry( Bdry%Bot%HS, myThid )
+      CALL WriteBdry( Bdry%Bot%HS, myThid )
 
       CALL WriteSxSy( myThid )
       CALL WriteSzRz( myThid )
@@ -1028,6 +1024,7 @@ CONTAINS
   !**********************************************************************!
 
   SUBROUTINE resetMemory()
+    USE ssp_mod,    only: SSP
     USE arr_mod,    only: nArr, Arr, U
     USE ihop_mod,   only: ray2D, MaxN, iStep
 
