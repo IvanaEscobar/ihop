@@ -438,7 +438,7 @@ CONTAINS
   !**********************************************************************!
 
   SUBROUTINE WriteBdry( HS, myThid )
-    USE ihop_mod,  only: PRTFile
+    USE ihop_mod,only: PRTFile
     USE ssp_mod, only: rhoR, alphaR, betaR, alphaI, betaI
 
     ! Handles top and bottom boundary conditions
@@ -507,11 +507,11 @@ CONTAINS
   ! **********************************************************************!
 
   SUBROUTINE openOutputFiles( fName, myTime, myIter, myThid )
-    USE ihop_mod,  only: RAYFile, DELFile, ARRFile, SHDFile, Title, Beam
+    USE ihop_mod,  only: RAYFile, DELFile, ARRFile, SHDFile, & 
+                         Title, Beam
+    USE angle_mod, only: Angles
+    USE srPos_mod, only: Pos
     ! Write appropriate header information
-
-    USE angle_mod,  only: Angles
-    USE srPos_mod,  only: Pos
 
     ! == Routine Arguments ==
     !  myTime   :: Current time in simulation
@@ -523,245 +523,245 @@ CONTAINS
     ! == Local variables ==
     CHARACTER*(MAX_LEN_FNAM), INTENT(IN) :: fName
     CHARACTER*(MAX_LEN_FNAM) :: fullName
-    INTEGER             :: IL
-    REAL               :: atten
-    CHARACTER (LEN=10) :: PlotType
-    CHARACTER (LEN=20) :: fmtstr
-    LOGICAL :: isOpen
+    CHARACTER*(10) :: PlotType
+    CHARACTER*(20) :: fmtstr
+    INTEGER        :: IL
+    REAL           :: atten
+    LOGICAL        :: isOpen
 
-    ! add time step to filename
     IF (myIter.GE.0) THEN
-        IL=ILNBLNK( fName )
-        WRITE(fullName, '(2A,I10.10)') fName(1:IL),'.',myIter
+      ! add time step to filename
+      IL=ILNBLNK( fName )
+      WRITE(fullName, '(2A,I10.10)') fName( 1:IL ), '.', myIter
     ELSE
-        fullName = fName
+      fullName = fName
     ENDIF
 
     SELECT CASE ( Beam%RunType( 1:1 ) )
     CASE ( 'R', 'E' )   ! Ray trace or Eigenrays
 #ifdef IHOP_WRITE_OUT
-       INQUIRE(UNIT=RAYFile, OPENED=isOpen)
-       IF (isOpen) CLOSE(RAYFile)
-       OPEN ( FILE = TRIM( fullName ) // '.ray', UNIT = RAYFile, &
-              FORM = 'FORMATTED' )
-       WRITE( RAYFile, '(3A)' )    '''', Title( 1:50 ), ''''
-       WRITE( RAYFile, '(F10.3)' ) IHOP_freq
-       WRITE( RAYFile, '(3I6)' )   Pos%nSX, Pos%nSY, Pos%nSZ
-       WRITE( RAYFile, '(I)' )     Angles%nAlpha
-       WRITE( RAYFile, '(F10.4)' ) Bdry%Top%HS%Depth
-       WRITE( RAYFile, '(F10.4)' ) Bdry%Bot%HS%Depth
+      INQUIRE(UNIT=RAYFile, OPENED=isOpen)
+      IF (isOpen) CLOSE(RAYFile)
+      OPEN ( FILE=TRIM( fullName ) // '.ray', UNIT=RAYFile, &
+             FORM='FORMATTED' )
+      WRITE( RAYFile, '(3A)'    ) '''', Title( 1:50 ), ''''
+      WRITE( RAYFile, '(F10.3)' ) IHOP_freq
+      WRITE( RAYFile, '(3I6)'   ) Pos%nSX, Pos%nSY, Pos%nSZ
+      WRITE( RAYFile, '(I)'     ) Angles%nAlpha
+      WRITE( RAYFile, '(F10.4)' ) Bdry%Top%HS%Depth
+      WRITE( RAYFile, '(F10.4)' ) Bdry%Bot%HS%Depth
 
 #ifdef IHOP_THREED
-       WRITE( RAYFile, '(2I)' ) Angles%nAlpha, Angles%nBeta
-       WRITE( RAYFile, '(A)' ) '''xyz'''
+      WRITE( RAYFile, '(2I)' ) Angles%nAlpha, Angles%nBeta
+      WRITE( RAYFile, '(A)'  ) '''xyz'''
 #else /* IHOP_THREED */
-       WRITE( RAYFile, '(A)' ) '''rz'''
+      WRITE( RAYFile, '(A)'  ) '''rz'''
 #endif /* IHOP_THREED */
-       FLUSH( RAYFile )
+      FLUSH( RAYFile )
 
 #endif /* IHOP_WRITE_OUT */
 
-       IF (writeDelay) THEN
+      IF (writeDelay) THEN
         INQUIRE(UNIT=DELFile, OPENED=isOpen)
         IF (isOpen) CLOSE(DELFile)
-        OPEN ( FILE = TRIM( fullName ) // '.delay', UNIT = DELFile, &
-               FORM = 'FORMATTED' )
-        WRITE( DELFile, '(3A)' )    '''', Title( 1:50 ), ''''
+        OPEN ( FILE=TRIM( fullName ) // '.delay', UNIT=DELFile, &
+               FORM='FORMATTED' )
+        WRITE( DELFile, '(3A)'    ) '''', Title( 1:50 ), ''''
         WRITE( DELFile, '(F10.3)' ) IHOP_freq
-        WRITE( DELFile, '(3I6)' )   Pos%nSX, Pos%nSY, Pos%nSZ
-        WRITE( DELFile, '(I)' )     Angles%nAlpha
+        WRITE( DELFile, '(3I6)'   ) Pos%nSX, Pos%nSY, Pos%nSZ
+        WRITE( DELFile, '(I)'     ) Angles%nAlpha
         WRITE( DELFile, '(F10.4)' ) Bdry%Top%HS%Depth
         WRITE( DELFile, '(F10.4)' ) Bdry%Bot%HS%Depth
 
 #ifdef IHOP_THREED
         WRITE( DELFile, '(2I)' ) Angles%nAlpha, Angles%nBeta
-        WRITE( DELFile, '(A)' ) '''xyz'''
+        WRITE( DELFile, '(A)'  ) '''xyz'''
 # else /* IHOP_THREED */
-        WRITE( DELFile, '(A)' ) '''rz'''
+        WRITE( DELFile, '(A)'  ) '''rz'''
 # endif /* IHOP_THREED */
         FLUSH( DELFile )
-       ENDIF
+      ENDIF
 
-    CASE ( 'e' )        ! eigenrays + arrival file in ascii format
+    CASE ( 'e' ) ! eigenrays + arrival file in ascii format
 #ifdef IHOP_WRITE_OUT
-       INQUIRE(UNIT=ARRFile, OPENED=isOpen)
-       IF (isOpen) CLOSE(ARRFile)
-       OPEN ( FILE = TRIM( fullName ) // '.arr', UNIT = ARRFile, &
-              FORM = 'FORMATTED' )
+      INQUIRE(UNIT=ARRFile, OPENED=isOpen)
+      IF (isOpen) CLOSE(ARRFile)
+      OPEN ( FILE=TRIM( fullName ) // '.arr', UNIT=ARRFile, &
+             FORM='FORMATTED' )
 
 # ifdef IHOP_THREED
-       WRITE( ARRFile, '(A)' ) '''3D'''
+      WRITE( ARRFile, '(A)' ) '''3D'''
 # else /* IHOP_THREED */
-       WRITE( ARRFile, '(A)' ) '''2D'''
+      WRITE( ARRFile, '(A)' ) '''2D'''
 # endif /* IHOP_THREED */
 
-       WRITE( ARRFile, '(F10.4)' ) IHOP_freq
+      WRITE( ARRFile, '(F10.4)' ) IHOP_freq
 
-       ! write source locations
+      ! write source locations
 # ifdef IHOP_THREED
-       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSX, 'G16.10)'
-       WRITE( ARRFile, fmtstr    ) Pos%nSX, Pos%SX( 1:Pos%nSX )
-       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSY, 'G16.10)'
-       WRITE( ARRFile, fmtstr    ) Pos%nSY, Pos%SY( 1:Pos%nSY )
-       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSZ, 'G16.10)'
-       WRITE( ARRFile, fmtstr    ) Pos%nSZ, Pos%SZ( 1:Pos%nSZ )
+      WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSX, 'G16.10)'
+      WRITE( ARRFile, fmtstr    ) Pos%nSX, Pos%SX( 1:Pos%nSX )
+      WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSY, 'G16.10)'
+      WRITE( ARRFile, fmtstr    ) Pos%nSY, Pos%SY( 1:Pos%nSY )
+      WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSZ, 'G16.10)'
+      WRITE( ARRFile, fmtstr    ) Pos%nSZ, Pos%SZ( 1:Pos%nSZ )
 # else /* IHOP_THREED */
-       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSZ, 'G16.10)'
-       WRITE( ARRFile, fmtstr    ) Pos%nSZ, Pos%SZ( 1:Pos%nSZ )
+      WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSZ, 'G16.10)'
+      WRITE( ARRFile, fmtstr    ) Pos%nSZ, Pos%SZ( 1:Pos%nSZ )
 # endif /* IHOP_THREED */
 
-       ! write receiver locations
-       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nRZ, 'G16.10)'
-       WRITE( ARRFile, fmtstr    ) Pos%nRZ, Pos%RZ( 1:Pos%nRZ )
-       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nRR, 'G16.10)'
-       WRITE( ARRFile, fmtstr    ) Pos%nRR, Pos%RR( 1:Pos%nRR )
+      ! write receiver locations
+      WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nRZ, 'G16.10)'
+      WRITE( ARRFile, fmtstr    ) Pos%nRZ, Pos%RZ( 1:Pos%nRZ )
+      WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nRR, 'G16.10)'
+      WRITE( ARRFile, fmtstr    ) Pos%nRR, Pos%RR( 1:Pos%nRR )
 # ifdef IHOP_THREED
-       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nTheta, 'G16.10)'
-       WRITE( ARRFile, fmtstr    ) Pos%nTheta, Pos%theta( 1:Pos%nTheta )
+      WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nTheta, 'G16.10)'
+      WRITE( ARRFile, fmtstr    ) Pos%nTheta, Pos%theta( 1:Pos%nTheta )
 # endif /* IHOP_THREED */
-       FLUSH( ARRFile )
+      FLUSH( ARRFile )
 
-       ! IEsco22: add erays to arrivals output
-       INQUIRE(UNIT=RAYFile, OPENED=isOpen)
-       IF (isOpen) CLOSE(RAYFile)
-       OPEN ( FILE = TRIM( fullName ) // '.ray', UNIT = RAYFile, &
-              FORM = 'FORMATTED' )
-       WRITE( RAYFile, '(3A)' )    '''', Title( 1:50 ), ''''
-       WRITE( RAYFile, '(F10.3)' ) IHOP_freq
-       WRITE( RAYFile, '(3I6)' )   Pos%nSX, Pos%nSY, Pos%nSZ
-       WRITE( RAYFile, '(I)' )     Angles%nAlpha
-       WRITE( RAYFile, '(F10.4)' ) Bdry%Top%HS%Depth
-       WRITE( RAYFile, '(F10.4)' ) Bdry%Bot%HS%Depth
+      ! IEsco22: add erays to arrivals output
+      INQUIRE(UNIT=RAYFile, OPENED=isOpen)
+      IF (isOpen) CLOSE(RAYFile)
+      OPEN ( FILE=TRIM( fullName ) // '.ray', UNIT=RAYFile, &
+             FORM='FORMATTED' )
+      WRITE( RAYFile, '(3A)'    ) '''', Title( 1:50 ), ''''
+      WRITE( RAYFile, '(F10.3)' ) IHOP_freq
+      WRITE( RAYFile, '(3I6)'   ) Pos%nSX, Pos%nSY, Pos%nSZ
+      WRITE( RAYFile, '(I)'     ) Angles%nAlpha
+      WRITE( RAYFile, '(F10.4)' ) Bdry%Top%HS%Depth
+      WRITE( RAYFile, '(F10.4)' ) Bdry%Bot%HS%Depth
 
 # ifdef IHOP_THREED
-       WRITE( RAYFile, '(2I)' ) Angles%nAlpha, Angles%nBeta
-       WRITE( RAYFile, '(A)' ) '''xyz'''
+      WRITE( RAYFile, '(2I)' ) Angles%nAlpha, Angles%nBeta
+      WRITE( RAYFile, '(A)'  ) '''xyz'''
 # else /* IHOP_THREED */
-       WRITE( RAYFile, '(A)' ) '''rz'''
+      WRITE( RAYFile, '(A)'  ) '''rz'''
 # endif /* IHOP_THREED */
-       FLUSH( RAYFile )
+      FLUSH( RAYFile )
 
-       IF (writeDelay) THEN
+      IF (writeDelay) THEN
         INQUIRE(UNIT=DELFile, OPENED=isOpen)
         IF (isOpen) CLOSE(DELFile)
-        OPEN ( FILE = TRIM( fullName ) // '.delay', UNIT = DELFile, &
-               FORM = 'FORMATTED' )
-        WRITE( DELFile, '(3A)' )    '''', Title( 1:50 ), ''''
+        OPEN ( FILE=TRIM( fullName ) // '.delay', UNIT=DELFile, &
+               FORM='FORMATTED' )
+        WRITE( DELFile, '(3A)'    ) '''', Title( 1:50 ), ''''
         WRITE( DELFile, '(F10.3)' ) IHOP_freq
-        WRITE( DELFile, '(3I6)' )   Pos%nSX, Pos%nSY, Pos%nSZ
-        WRITE( DELFile, '(I)' )     Angles%nAlpha
+        WRITE( DELFile, '(3I6)'   ) Pos%nSX, Pos%nSY, Pos%nSZ
+        WRITE( DELFile, '(I)'     ) Angles%nAlpha
         WRITE( DELFile, '(F10.4)' ) Bdry%Top%HS%Depth
         WRITE( DELFile, '(F10.4)' ) Bdry%Bot%HS%Depth
 
 #ifdef IHOP_THREED
         WRITE( DELFile, '(2I)' ) Angles%nAlpha, Angles%nBeta
-        WRITE( DELFile, '(A)' ) '''xyz'''
+        WRITE( DELFile, '(A)'  ) '''xyz'''
 # else /* IHOP_THREED */
-        WRITE( DELFile, '(A)' ) '''rz'''
+        WRITE( DELFile, '(A)'  ) '''rz'''
 # endif /* IHOP_THREED */
         FLUSH( DELFile )
-       ENDIF
+      ENDIF
 
 #endif /* IHOP_WRITE_OUT */
 
     CASE ( 'A' )        ! arrival file in ascii format
 #ifdef IHOP_WRITE_OUT
-       INQUIRE(UNIT=ARRFile, OPENED=isOpen)
-       IF (isOpen) CLOSE(ARRFile)
-       OPEN ( FILE = TRIM( fullName ) // '.arr', UNIT = ARRFile, &
-              FORM = 'FORMATTED' )
+      INQUIRE(UNIT=ARRFile, OPENED=isOpen)
+      IF (isOpen) CLOSE(ARRFile)
+      OPEN ( FILE=TRIM( fullName ) // '.arr', UNIT=ARRFile, &
+             FORM='FORMATTED' )
 
 # ifdef IHOP_THREED
-       WRITE( ARRFile, '(A)' ) '''3D'''
+      WRITE( ARRFile, '(A)' ) '''3D'''
 # else /* IHOP_THREED */
-       WRITE( ARRFile, '(A)' ) '''2D'''
+      WRITE( ARRFile, '(A)' ) '''2D'''
 # endif /* IHOP_THREED */
 
-       WRITE( ARRFile, '(F10.4)' ) IHOP_freq
+      WRITE( ARRFile, '(F10.4)' ) IHOP_freq
 
-       ! write source locations
+      ! write source locations
 # ifdef IHOP_THREED
-       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSX, 'G16.10)'
-       WRITE( ARRFile, fmtstr    ) Pos%nSX, Pos%SX( 1:Pos%nSX )
-       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSY, 'G16.10)'
-       WRITE( ARRFile, fmtstr    ) Pos%nSY, Pos%SY( 1:Pos%nSY )
-       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSZ, 'G16.10)'
-       WRITE( ARRFile, fmtstr    ) Pos%nSZ, Pos%SZ( 1:Pos%nSZ )
+      WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSX, 'G16.10)'
+      WRITE( ARRFile, fmtstr    ) Pos%nSX, Pos%SX( 1:Pos%nSX )
+      WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSY, 'G16.10)'
+      WRITE( ARRFile, fmtstr    ) Pos%nSY, Pos%SY( 1:Pos%nSY )
+      WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSZ, 'G16.10)'
+      WRITE( ARRFile, fmtstr    ) Pos%nSZ, Pos%SZ( 1:Pos%nSZ )
 # else /* IHOP_THREED */
-       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSZ, 'G16.10)'
-       WRITE( ARRFile, fmtstr    ) Pos%nSZ, Pos%SZ( 1:Pos%nSZ )
+      WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSZ, 'G16.10)'
+      WRITE( ARRFile, fmtstr    ) Pos%nSZ, Pos%SZ( 1:Pos%nSZ )
 # endif /* IHOP_THREED */
 
-       ! write receiver locations
-       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nRZ, 'G16.10)'
-       WRITE( ARRFile, fmtstr    ) Pos%nRZ, Pos%RZ( 1:Pos%nRZ )
-       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nRR, 'G16.10)'
-       WRITE( ARRFile, fmtstr    ) Pos%nRR, Pos%RR( 1:Pos%nRR )
+      ! write receiver locations
+      WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nRZ, 'G16.10)'
+      WRITE( ARRFile, fmtstr    ) Pos%nRZ, Pos%RZ( 1:Pos%nRZ )
+      WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nRR, 'G16.10)'
+      WRITE( ARRFile, fmtstr    ) Pos%nRR, Pos%RR( 1:Pos%nRR )
 # ifdef IHOP_THREED
-       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nTheta, 'G16.10)'
-       WRITE( ARRFile, fmtstr    ) Pos%nTheta, Pos%theta( 1:Pos%nTheta )
+      WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nTheta, 'G16.10)'
+      WRITE( ARRFile, fmtstr    ) Pos%nTheta, Pos%theta( 1:Pos%nTheta )
 # endif /* IHOP_THREED */
 
-       FLUSH( ARRFile )
+      FLUSH( ARRFile )
 #endif /* IHOP_WRITE_OUT */
 
     CASE ( 'a' )        ! arrival file in binary format
 #ifdef IHOP_WRITE_OUT
-       INQUIRE(UNIT=ARRFile, OPENED=isOpen)
-       IF (isOpen) CLOSE(ARRFile)
-       OPEN ( FILE = TRIM( fullName ) // '.arr', UNIT = ARRFile, &
-              FORM = 'UNFORMATTED' )
+      INQUIRE(UNIT=ARRFile, OPENED=isOpen)
+      IF (isOpen) CLOSE(ARRFile)
+      OPEN ( FILE=TRIM( fullName ) // '.arr', UNIT=ARRFile, &
+             FORM='UNFORMATTED' )
 
 # ifdef IHOP_THREED
-       WRITE( ARRFile, '(A)' ) '''3D'''
+      WRITE( ARRFile, '(A)' ) '''3D'''
 # else /* IHOP_THREED */
-       WRITE( ARRFile, '(A)' ) '''2D'''
+      WRITE( ARRFile, '(A)' ) '''2D'''
 # endif /* IHOP_THREED */
 
-       WRITE( ARRFile, '(F10.4)' ) IHOP_freq
+      WRITE( ARRFile, '(F10.4)' ) IHOP_freq
 
-       ! write source locations
+      ! write source locations
 # ifdef IHOP_THREED
-       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSX, 'G16.10)'
-       WRITE( ARRFile, fmtstr    ) Pos%nSX, Pos%SX( 1:Pos%nSX )
-       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSY, 'G16.10)'
-       WRITE( ARRFile, fmtstr    ) Pos%nSY, Pos%SY( 1:Pos%nSY )
-       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSZ, 'G16.10)'
-       WRITE( ARRFile, fmtstr    ) Pos%nSZ, Pos%SZ( 1:Pos%nSZ )
+      WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSX, 'G16.10)'
+      WRITE( ARRFile, fmtstr    ) Pos%nSX, Pos%SX( 1:Pos%nSX )
+      WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSY, 'G16.10)'
+      WRITE( ARRFile, fmtstr    ) Pos%nSY, Pos%SY( 1:Pos%nSY )
+      WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSZ, 'G16.10)'
+      WRITE( ARRFile, fmtstr    ) Pos%nSZ, Pos%SZ( 1:Pos%nSZ )
 # else /* IHOP_THREED */
-       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSZ, 'G16.10)'
-       WRITE( ARRFile, fmtstr    ) Pos%nSZ, Pos%SZ( 1:Pos%nSZ )
+      WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSZ, 'G16.10)'
+      WRITE( ARRFile, fmtstr    ) Pos%nSZ, Pos%SZ( 1:Pos%nSZ )
 # endif /* IHOP_THREED */
 
-       ! write receiver locations
-       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nRZ, 'G16.10)'
-       WRITE( ARRFile, fmtstr    ) Pos%nRZ, Pos%RZ( 1:Pos%nRZ )
-       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nRR, 'G16.10)'
-       WRITE( ARRFile, fmtstr    ) Pos%nRR, Pos%RR( 1:Pos%nRR )
+      ! write receiver locations
+      WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nRZ, 'G16.10)'
+      WRITE( ARRFile, fmtstr    ) Pos%nRZ, Pos%RZ( 1:Pos%nRZ )
+      WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nRR, 'G16.10)'
+      WRITE( ARRFile, fmtstr    ) Pos%nRR, Pos%RR( 1:Pos%nRR )
 # ifdef IHOP_THREED
-       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nTheta, 'G16.10)'
-       WRITE( ARRFile, fmtstr    ) Pos%nTheta, Pos%theta( 1:Pos%nTheta )
+      WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nTheta, 'G16.10)'
+      WRITE( ARRFile, fmtstr    ) Pos%nTheta, Pos%theta( 1:Pos%nTheta )
 # endif /* IHOP_THREED */
 
-       FLUSH( ARRFile )
+      FLUSH( ARRFile )
 #endif /* IHOP_WRITE_OUT */
 
     CASE DEFAULT
-       atten = 0.0
+      atten = 0.0
 
-       ! following to set PlotType has alread been done in READIN if that was
-       ! used for input
-       SELECT CASE ( Beam%RunType( 5:5 ) )
-       CASE ( 'R' )
-          PlotType = 'rectilin  '
-       CASE ( 'I' )
-          PlotType = 'irregular '
-       CASE DEFAULT
-          PlotType = 'rectilin  '
-       END SELECT
+      ! following to set PlotType has alread been done in READIN if that was
+      ! used for input
+      SELECT CASE ( Beam%RunType( 5:5 ) )
+      CASE ( 'R' )
+         PlotType = 'rectilin  '
+      CASE ( 'I' )
+         PlotType = 'irregular '
+      CASE DEFAULT
+         PlotType = 'rectilin  '
+      END SELECT
 
-       CALL WriteSHDHeader( TRIM( fullName ) // '.shd', Title, &
-                            REAL( IHOP_freq ), atten, PlotType )
+      CALL WriteSHDHeader( TRIM( fullName ) // '.shd', Title, &
+                           REAL( IHOP_freq ), atten, PlotType )
     END SELECT
 
   RETURN
