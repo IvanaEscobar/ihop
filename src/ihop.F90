@@ -146,9 +146,9 @@ CONTAINS
             CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
             CLOSE(PRTFile)
 
-          ENDIF ! IF ( myProcId.GT.0) 
+          ENDIF ! IF ( myProcId.GT.0)
         ENDIF ! IF ( numberOfProcs.GT.1 )
-# endif /* ALLOW_USE_MPI */ 
+# endif /* ALLOW_USE_MPI */
       ENDIF
 
       ! close all files
