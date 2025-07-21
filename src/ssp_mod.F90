@@ -152,9 +152,7 @@ CONTAINS
     cCoef = (-1.,-1.)
 
     ! Extract gcm SSP field
-    IF ( .not. useSSPFile ) THEN
-      CALL gcmSSP( myThid )
-    ENDIF
+    IF ( .NOT.useSSPFile ) CALL gcmSSP( myThid )
 
     ! Write to PRTFile
     IF ( .NOT.usingMPI ) THEN
@@ -172,51 +170,51 @@ CONTAINS
     ! Populate rest of SSP derived type based on SSP interpolation scheme
     SELECT CASE ( SSP%Type )
     CASE ( 'N' )  !  N2-linear profile option
-       n2( 1:SSP%nPts ) = 1.0 / SSP%c( 1:SSP%nPts )**2
-       !IEsco23 Test this: n2(  1:SSP%nZ ) = 1.0 / SSP%c( 1:SSP%nZ )**2
+      n2( 1:SSP%nPts ) = 1.0 / SSP%c( 1:SSP%nPts )**2
+      !IEsco23 Test this: n2(  1:SSP%nZ ) = 1.0 / SSP%c( 1:SSP%nZ )**2
 
-       ! compute gradient, n2z
-       DO iz = 2, SSP%nPts
-          n2z( iz-1 ) = (  n2(   iz ) - n2(    iz-1 ) ) / &
-                        ( SSP%Z( iz ) - SSP%Z( iz-1 ) )
-       END DO
+      ! compute gradient, n2z
+      DO iz = 2, SSP%nPts
+        n2z( iz-1 ) = (  n2(   iz ) - n2(    iz-1 ) ) / &
+                      ( SSP%Z( iz ) - SSP%Z( iz-1 ) )
+      END DO
 
     CASE ( 'C' )  !  C-linear profile option
     CASE ( 'P' )  !  monotone PCHIP ACS profile option
-       !                                                               2      3
-       ! compute coefficients of std cubic polynomial: c0 + c1*x + c2*x + c3*x
-       !
-       CALL PCHIP( SSP%Z, SSP%c, SSP%nPts, cCoef, cSpln )
+      !                                                               2      3
+      ! compute coefficients of std cubic polynomial: c0 + c1*x + c2*x + c3*x
+      !
+      CALL PCHIP( SSP%Z, SSP%c, SSP%nPts, cCoef, cSpln )
 !IEsco23 Test this:
-!       CALL PCHIP( SSP%Z, SSP%c, SSP%nZ, cCoef, cSpln )
+!     CALL PCHIP( SSP%Z, SSP%c, SSP%nZ, cCoef, cSpln )
 
     CASE ( 'S' )  !  Cubic spline profile option
-       cSpln( 1, 1:SSP%nPts ) = SSP%c( 1:SSP%nPts )
+      cSpln( 1, 1:SSP%nPts ) = SSP%c( 1:SSP%nPts )
 !IEsco23 Test this:
-!       cSpln( 1, 1 : SSP%nZ ) = SSP%c( 1 : SSP%nZ )
+!     cSpln( 1, 1 : SSP%nZ ) = SSP%c( 1 : SSP%nZ )
 
-       ! Compute spline coefs
-       CALL cSpline( SSP%Z, cSpln( 1, 1 ), SSP%nPts, 0, 0, SSP%nPts )
+      ! Compute spline coefs
+      CALL cSpline( SSP%Z, cSpln( 1, 1 ), SSP%nPts, 0, 0, SSP%nPts )
 !IEsco23 Test this:
-!      CALL CSpline( SSP%Z, cSpln( 1,1 ), SSP%nZ,iBCBeg, iBCEnd, SSP%nZ )
+!     CALL CSpline( SSP%Z, cSpln( 1,1 ), SSP%nZ,iBCBeg, iBCEnd, SSP%nZ )
 
     CASE ( 'Q' )
-       ! calculate cz
-       DO ir = 1, SSP%nR
-         DO iz = 2, SSP%nZ
-           ! delta_z = ( SSP%Z( iz2 ) - SSP%Z( iz2-1 ) )
-           SSP%czMat( iz-1, ir ) = ( SSP%cMat( iz,   ir ) - &
-                                     SSP%cMat( iz-1, ir ) ) / &
-                                   ( SSP%Z( iz ) - SSP%Z( iz-1 ) )
-         END DO
-       END DO
+      ! calculate cz
+      DO ir = 1, SSP%nR
+        DO iz = 2, SSP%nZ
+          ! delta_z = ( SSP%Z( iz2 ) - SSP%Z( iz2-1 ) )
+          SSP%czMat( iz-1, ir ) = ( SSP%cMat( iz,   ir ) - &
+                                    SSP%cMat( iz-1, ir ) ) / &
+                                  ( SSP%Z( iz ) - SSP%Z( iz-1 ) )
+        END DO
+      END DO
 
     CASE DEFAULT
 #ifdef IHOP_WRITE_OUT
-        WRITE(msgBuf,'(A)') 'SSPMOD setSSP: Invalid SSP profile option'
-        CALL PRINT_ERROR( msgBuf,myThid )
+      WRITE(msgBuf,'(A)') 'SSPMOD setSSP: Invalid SSP profile option'
+      CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
-        STOP 'ABNORMAL END: S/R setSSP'
+      STOP 'ABNORMAL END: S/R setSSP'
     END SELECT
 
   RETURN
@@ -1009,9 +1007,6 @@ SUBROUTINE gcmSSP( myThid )
     END DO
   END DO
 
-!IESCO c68s: IF ((nPx.GT.1) .OR. (nPy.GT.1)) THEN
-!IESCO c68s:   CALL GLOBAL_VEC_SUM_R8(SSP%nZ*SSP%nR,SSP%nZ*SSP%nR,tileSSP,myThid)
-!IESCO c68s: ENDIF
   CALL GLOBAL_SUM_VECTOR_RL(SSP%nZ*SSP%nR,tmpSSP,globSSP,myThid)
 
   ! reshape ssp to matrix
@@ -1022,7 +1017,6 @@ SUBROUTINE gcmSSP( myThid )
       k = k + 1
     END DO
   END DO
-! IESCO24: END MITgcm checkpoint69a uses a new global sum subroutine...
 
   IF(ALLOCATED(tileSSP)) DEALLOCATE(tileSSP)
   IF(ALLOCATED(tmpSSP))  DEALLOCATE(tmpSSP)
