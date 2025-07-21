@@ -627,6 +627,7 @@ CONTAINS
             endRay=.TRUE.
           ELSE
             WRITE(msgBuf,'(A)')
+            endRay=.FALSE.
           ENDIF
 
 #ifdef IHOP_WRITE_OUT
