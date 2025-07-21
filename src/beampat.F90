@@ -112,26 +112,22 @@ CONTAINS
   _BEGIN_MASTER(myThid)
 
 #ifdef IHOP_WRITE_OUT
-  ! In adjoint mode we do not write output besides on the first run
-  IF (IHOP_dumpfreq.GE.0) THEN
+  IF ( SBPFlag == '*' ) THEN
+    WRITE( PRTFile, * )
+    WRITE( PRTFile, * ) '______________________________'
+    WRITE( PRTFile, * ) 'Using source beam pattern file'
+    
+    WRITE( PRTFile, * ) 'Number of source beam pattern points', NSBPPts
 
-    IF ( SBPFlag == '*' ) THEN
-      WRITE( PRTFile, * )
-      WRITE( PRTFile, * ) '______________________________'
-      WRITE( PRTFile, * ) 'Using source beam pattern file'
-      
-      WRITE( PRTFile, * ) 'Number of source beam pattern points', NSBPPts
+    WRITE( PRTFile, * )
+    WRITE( PRTFile, * ) ' Angle (degrees)  Power (dB)'
 
-      WRITE( PRTFile, * )
-      WRITE( PRTFile, * ) ' Angle (degrees)  Power (dB)'
-
-      DO I = 1, NSBPPts
-        WRITE( PRTFile, FMT = "( 2G11.3 )" ) SrcBmPat( I, : )
-      END DO
-    END IF
-
-  END IF ! don't write in adjoint mode
+    DO I = 1, NSBPPts
+      WRITE( PRTFile, FMT = "( 2G11.3 )" ) SrcBmPat( I, : )
+    END DO
+  END IF
 #endif /* IHOP_WRITE_OUT */
+
   ! I/O on main thread only
   _END_MASTER(myThid)
   _BARRIER

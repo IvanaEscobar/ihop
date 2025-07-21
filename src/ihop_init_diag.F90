@@ -59,6 +59,9 @@ CONTAINS
     INTEGER, PARAMETER :: Number_to_Echo = 10
     REAL (KIND=_RL90)  :: ranges
 
+    ! In adjoint mode we do not write output besides on the first run
+    IF ( IHOP_dumpfreq.LT.0 ) RETURN
+
     ! *** ihop info to PRTFile ***
     CALL openPRTFile( myTime, myIter, myThid )
 
@@ -66,119 +69,115 @@ CONTAINS
     !   Only do I/O in the main thread
     _BEGIN_MASTER(myThid)
 
-    ! In adjoint mode we do not write output besides on the first run
-    IF (IHOP_dumpfreq.GE.0) THEN
-      CALL WriteRunType( Beam%RunType, myThid )
+    CALL WriteRunType( Beam%RunType, myThid )
 
-      CALL WriteTopOpt( myThid )
+    CALL WriteTopOpt( myThid )
 
-      WRITE(msgBuf,'(A)')
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(A,F10.2,A)' ) 'Depth = ',Bdry%Bot%HS%Depth,' m'
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(A)')
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(2A)') 'Top options: ', Bdry%Top%HS%Opt
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(A)')
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(A,F10.2,A)' ) 'Depth = ',Bdry%Bot%HS%Depth,' m'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(A)')
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(2A)') 'Top options: ', Bdry%Top%HS%Opt
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 
-      CALL WriteBdry( Bdry%Top%HS, myThid )
+    CALL WriteBdry( Bdry%Top%HS, myThid )
 
-      WRITE(msgBuf,'(A)')
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(2A)') 'Bottom options: ', Bdry%Bot%HS%Opt
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(A)')
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(2A)') 'Bottom options: ', Bdry%Bot%HS%Opt
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 
-      SELECT CASE ( Bdry%Bot%HS%Opt( 2 : 2 ) )
-        CASE ( '~', '*' )
-          WRITE(msgBuf,'(A)') '    Bathymetry file selected'
-          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-        CASE( ' ' )
-        CASE DEFAULT
-      END SELECT
+    SELECT CASE ( Bdry%Bot%HS%Opt( 2 : 2 ) )
+      CASE ( '~', '*' )
+        WRITE(msgBuf,'(A)') '    Bathymetry file selected'
+        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+      CASE( ' ' )
+      CASE DEFAULT
+    END SELECT
 
-      CALL WriteBdry( Bdry%Bot%HS, myThid )
+    CALL WriteBdry( Bdry%Bot%HS, myThid )
 
-      CALL WriteSxSy( myThid )
-      CALL WriteSzRz( myThid )
-      CALL WriteRcvrRanges( myThid )
+    CALL WriteSxSy( myThid )
+    CALL WriteSzRz( myThid )
+    CALL WriteRcvrRanges( myThid )
 # ifdef IHOP_THREED
-      CALL WriteRcvrBearings( myThid )
+    CALL WriteRcvrBearings( myThid )
 # endif
-      CALL WriteFreqVec( Bdry%Top%HS%Opt( 6:6 ), myThid )
+    CALL WriteFreqVec( Bdry%Top%HS%Opt( 6:6 ), myThid )
 
 
-      WRITE(msgBuf,'(2A)')'_____________________________________________', &
-                          '______________'
+    WRITE(msgBuf,'(2A)')'_____________________________________________', &
+                        '______________'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(A)')
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(A,I10)') 'Number of beams in elevation   = ', &
+                            Angles%nAlpha
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    IF ( Angles%iSingle_alpha > 0 ) THEN
+      WRITE(msgBuf,'(A,I10)') 'Trace only beam number ', &
+                              Angles%iSingle_alpha
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(A)')
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(A,I10)') 'Number of beams in elevation   = ', &
-                              Angles%nAlpha
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      IF ( Angles%iSingle_alpha > 0 ) THEN
-        WRITE(msgBuf,'(A,I10)') 'Trace only beam number ', &
-                                Angles%iSingle_alpha
-        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      END IF
+    END IF
 
-      WRITE(msgBuf,'(A)') 'Beam take-off angles (degrees)'
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(A)') 'Beam take-off angles (degrees)'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 
-      IF ( Angles%nAlpha >= 1 ) THEN
-        WRITE(msgBuf,'(10F12.3)') &
-            Angles%adeg( 1:MIN(Angles%nAlpha,Number_to_Echo) )
-        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      END IF
-      IF ( Angles%nAlpha > Number_to_Echo ) THEN
-        WRITE(msgBuf,'(A,F12.6)') ' ... ', Angles%adeg( Angles%nAlpha )
-        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      END IF
+    IF ( Angles%nAlpha >= 1 ) THEN
+      WRITE(msgBuf,'(10F12.3)') &
+          Angles%adeg( 1:MIN(Angles%nAlpha,Number_to_Echo) )
+      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    END IF
+    IF ( Angles%nAlpha > Number_to_Echo ) THEN
+      WRITE(msgBuf,'(A,F12.6)') ' ... ', Angles%adeg( Angles%nAlpha )
+      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    END IF
 
-      WRITE(msgBuf,'(A)')
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(2A)')'______________________________________________', &
-                          '_____________'
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(A)')
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(A,G11.4,A)') &
-          ' Step length, deltas = ', Beam%deltas, ' m'
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(A)')
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(A)')
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(2A)')'______________________________________________', &
+                        '_____________'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(A)')
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(A,G11.4,A)') &
+        ' Step length, deltas = ', Beam%deltas, ' m'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(A)')
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 
 # ifdef IHOP_THREED
-      WRITE(msgBuf,'(A,G11.6,A)') &
-          ' Maximum ray x-range, Box%X = ', Beam%Box%X,' m'
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(A,G11.6,A)') &
-          ' Maximum ray y-range, Box%Y = ', Beam%Box%Y,' m'
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(A,G11.6,A)') &
-          ' Maximum ray z-range, Box%Z = ', Beam%Box%Z,' m'
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(A,G11.6,A)') &
+        ' Maximum ray x-range, Box%X = ', Beam%Box%X,' m'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(A,G11.6,A)') &
+        ' Maximum ray y-range, Box%Y = ', Beam%Box%Y,' m'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(A,G11.6,A)') &
+        ' Maximum ray z-range, Box%Z = ', Beam%Box%Z,' m'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 # else /* not IHOP_THREED */
-      ranges = Beam%Box%R / 1000.0
-      WRITE(msgBuf,'(A,G11.6,A)') &
-          ' Maximum ray range, Box%R = ', ranges,' km'
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(A,G11.6,A)') &
-          ' Maximum ray depth, Box%Z = ', Beam%Box%Z,' m'
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    ranges = Beam%Box%R / 1000.0
+    WRITE(msgBuf,'(A,G11.6,A)') &
+        ' Maximum ray range, Box%R = ', ranges,' km'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(A,G11.6,A)') &
+        ' Maximum ray depth, Box%Z = ', Beam%Box%Z,' m'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 # endif /* not IHOP_THREED */
 
-      SELECT CASE ( Beam%Type( 4:4 ) )
-      CASE ( 'S' )
-        WRITE(msgBuf,'(A)') ' Beam shift in effect'
-        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      CASE DEFAULT
-        WRITE(msgBuf,'(A)') ' No beam shift in effect'
-        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      END SELECT
-      WRITE(msgBuf,'(A)')
+    SELECT CASE ( Beam%Type( 4:4 ) )
+    CASE ( 'S' )
+      WRITE(msgBuf,'(A)') ' Beam shift in effect'
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-
-    ENDIF ! adjoint run check
+    CASE DEFAULT
+      WRITE(msgBuf,'(A)') ' No beam shift in effect'
+      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    END SELECT
+    WRITE(msgBuf,'(A)')
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 
     !   Only do I/O in the main thread
     _END_MASTER(myThid)
@@ -212,55 +211,51 @@ CONTAINS
     INTEGER :: mydate(4)
 #endif
 
+    ! In adjoint mode we do not write output besides on the first run
+    IF ( IHOP_dumpfreq.LT.0 ) RETURN
+
     ! Open the print file: template from eeboot_minimal.F
 #ifdef IHOP_WRITE_OUT
     IF ( .NOT.usingMPI ) THEN
       WRITE(myProcessStr, '(I10.10)') myIter
       IL=ILNBLNK( myProcessStr )
       WRITE(fNam,'(4A)') TRIM(IHOP_fileroot),'.',myProcessStr(1:IL),'.prt'
-      IF ( IHOP_dumpfreq.GE.0 ) &
-        OPEN( PRTFile, FILE=fNam, STATUS='UNKNOWN', IOSTAT=iostat )
-#ifdef ALLOW_USE_MPI
+      OPEN( PRTFile, FILE=fNam, STATUS='UNKNOWN', IOSTAT=iostat )
+      IF ( iostat/=0 ) THEN
+        WRITE(*,*) 'ihop: IHOP_fileroot not recognized, ', &
+          TRIM(IHOP_fileroot)
+        WRITE(msgBuf,'(A)') 'IHOP_INIT: Unable to recognize file'
+        CALL PRINT_ERROR( msgBuf, myThid )
+        STOP 'ABNORMAL END: S/R IHOP_INIT'
+      ENDIF
+
+# ifdef ALLOW_USE_MPI
     ELSE ! using MPI
-      CALL MPI_COMM_RANK( MPI_COMM_MODEL, mpiMyId, mpiRC )
-      myProcId = mpiMyId
-      IL = MAX(4,1+INT(LOG10(DFLOAT(nPx*nPy))))
-      WRITE(fmtStr,'(2(A,I1),A)') '(I',IL,'.',IL,')'
-      WRITE(myProcessStr,fmtStr) myProcId
-      IL = ILNBLNK( myProcessStr )
-      mpiPidIo = myProcId
+      IF ( myIter.GE.0 ) THEN
+        WRITE(fNam,'(2A,I10.10,A)') &
+          TRIM(IHOP_fileroot),'.',myIter,'.prt'
+      ELSE
+        WRITE(msgBuf,'(A,I)') 'IHOP_INIT: myIter is ', myIter
+        CALL PRINT_ERROR( msgBuf, myThid )
+        STOP 'ABNORMAL END: S/R IHOP_INIT'
+      ENDIF
 
-      IF( mpiPidIo.EQ.myProcId ) THEN
+      OPEN(PRTFile, FILE=fNam, STATUS='UNKNOWN', IOSTAT=iostat )
+      IF ( iostat/=0 ) THEN
+        WRITE(*,*) 'ihop: IHOP_fileroot not recognized, ', &
+          TRIM(IHOP_fileroot)
+        WRITE(msgBuf,'(A)') 'IHOP_INIT: Unable to recognize file'
+        CALL PRINT_ERROR( msgBuf, myThid )
+        STOP 'ABNORMAL END: S/R IHOP_INIT'
+      ENDIF
 
-        IF ( myIter.GE.0 ) THEN
-          WRITE(fNam,'(2A,I10.10,A)') &
-            TRIM(IHOP_fileroot),'.',myIter,'.prt'
-        ELSE
-          WRITE(fNam,'(4A)') &
-            TRIM(IHOP_fileroot),'.',myProcessStr(1:IL),'.prt'
-        ENDIF
-
-        IF ( IHOP_dumpfreq.GE.0 ) &
-          OPEN(PRTFile, FILE=fNam, STATUS='UNKNOWN', IOSTAT=iostat )
-        IF ( iostat/=0 ) THEN
-          WRITE(*,*) 'ihop: IHOP_fileroot not recognized, ', &
-            TRIM(IHOP_fileroot)
-          WRITE(msgBuf,'(A)') 'IHOP_INIT: Unable to recognize file'
-          CALL PRINT_ERROR( msgBuf, myThid )
-          STOP 'ABNORMAL END: S/R IHOP_INIT'
-        END IF
-
-      END IF
 # endif /* ALLOW_USE_MPI */
-    END IF
+    ENDIF ! IF ( .NOT.usingMPI )
 #endif /* IHOP_WRITE_OUT */
 
     !   Only do I/O in the main thread
     _BARRIER
     _BEGIN_MASTER(myThid)
-
-    ! In adjoint mode we do not write output besides on the first run
-    IF (IHOP_dumpfreq.LT.0) RETURN
 
 #ifdef IHOP_WRITE_OUT
     WRITE(msgbuf,'(A)') 'iHOP Print File'
@@ -283,7 +278,7 @@ CONTAINS
 #endif /* IHOP_THREED */
 
 #ifdef IHOP_WRITE_OUT
-    WRITE(msgbuf,'(A)') Title ! , ACHAR(10)
+    WRITE(msgbuf,'(A)') TRIM(Title) ! , ACHAR(10)
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
     WRITE(msgBuf,'(2A)')'___________________________________________________', &
                         '________'
@@ -573,9 +568,10 @@ CONTAINS
     TYPE ( HSInfo ),   INTENT( IN ) :: HS
     REAL (KIND=_RL90) :: Mz ! values related to grain size
 
-#ifdef IHOP_WRITE_OUT
     ! In adjoint mode we do not write output besides on the first run
-    IF (IHOP_dumpfreq.GE.0) THEN
+    IF (IHOP_dumpfreq.LT.0) RETURN
+
+#ifdef IHOP_WRITE_OUT
     ! Echo to PRTFile user's choice of boundary condition
 
     SELECT CASE ( HS%BC )
@@ -618,9 +614,8 @@ CONTAINS
         CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
       CASE DEFAULT
     END SELECT
-
-    END IF ! if in adjoint mode
 #endif /* IHOP_WRITE_OUT */
+
   RETURN
   END !SUBROUTINE writeBdry
 
