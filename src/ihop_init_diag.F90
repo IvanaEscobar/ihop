@@ -229,15 +229,12 @@ CONTAINS
       WRITE(myProcessStr,fmtStr) myProcId
       IL = ILNBLNK( myProcessStr )
       mpiPidIo = myProcId
-      pidIO    = mpiPidIo
 
       IF( mpiPidIo.EQ.myProcId ) THEN
-#  ifdef SINGLE_DISK_IO
-        IF( myProcId.EQ.0 ) THEN
-#  endif
+
         IF ( myIter.GE.0 ) THEN
-          WRITE(fNam,'(4A,I10.10,A)') &
-            TRIM(IHOP_fileroot),'.',myProcessStr(1:IL),'.',myIter,'.prt'
+          WRITE(fNam,'(2A,I10.10,A)') &
+            TRIM(IHOP_fileroot),'.',myIter,'.prt'
         ELSE
           WRITE(fNam,'(4A)') &
             TRIM(IHOP_fileroot),'.',myProcessStr(1:IL),'.prt'
@@ -252,9 +249,7 @@ CONTAINS
           CALL PRINT_ERROR( msgBuf, myThid )
           STOP 'ABNORMAL END: S/R IHOP_INIT'
         END IF
-#  ifdef SINGLE_DISK_IO
-        END IF
-#  endif
+
       END IF
 # endif /* ALLOW_USE_MPI */
     END IF

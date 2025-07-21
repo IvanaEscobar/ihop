@@ -87,25 +87,31 @@ CONTAINS
     ! Only do IO and computation on a single process!
 #ifdef ALLOW_USE_MPI
     IF ( usingMPI ) THEN
+      CALL MPI_COMM_RANK( MPI_COMM_MODEL, mpiMyId, mpiRC )
+      myProcId = mpiMyId
+
+      ! Hard coded write on single proc
+      IF ( myProcId.EQ.0 ) THEN
+        ! open PRTFile
+        CALL initPRTFile( myTime, myIter, myThid )
+
+        ! write Top/Bot to PRTFile: REQUIRED
+        CALL writeBdry ( myThid )
+
+        ! write refCoef: OPTIONAL
+        CALL writeRefCoef( myThid ) 
+
+        ! Source Beam Pattern: OPTIONAL, default is omni source pattern
+        CALL writePat( myThid )
+
+        ! open output files: only on first adjoint forward pass
+        IF ( IHOP_dumpfreq.GE.0 ) &
+          CALL OpenOutputFiles( IHOP_fileroot, myTime, myIter, myThid )
+
+      ENDIF ! IF ( myProcId.EQ.0 ) 
 
     ENDIF ! IF ( usingMPI )
-#endif ALLOW_USE_MPI
-
-    ! save data.ihop, open PRTFile: REQUIRED
-    CALL initPRTFile( myTime, myIter, myThid )
-
-    ! write Top/Bot to PRTFile: REQUIRED
-    CALL writeBdry ( myThid )
-
-    ! write refCoef: OPTIONAL
-    CALL writeRefCoef( myThid ) 
-
-    ! Source Beam Pattern: OPTIONAL, default is omni source pattern
-    CALL writePat( myThid )
-
-    ! open output files: only on first adjoint forward pass
-    IF ( IHOP_dumpfreq.GE.0 ) &
-      CALL OpenOutputFiles( IHOP_fileroot, myTime, myIter, myThid )
+#endif /* ALLOW_USE_MPI */
 
 
     ! set SSP%cmat from gcm SSP: REQUIRED
@@ -142,10 +148,6 @@ CONTAINS
         IF ( numberOfProcs.GT.1 ) THEN
           ! keep one PRTFile, delete the rest
           IF ( myProcId.GT.0 ) THEN
-            WRITE(msgBuf,'(A,I4,A)') "NOTE: Proc ",myProcId, " didn't run ihop"
-            CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
-            ! Erase prtfiles that aren't on procid = 0
-            CLOSE(PRTFile, STATUS='DELETE')
 
           ELSE ! myProcId.EQ.0
             WRITE(msgBuf, '(A)' )
