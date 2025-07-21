@@ -105,9 +105,9 @@ CONTAINS
       CALL WriteSxSy( myThid )
       CALL WriteSzRz( myThid )
       CALL WriteRcvrRanges( myThid )
-#ifdef IHOP_THREED
+# ifdef IHOP_THREED
       CALL WriteRcvrBearings( myThid )
-#endif
+# endif
       CALL WriteFreqVec( Bdry%Top%HS%Opt( 6:6 ), myThid )
 
 
@@ -151,7 +151,7 @@ CONTAINS
       WRITE(msgBuf,'(A)')
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 
-#ifdef IHOP_THREED
+# ifdef IHOP_THREED
       WRITE(msgBuf,'(A,G11.6,A)') &
           ' Maximum ray x-range, Box%X = ', Beam%Box%X,' m'
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
@@ -161,7 +161,7 @@ CONTAINS
       WRITE(msgBuf,'(A,G11.6,A)') &
           ' Maximum ray z-range, Box%Z = ', Beam%Box%Z,' m'
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-#else /* not IHOP_THREED */
+# else /* not IHOP_THREED */
       ranges = Beam%Box%R / 1000.0
       WRITE(msgBuf,'(A,G11.6,A)') &
           ' Maximum ray range, Box%R = ', ranges,' km'
@@ -169,7 +169,7 @@ CONTAINS
       WRITE(msgBuf,'(A,G11.6,A)') &
           ' Maximum ray depth, Box%Z = ', Beam%Box%Z,' m'
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-#endif /* not IHOP_THREED */
+# endif /* not IHOP_THREED */
 
       SELECT CASE ( Beam%Type( 4:4 ) )
       CASE ( 'S' )
@@ -203,7 +203,7 @@ CONTAINS
   !     msgBuf :: Used to build messages for printing.
     _RL, INTENT(IN)     ::  myTime
     INTEGER, INTENT(IN) ::  myIter, myThid
-    CHARACTER*(MAX_LEN_MBUF):: msgBuf
+    CHARACTER*(MAX_LEN_MBUF) :: msgBuf
 
 
   !     == Local Arguments ==
