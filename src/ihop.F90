@@ -140,10 +140,10 @@ CONTAINS
       CALL CPU_TIME( Tstart )
       CALL IHOPCore( myThid )
       CALL CPU_TIME( Tstop  )
-#ifdef ALLOW_USE_MPI
-      IF ( usingMPI ) CALL MPI_BARRIER(MPI_COMM_WORLD, mpiRC)
-#endif
     ENDIF ! IF ( myProcId.EQ.0 )
+#ifdef ALLOW_USE_MPI
+    IF ( usingMPI ) CALL MPI_BARRIER(MPI_COMM_WORLD, mpiRC)
+#endif
 
 #ifdef IHOP_WRITE_OUT
     IF (( myProcId.EQ.0 ) .AND. ( IHOP_dumpfreq.GE.0 )) THEN
