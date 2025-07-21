@@ -668,15 +668,14 @@ CONTAINS
       WRITE( RAYFile, '(I)'     ) Angles%nAlpha
       WRITE( RAYFile, '(F10.4)' ) Bdry%Top%HS%Depth
       WRITE( RAYFile, '(F10.4)' ) Bdry%Bot%HS%Depth
-
 #ifdef IHOP_THREED
       WRITE( RAYFile, '(2I)' ) Angles%nAlpha, Angles%nBeta
       WRITE( RAYFile, '(A)'  ) '''xyz'''
 #else /* IHOP_THREED */
       WRITE( RAYFile, '(A)'  ) '''rz'''
 #endif /* IHOP_THREED */
-      FLUSH( RAYFile )
 
+      FLUSH( RAYFile )
 #endif /* IHOP_WRITE_OUT */
 
       IF (writeDelay) THEN
@@ -690,14 +689,15 @@ CONTAINS
         WRITE( DELFile, '(I)'     ) Angles%nAlpha
         WRITE( DELFile, '(F10.4)' ) Bdry%Top%HS%Depth
         WRITE( DELFile, '(F10.4)' ) Bdry%Bot%HS%Depth
-
 #ifdef IHOP_THREED
         WRITE( DELFile, '(2I)' ) Angles%nAlpha, Angles%nBeta
         WRITE( DELFile, '(A)'  ) '''xyz'''
 # else /* IHOP_THREED */
         WRITE( DELFile, '(A)'  ) '''rz'''
 # endif /* IHOP_THREED */
+
         FLUSH( DELFile )
+
       ENDIF
 
     CASE ( 'e' ) ! eigenrays + arrival file in ascii format
@@ -706,13 +706,11 @@ CONTAINS
       IF (isOpen) CLOSE(ARRFile)
       OPEN ( FILE=TRIM( fullName ) // '.arr', UNIT=ARRFile, &
              FORM='FORMATTED' )
-
 # ifdef IHOP_THREED
       WRITE( ARRFile, '(A)' ) '''3D'''
 # else /* IHOP_THREED */
       WRITE( ARRFile, '(A)' ) '''2D'''
 # endif /* IHOP_THREED */
-
       WRITE( ARRFile, '(F10.4)' ) IHOP_freq
 
       ! write source locations
@@ -737,6 +735,7 @@ CONTAINS
       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nTheta, 'G16.10)'
       WRITE( ARRFile, fmtstr    ) Pos%nTheta, Pos%theta( 1:Pos%nTheta )
 # endif /* IHOP_THREED */
+
       FLUSH( ARRFile )
 
       ! IEsco22: add erays to arrivals output
@@ -750,13 +749,13 @@ CONTAINS
       WRITE( RAYFile, '(I)'     ) Angles%nAlpha
       WRITE( RAYFile, '(F10.4)' ) Bdry%Top%HS%Depth
       WRITE( RAYFile, '(F10.4)' ) Bdry%Bot%HS%Depth
-
 # ifdef IHOP_THREED
       WRITE( RAYFile, '(2I)' ) Angles%nAlpha, Angles%nBeta
       WRITE( RAYFile, '(A)'  ) '''xyz'''
 # else /* IHOP_THREED */
       WRITE( RAYFile, '(A)'  ) '''rz'''
 # endif /* IHOP_THREED */
+
       FLUSH( RAYFile )
 
       IF (writeDelay) THEN
@@ -770,16 +769,16 @@ CONTAINS
         WRITE( DELFile, '(I)'     ) Angles%nAlpha
         WRITE( DELFile, '(F10.4)' ) Bdry%Top%HS%Depth
         WRITE( DELFile, '(F10.4)' ) Bdry%Bot%HS%Depth
-
 #ifdef IHOP_THREED
         WRITE( DELFile, '(2I)' ) Angles%nAlpha, Angles%nBeta
         WRITE( DELFile, '(A)'  ) '''xyz'''
 # else /* IHOP_THREED */
         WRITE( DELFile, '(A)'  ) '''rz'''
 # endif /* IHOP_THREED */
-        FLUSH( DELFile )
-      ENDIF
 
+        FLUSH( DELFile )
+
+      ENDIF
 #endif /* IHOP_WRITE_OUT */
 
     CASE ( 'A' )        ! arrival file in ascii format
@@ -794,7 +793,6 @@ CONTAINS
 # else /* IHOP_THREED */
       WRITE( ARRFile, '(A)' ) '''2D'''
 # endif /* IHOP_THREED */
-
       WRITE( ARRFile, '(F10.4)' ) IHOP_freq
 
       ! write source locations
@@ -835,7 +833,6 @@ CONTAINS
 # else /* IHOP_THREED */
       WRITE( ARRFile, '(A)' ) '''2D'''
 # endif /* IHOP_THREED */
-
       WRITE( ARRFile, '(F10.4)' ) IHOP_freq
 
       ! write source locations
