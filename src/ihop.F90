@@ -756,10 +756,10 @@ CONTAINS
     RN = 2 * kappa / c ** 2 / Th    ! boundary curvature correction
 
     IF ( BotTop == 'TOP' ) THEN
-       ! cnjump changes sign because the (t,n) system of the top boundary has a
-       ! different sense to the bottom boundary
-       cnjump = -cnjump
-       RN     = -RN
+      ! cnjump changes sign because the (t,n) system of the top boundary has a
+      ! different sense to the bottom boundary
+      cnjump = -cnjump
+      RN     = -RN
     END IF
 
     RM = Tg / Th   ! this is tan( alpha ) where alpha is the angle of incidence
@@ -767,11 +767,11 @@ CONTAINS
 
     SELECT CASE ( Beam%Type( 3:3 ) )
     CASE ( 'D' )
-       RN = 2.0 * RN
+      RN = 2.0 * RN
     CASE ( 'Z' )
-       RN = 0.0
+      RN = 0.0
     CASE DEFAULT
-       RN = RN
+      RN = RN
     END SELECT
 
     ray2D( is1 )%c   = c
@@ -784,136 +784,138 @@ CONTAINS
 
     SELECT CASE ( HS%BC )
     CASE ( 'R' )                 ! rigid
-       ray2D( is1 )%Amp   = ray2D( is )%Amp
-       ray2D( is1 )%Phase = ray2D( is )%Phase
+      ray2D( is1 )%Amp   = ray2D( is )%Amp
+      ray2D( is1 )%Phase = ray2D( is )%Phase
     CASE ( 'V' )                 ! vacuum
-       ray2D( is1 )%Amp   = ray2D( is )%Amp
-       ray2D( is1 )%Phase = ray2D( is )%Phase + PI
+      ray2D( is1 )%Amp   = ray2D( is )%Amp
+      ray2D( is1 )%Phase = ray2D( is )%Phase + PI
     CASE ( 'F' )                 ! file
 !$TAF store rint = reflect2d1
-       ! angle of incidence (relative to normal to bathymetry)
-       IF ( (Th==0.0) .AND. (Tg==0.0) ) THEN
-          RInt%theta = 0.0
-       ELSE
-          RInt%theta = rad2deg * ABS( ATAN2( Th, Tg ) )
-       ENDIF
-       
-       ! reflection coefficient is symmetric about 90 degrees
-       IF ( RInt%theta > 90 ) RInt%theta = 180. - RInt%theta 
+      ! angle of incidence (relative to normal to bathymetry)
+      IF ( (Th==0.0) .AND. (Tg==0.0) ) THEN
+        RInt%theta = 0.0
+      ELSE
+        RInt%theta = rad2deg * ABS( ATAN2( Th, Tg ) )
+      ENDIF
+      
+      ! reflection coefficient is symmetric about 90 degrees
+      IF ( RInt%theta > 90 ) RInt%theta = 180. - RInt%theta 
 
-       CALL InterpolateReflectionCoefficient( RInt, RefC, Npts )
-       ray2D( is1 )%Amp   = ray2D( is )%Amp * RInt%R
-       ray2D( is1 )%Phase = ray2D( is )%Phase + RInt%phi
+      CALL InterpolateReflectionCoefficient( RInt, RefC, Npts )
+      ray2D( is1 )%Amp   = ray2D( is )%Amp * RInt%R
+      ray2D( is1 )%Phase = ray2D( is )%Phase + RInt%phi
 
     CASE ( 'A', 'G' )     ! half-space
-       kx = afreq * Tg    ! wavenumber in direction parallel      to bathymetry
-       kz = afreq * Th    ! wavenumber in direction perpendicular to bathymetry
+      kx = afreq * Tg    ! wavenumber in direction parallel      to bathymetry
+      kz = afreq * Th    ! wavenumber in direction perpendicular to bathymetry
 
-       ! notation below is a bit mis-leading
-       ! kzS, kzP is really what I called gamma in other codes, and differs by a
-       ! factor of +/- i
-       IF ( REAL( HS%cS ) > 0.0 ) THEN
-          kzS2 = kx**2 - ( afreq / HS%cS )**2
-          kzP2 = kx**2 - ( afreq / HS%cP )**2
-          kzS  = SQRT( kzS2 )
-          kzP  = SQRT( kzP2 )
-          mu   = HS%rho * HS%cS**2
+      ! notation below is a bit mis-leading
+      ! kzS, kzP is really what I called gamma in other codes, and differs by a
+      ! factor of +/- i
+      IF ( REAL( HS%cS ) > 0.0 ) THEN
+        kzS2 = kx**2 - ( afreq / HS%cS )**2
+        kzP2 = kx**2 - ( afreq / HS%cP )**2
+        kzS  = SQRT( kzS2 )
+        kzP  = SQRT( kzP2 )
+        mu   = HS%rho * HS%cS**2
 
-          y2 = ( ( kzS2 + kx**2 )**2 - 4.0D0 * kzS * kzP * kx**2 ) * mu
-          y4 = kzP * ( kx**2 - kzS2 )
+        y2 = ( ( kzS2 + kx**2 )**2 - 4.0D0 * kzS * kzP * kx**2 ) * mu
+        y4 = kzP * ( kx**2 - kzS2 )
 
-          f = afreq**2 * y4
-          g = y2
-       ELSE
-          kzP = SQRT( kx**2 - ( afreq / HS%cP )**2 )
+        f = afreq**2 * y4
+        g = y2
+      ELSE
+        kzP = SQRT( kx**2 - ( afreq / HS%cP )**2 )
 
-          ! Intel and GFortran compilers return different branches of the SQRT
-          ! for negative reals
-          IF ( REAL( kzP ) == 0.0D0 .AND. AIMAG( kzP ) < 0.0D0 ) kzP = -kzP
-          f   = kzP
-          g   = HS%rho
-       ENDIF
+        ! Intel and GFortran compilers return different branches of the SQRT
+        ! for negative reals
+        IF ( REAL( kzP ) == 0.0D0 .AND. AIMAG( kzP ) < 0.0D0 ) kzP = -kzP
+        f   = kzP
+        g   = HS%rho
+      ENDIF
 
-       ! complex reflection coef.
-       Refl =  - ( rho*f - oneCMPLX * kz*g ) / ( rho*f + oneCMPLX*kz*g )
+      ! complex reflection coef.
+      Refl =  - ( rho*f - oneCMPLX * kz*g ) / ( rho*f + oneCMPLX*kz*g )
 
-       IF ( ABS( Refl ) < 1.0E-5 ) THEN   ! kill a ray that has lost its energy in reflection
-          ray2D( is1 )%Amp   = 0.0
-          ray2D( is1 )%Phase = ray2D( is )%Phase
-       ELSE
-          ray2D( is1 )%Amp   = ABS( Refl ) * ray2D(  is )%Amp
-          ray2D( is1 )%Phase = ray2D( is )%Phase + &
-                               ATAN2( AIMAG( Refl ), REAL( Refl ) )
+      IF ( ABS( Refl ) < 1.0E-5 ) THEN   ! kill a ray that has lost its energy in reflection
+        ray2D( is1 )%Amp   = 0.0
+        ray2D( is1 )%Phase = ray2D( is )%Phase
+      ELSE
+        ray2D( is1 )%Amp   = ABS( Refl ) * ray2D(  is )%Amp
+        ray2D( is1 )%Phase = ray2D( is )%Phase + &
+                             ATAN2( AIMAG( Refl ), REAL( Refl ) )
 
-          if ( Beam%Type( 4:4 ) == 'S' ) then   ! beam displacement & width change (Seongil's version)
-             ch = ray2D( is )%c / conjg( HS%cP )
-             co = ray2D( is )%t( 1 ) * ray2D( is )%c
-             si = ray2D( is )%t( 2 ) * ray2D( is )%c
-             ck = afreq / ray2D( is )%c
+        IF ( Beam%Type( 4:4 ) == 'S' ) THEN   ! beam displacement & width change (Seongil's version)
+          ch = ray2D( is )%c / conjg( HS%cP )
+          co = ray2D( is )%t( 1 ) * ray2D( is )%c
+          si = ray2D( is )%t( 2 ) * ray2D( is )%c
+          ck = afreq / ray2D( is )%c
 
-             a   = 2 * HS%rho * ( 1 - ch * ch )
-             b   = co * co - ch * ch
-             d   = HS%rho * HS%rho * si * si + b
-             sb  = sqrt( b )
-             cco = co * co
-             ssi = si * si
+          a   = 2 * HS%rho * ( 1 - ch * ch )
+          b   = co * co - ch * ch
+          d   = HS%rho * HS%rho * si * si + b
+          sb  = sqrt( b )
+          cco = co * co
+          ssi = si * si
 
-             IF ( si /= 0.0 ) THEN
-                delta = a * co / si / ( ck * sb * d )   ! Do we need an abs() on this???
-             ELSE
-                delta = 0.0
-             END IF
+          IF ( si /= 0.0 ) THEN
+             delta = a * co / si / ( ck * sb * d )   ! Do we need an abs() on this???
+          ELSE
+             delta = 0.0
+          ENDIF
 
-             pdelta  = real( delta ) / ( ray2D( is )%c / co)
-             ddelta  = -a / ( ck*sb*d ) - a*cco / ssi / (ck*sb*d) &
-                       + a*cco / (ck*b*sb*d) &
-                       -a*co / si / (ck*sb*d*d) &
-                       * (2* HS%rho * HS%rho *si*co-2*co*si)
-             rddelta = -real( ddelta )
-             sddelta = rddelta / abs( rddelta )
+          pdelta  = real( delta ) / ( ray2D( is )%c / co)
+          ddelta  = -a / ( ck*sb*d ) - a*cco / ssi / (ck*sb*d) &
+                    + a*cco / (ck*b*sb*d) &
+                    -a*co / si / (ck*sb*d*d) &
+                    * (2* HS%rho * HS%rho *si*co-2*co*si)
+          rddelta = -real( ddelta )
+          sddelta = rddelta / abs( rddelta )
 
-             ! next 3 lines have an update by Diana McCammon to allow a sloping
-             ! bottom . I think the formulas are good, but this won't be reliable
-             ! because it doesn't have the logic that tracks crossing into new
-             ! segments after the ray displacement.
+          ! next 3 lines have an update by Diana McCammon to allow a sloping
+          ! bottom . I think the formulas are good, but this won't be reliable
+          ! because it doesn't have the logic that tracks crossing into new
+          ! segments after the ray displacement.
 
-             theta_bot = datan( tBdry( 2 ) / tBdry( 1 ))  ! bottom angle
-             ray2D( is1 )%x( 1 ) = ray2D( is1 )%x( 1 ) + real( delta ) &
-                                   * dcos( theta_bot )   ! range displacement
-             ray2D( is1 )%x( 2 ) = ray2D( is1 )%x( 2 ) + real( delta ) &
-                                   * dsin( theta_bot )   ! depth displacement
-             ray2D( is1 )%tau    = ray2D( is1 )%tau + pdelta  ! phase change
-             ray2D( is1 )%q      = ray2D( is1 )%q + sddelta * rddelta * si * c &
-                                   * ray2D( is )%p   ! beam-width change
-          endif
+          theta_bot = datan( tBdry( 2 ) / tBdry( 1 ))  ! bottom angle
+          ray2D( is1 )%x( 1 ) = ray2D( is1 )%x( 1 ) + real( delta ) &
+                                * dcos( theta_bot )   ! range displacement
+          ray2D( is1 )%x( 2 ) = ray2D( is1 )%x( 2 ) + real( delta ) &
+                                * dsin( theta_bot )   ! depth displacement
+          ray2D( is1 )%tau    = ray2D( is1 )%tau + pdelta  ! phase change
+          ray2D( is1 )%q      = ray2D( is1 )%q + sddelta * rddelta * si * c &
+                                * ray2D( is )%p   ! beam-width change
+                            
+        ENDIF
 
-       ENDIF
+      ENDIF
 
     CASE DEFAULT
 #ifdef IHOP_WRITE_OUT
-       WRITE(msgBuf,'(2A)') 'HS%BC = ', HS%BC
-       ! In adjoint mode we do not write output besides on the first run
-       IF (IHOP_dumpfreq.GE.0) &
+      WRITE(msgBuf,'(2A)') 'HS%BC = ', HS%BC
+      ! In adjoint mode we do not write output besides on the first run
+      IF ( IHOP_dumpfreq.GE.0 ) &
         CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
-       WRITE(msgBuf,'(A)') 'IHOP Reflect2D: Unknown boundary condition type'
-       CALL PRINT_ERROR( msgBuf,myThid )
+      WRITE(msgBuf,'(A)') 'IHOP Reflect2D: Unknown boundary condition type'
+      CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
        STOP 'ABNORMAL END: S/R Reflect2D'
     END SELECT
 
     ! Update top/bottom bounce counter
     IF (BotTop == 'TOP') THEN
-       ray2D( is+1 )%NumTopBnc = ray2D( is )%NumTopBnc + 1
-    ELSE IF ( BotTop == 'BOT' ) THEN
-       ray2D( is+1 )%NumBotBnc = ray2D( is )%NumBotBnc + 1
+      ray2D( is+1 )%NumTopBnc = ray2D( is )%NumTopBnc + 1
+    ELSEIF ( BotTop == 'BOT' ) THEN
+      ray2D( is+1 )%NumBotBnc = ray2D( is )%NumBotBnc + 1
     ELSE
 #ifdef IHOP_WRITE_OUT
-       WRITE(msgBuf,'(2A)') 'IHOP Reflect2D: ', &
-                            'no reflection bounce, but in reflect2d somehow'
-       CALL PRINT_ERROR( msgBuf,myThid )
+      WRITE(msgBuf,'(2A)') 'IHOP Reflect2D: ', &
+                           'no reflection bounce, but in reflect2d somehow'
+      CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
-       STOP 'ABNORMAL END: S/R Reflect2D'
-    END IF
+      STOP 'ABNORMAL END: S/R Reflect2D'
+      
+    ENDIF
 
   RETURN
   END !SUBROUTINE Reflect2D
