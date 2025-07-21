@@ -86,6 +86,8 @@ CONTAINS
 
     ! Only do IO and computation on a single process!
     IF (( .NOT.usingMPI ) .AND. ( IHOP_dumpfreq.GE.0 )) THEN
+      myProcId=0
+
       ! open PRTFile
       CALL initPRTFile( myTime, myIter, myThid )
 
@@ -133,67 +135,46 @@ CONTAINS
     CALL setSSP( myThid )
 
 
-
     ! Run IHOP solver on a single processor
-    IF ( numberOfProcs.GT.1 ) THEN
-#ifdef ALLOW_USE_MPI
-      IF( myProcId.EQ.0 ) THEN
-        CALL CPU_TIME( Tstart )
-        CALL IHOPCore( myThid )
-        CALL CPU_TIME( Tstop  )
-      ENDIF
-      CALL MPI_BARRIER(MPI_COMM_WORLD, mpiRC)
-#endif
-    ELSE
+    IF ( myProcId.EQ.0 ) THEN
       CALL CPU_TIME( Tstart )
       CALL IHOPCore( myThid )
       CALL CPU_TIME( Tstop  )
-    ENDIF
+#ifdef ALLOW_USE_MPI
+      IF ( usingMPI ) CALL MPI_BARRIER(MPI_COMM_WORLD, mpiRC)
+#endif
+    ENDIF ! IF ( myProcId.EQ.0 )
 
 #ifdef IHOP_WRITE_OUT
-    IF ( IHOP_dumpfreq.GE.0 ) THEN
-      IF ( .NOT.usingMPI ) THEN
-        WRITE(msgBuf, '(A)' )
-        CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
-        WRITE(msgBuf, '(A,G15.3,A)' ) 'CPU Time = ', Tstop-Tstart, 's'
-        CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
-        CLOSE(PRTFile)
-# ifdef ALLOW_USE_MPI
-      ELSE ! using MPI
-        IF ( numberOfProcs.GT.1 ) THEN
-          ! keep one PRTFile, delete the rest
-          IF ( myProcId.GT.0 ) THEN
-
-          ELSE ! myProcId.EQ.0
-            WRITE(msgBuf, '(A)' )
-            CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
-            WRITE(msgBuf, '(A,G15.3,A)' ) 'CPU Time = ', Tstop-Tstart, 's'
-            CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
-            CLOSE(PRTFile)
-
-          ENDIF ! IF ( myProcId.GT.0)
-        ENDIF ! IF ( numberOfProcs.GT.1 )
-# endif /* ALLOW_USE_MPI */
-      ENDIF
+    IF (( myProcId.EQ.0 ) .AND. ( IHOP_dumpfreq.GE.0 )) THEN
+      WRITE(msgBuf, '(A)' )
+      CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
+      WRITE(msgBuf, '(A,G15.3,A)' ) 'CPU Time = ', Tstop-Tstart, 's'
+      CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
+      CLOSE(PRTFile)
 
       ! close all files
       SELECT CASE ( Beam%RunType( 1:1 ) )
       CASE ( 'C', 'S', 'I' )  ! TL calculation
         CLOSE( SHDFile )
+
       CASE ( 'A', 'a' )       ! arrivals calculation
         CLOSE( ARRFile )
+
       CASE ( 'R', 'E' )       ! ray and eigen ray trace
         CLOSE( RAYFile )
         IF ( writeDelay ) CLOSE( DELFile )
+
       CASE ( 'e' )
         CLOSE( RAYFile )
         CLOSE( ARRFile )
         IF ( writeDelay ) CLOSE( DELFile )
+
       CASE DEFAULT
         STOP "ABNORMAL END: S/R IHOP_MAIN"
       END SELECT
 
-  ENDIF ! IF ( IHOP_dumpfreq.GE.0 )
+    ENDIF ! IF (( myProcId.EQ.0 )
 #endif /* IHOP_WRITE_OUT */
 
   RETURN
