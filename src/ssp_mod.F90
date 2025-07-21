@@ -24,6 +24,9 @@ MODULE ssp_mod
 ! == Global variables ==
 #include "SIZE.h"
 #include "EEPARAMS.h"
+#ifdef ALLOW_USE_MPI
+# include "EESUPPORT.h"
+#endif
 #include "PARAMS.h"
 #include "GRID.h"
 #include "IHOP_SIZE.h"
@@ -128,6 +131,10 @@ CONTAINS
 
   !     == Local Variables ==
     INTEGER :: ir, iz
+#ifdef ALLOW_USE_MPI
+    INTEGER :: mpiRC
+    mpiRC  = 0
+#endif
 
 !$TAF init setssp1 = 'ssp_mod_setssp'
 
@@ -148,8 +155,19 @@ CONTAINS
     IF ( .not. useSSPFile ) THEN
       CALL gcmSSP( myThid )
     ENDIF
+
     ! Write to PRTFile
-    CALL writeSSP( myThid )
+    IF ( .NOT.usingMPI ) THEN
+      CALL writeSSP( myThid )
+#ifdef ALLOW_USE_MPI
+    ELSE ! using MPI
+      CALL MPI_COMM_RANK( MPI_COMM_MODEL, mpiMyId, mpiRC )
+      myProcId = mpiMyId
+
+      ! Hard coded write on single proc
+      IF ( myProcId.EQ.0 ) CALL writeSSP( myThid )
+#endif /* ALOOW_USE_MPI */
+    ENDIF ! IF ( .NOT.usingMPI )
 
     ! Populate rest of SSP derived type based on SSP interpolation scheme
     SELECT CASE ( SSP%Type )
