@@ -85,18 +85,34 @@ CONTAINS
     CALL resetMemory()
 
     ! Only do IO and computation on a single process!
+    IF (( .NOT.usingMPI ) .AND. ( IHOP_dumpfreq.GE.0 )) THEN
+      ! open PRTFile
+      CALL initPRTFile( myTime, myIter, myThid )
+
+      ! write Top/Bot to PRTFile: REQUIRED
+      CALL writeBdry( myThid )
+
+      ! write refCoef: OPTIONAL
+      CALL writeRefCoef( myThid ) 
+
+      ! Source Beam Pattern: OPTIONAL, default is omni source pattern
+      CALL writePat( myThid )
+
+      ! Open output files
+      CALL OpenOutputFiles( IHOP_fileroot, myTime, myIter, myThid )
+
 #ifdef ALLOW_USE_MPI
-    IF ( usingMPI ) THEN
+    ELSE ! using MPI
       CALL MPI_COMM_RANK( MPI_COMM_MODEL, mpiMyId, mpiRC )
       myProcId = mpiMyId
 
       ! Hard coded write on single proc
-      IF ( myProcId.EQ.0 ) THEN
+      IF (( myProcId.EQ.0 ) .AND. ( IHOP_dumpfreq.GE.0 )) THEN
         ! open PRTFile
         CALL initPRTFile( myTime, myIter, myThid )
 
         ! write Top/Bot to PRTFile: REQUIRED
-        CALL writeBdry ( myThid )
+        CALL writeBdry( myThid )
 
         ! write refCoef: OPTIONAL
         CALL writeRefCoef( myThid ) 
@@ -104,14 +120,13 @@ CONTAINS
         ! Source Beam Pattern: OPTIONAL, default is omni source pattern
         CALL writePat( myThid )
 
-        ! open output files: only on first adjoint forward pass
-        IF ( IHOP_dumpfreq.GE.0 ) &
-          CALL OpenOutputFiles( IHOP_fileroot, myTime, myIter, myThid )
+        ! Open output files:
+        CALL OpenOutputFiles( IHOP_fileroot, myTime, myIter, myThid )
 
       ENDIF ! IF ( myProcId.EQ.0 ) 
 
-    ENDIF ! IF ( usingMPI )
 #endif /* ALLOW_USE_MPI */
+    ENDIF ! IF ( .NOT.usingMPI )
 
 
     ! set SSP%cmat from gcm SSP: REQUIRED
