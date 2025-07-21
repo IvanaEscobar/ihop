@@ -81,7 +81,7 @@ CONTAINS
     Tstart = 0.
     Tstop  = 0.
 
-    ! Reset memory and default values
+    ! Reset memory and default values: REQUIRED
     CALL resetMemory()
 
     ! save data.ihop, open PRTFile: REQUIRED
@@ -101,71 +101,74 @@ CONTAINS
     CALL setSSP( myThid )
 
 
-! open all output files
-    IF ( IHOP_dumpfreq .GE. 0 ) &
-     CALL OpenOutputFiles( IHOP_fileroot, myTime, myIter, myThid )
+! open output files: only on first adjoint forward pass
+    IF ( IHOP_dumpfreq.GE.0 ) &
+      CALL OpenOutputFiles( IHOP_fileroot, myTime, myIter, myThid )
 
     ! Run IHOP solver on a single processor
-    if (numberOfProcs.gt.1) then
+    IF ( numberOfProcs.GT.1 ) THEN
 #ifdef ALLOW_USE_MPI
-        if(myProcId.eq.0) then
-            CALL CPU_TIME( Tstart )
-            CALL IHOPCore(myThid)
-            CALL CPU_TIME( Tstop )
-        endif
-        CALL MPI_BARRIER(MPI_COMM_WORLD, mpiRC)
-#endif
-    else
+      IF( myProcId.EQ.0 ) THEN
         CALL CPU_TIME( Tstart )
-        CALL IHOPCore(myThid)
-        CALL CPU_TIME( Tstop )
-    endif
+        CALL IHOPCore( myThid )
+        CALL CPU_TIME( Tstop  )
+      ENDIF
+      CALL MPI_BARRIER(MPI_COMM_WORLD, mpiRC)
+#endif
+    ELSE
+      CALL CPU_TIME( Tstart )
+      CALL IHOPCore( myThid )
+      CALL CPU_TIME( Tstop  )
+    ENDIF
 
 #ifdef IHOP_WRITE_OUT
     IF ( IHOP_dumpfreq.GE.0 ) THEN
-        ! print run time
-        if (numberOfProcs.gt.1) then
-          if(myProcId.gt.0) then
-            WRITE(msgBuf,'(A,I4,A)') 'NOTE: Proc ',myProcId, " didn't run ihop"
+      IF ( .NOT.usingMPI ) THEN
+        WRITE(msgBuf, '(A)' )
+        CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
+        WRITE(msgBuf, '(A,G15.3,A)' ) 'CPU Time = ', Tstop-Tstart, 's'
+        CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
+        CLOSE(PRTFile)
+# ifdef ALLOW_USE_MPI
+      ELSE ! using MPI
+        IF ( numberOfProcs.GT.1 ) THEN
+          ! keep one PRTFile, delete the rest
+          IF ( myProcId.GT.0 ) THEN
+            WRITE(msgBuf,'(A,I4,A)') "NOTE: Proc ",myProcId, " didn't run ihop"
             CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
             ! Erase prtfiles that aren't on procid = 0
             CLOSE(PRTFile, STATUS='DELETE')
 
-          else ! myProcId.eq.0
+          ELSE ! myProcId.EQ.0
             WRITE(msgBuf, '(A)' )
             CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
             WRITE(msgBuf, '(A,G15.3,A)' ) 'CPU Time = ', Tstop-Tstart, 's'
             CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
             CLOSE(PRTFile)
 
-          endif
-        else
-          WRITE(msgBuf, '(A)' )
-          CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
-          WRITE(msgBuf, '(A,G15.3,A)' ) 'CPU Time = ', Tstop-Tstart, 's'
-          CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
-          CLOSE(PRTFile)
+          ENDIF ! IF ( myProcId.GT.0) 
+        ENDIF ! IF ( numberOfProcs.GT.1 )
+# endif /* ALLOW_USE_MPI */ 
+      ENDIF
 
-        endif
+      ! close all files
+      SELECT CASE ( Beam%RunType( 1:1 ) )
+      CASE ( 'C', 'S', 'I' )  ! TL calculation
+        CLOSE( SHDFile )
+      CASE ( 'A', 'a' )       ! arrivals calculation
+        CLOSE( ARRFile )
+      CASE ( 'R', 'E' )       ! ray and eigen ray trace
+        CLOSE( RAYFile )
+        IF ( writeDelay ) CLOSE( DELFile )
+      CASE ( 'e' )
+        CLOSE( RAYFile )
+        CLOSE( ARRFile )
+        IF ( writeDelay ) CLOSE( DELFile )
+      CASE DEFAULT
+        STOP "ABNORMAL END: S/R IHOP_MAIN"
+      END SELECT
 
-        ! close all files
-        SELECT CASE ( Beam%RunType( 1:1 ) )
-        CASE ( 'C', 'S', 'I' )  ! TL calculation
-           CLOSE( SHDFile )
-        CASE ( 'A', 'a' )       ! arrivals calculation
-           CLOSE( ARRFile )
-        CASE ( 'R', 'E' )       ! ray and eigen ray trace
-           CLOSE( RAYFile )
-           IF ( writeDelay ) CLOSE( DELFile )
-        CASE ( 'e' )
-           CLOSE( RAYFile )
-           CLOSE( ARRFile )
-           IF ( writeDelay ) CLOSE( DELFile )
-        CASE DEFAULT
-           STOP "ABNORMAL END: S/R IHOP_MAIN"
-        END SELECT
-
-    ENDIF
+  ENDIF ! IF ( IHOP_dumpfreq.GE.0 )
 #endif /* IHOP_WRITE_OUT */
 
   RETURN
