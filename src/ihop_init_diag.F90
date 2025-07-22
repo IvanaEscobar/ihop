@@ -8,7 +8,6 @@ MODULE IHOP_INIT_DIAG
 
   ! mbp 12/2018, based on much older subroutine
 
-  USE ssp_mod,   only: SSP
   USE bdry_mod,  only: Bdry, HSInfo
   USE atten_mod, only: CRCI
 
@@ -45,7 +44,7 @@ CONTAINS
     USE angle_mod, only: Angles
     USE srpos_mod, only: WriteSxSy, WriteSzRz, WriteRcvrRanges, WriteFreqVec
 
-    ! I/O routine for acoustic fixed inputS
+  ! I/O routine for acoustic fixed inputS
 
   ! == Routine Arguments ==
   ! myTime  :: Current time in simulation
@@ -54,14 +53,14 @@ CONTAINS
   ! msgBuf  :: Used to build messages for printing.
     _RL, INTENT(IN)     ::  myTime
     INTEGER, INTENT(IN) ::  myIter, myThid
-    CHARACTER*(MAX_LEN_MBUF):: msgBuf
+    CHARACTER*(MAX_LEN_MBUF) :: msgBuf
 
   ! == Local Variables ==
     INTEGER, PARAMETER :: Number_to_Echo = 10
-!    REAL (KIND=_RL90),  PARAMETER :: c0 = 1500.0
-!    REAL (KIND=_RL90)  :: x(2), c, cimag, gradc(2), crz, czz, rho, Depth
     REAL (KIND=_RL90)  :: ranges
-!    CHARACTER (LEN=10) :: PlotType
+
+    ! In adjoint mode we do not write output besides on the first run
+    IF ( IHOP_dumpfreq.LT.0 ) RETURN
 
     ! *** ihop info to PRTFile ***
     CALL openPRTFile( myTime, myIter, myThid )
@@ -70,120 +69,115 @@ CONTAINS
     !   Only do I/O in the main thread
     _BEGIN_MASTER(myThid)
 
-    ! In adjoint mode we do not write output besides on the first run
-    IF (IHOP_dumpfreq.GE.0) THEN
-      CALL WriteRunType( Beam%RunType, myThid )
+    CALL WriteRunType( Beam%RunType, myThid )
 
-      CALL WriteTopOpt( myThid )
+    CALL WriteTopOpt( myThid )
 
-      WRITE(msgBuf,'(A)')
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(A,F10.2,A)' ) 'Depth = ',Bdry%Bot%HS%Depth,' m'
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(A)')
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(2A)') 'Top options: ', Bdry%Top%HS%Opt
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(A)')
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(A,F10.2,A)' ) 'Depth = ',Bdry%Bot%HS%Depth,' m'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(A)')
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(2A)') 'Top options: ', Bdry%Top%HS%Opt
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 
-      CALL writeBdry( Bdry%Top%HS, myThid )
+    CALL WriteBdry( Bdry%Top%HS, myThid )
 
-      WRITE(msgBuf,'(A)')
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(2A)') 'Bottom options: ', Bdry%Bot%HS%Opt
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(A)')
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(2A)') 'Bottom options: ', Bdry%Bot%HS%Opt
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 
-      SELECT CASE ( Bdry%Bot%HS%Opt( 2 : 2 ) )
-        CASE ( '~', '*' )
-          WRITE(msgBuf,'(A)') '    Bathymetry file selected'
-          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-        CASE( ' ' )
-        CASE DEFAULT
-      END SELECT
-
-      CALL writeBdry( Bdry%Bot%HS, myThid )
-
-
-      CALL WriteSxSy( myThid )
-      CALL WriteSzRz( myThid )
-      CALL WriteRcvrRanges( myThid )
-#ifdef IHOP_THREED
-      CALL WriteRcvrBearings( myThid )
-#endif
-      CALL WriteFreqVec( Bdry%Top%HS%Opt( 6:6 ), myThid )
-
-
-      WRITE(msgBuf,'(2A)')'_____________________________________________', &
-                          '______________'
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(A)')
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(A,I10)') 'Number of beams in elevation   = ', &
-                              Angles%nAlpha
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      IF ( Angles%iSingle_alpha > 0 ) THEN
-        WRITE(msgBuf,'(A,I10)') 'Trace only beam number ', &
-                                Angles%iSingle_alpha
+    SELECT CASE ( Bdry%Bot%HS%Opt( 2 : 2 ) )
+      CASE ( '~', '*' )
+        WRITE(msgBuf,'(A)') '    Bathymetry file selected'
         CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      END IF
-
-      WRITE(msgBuf,'(A)') 'Beam take-off angles (degrees)'
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-
-      IF ( Angles%nAlpha >= 1 ) THEN
-        WRITE(msgBuf,'(10F12.3)') &
-            Angles%adeg( 1:MIN(Angles%nAlpha,Number_to_Echo) )
-        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      END IF
-      IF ( Angles%nAlpha > Number_to_Echo ) THEN
-        WRITE(msgBuf,'(A,F12.6)') ' ... ', Angles%adeg( Angles%nAlpha )
-        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      END IF
-
-      WRITE(msgBuf,'(A)')
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(2A)')'______________________________________________', &
-                          '_____________'
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(A)')
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(A,G11.4,A)') &
-          ' Step length, deltas = ', Beam%deltas, ' m'
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(A)')
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-
-#ifdef IHOP_THREED
-      WRITE(msgBuf,'(A,G11.4,A)') &
-          ' Maximum ray x-range, Box%X = ', Beam%Box%X,' m'
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(A,G11.4,A)') &
-          ' Maximum ray y-range, Box%Y = ', Beam%Box%Y,' m'
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(A,G11.4,A)') &
-          ' Maximum ray z-range, Box%Z = ', Beam%Box%Z,' m'
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-#else /* not IHOP_THREED */
-      ranges = Beam%Box%R / 1000.0
-      WRITE(msgBuf,'(A,G11.6,A)') &
-          ' Maximum ray range, Box%R = ', ranges,' km'
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(A,G11.6,A)') &
-          ' Maximum ray depth, Box%Z = ', Beam%Box%Z,' m'
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-#endif /* not IHOP_THREED */
-
-      SELECT CASE ( Beam%Type( 4:4 ) )
-      CASE ( 'S' )
-        WRITE(msgBuf,'(A)') ' Beam shift in effect'
-        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+      CASE( ' ' )
       CASE DEFAULT
-        WRITE(msgBuf,'(A)') ' No beam shift in effect'
-        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      END SELECT
-      WRITE(msgBuf,'(A)')
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    END SELECT
 
-    ENDIF ! adjoint run check
+    CALL WriteBdry( Bdry%Bot%HS, myThid )
+
+    CALL WriteSxSy( myThid )
+    CALL WriteSzRz( myThid )
+    CALL WriteRcvrRanges( myThid )
+# ifdef IHOP_THREED
+    CALL WriteRcvrBearings( myThid )
+# endif
+    CALL WriteFreqVec( Bdry%Top%HS%Opt( 6:6 ), myThid )
+
+
+    WRITE(msgBuf,'(2A)')'_____________________________________________', &
+                        '______________'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(A)')
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(A,I10)') 'Number of beams in elevation   = ', &
+                            Angles%nAlpha
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    IF ( Angles%iSingle_alpha > 0 ) THEN
+      WRITE(msgBuf,'(A,I10)') 'Trace only beam number ', &
+                              Angles%iSingle_alpha
+      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    END IF
+
+    WRITE(msgBuf,'(A)') 'Beam take-off angles (degrees)'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+
+    IF ( Angles%nAlpha >= 1 ) THEN
+      WRITE(msgBuf,'(10F12.3)') &
+          Angles%adeg( 1:MIN(Angles%nAlpha,Number_to_Echo) )
+      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    END IF
+    IF ( Angles%nAlpha > Number_to_Echo ) THEN
+      WRITE(msgBuf,'(A,F12.6)') ' ... ', Angles%adeg( Angles%nAlpha )
+      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    END IF
+
+    WRITE(msgBuf,'(A)')
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(2A)')'______________________________________________', &
+                        '_____________'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(A)')
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(A,G11.4,A)') &
+        ' Step length, deltas = ', Beam%deltas, ' m'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(A)')
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+
+# ifdef IHOP_THREED
+    WRITE(msgBuf,'(A,G11.6,A)') &
+        ' Maximum ray x-range, Box%X = ', Beam%Box%X,' m'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(A,G11.6,A)') &
+        ' Maximum ray y-range, Box%Y = ', Beam%Box%Y,' m'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(A,G11.6,A)') &
+        ' Maximum ray z-range, Box%Z = ', Beam%Box%Z,' m'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+# else /* not IHOP_THREED */
+    ranges = Beam%Box%R / 1000.0
+    WRITE(msgBuf,'(A,G11.6,A)') &
+        ' Maximum ray range, Box%R = ', ranges,' km'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(A,G11.6,A)') &
+        ' Maximum ray depth, Box%Z = ', Beam%Box%Z,' m'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+# endif /* not IHOP_THREED */
+
+    SELECT CASE ( Beam%Type( 4:4 ) )
+    CASE ( 'S' )
+      WRITE(msgBuf,'(A)') ' Beam shift in effect'
+      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    CASE DEFAULT
+      WRITE(msgBuf,'(A)') ' No beam shift in effect'
+      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    END SELECT
+    WRITE(msgBuf,'(A)')
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 
     !   Only do I/O in the main thread
     _END_MASTER(myThid)
@@ -194,6 +188,127 @@ CONTAINS
 
   !**********************************************************************!
 
+  SUBROUTINE openPRTFile ( myTime, myIter, myThid )
+    USE ihop_mod, only: PRTFile, Title
+
+  !     == Routine Arguments ==
+  !     myThid :: Thread number. Unused by IESCO
+  !     myTime :: Current time in simulation
+  !     myIter :: Current time-step number
+  !     msgBuf :: Used to build messages for printing.
+    _RL, INTENT(IN)     ::  myTime
+    INTEGER, INTENT(IN) ::  myIter, myThid
+    CHARACTER*(MAX_LEN_MBUF) :: msgBuf
+
+
+  !     == Local Arguments ==
+    INTEGER                     :: iostat
+  ! For MPI writing: inspo from eeboot_minimal.F
+    CHARACTER*(MAX_LEN_FNAM)    :: fNam
+    CHARACTER*(6)               :: fmtStr
+    INTEGER                     :: mpiRC, IL
+#ifdef ALLOW_CAL
+    INTEGER :: mydate(4)
+#endif
+
+    ! In adjoint mode we do not write output besides on the first run
+    IF ( IHOP_dumpfreq.LT.0 ) RETURN
+
+    ! Open the print file: template from eeboot_minimal.F
+#ifdef IHOP_WRITE_OUT
+    IF ( .NOT.usingMPI ) THEN
+      WRITE(myProcessStr, '(I10.10)') myIter
+      IL=ILNBLNK( myProcessStr )
+      WRITE(fNam,'(4A)') TRIM(IHOP_fileroot),'.',myProcessStr(1:IL),'.prt'
+      OPEN( PRTFile, FILE=fNam, STATUS='UNKNOWN', IOSTAT=iostat )
+      IF ( iostat/=0 ) THEN
+        WRITE(*,*) 'ihop: IHOP_fileroot not recognized, ', &
+          TRIM(IHOP_fileroot)
+        WRITE(msgBuf,'(A)') 'IHOP_INIT: Unable to recognize file'
+        CALL PRINT_ERROR( msgBuf, myThid )
+        STOP 'ABNORMAL END: S/R IHOP_INIT'
+      ENDIF
+
+# ifdef ALLOW_USE_MPI
+    ELSE ! using MPI
+      IF ( myIter.GE.0 ) THEN
+        WRITE(fNam,'(2A,I10.10,A)') &
+          TRIM(IHOP_fileroot),'.',myIter,'.prt'
+      ELSE
+        WRITE(msgBuf,'(A,I)') 'IHOP_INIT: myIter is ', myIter
+        CALL PRINT_ERROR( msgBuf, myThid )
+        STOP 'ABNORMAL END: S/R IHOP_INIT'
+      ENDIF
+
+      OPEN(PRTFile, FILE=fNam, STATUS='UNKNOWN', IOSTAT=iostat )
+      IF ( iostat/=0 ) THEN
+        WRITE(*,*) 'ihop: IHOP_fileroot not recognized, ', &
+          TRIM(IHOP_fileroot)
+        WRITE(msgBuf,'(A)') 'IHOP_INIT: Unable to recognize file'
+        CALL PRINT_ERROR( msgBuf, myThid )
+        STOP 'ABNORMAL END: S/R IHOP_INIT'
+      ENDIF
+
+# endif /* ALLOW_USE_MPI */
+    ENDIF ! IF ( .NOT.usingMPI )
+#endif /* IHOP_WRITE_OUT */
+
+    !   Only do I/O in the main thread
+    _BARRIER
+    _BEGIN_MASTER(myThid)
+
+#ifdef IHOP_WRITE_OUT
+    WRITE(msgbuf,'(A)') 'iHOP Print File'
+    CALL PRINT_MESSAGE( msgBuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgbuf,'(A)')
+    CALL PRINT_MESSAGE( msgBuf, PRTFile, SQUEEZE_RIGHT, myThid )
+#endif /* IHOP_WRITE_OUT */
+
+    ! *** TITLE ***
+#ifdef IHOP_THREED
+    WRITE(msgBuf,'(2A)') 'IHOP_INIT_DIAG openPRTFile: ', &
+                         '3D not supported in ihop'
+    CALL PRINT_ERROR( msgBuf,myThid )
+    STOP 'ABNORMAL END: S/R openPRTFile'
+    Title( 1 :11 ) = 'iHOP3D - '
+    Title( 12:80 ) = IHOP_title
+#else /* not IHOP_THREED */
+    Title( 1:9   ) = 'iHOP - '
+    Title( 10:80 ) = IHOP_title
+#endif /* IHOP_THREED */
+
+#ifdef IHOP_WRITE_OUT
+    WRITE(msgbuf,'(A)') TRIM(Title) ! , ACHAR(10)
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(2A)')'___________________________________________________', &
+                        '________'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgbuf,'(A)')
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE( msgBuf, '(A,I10,A,F20.2,A)') 'GCM iter ', myIter,' at time = ', &
+                                        myTime,' [sec]'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+# ifdef ALLOW_CAL
+    CALL CAL_GETDATE( myIter,myTime,mydate,myThid )
+    WRITE (msgBuf,'(A,I8,I6,I3,I4)') 'GCM cal date ', mydate(1), mydate(2), &
+                                     mydate(3), mydate(4)
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+# endif /* ALLOW_CAL */
+    WRITE(msgbuf,'(A)')
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE( msgBuf, '(A,F11.4,A)' )'Frequency ', IHOP_freq, ' [Hz]'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(2A)')'___________________________________________________', &
+                        '________'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+#endif /* IHOP_WRITE_OUT */
+
+    !   Only do I/O in the main thread
+    _END_MASTER(myThid)
+
+  END !SUBROUTINE openPRTFile
+
+!**********************************************************************!
   SUBROUTINE WriteTopOpt( myThid )
     USE ihop_mod,  only: PRTFile
     USE ssp_mod,   only: SSP
@@ -206,7 +321,7 @@ CONTAINS
     CHARACTER*(MAX_LEN_MBUF):: msgBuf
 
   !     == Local Variables ==
-    CHARACTER (LEN= 1) :: BC ! Boundary condition type
+    CHARACTER*(1) :: BC ! Boundary condition type
 
     BC = IHOP_TopOpt( 2:2 )
 
@@ -438,7 +553,7 @@ CONTAINS
   !**********************************************************************!
 
   SUBROUTINE WriteBdry( HS, myThid )
-    USE ihop_mod,  only: PRTFile
+    USE ihop_mod,only: PRTFile
     USE ssp_mod, only: rhoR, alphaR, betaR, alphaI, betaI
 
     ! Handles top and bottom boundary conditions
@@ -453,9 +568,10 @@ CONTAINS
     TYPE ( HSInfo ),   INTENT( IN ) :: HS
     REAL (KIND=_RL90) :: Mz ! values related to grain size
 
-#ifdef IHOP_WRITE_OUT
     ! In adjoint mode we do not write output besides on the first run
-    IF (IHOP_dumpfreq.GE.0) THEN
+    IF (IHOP_dumpfreq.LT.0) RETURN
+
+#ifdef IHOP_WRITE_OUT
     ! Echo to PRTFile user's choice of boundary condition
 
     SELECT CASE ( HS%BC )
@@ -498,20 +614,19 @@ CONTAINS
         CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
       CASE DEFAULT
     END SELECT
-
-    END IF ! if in adjoint mode
 #endif /* IHOP_WRITE_OUT */
+
   RETURN
   END !SUBROUTINE writeBdry
 
   ! **********************************************************************!
 
   SUBROUTINE openOutputFiles( fName, myTime, myIter, myThid )
-    USE ihop_mod,  only: RAYFile, DELFile, ARRFile, SHDFile, Title, Beam
+    USE ihop_mod,  only: RAYFile, DELFile, ARRFile, SHDFile, & 
+                         Title, Beam
+    USE angle_mod, only: Angles
+    USE srPos_mod, only: Pos
     ! Write appropriate header information
-
-    USE angle_mod,  only: Angles
-    USE srPos_mod,  only: Pos
 
     ! == Routine Arguments ==
     !  myTime   :: Current time in simulation
@@ -523,252 +638,251 @@ CONTAINS
     ! == Local variables ==
     CHARACTER*(MAX_LEN_FNAM), INTENT(IN) :: fName
     CHARACTER*(MAX_LEN_FNAM) :: fullName
-    INTEGER             :: IL
-    REAL               :: atten
-    CHARACTER (LEN=10) :: PlotType
-    CHARACTER (LEN=20) :: fmtstr
-    LOGICAL :: isOpen
+    CHARACTER*(10) :: PlotType
+    CHARACTER*(20) :: fmtstr
+    INTEGER        :: IL
+    REAL           :: atten
+    LOGICAL        :: isOpen
 
-    ! add time step to filename
+    ! In adjoint mode we do not write output besides on the first run
+    IF (IHOP_dumpfreq.LT.0) RETURN
+
     IF (myIter.GE.0) THEN
-        IL=ILNBLNK( fName )
-        WRITE(fullName, '(2A,I10.10)') fName(1:IL),'.',myIter
+      ! add time step to filename
+      IL=ILNBLNK( fName )
+      WRITE(fullName, '(2A,I10.10)') fName( 1:IL ), '.', myIter
     ELSE
-        fullName = fName
+      fullName = fName
     ENDIF
 
     SELECT CASE ( Beam%RunType( 1:1 ) )
     CASE ( 'R', 'E' )   ! Ray trace or Eigenrays
 #ifdef IHOP_WRITE_OUT
-       INQUIRE(UNIT=RAYFile, OPENED=isOpen)
-       IF (isOpen) CLOSE(RAYFile)
-       OPEN ( FILE = TRIM( fullName ) // '.ray', UNIT = RAYFile, &
-              FORM = 'FORMATTED' )
-       WRITE( RAYFile, '(3A)' )    '''', Title( 1:50 ), ''''
-       WRITE( RAYFile, '(F10.3)' ) IHOP_freq
-       WRITE( RAYFile, '(3I6)' )   Pos%nSX, Pos%nSY, Pos%nSZ
-       WRITE( RAYFile, '(I)' )     Angles%nAlpha
-       WRITE( RAYFile, '(F10.4)' ) Bdry%Top%HS%Depth
-       WRITE( RAYFile, '(F10.4)' ) Bdry%Bot%HS%Depth
-
+      INQUIRE(UNIT=RAYFile, OPENED=isOpen)
+      IF (isOpen) CLOSE(RAYFile)
+      OPEN ( FILE=TRIM( fullName ) // '.ray', UNIT=RAYFile, &
+             FORM='FORMATTED' )
+      WRITE( RAYFile, '(3A)'    ) '''', Title( 1:50 ), ''''
+      WRITE( RAYFile, '(F10.3)' ) IHOP_freq
+      WRITE( RAYFile, '(3I6)'   ) Pos%nSX, Pos%nSY, Pos%nSZ
+      WRITE( RAYFile, '(I)'     ) Angles%nAlpha
+      WRITE( RAYFile, '(F10.4)' ) Bdry%Top%HS%Depth
+      WRITE( RAYFile, '(F10.4)' ) Bdry%Bot%HS%Depth
 #ifdef IHOP_THREED
-       WRITE( RAYFile, '(2I)' ) Angles%nAlpha, Angles%nBeta
-       WRITE( RAYFile, '(A)' ) '''xyz'''
+      WRITE( RAYFile, '(2I)' ) Angles%nAlpha, Angles%nBeta
+      WRITE( RAYFile, '(A)'  ) '''xyz'''
 #else /* IHOP_THREED */
-       WRITE( RAYFile, '(A)' ) '''rz'''
+      WRITE( RAYFile, '(A)'  ) '''rz'''
 #endif /* IHOP_THREED */
-       FLUSH( RAYFile )
 
+      FLUSH( RAYFile )
 #endif /* IHOP_WRITE_OUT */
 
-       IF (writeDelay) THEN
+      IF (writeDelay) THEN
         INQUIRE(UNIT=DELFile, OPENED=isOpen)
         IF (isOpen) CLOSE(DELFile)
-        OPEN ( FILE = TRIM( fullName ) // '.delay', UNIT = DELFile, &
-               FORM = 'FORMATTED' )
-        WRITE( DELFile, '(3A)' )    '''', Title( 1:50 ), ''''
+        OPEN ( FILE=TRIM( fullName ) // '.delay', UNIT=DELFile, &
+               FORM='FORMATTED' )
+        WRITE( DELFile, '(3A)'    ) '''', Title( 1:50 ), ''''
         WRITE( DELFile, '(F10.3)' ) IHOP_freq
-        WRITE( DELFile, '(3I6)' )   Pos%nSX, Pos%nSY, Pos%nSZ
-        WRITE( DELFile, '(I)' )     Angles%nAlpha
+        WRITE( DELFile, '(3I6)'   ) Pos%nSX, Pos%nSY, Pos%nSZ
+        WRITE( DELFile, '(I)'     ) Angles%nAlpha
         WRITE( DELFile, '(F10.4)' ) Bdry%Top%HS%Depth
         WRITE( DELFile, '(F10.4)' ) Bdry%Bot%HS%Depth
-
 #ifdef IHOP_THREED
         WRITE( DELFile, '(2I)' ) Angles%nAlpha, Angles%nBeta
-        WRITE( DELFile, '(A)' ) '''xyz'''
+        WRITE( DELFile, '(A)'  ) '''xyz'''
 # else /* IHOP_THREED */
-        WRITE( DELFile, '(A)' ) '''rz'''
+        WRITE( DELFile, '(A)'  ) '''rz'''
 # endif /* IHOP_THREED */
-        FLUSH( DELFile )
-       ENDIF
 
-    CASE ( 'e' )        ! eigenrays + arrival file in ascii format
+        FLUSH( DELFile )
+
+      ENDIF
+
+    CASE ( 'e' ) ! eigenrays + arrival file in ascii format
 #ifdef IHOP_WRITE_OUT
-       INQUIRE(UNIT=ARRFile, OPENED=isOpen)
-       IF (isOpen) CLOSE(ARRFile)
-       OPEN ( FILE = TRIM( fullName ) // '.arr', UNIT = ARRFile, &
-              FORM = 'FORMATTED' )
-
+      INQUIRE(UNIT=ARRFile, OPENED=isOpen)
+      IF (isOpen) CLOSE(ARRFile)
+      OPEN ( FILE=TRIM( fullName ) // '.arr', UNIT=ARRFile, &
+             FORM='FORMATTED' )
 # ifdef IHOP_THREED
-       WRITE( ARRFile, '(A)' ) '''3D'''
+      WRITE( ARRFile, '(A)' ) '''3D'''
 # else /* IHOP_THREED */
-       WRITE( ARRFile, '(A)' ) '''2D'''
+      WRITE( ARRFile, '(A)' ) '''2D'''
 # endif /* IHOP_THREED */
+      WRITE( ARRFile, '(F10.4)' ) IHOP_freq
 
-       WRITE( ARRFile, '(F10.4)' ) IHOP_freq
-
-       ! write source locations
+      ! write source locations
 # ifdef IHOP_THREED
-       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSX, 'G16.10)'
-       WRITE( ARRFile, fmtstr    ) Pos%nSX, Pos%SX( 1:Pos%nSX )
-       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSY, 'G16.10)'
-       WRITE( ARRFile, fmtstr    ) Pos%nSY, Pos%SY( 1:Pos%nSY )
-       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSZ, 'G16.10)'
-       WRITE( ARRFile, fmtstr    ) Pos%nSZ, Pos%SZ( 1:Pos%nSZ )
+      WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSX, 'G16.10)'
+      WRITE( ARRFile, fmtstr    ) Pos%nSX, Pos%SX( 1:Pos%nSX )
+      WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSY, 'G16.10)'
+      WRITE( ARRFile, fmtstr    ) Pos%nSY, Pos%SY( 1:Pos%nSY )
+      WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSZ, 'G16.10)'
+      WRITE( ARRFile, fmtstr    ) Pos%nSZ, Pos%SZ( 1:Pos%nSZ )
 # else /* IHOP_THREED */
-       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSZ, 'G16.10)'
-       WRITE( ARRFile, fmtstr    ) Pos%nSZ, Pos%SZ( 1:Pos%nSZ )
+      WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSZ, 'G16.10)'
+      WRITE( ARRFile, fmtstr    ) Pos%nSZ, Pos%SZ( 1:Pos%nSZ )
 # endif /* IHOP_THREED */
 
-       ! write receiver locations
-       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nRZ, 'G16.10)'
-       WRITE( ARRFile, fmtstr    ) Pos%nRZ, Pos%RZ( 1:Pos%nRZ )
-       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nRR, 'G16.10)'
-       WRITE( ARRFile, fmtstr    ) Pos%nRR, Pos%RR( 1:Pos%nRR )
+      ! write receiver locations
+      WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nRZ, 'G16.10)'
+      WRITE( ARRFile, fmtstr    ) Pos%nRZ, Pos%RZ( 1:Pos%nRZ )
+      WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nRR, 'G16.10)'
+      WRITE( ARRFile, fmtstr    ) Pos%nRR, Pos%RR( 1:Pos%nRR )
 # ifdef IHOP_THREED
-       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nTheta, 'G16.10)'
-       WRITE( ARRFile, fmtstr    ) Pos%nTheta, Pos%theta( 1:Pos%nTheta )
+      WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nTheta, 'G16.10)'
+      WRITE( ARRFile, fmtstr    ) Pos%nTheta, Pos%theta( 1:Pos%nTheta )
 # endif /* IHOP_THREED */
-       FLUSH( ARRFile )
 
-       ! IEsco22: add erays to arrivals output
-       INQUIRE(UNIT=RAYFile, OPENED=isOpen)
-       IF (isOpen) CLOSE(RAYFile)
-       OPEN ( FILE = TRIM( fullName ) // '.ray', UNIT = RAYFile, &
-              FORM = 'FORMATTED' )
-       WRITE( RAYFile, '(3A)' )    '''', Title( 1:50 ), ''''
-       WRITE( RAYFile, '(F10.3)' ) IHOP_freq
-       WRITE( RAYFile, '(3I6)' )   Pos%nSX, Pos%nSY, Pos%nSZ
-       WRITE( RAYFile, '(I)' )     Angles%nAlpha
-       WRITE( RAYFile, '(F10.4)' ) Bdry%Top%HS%Depth
-       WRITE( RAYFile, '(F10.4)' ) Bdry%Bot%HS%Depth
+      FLUSH( ARRFile )
 
+      ! IEsco22: add erays to arrivals output
+      INQUIRE(UNIT=RAYFile, OPENED=isOpen)
+      IF (isOpen) CLOSE(RAYFile)
+      OPEN ( FILE=TRIM( fullName ) // '.ray', UNIT=RAYFile, &
+             FORM='FORMATTED' )
+      WRITE( RAYFile, '(3A)'    ) '''', Title( 1:50 ), ''''
+      WRITE( RAYFile, '(F10.3)' ) IHOP_freq
+      WRITE( RAYFile, '(3I6)'   ) Pos%nSX, Pos%nSY, Pos%nSZ
+      WRITE( RAYFile, '(I)'     ) Angles%nAlpha
+      WRITE( RAYFile, '(F10.4)' ) Bdry%Top%HS%Depth
+      WRITE( RAYFile, '(F10.4)' ) Bdry%Bot%HS%Depth
 # ifdef IHOP_THREED
-       WRITE( RAYFile, '(2I)' ) Angles%nAlpha, Angles%nBeta
-       WRITE( RAYFile, '(A)' ) '''xyz'''
+      WRITE( RAYFile, '(2I)' ) Angles%nAlpha, Angles%nBeta
+      WRITE( RAYFile, '(A)'  ) '''xyz'''
 # else /* IHOP_THREED */
-       WRITE( RAYFile, '(A)' ) '''rz'''
+      WRITE( RAYFile, '(A)'  ) '''rz'''
 # endif /* IHOP_THREED */
-       FLUSH( RAYFile )
 
-       IF (writeDelay) THEN
+      FLUSH( RAYFile )
+
+      IF (writeDelay) THEN
         INQUIRE(UNIT=DELFile, OPENED=isOpen)
         IF (isOpen) CLOSE(DELFile)
-        OPEN ( FILE = TRIM( fullName ) // '.delay', UNIT = DELFile, &
-               FORM = 'FORMATTED' )
-        WRITE( DELFile, '(3A)' )    '''', Title( 1:50 ), ''''
+        OPEN ( FILE=TRIM( fullName ) // '.delay', UNIT=DELFile, &
+               FORM='FORMATTED' )
+        WRITE( DELFile, '(3A)'    ) '''', Title( 1:50 ), ''''
         WRITE( DELFile, '(F10.3)' ) IHOP_freq
-        WRITE( DELFile, '(3I6)' )   Pos%nSX, Pos%nSY, Pos%nSZ
-        WRITE( DELFile, '(I)' )     Angles%nAlpha
+        WRITE( DELFile, '(3I6)'   ) Pos%nSX, Pos%nSY, Pos%nSZ
+        WRITE( DELFile, '(I)'     ) Angles%nAlpha
         WRITE( DELFile, '(F10.4)' ) Bdry%Top%HS%Depth
         WRITE( DELFile, '(F10.4)' ) Bdry%Bot%HS%Depth
-
 #ifdef IHOP_THREED
         WRITE( DELFile, '(2I)' ) Angles%nAlpha, Angles%nBeta
-        WRITE( DELFile, '(A)' ) '''xyz'''
+        WRITE( DELFile, '(A)'  ) '''xyz'''
 # else /* IHOP_THREED */
-        WRITE( DELFile, '(A)' ) '''rz'''
+        WRITE( DELFile, '(A)'  ) '''rz'''
 # endif /* IHOP_THREED */
-        FLUSH( DELFile )
-       ENDIF
 
+        FLUSH( DELFile )
+
+      ENDIF
 #endif /* IHOP_WRITE_OUT */
 
     CASE ( 'A' )        ! arrival file in ascii format
 #ifdef IHOP_WRITE_OUT
-       INQUIRE(UNIT=ARRFile, OPENED=isOpen)
-       IF (isOpen) CLOSE(ARRFile)
-       OPEN ( FILE = TRIM( fullName ) // '.arr', UNIT = ARRFile, &
-              FORM = 'FORMATTED' )
+      INQUIRE(UNIT=ARRFile, OPENED=isOpen)
+      IF (isOpen) CLOSE(ARRFile)
+      OPEN ( FILE=TRIM( fullName ) // '.arr', UNIT=ARRFile, &
+             FORM='FORMATTED' )
 
 # ifdef IHOP_THREED
-       WRITE( ARRFile, '(A)' ) '''3D'''
+      WRITE( ARRFile, '(A)' ) '''3D'''
 # else /* IHOP_THREED */
-       WRITE( ARRFile, '(A)' ) '''2D'''
+      WRITE( ARRFile, '(A)' ) '''2D'''
 # endif /* IHOP_THREED */
+      WRITE( ARRFile, '(F10.4)' ) IHOP_freq
 
-       WRITE( ARRFile, '(F10.4)' ) IHOP_freq
-
-       ! write source locations
+      ! write source locations
 # ifdef IHOP_THREED
-       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSX, 'G16.10)'
-       WRITE( ARRFile, fmtstr    ) Pos%nSX, Pos%SX( 1:Pos%nSX )
-       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSY, 'G16.10)'
-       WRITE( ARRFile, fmtstr    ) Pos%nSY, Pos%SY( 1:Pos%nSY )
-       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSZ, 'G16.10)'
-       WRITE( ARRFile, fmtstr    ) Pos%nSZ, Pos%SZ( 1:Pos%nSZ )
+      WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSX, 'G16.10)'
+      WRITE( ARRFile, fmtstr    ) Pos%nSX, Pos%SX( 1:Pos%nSX )
+      WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSY, 'G16.10)'
+      WRITE( ARRFile, fmtstr    ) Pos%nSY, Pos%SY( 1:Pos%nSY )
+      WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSZ, 'G16.10)'
+      WRITE( ARRFile, fmtstr    ) Pos%nSZ, Pos%SZ( 1:Pos%nSZ )
 # else /* IHOP_THREED */
-       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSZ, 'G16.10)'
-       WRITE( ARRFile, fmtstr    ) Pos%nSZ, Pos%SZ( 1:Pos%nSZ )
+      WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSZ, 'G16.10)'
+      WRITE( ARRFile, fmtstr    ) Pos%nSZ, Pos%SZ( 1:Pos%nSZ )
 # endif /* IHOP_THREED */
 
-       ! write receiver locations
-       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nRZ, 'G16.10)'
-       WRITE( ARRFile, fmtstr    ) Pos%nRZ, Pos%RZ( 1:Pos%nRZ )
-       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nRR, 'G16.10)'
-       WRITE( ARRFile, fmtstr    ) Pos%nRR, Pos%RR( 1:Pos%nRR )
+      ! write receiver locations
+      WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nRZ, 'G16.10)'
+      WRITE( ARRFile, fmtstr    ) Pos%nRZ, Pos%RZ( 1:Pos%nRZ )
+      WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nRR, 'G16.10)'
+      WRITE( ARRFile, fmtstr    ) Pos%nRR, Pos%RR( 1:Pos%nRR )
 # ifdef IHOP_THREED
-       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nTheta, 'G16.10)'
-       WRITE( ARRFile, fmtstr    ) Pos%nTheta, Pos%theta( 1:Pos%nTheta )
+      WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nTheta, 'G16.10)'
+      WRITE( ARRFile, fmtstr    ) Pos%nTheta, Pos%theta( 1:Pos%nTheta )
 # endif /* IHOP_THREED */
 
-       FLUSH( ARRFile )
+      FLUSH( ARRFile )
 #endif /* IHOP_WRITE_OUT */
 
     CASE ( 'a' )        ! arrival file in binary format
 #ifdef IHOP_WRITE_OUT
-       INQUIRE(UNIT=ARRFile, OPENED=isOpen)
-       IF (isOpen) CLOSE(ARRFile)
-       OPEN ( FILE = TRIM( fullName ) // '.arr', UNIT = ARRFile, &
-              FORM = 'UNFORMATTED' )
+      INQUIRE(UNIT=ARRFile, OPENED=isOpen)
+      IF (isOpen) CLOSE(ARRFile)
+      OPEN ( FILE=TRIM( fullName ) // '.arr', UNIT=ARRFile, &
+             FORM='UNFORMATTED' )
 
 # ifdef IHOP_THREED
-       WRITE( ARRFile, '(A)' ) '''3D'''
+      WRITE( ARRFile, '(A)' ) '''3D'''
 # else /* IHOP_THREED */
-       WRITE( ARRFile, '(A)' ) '''2D'''
+      WRITE( ARRFile, '(A)' ) '''2D'''
 # endif /* IHOP_THREED */
+      WRITE( ARRFile, '(F10.4)' ) IHOP_freq
 
-       WRITE( ARRFile, '(F10.4)' ) IHOP_freq
-
-       ! write source locations
+      ! write source locations
 # ifdef IHOP_THREED
-       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSX, 'G16.10)'
-       WRITE( ARRFile, fmtstr    ) Pos%nSX, Pos%SX( 1:Pos%nSX )
-       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSY, 'G16.10)'
-       WRITE( ARRFile, fmtstr    ) Pos%nSY, Pos%SY( 1:Pos%nSY )
-       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSZ, 'G16.10)'
-       WRITE( ARRFile, fmtstr    ) Pos%nSZ, Pos%SZ( 1:Pos%nSZ )
+      WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSX, 'G16.10)'
+      WRITE( ARRFile, fmtstr    ) Pos%nSX, Pos%SX( 1:Pos%nSX )
+      WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSY, 'G16.10)'
+      WRITE( ARRFile, fmtstr    ) Pos%nSY, Pos%SY( 1:Pos%nSY )
+      WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSZ, 'G16.10)'
+      WRITE( ARRFile, fmtstr    ) Pos%nSZ, Pos%SZ( 1:Pos%nSZ )
 # else /* IHOP_THREED */
-       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSZ, 'G16.10)'
-       WRITE( ARRFile, fmtstr    ) Pos%nSZ, Pos%SZ( 1:Pos%nSZ )
+      WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSZ, 'G16.10)'
+      WRITE( ARRFile, fmtstr    ) Pos%nSZ, Pos%SZ( 1:Pos%nSZ )
 # endif /* IHOP_THREED */
 
-       ! write receiver locations
-       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nRZ, 'G16.10)'
-       WRITE( ARRFile, fmtstr    ) Pos%nRZ, Pos%RZ( 1:Pos%nRZ )
-       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nRR, 'G16.10)'
-       WRITE( ARRFile, fmtstr    ) Pos%nRR, Pos%RR( 1:Pos%nRR )
+      ! write receiver locations
+      WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nRZ, 'G16.10)'
+      WRITE( ARRFile, fmtstr    ) Pos%nRZ, Pos%RZ( 1:Pos%nRZ )
+      WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nRR, 'G16.10)'
+      WRITE( ARRFile, fmtstr    ) Pos%nRR, Pos%RR( 1:Pos%nRR )
 # ifdef IHOP_THREED
-       WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nTheta, 'G16.10)'
-       WRITE( ARRFile, fmtstr    ) Pos%nTheta, Pos%theta( 1:Pos%nTheta )
+      WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nTheta, 'G16.10)'
+      WRITE( ARRFile, fmtstr    ) Pos%nTheta, Pos%theta( 1:Pos%nTheta )
 # endif /* IHOP_THREED */
 
-       FLUSH( ARRFile )
+      FLUSH( ARRFile )
 #endif /* IHOP_WRITE_OUT */
 
     CASE DEFAULT
-       atten = 0.0
+      atten = 0.0
 
-       ! following to set PlotType has alread been done in READIN if that was
-       ! used for input
-       SELECT CASE ( Beam%RunType( 5:5 ) )
-       CASE ( 'R' )
-          PlotType = 'rectilin  '
-       CASE ( 'I' )
-          PlotType = 'irregular '
-       CASE DEFAULT
-          PlotType = 'rectilin  '
-       END SELECT
+      ! following to set PlotType has alread been done in READIN if that was
+      ! used for input
+      SELECT CASE ( Beam%RunType( 5:5 ) )
+      CASE ( 'R' )
+         PlotType = 'rectilin  '
+      CASE ( 'I' )
+         PlotType = 'irregular '
+      CASE DEFAULT
+         PlotType = 'rectilin  '
+      END SELECT
 
-       CALL WriteSHDHeader( TRIM( fullName ) // '.shd', Title, &
-                            REAL( IHOP_freq ), atten, PlotType )
+      CALL WriteSHDHeader( TRIM( fullName ) // '.shd', Title, &
+                           REAL( IHOP_freq ), atten, PlotType )
     END SELECT
 
   RETURN
   END !SUBROUTINE openOutputFiles
 
   !**********************************************************************!
-
   SUBROUTINE WriteSHDHeader( FileName, Title, freq0, Atten, PlotType )
 
     USE srPos_mod,  only: Pos, Nfreq, freqVec
@@ -895,138 +1009,9 @@ CONTAINS
   END !SUBROUTINE AllocatePos
 
   !**********************************************************************!
-  SUBROUTINE openPRTFile ( myTime, myIter, myThid )
-    USE ihop_mod, only: PRTFile, Title
-
-  !     == Routine Arguments ==
-  !     myThid :: Thread number. Unused by IESCO
-  !     myTime :: Current time in simulation
-  !     myIter :: Current time-step number
-  !     msgBuf :: Used to build messages for printing.
-    _RL, INTENT(IN)     ::  myTime
-    INTEGER, INTENT(IN) ::  myIter, myThid
-    CHARACTER*(MAX_LEN_MBUF):: msgBuf
-
-
-  !     == Local Arguments ==
-    INTEGER                     :: iostat
-  ! For MPI writing: inspo from eeboot_minimal.F
-    CHARACTER*(MAX_LEN_FNAM)    :: fNam
-    CHARACTER*(6)               :: fmtStr
-    INTEGER                     :: mpiRC, IL
-#ifdef ALLOW_CAL
-    INTEGER :: mydate(4)
-#endif
-
-    ! Open the print file: template from eeboot_minimal.F
-#ifdef IHOP_WRITE_OUT
-    IF ( .NOT.usingMPI ) THEN
-        WRITE(myProcessStr, '(I10.10)') myIter
-        IL=ILNBLNK( myProcessStr )
-        WRITE(fNam,'(4A)') TRIM(IHOP_fileroot),'.',myProcessStr(1:IL),'.prt'
-        IF ( IHOP_dumpfreq.GE.0 ) &
-         OPEN( PRTFile, FILE = fNam, STATUS = 'UNKNOWN', IOSTAT = iostat )
-#ifdef ALLOW_USE_MPI
-    ELSE ! using MPI
-        CALL MPI_COMM_RANK( MPI_COMM_MODEL, mpiMyId, mpiRC )
-        myProcId = mpiMyId
-        IL = MAX(4,1+INT(LOG10(DFLOAT(nPx*nPy))))
-        WRITE(fmtStr,'(2(A,I1),A)') '(I',IL,'.',IL,')'
-        WRITE(myProcessStr,fmtStr) myProcId
-        IL = ILNBLNK( myProcessStr )
-        mpiPidIo = myProcId
-        pidIO    = mpiPidIo
-
-        IF( mpiPidIo.EQ.myProcId ) THEN
-#  ifdef SINGLE_DISK_IO
-         IF( myProcId.eq.0 ) THEN
-#  endif
-            IF (myIter.GE.0) THEN
-                WRITE(fNam,'(4A,I10.10,A)') &
-                    TRIM(IHOP_fileroot),'.',myProcessStr(1:IL),'.',myIter,'.prt'
-            ELSE
-                WRITE(fNam,'(4A)') &
-                    TRIM(IHOP_fileroot),'.',myProcessStr(1:IL),'.prt'
-            ENDIF
-
-            IF ( IHOP_dumpfreq .GE. 0) &
-             OPEN(PRTFile, FILE = fNam, STATUS = 'UNKNOWN', IOSTAT = iostat )
-            IF ( iostat /= 0 ) THEN
-                WRITE(*,*) 'ihop: IHOP_fileroot not recognized, ', &
-                    TRIM(IHOP_fileroot)
-                WRITE(msgBuf,'(A)') 'IHOP_INIT: Unable to recognize file'
-                CALL PRINT_ERROR( msgBuf, myThid )
-                STOP 'ABNORMAL END: S/R IHOP_INIT'
-            END IF
-#  ifdef SINGLE_DISK_IO
-         END IF
-#  endif
-        END IF
-# endif /* ALLOW_USE_MPI */
-    END IF
-#endif /* IHOP_WRITE_OUT */
-
-    !   Only do I/O in the main thread
-    _BARRIER
-    _BEGIN_MASTER(myThid)
-
-    ! In adjoint mode we do not write output besides on the first run
-    IF (IHOP_dumpfreq.LT.0) RETURN
-
-#ifdef IHOP_WRITE_OUT
-    WRITE(msgbuf,'(A)') 'iHOP Print File'
-    CALL PRINT_MESSAGE( msgBuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgbuf,'(A)')
-    CALL PRINT_MESSAGE( msgBuf, PRTFile, SQUEEZE_RIGHT, myThid )
-#endif /* IHOP_WRITE_OUT */
-
-    ! *** TITLE ***
-#ifdef IHOP_THREED
-    WRITE(msgBuf,'(2A)') 'IHOP_INIT_DIAG openPRTFile: ', &
-                         '3D not supported in ihop'
-    CALL PRINT_ERROR( msgBuf,myThid )
-    STOP 'ABNORMAL END: S/R openPRTFile'
-    Title( 1 :11 ) = 'iHOP3D - '
-    Title( 12:80 ) = IHOP_title
-#else /* not IHOP_THREED */
-    Title( 1 : 9 ) = 'iHOP - '
-    Title( 10:80 ) = IHOP_title
-#endif /* IHOP_THREED */
-
-#ifdef IHOP_WRITE_OUT
-    WRITE(msgbuf,'(A)') Title ! , ACHAR(10)
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(2A)')'___________________________________________________', &
-                        '________'
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgbuf,'(A)')
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE( msgBuf, '(A,I10,A,F20.2,A)') 'GCM iter ', myIter,' at time = ', &
-        myTime,' [sec]'
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-# ifdef ALLOW_CAL
-    CALL CAL_GETDATE( myIter,myTime,mydate,myThid )
-    WRITE (msgBuf,'(A,I8,I6,I3,I4)') 'GCM cal date ', mydate(1), mydate(2), &
-                                                       mydate(3), mydate(4)
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-# endif /* ALLOW_CAL */
-    WRITE(msgbuf,'(A)')
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE( msgBuf, '(A,F11.4,A)' )'Frequency ', IHOP_freq, ' [Hz]'
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(2A)')'___________________________________________________', &
-                        '________'
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-#endif /* IHOP_WRITE_OUT */
-
-    !   Only do I/O in the main thread
-    _END_MASTER(myThid)
-
-  END !SUBROUTINE openPRTFile
-
-!**********************************************************************!
 
   SUBROUTINE resetMemory()
+    USE ssp_mod,    only: SSP
     USE arr_mod,    only: nArr, Arr, U
     USE ihop_mod,   only: ray2D, MaxN, iStep
 

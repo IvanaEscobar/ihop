@@ -785,113 +785,110 @@ CONTAINS
     _BEGIN_MASTER(myThid)
 
 #ifdef IHOP_WRITE_OUT
-    ! In adjoint mode we do not write output besides on the first run
-    IF (IHOP_dumpfreq.GE.0) THEN
-      WRITE(msgBuf,'(2A)') '____________________________________________', &
-                           '_______________'
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(A)')
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(2A)') '____________________________________________', &
+                         '_______________'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(A)')
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 
 
-      SELECT CASE ( ReadFile )
-        CASE ( '~', '*' ) ! read from a file
-          IF (BotTop.eq.'Top') THEN
-            WRITE(msgBuf,'(2A)') BotTop, ': Using top-altimetry file'
-          ELSE ! 'Bot'
-            WRITE(msgBuf,'(2A)') BotTop, ': Using bottom-bathymetry file'
-          ENDIF
-          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    SELECT CASE ( ReadFile )
+      CASE ( '~', '*' ) ! read from a file
+        IF (BotTop.eq.'Top') THEN
+          WRITE(msgBuf,'(2A)') BotTop, ': Using top-altimetry file'
+        ELSE ! 'Bot'
+          WRITE(msgBuf,'(2A)') BotTop, ': Using bottom-bathymetry file'
+        ENDIF
+        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
   
-          IF (BotTop.eq.'Top') THEN
-            WRITE(msgBuf,'(3A)') '  ATIFile = ', TRIM( IHOP_fileroot ), '.ati'
-          ELSE ! 'Bot'
-            WRITE(msgBuf,'(3A)') '  BTYFile = ', TRIM( IHOP_fileroot ), '.bty'
-          ENDIF
-          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+        IF (BotTop.eq.'Top') THEN
+          WRITE(msgBuf,'(3A)') '  ATIFile = ', TRIM( IHOP_fileroot ), '.ati'
+        ELSE ! 'Bot'
+          WRITE(msgBuf,'(3A)') '  BTYFile = ', TRIM( IHOP_fileroot ), '.bty'
+        ENDIF
+        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 
-          SELECT CASE ( BdryType( 1:1 ) )
-            CASE ( 'C' )
-              WRITE(msgBuf,'(A)') '  Curvilinear Interpolation'
+        SELECT CASE ( BdryType( 1:1 ) )
+          CASE ( 'C' )
+            WRITE(msgBuf,'(A)') '  Curvilinear Interpolation'
+          CASE ( 'L' )
+            WRITE(msgBuf,'(A)') '  Piecewise linear interpolation'
+          CASE DEFAULT
+            STOP 'ABNORMAL END: S/R writeTopBot'
+        END SELECT
+        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+
+        IF (BotTop.eq.'Top') THEN
+          WRITE(msgBuf,'(A,I10)') '  Number of altimetry points = ', NPts-2
+        ELSE ! 'Bot'
+          WRITE(msgBuf,'(A,I10)') '  Number of bathymetry points = ', NPts-2
+        ENDIF
+        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+        WRITE(msgBuf,'(A)')
+        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+
+        IF (BotTop.eq.'Top') THEN
+          WRITE(msgBuf,'(A)') ' Range (km)  Depth (m)'
+        ELSE ! 'Bot'
+          SELECT CASE ( BdryType( 2:2 ) )
+            CASE ( 'S', '' )
+              WRITE(msgBuf,'(A)') 'Short format (bathymetry only)'
+              CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+              WRITE(msgBuf,'(A)') ' Range (km)  Depth (m)'
             CASE ( 'L' )
-              WRITE(msgBuf,'(A)') '  Piecewise linear interpolation'
+              WRITE(msgBuf,'(A)') 'Long format (bathymetry and geoacoustics)'
+              CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+              WRITE(msgBuf,'(2A)') &
+                 ' Range (km)  Depth (m)  alphaR (m/s)  betaR  rho (g/cm^3)',&
+                 'alphaI     betaI'
+              CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+              WRITE(msgBuf,'(A)')
+            CASE DEFAULT
+              STOP 'ABNORMAL END: S/R WriteTopBot'
+          END SELECT
+        ENDIF
+        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+
+
+        ! Write through all NPts
+        boundaryPt: DO ii = 2, NPts - 1
+          ! Print ranges in km
+          ranges = locBdry( ii )%x(1) / 1000.
+
+          SELECT CASE ( BdryType( 2:2 ) )
+            CASE ( 'S', '' )
+              IF ( ii < Number_to_Echo .OR. ii == NPts ) THEN
+
+                WRITE( msgBuf,"(2G11.3)" ) ranges, locBdry( ii )%x(2)
+                CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+              END IF
+
+            CASE ( 'L' )
+              IF ( ii < Number_to_Echo .OR. ii == NPts ) THEN
+                WRITE( msgBuf,'(2F10.2,3X,2F10.2,3X,F6.2,3X,2F10.4)' ) &
+                    ranges, locBdry(ii)%x(2), &
+                    locBdry(ii)%HS%alphaR, locBdry(ii)%HS%betaR, &
+                    locBdry(ii)%HS%rho, &
+                    locBdry(ii)%HS%alphaI, locBdry(ii)%HS%betaI
+                 CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+              END IF
             CASE DEFAULT
               STOP 'ABNORMAL END: S/R writeTopBot'
           END SELECT
-          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 
-          IF (BotTop.eq.'Top') THEN
-            WRITE(msgBuf,'(A,I10)') '  Number of altimetry points = ', NPts-2
-          ELSE ! 'Bot'
-            WRITE(msgBuf,'(A,I10)') '  Number of bathymetry points = ', NPts-2
-          ENDIF
-          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-          WRITE(msgBuf,'(A)')
-          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+        END DO boundaryPt
 
-          IF (BotTop.eq.'Top') THEN
-            WRITE(msgBuf,'(A)') ' Range (km)  Depth (m)'
-          ELSE ! 'Bot'
-            SELECT CASE ( BdryType( 2:2 ) )
-              CASE ( 'S', '' )
-                WRITE(msgBuf,'(A)') 'Short format (bathymetry only)'
-                CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-                WRITE(msgBuf,'(A)') ' Range (km)  Depth (m)'
-              CASE ( 'L' )
-                WRITE(msgBuf,'(A)') 'Long format (bathymetry and geoacoustics)'
-                CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-                WRITE(msgBuf,'(2A)') &
-                   ' Range (km)  Depth (m)  alphaR (m/s)  betaR  rho (g/cm^3)',&
-                   'alphaI     betaI'
-                CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-                WRITE(msgBuf,'(A)')
-              CASE DEFAULT
-                STOP 'ABNORMAL END: S/R WriteTopBot'
-            END SELECT
-          ENDIF
-          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+      CASE DEFAULT ! not reading from file
+        IF (BotTop.eq.'Top') THEN
+          WRITE(msgBuf,'(3A)') BotTop, ': No ATIFile. Assume flat top.',&
+                                       ' Set +/- infty.'
+        ELSE ! 'Bot'
+          WRITE(msgBuf,'(3A)') BotTop, ': No BTYFile. Assume flat bottom.',&
+                                       ' Set +/- infty.'
+        END IF
+        CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    END SELECT
 
-
-          ! Write through all NPts
-          boundaryPt: DO ii = 2, NPts - 1
-            ! Print ranges in km
-            ranges = locBdry( ii )%x(1) / 1000.
-
-            SELECT CASE ( BdryType( 2:2 ) )
-              CASE ( 'S', '' )
-                IF ( ii < Number_to_Echo .OR. ii == NPts ) THEN
-
-                  WRITE( msgBuf,"(2G11.3)" ) ranges, locBdry( ii )%x(2)
-                  CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-                END IF
-
-              CASE ( 'L' )
-                IF ( ii < Number_to_Echo .OR. ii == NPts ) THEN
-                  WRITE( msgBuf,'(2F10.2,3X,2F10.2,3X,F6.2,3X,2F10.4)' ) &
-                      ranges, locBdry(ii)%x(2), &
-                      locBdry(ii)%HS%alphaR, locBdry(ii)%HS%betaR, &
-                      locBdry(ii)%HS%rho, &
-                      locBdry(ii)%HS%alphaI, locBdry(ii)%HS%betaI
-                   CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-                END IF
-              CASE DEFAULT
-                STOP 'ABNORMAL END: S/R writeTopBot'
-            END SELECT
-
-          END DO boundaryPt
-
-        CASE DEFAULT ! not reading from file
-          IF (BotTop.eq.'Top') THEN
-            WRITE(msgBuf,'(3A)') BotTop, ': No ATIFile. Assume flat top.',&
-                                         ' Set +/- infty.'
-          ELSE ! 'Bot'
-            WRITE(msgBuf,'(3A)') BotTop, ': No BTYFile. Assume flat bottom.',&
-                                         ' Set +/- infty.'
-          END IF
-          CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      END SELECT
-
-    END IF ! IHOP_dumpfreq.GE.0
 # endif /* IHOP_WRITE_OUT */
 
     !   Only do I/O in the main thread

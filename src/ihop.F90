@@ -81,91 +81,100 @@ CONTAINS
     Tstart = 0.
     Tstop  = 0.
 
-    ! Reset memory and default values
+    ! Reset memory and default values: REQUIRED
     CALL resetMemory()
 
-    ! save data.ihop, open PRTFile: REQUIRED
-    CALL initPRTFile( myTime, myIter, myThid )
+    ! Only do IO and computation on a single process!
+    IF (( .NOT.usingMPI ) .AND. ( IHOP_dumpfreq.GE.0 )) THEN
+      myProcId=0
 
-    ! write Top/Bot to PRTFile: REQUIRED
-    CALL writeBdry ( myThid )
+      ! open PRTFile
+      CALL initPRTFile( myTime, myIter, myThid )
 
-    ! write refCoef: OPTIONAL
-    CALL writeRefCoef( myThid ) 
+      ! write Top/Bot to PRTFile: REQUIRED
+      CALL writeBdry( myThid )
 
-    ! Source Beam Pattern: OPTIONAL, default is omni source pattern
-    CALL writePat( myThid )
+      ! write refCoef: OPTIONAL
+      CALL writeRefCoef( myThid ) 
+
+      ! Source Beam Pattern: OPTIONAL, default is omni source pattern
+      CALL writePat( myThid )
+
+      ! Open output files
+      CALL OpenOutputFiles( IHOP_fileroot, myTime, myIter, myThid )
+
+#ifdef ALLOW_USE_MPI
+    ELSE ! using MPI
+      CALL MPI_COMM_RANK( MPI_COMM_MODEL, mpiMyId, mpiRC )
+      myProcId = mpiMyId
+
+      ! Hard coded write on single proc
+      IF (( myProcId.EQ.0 ) .AND. ( IHOP_dumpfreq.GE.0 )) THEN
+        ! open PRTFile
+        CALL initPRTFile( myTime, myIter, myThid )
+
+        ! write Top/Bot to PRTFile: REQUIRED
+        CALL writeBdry( myThid )
+
+        ! write refCoef: OPTIONAL
+        CALL writeRefCoef( myThid ) 
+
+        ! Source Beam Pattern: OPTIONAL, default is omni source pattern
+        CALL writePat( myThid )
+
+        ! Open output files:
+        CALL OpenOutputFiles( IHOP_fileroot, myTime, myIter, myThid )
+
+      ENDIF ! IF ( myProcId.EQ.0 ) 
+
+#endif /* ALLOW_USE_MPI */
+    ENDIF ! IF ( .NOT.usingMPI )
 
 
     ! set SSP%cmat from gcm SSP: REQUIRED
     CALL setSSP( myThid )
 
 
-! open all output files
-    IF ( IHOP_dumpfreq .GE. 0 ) &
-     CALL OpenOutputFiles( IHOP_fileroot, myTime, myIter, myThid )
-
     ! Run IHOP solver on a single processor
-    if (numberOfProcs.gt.1) then
+    IF ( myProcId.EQ.0 ) THEN
+      CALL CPU_TIME( Tstart )
+      CALL IHOPCore( myThid )
+      CALL CPU_TIME( Tstop  )
+    ENDIF ! IF ( myProcId.EQ.0 )
 #ifdef ALLOW_USE_MPI
-        if(myProcId.eq.0) then
-            CALL CPU_TIME( Tstart )
-            CALL IHOPCore(myThid)
-            CALL CPU_TIME( Tstop )
-        endif
-        CALL MPI_BARRIER(MPI_COMM_WORLD, mpiRC)
+    IF ( usingMPI ) CALL MPI_BARRIER(MPI_COMM_WORLD, mpiRC)
 #endif
-    else
-        CALL CPU_TIME( Tstart )
-        CALL IHOPCore(myThid)
-        CALL CPU_TIME( Tstop )
-    endif
 
 #ifdef IHOP_WRITE_OUT
-    IF ( IHOP_dumpfreq.GE.0 ) THEN
-        ! print run time
-        if (numberOfProcs.gt.1) then
-          if(myProcId.gt.0) then
-            WRITE(msgBuf,'(A,I4,A)') 'NOTE: Proc ',myProcId, " didn't run ihop"
-            CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
-            ! Erase prtfiles that aren't on procid = 0
-            CLOSE(PRTFile, STATUS='DELETE')
+    IF (( myProcId.EQ.0 ) .AND. ( IHOP_dumpfreq.GE.0 )) THEN
+      WRITE(msgBuf, '(A)' )
+      CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
+      WRITE(msgBuf, '(A,G15.3,A)' ) 'CPU Time = ', Tstop-Tstart, 's'
+      CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
+      CLOSE(PRTFile)
 
-          else ! myProcId.eq.0
-            WRITE(msgBuf, '(A)' )
-            CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
-            WRITE(msgBuf, '(A,G15.3,A)' ) 'CPU Time = ', Tstop-Tstart, 's'
-            CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
-            CLOSE(PRTFile)
+      ! close all files
+      SELECT CASE ( Beam%RunType( 1:1 ) )
+      CASE ( 'C', 'S', 'I' )  ! TL calculation
+        CLOSE( SHDFile )
 
-          endif
-        else
-          WRITE(msgBuf, '(A)' )
-          CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
-          WRITE(msgBuf, '(A,G15.3,A)' ) 'CPU Time = ', Tstop-Tstart, 's'
-          CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
-          CLOSE(PRTFile)
+      CASE ( 'A', 'a' )       ! arrivals calculation
+        CLOSE( ARRFile )
 
-        endif
+      CASE ( 'R', 'E' )       ! ray and eigen ray trace
+        CLOSE( RAYFile )
+        IF ( writeDelay ) CLOSE( DELFile )
 
-        ! close all files
-        SELECT CASE ( Beam%RunType( 1:1 ) )
-        CASE ( 'C', 'S', 'I' )  ! TL calculation
-           CLOSE( SHDFile )
-        CASE ( 'A', 'a' )       ! arrivals calculation
-           CLOSE( ARRFile )
-        CASE ( 'R', 'E' )       ! ray and eigen ray trace
-           CLOSE( RAYFile )
-           IF ( writeDelay ) CLOSE( DELFile )
-        CASE ( 'e' )
-           CLOSE( RAYFile )
-           CLOSE( ARRFile )
-           IF ( writeDelay ) CLOSE( DELFile )
-        CASE DEFAULT
-           STOP "ABNORMAL END: S/R IHOP_MAIN"
-        END SELECT
+      CASE ( 'e' )
+        CLOSE( RAYFile )
+        CLOSE( ARRFile )
+        IF ( writeDelay ) CLOSE( DELFile )
 
-    ENDIF
+      CASE DEFAULT
+        STOP "ABNORMAL END: S/R IHOP_MAIN"
+      END SELECT
+
+    ENDIF ! IF (( myProcId.EQ.0 )
 #endif /* IHOP_WRITE_OUT */
 
   RETURN
@@ -388,7 +397,8 @@ CONTAINS
     ! Distances from ray beginning, end to top and bottom
     REAL (KIND=_RL90) :: DistBegTop, DistEndTop, DistBegBot, DistEndBot
     REAL (KIND=_RL90) :: sss, declAlpha, declAlphaOld
-    LOGICAL           :: RayTurn = .FALSE., continue_steps, reflect
+    LOGICAL           :: RayTurn=.FALSE., endRay=.FALSE.
+    LOGICAL           :: continue_steps, reflect
 
 !$TAF init TraceRay2D = static, maxN-1
 
@@ -402,11 +412,11 @@ CONTAINS
     ! second component of qv is not supported in geometric beam tracing
     ! set I.C. to 0 in hopes of saving run time
 !$TAF store beam%runtype = TraceRay2D
-    IF ( Beam%RunType( 2:2 ) == 'G' .or. Beam%RunType( 2:2 ) == 'B')  THEN
-        ray2D( 1 )%q = [ 0.0, 0.0 ]   ! IESCO22: geometric beam in Cartesian
+    IF ( Beam%RunType( 2:2 )=='G' .OR. Beam%RunType( 2:2 )=='B')  THEN
+      ray2D( 1 )%q = [ 0.0, 0.0 ]   ! IESCO22: geometric beam in Cartesian
     ELSE
-        ray2D( 1 )%q = [ 0.0, 1.0 ]   ! IESCO22: ray centered coords
-    END IF
+      ray2D( 1 )%q = [ 0.0, 1.0 ]   ! IESCO22: ray centered coords
+    ENDIF
     ray2D( 1 )%tau       = 0.0
     ray2D( 1 )%Amp       = Amp0
     ray2D( 1 )%Phase     = 0.0
@@ -420,18 +430,19 @@ CONTAINS
 
     ! IESCO22: 'L' is long format. See BeadBTY s/r in bdrymod.f90. Default is to
     ! calculate cp, cs, and rho instead of reading them in
-    IF ( atiType( 2:2 ) == 'L' ) THEN
-       ! grab the geoacoustic info for the new segment
-       Bdry%Top%HS%cp  = Top( IsegTop )%HS%cp
-       Bdry%Top%HS%cs  = Top( IsegTop )%HS%cs
-       Bdry%Top%HS%rho = Top( IsegTop )%HS%rho
-    END IF
-    IF ( btyType( 2:2 ) == 'L' ) THEN
-       ! grab the geoacoustic info for the new segment
-       Bdry%Bot%HS%cp  = Bot( IsegBot )%HS%cp
-       Bdry%Bot%HS%cs  = Bot( IsegBot )%HS%cs
-       Bdry%Bot%HS%rho = Bot( IsegBot )%HS%rho
-    END IF
+    IF ( atiType( 2:2 )=='L' ) THEN
+      ! grab the geoacoustic info for the new segment
+      Bdry%Top%HS%cp  = Top( IsegTop )%HS%cp
+      Bdry%Top%HS%cs  = Top( IsegTop )%HS%cs
+      Bdry%Top%HS%rho = Top( IsegTop )%HS%rho
+    ENDIF
+
+    IF ( btyType( 2:2 )=='L' ) THEN
+      ! grab the geoacoustic info for the new segment
+      Bdry%Bot%HS%cp  = Bot( IsegBot )%HS%cp
+      Bdry%Bot%HS%cs  = Bot( IsegBot )%HS%cs
+      Bdry%Bot%HS%rho = Bot( IsegBot )%HS%rho
+    ENDIF
 
     CALL Distances2D( ray2D( 1 )%x, Top( IsegTop )%x, Bot( IsegBot )%x, &
                                     dEndTop,          dEndBot, &
@@ -439,202 +450,209 @@ CONTAINS
                                     DistBegTop,       DistBegBot )
 
 ! Source MUST be within the domain
-    IF ( DistBegTop <= 0 .OR. DistBegBot <= 0 ) THEN
-       Beam%Nsteps = 1
+    IF ( DistBegTop.LE.0 .OR. DistBegBot.LE.0 ) THEN
+      Beam%Nsteps = 1
 #ifdef IHOP_WRITE_OUT
-       WRITE(msgBuf,'(A)') &
-          'WARNING: TraceRay2D: The source is outside the domain boundaries'
-       ! In adjoint mode we do not write output besides on the first run
-       IF (IHOP_dumpfreq.GE.0) &
-            CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
+      WRITE(msgBuf,'(A)') &
+         'WARNING: TraceRay2D: The source is outside the domain boundaries'
+      ! In adjoint mode we do not write output besides on the first run
+      IF (IHOP_dumpfreq.GE.0) &
+        CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
 #endif /* IHOP_WRITE_OUT */
     ELSE
-       ! Trace the beam (Reflect2D increments the step index, is)
-       is = 0
-       continue_steps = .true.
-       reflect=.false.
+      ! Trace the beam (Reflect2D increments the step index, is)
+      is = 0
+      continue_steps = .true.
+      reflect=.false.
 
-       Stepping: DO istep = 1, maxN - 1
+      Stepping: DO istep = 1, maxN-1
 !$TAF store is,bdry,beam,continue_steps,distbegbot,distbegtop = TraceRay2D
 
-          IF ( continue_steps ) THEN
-             is  = is + 1 ! old step
-             is1 = is + 1 ! new step forward
+        IF ( continue_steps ) THEN
+          is  = is + 1 ! old step
+          is1 = is + 1 ! new step forward
 
 !$TAF store is,isegbot,isegtop,rbotseg,rtopseg = TraceRay2D
 !$TAF store ray2d = TraceRay2D
 
-             CALL Step2D( ray2D( is ), ray2D( is1 ),  &
-                  Top( IsegTop )%x, Top( IsegTop )%n, &
-                  Bot( IsegBot )%x, Bot( IsegBot )%n, myThid )
+          CALL Step2D( ray2D( is ), ray2D( is1 ),  &
+               Top( IsegTop )%x, Top( IsegTop )%n, &
+               Bot( IsegBot )%x, Bot( IsegBot )%n, myThid )
 
-             ! IESCO22: turning point check
-             IF ( is > 1 ) THEN
-                rayt    = ray2D(is1)%x - ray2D(is)%x
-                raytOld = ray2D(is)%x  - ray2D(is-1)%x
+          ! IESCO22: turning point check
+          IF ( is > 1 ) THEN
+            rayt    = ray2D(is1)%x - ray2D(is)%x
+            raytOld = ray2D(is)%x  - ray2D(is-1)%x
 
-                IF ( ALL(rayt==0.0) ) THEN
-                    declAlpha = 0.0
-                ELSE
-                    declAlpha = ATAN2( rayt(2), rayt(1) )
-                ENDIF
+            IF ( ALL(rayt==0.0) ) THEN
+              declAlpha = 0.0
+            ELSE
+              declAlpha = ATAN2( rayt(2), rayt(1) )
+            ENDIF
 
-                IF ( ALL(raytOld==0.0) ) THEN
-                    declAlphaOld = 0.0
-                ELSE
-                    declAlphaOld = ATAN2( raytOld(2), raytOld(1) )
-                ENDIF
+            IF ( ALL(raytOld==0.0) ) THEN
+              declAlphaOld = 0.0
+            ELSE
+              declAlphaOld = ATAN2( raytOld(2), raytOld(1) )
+            ENDIF
 
-                RayTurn = ( declAlpha <= 0.0d0 .AND. declAlphaOld > 0.0d0 .OR. &
-                            declAlpha >= 0.0d0 .AND. declAlphaOld < 0.0d0 )
-                IF (RayTurn) THEN
-                   ray2D( is1 )%NumTurnPt = ray2D( is )%NumTurnPt + 1
-                ENDIF
-             ENDIF
+            RayTurn = ( declAlpha <= 0.0d0 .AND. declAlphaOld > 0.0d0 .OR. &
+                        declAlpha >= 0.0d0 .AND. declAlphaOld < 0.0d0 )
+            IF (RayTurn) ray2D( is1 )%NumTurnPt = ray2D( is )%NumTurnPt + 1
 
-             ! New altimetry segment?
-             IF ( ray2D( is1 )%x( 1 ) < rTopSeg( 1 ) .OR. &
-                  ray2D( is1 )%x( 1 ) > rTopSeg( 2 ) ) THEN
-                CALL GetTopSeg( ray2D( is1 )%x( 1 ), myThid )
-                IF ( atiType( 2:2 ) == 'L' ) THEN
-                   ! ATIFile geoacoustic info from new segment, cp
-                   Bdry%Top%HS%cp  = Top( IsegTop )%HS%cp
-                   Bdry%Top%HS%cs  = Top( IsegTop )%HS%cs
-                   Bdry%Top%HS%rho = Top( IsegTop )%HS%rho
-                END IF
-             END IF
+          ENDIF ! IF ( is > 1 )
 
-             ! New bathymetry segment?
-             IF ( ray2D( is1 )%x( 1 ) < rBotSeg( 1 ) .OR. &
-                  ray2D( is1 )%x( 1 ) > rBotSeg( 2 ) ) THEN
-                CALL GetBotSeg( ray2D( is1 )%x( 1 ), myThid )
-                IF ( btyType( 2:2 ) == 'L' ) THEN
-                   ! BTYFile geoacoustic info from new segment, cp
-                   Bdry%Bot%HS%cp  = Bot( IsegBot )%HS%cp
-                   Bdry%Bot%HS%cs  = Bot( IsegBot )%HS%cs
-                   Bdry%Bot%HS%rho = Bot( IsegBot )%HS%rho
-                END IF
-             END IF
+          ! New altimetry segment?
+          IF ( ray2D( is1 )%x( 1 ) < rTopSeg( 1 ) .OR. &
+               ray2D( is1 )%x( 1 ) > rTopSeg( 2 ) ) THEN
+            CALL GetTopSeg( ray2D( is1 )%x( 1 ), myThid )
+            IF ( atiType( 2:2 ) == 'L' ) THEN
+              ! ATIFile geoacoustic info from new segment, cp
+              Bdry%Top%HS%cp  = Top( IsegTop )%HS%cp
+              Bdry%Top%HS%cs  = Top( IsegTop )%HS%cs
+              Bdry%Top%HS%rho = Top( IsegTop )%HS%rho
+            ENDIF
 
-             ! *** Reflections ***
-             ! Tests ray at step is IS inside, and ray at step is+1 IS outside
-             ! DistBeg is the distance at step is,   which is saved
-             ! DistEnd is the distance at step is+1, which needs to be calculated
+          ENDIF
 
-             CALL Distances2D( ray2D( is1 )%x,  &
-                  Top( IsegTop )%x, Bot( IsegBot )%x, dEndTop,    dEndBot, &
-                  Top( IsegTop )%n, Bot( IsegBot )%n, DistEndTop, DistEndBot )
+          ! New bathymetry segment?
+          IF ( ray2D( is1 )%x( 1 ) < rBotSeg( 1 ) .OR. &
+               ray2D( is1 )%x( 1 ) > rBotSeg( 2 ) ) THEN
+            CALL GetBotSeg( ray2D( is1 )%x( 1 ), myThid )
+            IF ( btyType( 2:2 ) == 'L' ) THEN
+              ! BTYFile geoacoustic info from new segment, cp
+              Bdry%Bot%HS%cp  = Bot( IsegBot )%HS%cp
+              Bdry%Bot%HS%cs  = Bot( IsegBot )%HS%cs
+              Bdry%Bot%HS%rho = Bot( IsegBot )%HS%rho
+            ENDIF
 
-             ! IESCO22: Did new ray point cross top boundary? Then reflect
-             IF ( DistBegTop > 0.0d0 .AND. DistEndTop <= 0.0d0 ) THEN
-                reflect=.true.
+          ENDIF
+
+          ! *** Reflections ***
+          ! Tests ray at step is IS inside, and ray at step is+1 IS outside
+          ! DistBeg is the distance at step is,   which is saved
+          ! DistEnd is the distance at step is+1, which needs to be calculated
+
+          CALL Distances2D( ray2D( is1 )%x,  &
+               Top( IsegTop )%x, Bot( IsegBot )%x, dEndTop,    dEndBot, &
+               Top( IsegTop )%n, Bot( IsegBot )%n, DistEndTop, DistEndBot )
+
+          ! IESCO22: Did new ray point cross top boundary? Then reflect
+          IF ( DistBegTop > 0.0d0 .AND. DistEndTop <= 0.0d0 ) THEN
+            reflect=.true.
 
 !$TAF store isegtop = TraceRay2D
 
-                IF ( atiType == 'C' ) THEN ! curvilinear interpolation
-                   ! proportional distance along segment
-                   sss     = DOT_PRODUCT( dEndTop, Top( IsegTop )%t ) &
-                             / Top( IsegTop )%Len
-                   ToptInt = ( 1-sss ) * Top( IsegTop   )%Nodet &
-                             + sss     * Top( 1+IsegTop )%Nodet
-                   TopnInt = ( 1-sss ) * Top( IsegTop   )%Noden &
-                             + sss     * Top( 1+IsegTop )%Noden
-                ELSE
-                   TopnInt = Top( IsegTop )%n   ! constant normal in a segment
-                   ToptInt = Top( IsegTop )%t
-                END IF
+            IF ( atiType == 'C' ) THEN ! curvilinear interpolation
+              ! proportional distance along segment
+              sss     = DOT_PRODUCT( dEndTop, Top( IsegTop )%t ) &
+                        / Top( IsegTop )%Len
+              ToptInt = ( 1-sss ) * Top( IsegTop   )%Nodet &
+                        + sss     * Top( 1+IsegTop )%Nodet
+              TopnInt = ( 1-sss ) * Top( IsegTop   )%Noden &
+                        + sss     * Top( 1+IsegTop )%Noden
+            ELSE
+              TopnInt = Top( IsegTop )%n   ! constant normal in a segment
+              ToptInt = Top( IsegTop )%t
+            ENDIF
 
 !$TAF store is,isegtop = TraceRay2D
-                CALL Reflect2D( is, Bdry%Top%HS,    'TOP',  ToptInt, TopnInt, &
-                                    Top( IsegTop )%kappa,   RTop,    NTopPTS, &
-                                    myThid )
+            CALL Reflect2D( is, Bdry%Top%HS,    'TOP',  ToptInt, TopnInt, &
+                                Top( IsegTop )%kappa,   RTop,    NTopPTS, &
+                                myThid )
 
 !$TAF store is,isegbot = TraceRay2D
-                CALL Distances2D( ray2D( is+1 )%x, &
-                     Top( IsegTop )%x, Bot( IsegBot )%x, dEndTop,    dEndBot, &
-                     Top( IsegTop )%n, Bot( IsegBot )%n, DistEndTop, DistEndBot )
+            CALL Distances2D( ray2D( is+1 )%x, &
+                 Top( IsegTop )%x, Bot( IsegBot )%x, dEndTop,    dEndBot, &
+                 Top( IsegTop )%n, Bot( IsegBot )%n, DistEndTop, DistEndBot )
 
-             ! IESCO22: Did ray cross bottom boundary? Then reflect
-             ELSE IF ( DistBegBot > 0.0d0 .AND. DistEndBot <= 0.0d0 ) THEN
-                reflect=.true.
+          ! IESCO22: Did ray cross bottom boundary? Then reflect
+          ELSEIF ( DistBegBot > 0.0d0 .AND. DistEndBot <= 0.0d0 ) THEN
+            reflect=.true.
 
 !$TAF store isegbot = TraceRay2D
-                IF ( btyType == 'C' ) THEN ! curvilinear interpolation
-                   ! proportional distance along segment
-                   sss     = DOT_PRODUCT( dEndBot, Bot( IsegBot )%t ) &
-                             / Bot( IsegBot )%Len
-                   BotnInt = ( 1-sss ) * Bot( IsegBot   )%Noden &
-                             + sss     * Bot( 1+IsegBot )%Noden
-                   BottInt = ( 1-sss ) * Bot( IsegBot   )%Nodet &
-                             + sss     * Bot( 1+IsegBot )%Nodet
-                ELSE ! btyType not 'C'
-                   BotnInt = Bot( IsegBot )%n   ! normal is constant in a segment
-                   BottInt = Bot( IsegBot )%t
-                END IF
+            IF ( btyType == 'C' ) THEN ! curvilinear interpolation
+              ! proportional distance along segment
+              sss     = DOT_PRODUCT( dEndBot, Bot( IsegBot )%t ) &
+                        / Bot( IsegBot )%Len
+              BotnInt = ( 1-sss ) * Bot( IsegBot   )%Noden &
+                        + sss     * Bot( 1+IsegBot )%Noden
+              BottInt = ( 1-sss ) * Bot( IsegBot   )%Nodet &
+                        + sss     * Bot( 1+IsegBot )%Nodet
+            ELSE ! btyType not 'C'
+              BotnInt = Bot( IsegBot )%n   ! normal is constant in a segment
+              BottInt = Bot( IsegBot )%t
+            ENDIF
 
 !$TAF store is,isegbot = TraceRay2D
-                CALL Reflect2D( is, Bdry%Bot%HS,    'BOT',  BottInt, BotnInt, &
-                                    Bot( IsegBot )%kappa,   RBot,    NBotPTS, &
-                                    myThid )
+            CALL Reflect2D( is, Bdry%Bot%HS,    'BOT',  BottInt, BotnInt, &
+                                Bot( IsegBot )%kappa,   RBot,    NBotPTS, &
+                                myThid )
 
 !$TAF store is,isegbot = TraceRay2D
-                CALL Distances2D( ray2D( is+1 )%x, &
-                     Top( IsegTop )%x, Bot( IsegBot )%x, dEndTop,    dEndBot, &
-                     Top( IsegTop )%n, Bot( IsegBot )%n, DistEndTop, DistEndBot )
-             ELSE
-                ! Do not reflect
-                reflect=.false.
-             END IF
+            CALL Distances2D( ray2D( is+1 )%x, &
+                 Top( IsegTop )%x, Bot( IsegBot )%x, dEndTop,    dEndBot, &
+                 Top( IsegTop )%n, Bot( IsegBot )%n, DistEndTop, DistEndBot )
 
-             ! Has the ray left the box, lost its energy, escaped the boundaries,
-             ! or exceeded storage limit?
-             ! IESCO22: Rewriting for debugging with gcov
-             WRITE(msgBuf,'(A)') ' '
-             IF ( ray2D( is+1 )%x( 1 ) > Beam%Box%R ) THEN
-                WRITE(msgBuf,'(A)') 'TraceRay2D: ray left Box%R'
-             ELSE IF ( ray2D( is+1 )%x( 1 ) < 0 ) THEN
-                WRITE(msgBuf,'(A)') 'TraceRay2D: ray left Box r=0'
-             ELSE IF ( ray2D( is+1 )%x( 2 ) > Beam%Box%Z ) THEN
-                WRITE(msgBuf,'(A)') 'TraceRay2D: ray left Box%Z'
-             ELSE IF ( ABS( ray2D( is+1 )%Amp ) < 0.005 ) THEN
-                WRITE(msgBuf,'(A)') 'TraceRay2D: ray lost energy'
-             ELSE IF ( DistBegTop < 0.0 .AND. DistEndTop < 0.0 ) THEN
-                WRITE(msgBuf,'(A)') 'TraceRay2D: ray escaped top bound'
-             ELSE IF ( DistBegBot < 0.0 .AND. DistEndBot < 0.0 ) THEN
-                WRITE(msgBuf,'(A)') 'TraceRay2D: ray escaped bot bound'
-             ELSE IF ( is >= maxN - 3 ) THEN
-                WRITE(msgBuf,'(2A)') 'WARNING: TraceRay2D: Check storage ',&
-                                     'for ray trajectory'
-             ELSE
-                WRITE(msgBuf,'(A)')
-             END IF
+          ELSE
+            ! Do not reflect
+            reflect=.false.
+          ENDIF ! IF ( DistBegTop > 0.0d0 .AND. D
+
+          ! Has the ray left the box, lost its energy, escaped the boundaries,
+          ! or exceeded storage limit?
+          ! IESCO22: Rewriting for debugging with gcov
+          WRITE(msgBuf,'(A)') ' '
+          IF ( ray2D( is+1 )%x( 1 ) > Beam%Box%R ) THEN
+            WRITE(msgBuf,'(A)') 'TraceRay2D: ray left Box%R'
+            endRay=.TRUE.
+          ELSEIF ( ray2D( is+1 )%x( 1 ) < 0 ) THEN
+            WRITE(msgBuf,'(A)') 'TraceRay2D: ray left Box r=0'
+            endRay=.TRUE.
+          ELSEIF ( ray2D( is+1 )%x( 2 ) > Beam%Box%Z ) THEN
+            WRITE(msgBuf,'(A)') 'TraceRay2D: ray left Box%Z'
+            endRay=.TRUE.
+          ELSEIF ( ABS( ray2D( is+1 )%Amp ) < 0.005 ) THEN
+            WRITE(msgBuf,'(A)') 'TraceRay2D: ray lost energy'
+            endRay=.TRUE.
+          ELSEIF ( DistBegTop < 0.0 .AND. DistEndTop < 0.0 ) THEN
+            WRITE(msgBuf,'(A)') 'TraceRay2D: ray escaped top bound'
+            endRay=.TRUE.
+          ELSEIF ( DistBegBot < 0.0 .AND. DistEndBot < 0.0 ) THEN
+            WRITE(msgBuf,'(A)') 'TraceRay2D: ray escaped bot bound'
+            endRay=.TRUE.
+          ELSEIF ( is >= maxN - 3 ) THEN
+            WRITE(msgBuf,'(2A)') 'WARNING: TraceRay2D: Check storage ',&
+                                 'for ray trajectory'
+            endRay=.TRUE.
+          ELSE
+            WRITE(msgBuf,'(A)')
+            endRay=.FALSE.
+          ENDIF
 
 #ifdef IHOP_WRITE_OUT
-             IF ( ( ray2D( is+1 )%x( 1 ) > Beam%Box%R ) .OR. &
-                  ( ray2D( is+1 )%x( 1 ) < 0 ) .OR. &
-                  ( ray2D( is+1 )%x( 2 ) > Beam%Box%Z ) .OR. &
-                  ( ABS( ray2D( is+1 )%Amp ) < 0.005 ) .OR. &
-                  ( DistBegTop < 0.0 .AND. DistEndTop < 0.0 ) .OR. &
-                  ( DistBegBot < 0.0 .AND. DistEndBot < 0.0 ) .OR. &
-                  ( is >= maxN - 3 ) ) THEN
-                  IF ( IHOP_dumpfreq .GE. 0) &
-                      CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
-             ENDIF
+          IF ( endRay ) THEN
+            IF ( IHOP_dumpfreq.GE.0) &
+              CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
+          ENDIF
 #endif /* IHOP_WRITE_OUT */
-             IF (INDEX(msgBuf, 'TraceRay2D').eq.1) THEN
-                 Beam%Nsteps = is+1
-                 continue_steps = .false.
-             ELSE IF (INDEX(msgBuf, 'WARNING: TraceRay2D').eq.1) THEN
-                 Beam%Nsteps = is
-                 continue_steps = .false.
-             ELSE
-                 continue_steps = .true.
-             END IF
 
-             DistBegTop = DistEndTop
-             DistBegBot = DistEndBot
-          END IF ! continue_steps
-       END DO Stepping
+          IF (INDEX(msgBuf, 'TraceRay2D').EQ.1) THEN
+              Beam%Nsteps = is+1
+              continue_steps = .false.
+          ELSEIF (INDEX(msgBuf, 'WARNING: TraceRay2D').eq.1) THEN
+              Beam%Nsteps = is
+              continue_steps = .false.
+          ELSE
+              continue_steps = .true.
+          ENDIF
+
+          DistBegTop = DistEndTop
+          DistBegBot = DistEndBot
+
+        ENDIF ! continue_steps
+
+      ENDDO Stepping
 
     ENDIF ! IF ( DistBegTop <= 0 .OR. DistBegBot <= 0 ) THEN
 
@@ -739,10 +757,10 @@ CONTAINS
     RN = 2 * kappa / c ** 2 / Th    ! boundary curvature correction
 
     IF ( BotTop == 'TOP' ) THEN
-       ! cnjump changes sign because the (t,n) system of the top boundary has a
-       ! different sense to the bottom boundary
-       cnjump = -cnjump
-       RN     = -RN
+      ! cnjump changes sign because the (t,n) system of the top boundary has a
+      ! different sense to the bottom boundary
+      cnjump = -cnjump
+      RN     = -RN
     END IF
 
     RM = Tg / Th   ! this is tan( alpha ) where alpha is the angle of incidence
@@ -750,11 +768,11 @@ CONTAINS
 
     SELECT CASE ( Beam%Type( 3:3 ) )
     CASE ( 'D' )
-       RN = 2.0 * RN
+      RN = 2.0 * RN
     CASE ( 'Z' )
-       RN = 0.0
+      RN = 0.0
     CASE DEFAULT
-       RN = RN
+      RN = RN
     END SELECT
 
     ray2D( is1 )%c   = c
@@ -767,136 +785,138 @@ CONTAINS
 
     SELECT CASE ( HS%BC )
     CASE ( 'R' )                 ! rigid
-       ray2D( is1 )%Amp   = ray2D( is )%Amp
-       ray2D( is1 )%Phase = ray2D( is )%Phase
+      ray2D( is1 )%Amp   = ray2D( is )%Amp
+      ray2D( is1 )%Phase = ray2D( is )%Phase
     CASE ( 'V' )                 ! vacuum
-       ray2D( is1 )%Amp   = ray2D( is )%Amp
-       ray2D( is1 )%Phase = ray2D( is )%Phase + PI
+      ray2D( is1 )%Amp   = ray2D( is )%Amp
+      ray2D( is1 )%Phase = ray2D( is )%Phase + PI
     CASE ( 'F' )                 ! file
 !$TAF store rint = reflect2d1
-       ! angle of incidence (relative to normal to bathymetry)
-       IF ( (Th==0.0) .AND. (Tg==0.0) ) THEN
-          RInt%theta = 0.0
-       ELSE
-          RInt%theta = rad2deg * ABS( ATAN2( Th, Tg ) )
-       ENDIF
-       
-       ! reflection coefficient is symmetric about 90 degrees
-       IF ( RInt%theta > 90 ) RInt%theta = 180. - RInt%theta 
+      ! angle of incidence (relative to normal to bathymetry)
+      IF ( (Th==0.0) .AND. (Tg==0.0) ) THEN
+        RInt%theta = 0.0
+      ELSE
+        RInt%theta = rad2deg * ABS( ATAN2( Th, Tg ) )
+      ENDIF
+      
+      ! reflection coefficient is symmetric about 90 degrees
+      IF ( RInt%theta > 90 ) RInt%theta = 180. - RInt%theta 
 
-       CALL InterpolateReflectionCoefficient( RInt, RefC, Npts )
-       ray2D( is1 )%Amp   = ray2D( is )%Amp * RInt%R
-       ray2D( is1 )%Phase = ray2D( is )%Phase + RInt%phi
+      CALL InterpolateReflectionCoefficient( RInt, RefC, Npts )
+      ray2D( is1 )%Amp   = ray2D( is )%Amp * RInt%R
+      ray2D( is1 )%Phase = ray2D( is )%Phase + RInt%phi
 
     CASE ( 'A', 'G' )     ! half-space
-       kx = afreq * Tg    ! wavenumber in direction parallel      to bathymetry
-       kz = afreq * Th    ! wavenumber in direction perpendicular to bathymetry
+      kx = afreq * Tg    ! wavenumber in direction parallel      to bathymetry
+      kz = afreq * Th    ! wavenumber in direction perpendicular to bathymetry
 
-       ! notation below is a bit mis-leading
-       ! kzS, kzP is really what I called gamma in other codes, and differs by a
-       ! factor of +/- i
-       IF ( REAL( HS%cS ) > 0.0 ) THEN
-          kzS2 = kx**2 - ( afreq / HS%cS )**2
-          kzP2 = kx**2 - ( afreq / HS%cP )**2
-          kzS  = SQRT( kzS2 )
-          kzP  = SQRT( kzP2 )
-          mu   = HS%rho * HS%cS**2
+      ! notation below is a bit mis-leading
+      ! kzS, kzP is really what I called gamma in other codes, and differs by a
+      ! factor of +/- i
+      IF ( REAL( HS%cS ) > 0.0 ) THEN
+        kzS2 = kx**2 - ( afreq / HS%cS )**2
+        kzP2 = kx**2 - ( afreq / HS%cP )**2
+        kzS  = SQRT( kzS2 )
+        kzP  = SQRT( kzP2 )
+        mu   = HS%rho * HS%cS**2
 
-          y2 = ( ( kzS2 + kx**2 )**2 - 4.0D0 * kzS * kzP * kx**2 ) * mu
-          y4 = kzP * ( kx**2 - kzS2 )
+        y2 = ( ( kzS2 + kx**2 )**2 - 4.0D0 * kzS * kzP * kx**2 ) * mu
+        y4 = kzP * ( kx**2 - kzS2 )
 
-          f = afreq**2 * y4
-          g = y2
-       ELSE
-          kzP = SQRT( kx**2 - ( afreq / HS%cP )**2 )
+        f = afreq**2 * y4
+        g = y2
+      ELSE
+        kzP = SQRT( kx**2 - ( afreq / HS%cP )**2 )
 
-          ! Intel and GFortran compilers return different branches of the SQRT
-          ! for negative reals
-          IF ( REAL( kzP ) == 0.0D0 .AND. AIMAG( kzP ) < 0.0D0 ) kzP = -kzP
-          f   = kzP
-          g   = HS%rho
-       ENDIF
+        ! Intel and GFortran compilers return different branches of the SQRT
+        ! for negative reals
+        IF ( REAL( kzP ) == 0.0D0 .AND. AIMAG( kzP ) < 0.0D0 ) kzP = -kzP
+        f   = kzP
+        g   = HS%rho
+      ENDIF
 
-       ! complex reflection coef.
-       Refl =  - ( rho*f - oneCMPLX * kz*g ) / ( rho*f + oneCMPLX*kz*g )
+      ! complex reflection coef.
+      Refl =  - ( rho*f - oneCMPLX * kz*g ) / ( rho*f + oneCMPLX*kz*g )
 
-       IF ( ABS( Refl ) < 1.0E-5 ) THEN   ! kill a ray that has lost its energy in reflection
-          ray2D( is1 )%Amp   = 0.0
-          ray2D( is1 )%Phase = ray2D( is )%Phase
-       ELSE
-          ray2D( is1 )%Amp   = ABS( Refl ) * ray2D(  is )%Amp
-          ray2D( is1 )%Phase = ray2D( is )%Phase + &
-                               ATAN2( AIMAG( Refl ), REAL( Refl ) )
+      IF ( ABS( Refl ) < 1.0E-5 ) THEN   ! kill a ray that has lost its energy in reflection
+        ray2D( is1 )%Amp   = 0.0
+        ray2D( is1 )%Phase = ray2D( is )%Phase
+      ELSE
+        ray2D( is1 )%Amp   = ABS( Refl ) * ray2D(  is )%Amp
+        ray2D( is1 )%Phase = ray2D( is )%Phase + &
+                             ATAN2( AIMAG( Refl ), REAL( Refl ) )
 
-          if ( Beam%Type( 4:4 ) == 'S' ) then   ! beam displacement & width change (Seongil's version)
-             ch = ray2D( is )%c / conjg( HS%cP )
-             co = ray2D( is )%t( 1 ) * ray2D( is )%c
-             si = ray2D( is )%t( 2 ) * ray2D( is )%c
-             ck = afreq / ray2D( is )%c
+        IF ( Beam%Type( 4:4 ) == 'S' ) THEN   ! beam displacement & width change (Seongil's version)
+          ch = ray2D( is )%c / conjg( HS%cP )
+          co = ray2D( is )%t( 1 ) * ray2D( is )%c
+          si = ray2D( is )%t( 2 ) * ray2D( is )%c
+          ck = afreq / ray2D( is )%c
 
-             a   = 2 * HS%rho * ( 1 - ch * ch )
-             b   = co * co - ch * ch
-             d   = HS%rho * HS%rho * si * si + b
-             sb  = sqrt( b )
-             cco = co * co
-             ssi = si * si
+          a   = 2 * HS%rho * ( 1 - ch * ch )
+          b   = co * co - ch * ch
+          d   = HS%rho * HS%rho * si * si + b
+          sb  = sqrt( b )
+          cco = co * co
+          ssi = si * si
 
-             IF ( si /= 0.0 ) THEN
-                delta = a * co / si / ( ck * sb * d )   ! Do we need an abs() on this???
-             ELSE
-                delta = 0.0
-             END IF
+          IF ( si /= 0.0 ) THEN
+             delta = a * co / si / ( ck * sb * d )   ! Do we need an abs() on this???
+          ELSE
+             delta = 0.0
+          ENDIF
 
-             pdelta  = real( delta ) / ( ray2D( is )%c / co)
-             ddelta  = -a / ( ck*sb*d ) - a*cco / ssi / (ck*sb*d) &
-                       + a*cco / (ck*b*sb*d) &
-                       -a*co / si / (ck*sb*d*d) &
-                       * (2* HS%rho * HS%rho *si*co-2*co*si)
-             rddelta = -real( ddelta )
-             sddelta = rddelta / abs( rddelta )
+          pdelta  = real( delta ) / ( ray2D( is )%c / co)
+          ddelta  = -a / ( ck*sb*d ) - a*cco / ssi / (ck*sb*d) &
+                    + a*cco / (ck*b*sb*d) &
+                    -a*co / si / (ck*sb*d*d) &
+                    * (2* HS%rho * HS%rho *si*co-2*co*si)
+          rddelta = -real( ddelta )
+          sddelta = rddelta / abs( rddelta )
 
-             ! next 3 lines have an update by Diana McCammon to allow a sloping
-             ! bottom . I think the formulas are good, but this won't be reliable
-             ! because it doesn't have the logic that tracks crossing into new
-             ! segments after the ray displacement.
+          ! next 3 lines have an update by Diana McCammon to allow a sloping
+          ! bottom . I think the formulas are good, but this won't be reliable
+          ! because it doesn't have the logic that tracks crossing into new
+          ! segments after the ray displacement.
 
-             theta_bot = datan( tBdry( 2 ) / tBdry( 1 ))  ! bottom angle
-             ray2D( is1 )%x( 1 ) = ray2D( is1 )%x( 1 ) + real( delta ) &
-                                   * dcos( theta_bot )   ! range displacement
-             ray2D( is1 )%x( 2 ) = ray2D( is1 )%x( 2 ) + real( delta ) &
-                                   * dsin( theta_bot )   ! depth displacement
-             ray2D( is1 )%tau    = ray2D( is1 )%tau + pdelta  ! phase change
-             ray2D( is1 )%q      = ray2D( is1 )%q + sddelta * rddelta * si * c &
-                                   * ray2D( is )%p   ! beam-width change
-          endif
+          theta_bot = datan( tBdry( 2 ) / tBdry( 1 ))  ! bottom angle
+          ray2D( is1 )%x( 1 ) = ray2D( is1 )%x( 1 ) + real( delta ) &
+                                * dcos( theta_bot )   ! range displacement
+          ray2D( is1 )%x( 2 ) = ray2D( is1 )%x( 2 ) + real( delta ) &
+                                * dsin( theta_bot )   ! depth displacement
+          ray2D( is1 )%tau    = ray2D( is1 )%tau + pdelta  ! phase change
+          ray2D( is1 )%q      = ray2D( is1 )%q + sddelta * rddelta * si * c &
+                                * ray2D( is )%p   ! beam-width change
+                            
+        ENDIF
 
-       ENDIF
+      ENDIF
 
     CASE DEFAULT
 #ifdef IHOP_WRITE_OUT
-       WRITE(msgBuf,'(2A)') 'HS%BC = ', HS%BC
-       ! In adjoint mode we do not write output besides on the first run
-       IF (IHOP_dumpfreq.GE.0) &
+      WRITE(msgBuf,'(2A)') 'HS%BC = ', HS%BC
+      ! In adjoint mode we do not write output besides on the first run
+      IF ( IHOP_dumpfreq.GE.0 ) &
         CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
-       WRITE(msgBuf,'(A)') 'IHOP Reflect2D: Unknown boundary condition type'
-       CALL PRINT_ERROR( msgBuf,myThid )
+      WRITE(msgBuf,'(A)') 'IHOP Reflect2D: Unknown boundary condition type'
+      CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
        STOP 'ABNORMAL END: S/R Reflect2D'
     END SELECT
 
     ! Update top/bottom bounce counter
     IF (BotTop == 'TOP') THEN
-       ray2D( is+1 )%NumTopBnc = ray2D( is )%NumTopBnc + 1
-    ELSE IF ( BotTop == 'BOT' ) THEN
-       ray2D( is+1 )%NumBotBnc = ray2D( is )%NumBotBnc + 1
+      ray2D( is+1 )%NumTopBnc = ray2D( is )%NumTopBnc + 1
+    ELSEIF ( BotTop == 'BOT' ) THEN
+      ray2D( is+1 )%NumBotBnc = ray2D( is )%NumBotBnc + 1
     ELSE
 #ifdef IHOP_WRITE_OUT
-       WRITE(msgBuf,'(2A)') 'IHOP Reflect2D: ', &
-                            'no reflection bounce, but in reflect2d somehow'
-       CALL PRINT_ERROR( msgBuf,myThid )
+      WRITE(msgBuf,'(2A)') 'IHOP Reflect2D: ', &
+                           'no reflection bounce, but in reflect2d somehow'
+      CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
-       STOP 'ABNORMAL END: S/R Reflect2D'
-    END IF
+      STOP 'ABNORMAL END: S/R Reflect2D'
+      
+    ENDIF
 
   RETURN
   END !SUBROUTINE Reflect2D

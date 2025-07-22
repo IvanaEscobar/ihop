@@ -24,6 +24,9 @@ MODULE ssp_mod
 ! == Global variables ==
 #include "SIZE.h"
 #include "EEPARAMS.h"
+#ifdef ALLOW_USE_MPI
+# include "EESUPPORT.h"
+#endif
 #include "PARAMS.h"
 #include "GRID.h"
 #include "IHOP_SIZE.h"
@@ -128,6 +131,10 @@ CONTAINS
 
   !     == Local Variables ==
     INTEGER :: ir, iz
+#ifdef ALLOW_USE_MPI
+    INTEGER :: mpiRC
+    mpiRC  = 0
+#endif
 
 !$TAF init setssp1 = 'ssp_mod_setssp'
 
@@ -145,60 +152,69 @@ CONTAINS
     cCoef = (-1.,-1.)
 
     ! Extract gcm SSP field
-    IF ( .not. useSSPFile ) THEN
-      CALL gcmSSP( myThid )
-    ENDIF
+    IF ( .NOT.useSSPFile ) CALL gcmSSP( myThid )
+
     ! Write to PRTFile
-    CALL writeSSP( myThid )
+    IF ( .NOT.usingMPI ) THEN
+      CALL writeSSP( myThid )
+#ifdef ALLOW_USE_MPI
+    ELSE ! using MPI
+      CALL MPI_COMM_RANK( MPI_COMM_MODEL, mpiMyId, mpiRC )
+      myProcId = mpiMyId
+
+      ! Hard coded write on single proc
+      IF ( myProcId.EQ.0 ) CALL writeSSP( myThid )
+#endif /* ALOOW_USE_MPI */
+    ENDIF ! IF ( .NOT.usingMPI )
 
     ! Populate rest of SSP derived type based on SSP interpolation scheme
     SELECT CASE ( SSP%Type )
     CASE ( 'N' )  !  N2-linear profile option
-       n2( 1:SSP%nPts ) = 1.0 / SSP%c( 1:SSP%nPts )**2
-       !IEsco23 Test this: n2(  1:SSP%nZ ) = 1.0 / SSP%c( 1:SSP%nZ )**2
+      n2( 1:SSP%nPts ) = 1.0 / SSP%c( 1:SSP%nPts )**2
+      !IEsco23 Test this: n2(  1:SSP%nZ ) = 1.0 / SSP%c( 1:SSP%nZ )**2
 
-       ! compute gradient, n2z
-       DO iz = 2, SSP%nPts
-          n2z( iz-1 ) = (  n2(   iz ) - n2(    iz-1 ) ) / &
-                        ( SSP%Z( iz ) - SSP%Z( iz-1 ) )
-       END DO
+      ! compute gradient, n2z
+      DO iz = 2, SSP%nPts
+        n2z( iz-1 ) = (  n2(   iz ) - n2(    iz-1 ) ) / &
+                      ( SSP%Z( iz ) - SSP%Z( iz-1 ) )
+      END DO
 
     CASE ( 'C' )  !  C-linear profile option
     CASE ( 'P' )  !  monotone PCHIP ACS profile option
-       !                                                               2      3
-       ! compute coefficients of std cubic polynomial: c0 + c1*x + c2*x + c3*x
-       !
-       CALL PCHIP( SSP%Z, SSP%c, SSP%nPts, cCoef, cSpln )
+      !                                                               2      3
+      ! compute coefficients of std cubic polynomial: c0 + c1*x + c2*x + c3*x
+      !
+      CALL PCHIP( SSP%Z, SSP%c, SSP%nPts, cCoef, cSpln )
 !IEsco23 Test this:
-!       CALL PCHIP( SSP%Z, SSP%c, SSP%nZ, cCoef, cSpln )
+!     CALL PCHIP( SSP%Z, SSP%c, SSP%nZ, cCoef, cSpln )
 
     CASE ( 'S' )  !  Cubic spline profile option
-       cSpln( 1, 1:SSP%nPts ) = SSP%c( 1:SSP%nPts )
+      cSpln( 1, 1:SSP%nPts ) = SSP%c( 1:SSP%nPts )
 !IEsco23 Test this:
-!       cSpln( 1, 1 : SSP%nZ ) = SSP%c( 1 : SSP%nZ )
+!     cSpln( 1, 1 : SSP%nZ ) = SSP%c( 1 : SSP%nZ )
 
-       ! Compute spline coefs
-       CALL cSpline( SSP%Z, cSpln( 1, 1 ), SSP%nPts, 0, 0, SSP%nPts )
+      ! Compute spline coefs
+      CALL cSpline( SSP%Z, cSpln( 1, 1 ), SSP%nPts, 0, 0, SSP%nPts )
 !IEsco23 Test this:
-!      CALL CSpline( SSP%Z, cSpln( 1,1 ), SSP%nZ,iBCBeg, iBCEnd, SSP%nZ )
+!     CALL CSpline( SSP%Z, cSpln( 1,1 ), SSP%nZ,iBCBeg, iBCEnd, SSP%nZ )
 
     CASE ( 'Q' )
-       ! calculate cz
-       DO ir = 1, SSP%nR
-         DO iz = 2, SSP%nZ
-           ! delta_z = ( SSP%Z( iz2 ) - SSP%Z( iz2-1 ) )
-           SSP%czMat( iz-1, ir ) = ( SSP%cMat( iz,   ir ) - &
-                                     SSP%cMat( iz-1, ir ) ) / &
-                                   ( SSP%Z( iz ) - SSP%Z( iz-1 ) )
-         END DO
-       END DO
+      ! calculate cz
+      DO ir = 1, SSP%nR
+        DO iz = 2, SSP%nZ
+          ! delta_z = ( SSP%Z( iz2 ) - SSP%Z( iz2-1 ) )
+          SSP%czMat( iz-1, ir ) = ( SSP%cMat( iz,   ir ) - &
+                                    SSP%cMat( iz-1, ir ) ) / &
+                                  ( SSP%Z( iz ) - SSP%Z( iz-1 ) )
+        END DO
+      END DO
 
     CASE DEFAULT
 #ifdef IHOP_WRITE_OUT
-        WRITE(msgBuf,'(A)') 'SSPMOD setSSP: Invalid SSP profile option'
-        CALL PRINT_ERROR( msgBuf,myThid )
+      WRITE(msgBuf,'(A)') 'SSPMOD setSSP: Invalid SSP profile option'
+      CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
-        STOP 'ABNORMAL END: S/R setSSP'
+      STOP 'ABNORMAL END: S/R setSSP'
     END SELECT
 
   RETURN
@@ -991,9 +1007,6 @@ SUBROUTINE gcmSSP( myThid )
     END DO
   END DO
 
-!IESCO c68s: IF ((nPx.GT.1) .OR. (nPy.GT.1)) THEN
-!IESCO c68s:   CALL GLOBAL_VEC_SUM_R8(SSP%nZ*SSP%nR,SSP%nZ*SSP%nR,tileSSP,myThid)
-!IESCO c68s: ENDIF
   CALL GLOBAL_SUM_VECTOR_RL(SSP%nZ*SSP%nR,tmpSSP,globSSP,myThid)
 
   ! reshape ssp to matrix
@@ -1004,7 +1017,6 @@ SUBROUTINE gcmSSP( myThid )
       k = k + 1
     END DO
   END DO
-! IESCO24: END MITgcm checkpoint69a uses a new global sum subroutine...
 
   IF(ALLOCATED(tileSSP)) DEALLOCATE(tileSSP)
   IF(ALLOCATED(tmpSSP))  DEALLOCATE(tmpSSP)
@@ -1059,6 +1071,9 @@ SUBROUTINE writeSSP( myThid )
   CHARACTER*(80)    :: fmtstr
   REAL (KIND=_RL90) :: ssptmp(SSP%nR)
 
+  ! In adjoint mode we do not write output besides on the first run
+  IF ( IHOP_dumpfreq.LT.0) RETURN
+
   ! init local vars
   ssptmp = 0.0
 
@@ -1066,95 +1081,92 @@ SUBROUTINE writeSSP( myThid )
   _BEGIN_MASTER(myThid)
 
 #ifdef IHOP_WRITE_OUT
-  ! In adjoint mode we do not write output besides on the first run
-  IF (IHOP_dumpfreq.GE.0) THEN
-    ! Write relevant diagnostics
-    WRITE(msgBuf,'(2A)')'________________________________________________', &
-      '___________'
+  ! Write relevant diagnostics
+  WRITE(msgBuf,'(2A)')'________________________________________________', &
+    '___________'
+  CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+  WRITE(msgBuf,'(A)')
+  CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+  WRITE(msgBuf,'(A)') "Sound Speed Field"
+  CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+  WRITE(msgBuf,'(A)')
+  CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+
+  WRITE(msgBuf,'(2A)') 'Profile option: ', SSP%Type
+  CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+  WRITE(msgBuf,'(A)')
+  CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+
+  IF (SSP%nR .GT. 1) THEN
+    WRITE(msgBuf,'(A)') 'Using range-dependent sound speed'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+  END IF
+  IF (SSP%nR .EQ. 1) THEN
+    WRITE(msgBuf,'(A)') 'Using range-independent sound speed'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+  END IF
+
+  WRITE(msgBuf,'(A,I10)') 'Number of SSP ranges = ', SSP%nR
+  CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+  WRITE(msgBuf,'(A,I10)') 'Number of SSP depths = ', SSP%nZ
+  CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+
+  WRITE(msgBuf,'(A)')
+  CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+  WRITE(msgBuf,'(A)') 'Profile ranges [km]:'
+  CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+  WRITE(fmtStr,'(A,I10,A)') '(T11,',SSP%nR, 'F10.2)'
+  ssptmp = SSP%Seg%R( 1:SSP%nR ) / 1000.0
+  WRITE(msgBuf,fmtStr) ssptmp
+  CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+
+  WRITE(msgBuf,'(A)')
+  CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+  WRITE(msgBuf,'(A)') 'Sound speed matrix:'
+  CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+  WRITE(msgBuf,'(A)') ' Depth [m ]     Soundspeed [m/s]'
+  CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+
+  ssptmp = 0.0
+  WRITE(fmtStr,'(A,I10,A)') '(',SSP%nR+1, 'F10.2)'
+  DO iz = 1, SSP%nZ
+    ssptmp = ssp%cMat( iz,: )
+    WRITE(msgBuf,fmtStr) SSP%Z( iz ), ssptmp
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+  END DO
+
+  IF (useSSPFile) THEN
+    WRITE(msgBuf,'(A)')
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(A)') 'Sound speed profile:'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(2A)')'      z         alphaR      betaR     rho      ', &
+                        '  alphaI     betaI'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    WRITE(msgBuf,'(2A)')'     [m]         [m/s]      [m/s]   [g/cm^3]   ', &
+                        '   [m/s]     [m/s]'
+    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+
+    WRITE(msgBuf,'(2A)')'_______________________________________________', &
+                        '____________'
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
     WRITE(msgBuf,'(A)')
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(A)') "Sound Speed Field"
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(A)')
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 
-    WRITE(msgBuf,'(2A)') 'Profile option: ', SSP%Type
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(A)')
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-
-    IF (SSP%nR .GT. 1) THEN
-      WRITE(msgBuf,'(A)') 'Using range-dependent sound speed'
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    END IF
-    IF (SSP%nR .EQ. 1) THEN
-      WRITE(msgBuf,'(A)') 'Using range-independent sound speed'
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    END IF
-
-    WRITE(msgBuf,'(A,I10)') 'Number of SSP ranges = ', SSP%nR
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(A,I10)') 'Number of SSP depths = ', SSP%nZ
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-
-    WRITE(msgBuf,'(A)')
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(A)') 'Profile ranges [km]:'
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(fmtStr,'(A,I10,A)') '(T11,',SSP%nR, 'F10.2)'
-    ssptmp = SSP%Seg%R( 1:SSP%nR ) / 1000.0
-    WRITE(msgBuf,fmtStr) ssptmp
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-
-    WRITE(msgBuf,'(A)')
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(A)') 'Sound speed matrix:'
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(A)') ' Depth [m ]     Soundspeed [m/s]'
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-
-    ssptmp = 0.0
-    WRITE(fmtStr,'(A,I10,A)') '(',SSP%nR+1, 'F10.2)'
-    DO iz = 1, SSP%nZ
-      ssptmp = ssp%cMat( iz,: )
-      WRITE(msgBuf,fmtStr) SSP%Z( iz ), ssptmp
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+    DO iz = 1, SSP%nPts
+       WRITE(msgBuf,'( F10.2, 3X, 2F10.2, 3X, F6.2, 3X, 2F10.4)') &
+           SSP%Z( iz ), SSP%cMat(iz,1), betaR, rhoR, alphaI, betaI
+       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
     END DO
+  END IF
 
-    IF (useSSPFile) THEN
-      WRITE(msgBuf,'(A)')
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(A)') 'Sound speed profile:'
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(2A)')'      z         alphaR      betaR     rho      ', &
-                          '  alphaI     betaI'
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(2A)')'     [m]         [m/s]      [m/s]   [g/cm^3]   ', &
-                          '   [m/s]     [m/s]'
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-
-      WRITE(msgBuf,'(2A)')'_______________________________________________', &
-                          '____________'
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(A)')
-      CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-
-      DO iz = 1, SSP%nPts
-         WRITE(msgBuf,'( F10.2, 3X, 2F10.2, 3X, F6.2, 3X, 2F10.4)') &
-             SSP%Z( iz ), SSP%cMat(iz,1), betaR, rhoR, alphaI, betaI
-         CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      END DO
-    END IF
-
-    WRITE(msgBuf,'(2A)')'_____________________________________________', &
-                        '______________'
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(A)')
-    CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-
-ENDIF ! don't write in adjoint mode
+  WRITE(msgBuf,'(2A)')'_____________________________________________', &
+                      '______________'
+  CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
+  WRITE(msgBuf,'(A)')
+  CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 #endif /* IHOP_WRITE_OUT */
+
   ! I/O on main thread only
   _END_MASTER(myThid)
   _BARRIER

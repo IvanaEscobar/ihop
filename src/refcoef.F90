@@ -370,39 +370,35 @@ CONTAINS
   _BEGIN_MASTER(myThid)
 
 #ifdef IHOP_WRITE_OUT
-  ! In adjoint mode we do not write output besides on the first run
-  IF (IHOP_dumpfreq.GE.0) THEN
+  IF ( BotRC == 'F' ) THEN
+    WRITE( PRTFile,'(2A)' ) '_______________________________________', &
+                            '___________________________________'
+    WRITE( PRTFile,'(A)' )
+    WRITE( PRTFile,'(A)' ) 'Using tabulated bottom reflection coef.'
+    WRITE( PRTFile,'(2A)' ) 'BRCFile=', TRIM( IHOP_fileroot )//'.brc'
 
-    IF ( BotRC == 'F' ) THEN
-      WRITE( PRTFile,'(2A)' ) '_______________________________________', &
-                              '___________________________________'
-      WRITE( PRTFile,'(A)' )
-      WRITE( PRTFile,'(A)' ) 'Using tabulated bottom reflection coef.'
-      WRITE( PRTFile,'(2A)' ) 'BRCFile=', TRIM( IHOP_fileroot )//'.brc'
+    WRITE( PRTFile,'(2A,I10)' ) 'Number of points in bottom reflection ', &
+                         'coefficient = ', NBotPts
+  END IF
 
-      WRITE( PRTFile,'(2A,I10)' ) 'Number of points in bottom reflection ', &
-                           'coefficient = ', NBotPts
-    END IF
+  IF ( TopRC == 'F' ) THEN
+    WRITE( PRTFile,'(2A)' ) '_______________________________________', &
+                            '___________________________________'
+    WRITE( PRTFile,'(A)' )
+    WRITE( PRTFile,'(A)' ) 'Using tabulated top reflection coef.'
+    WRITE( PRTFile,'(2A)' ) 'TRCFile=', TRIM( IHOP_fileroot )//'.trc'
 
-    IF ( TopRC == 'F' ) THEN
-      WRITE( PRTFile,'(2A)' ) '_______________________________________', &
-                              '___________________________________'
-      WRITE( PRTFile,'(A)' )
-      WRITE( PRTFile,'(A)' ) 'Using tabulated top reflection coef.'
-      WRITE( PRTFile,'(2A)' ) 'TRCFile=', TRIM( IHOP_fileroot )//'.trc'
+    WRITE( PRTFile,'(2A,I10)' ) 'Number of points in top reflection ', &
+                         'coefficient = ', NTopPts
+  END IF
 
-      WRITE( PRTFile,'(2A,I10)' ) 'Number of points in top reflection ', &
-                           'coefficient = ', NTopPts
-    END IF
-
-    IF ( BotRC == 'P' ) THEN
-      WRITE( PRTFile, * )
-      WRITE( PRTFile, * ) 'Number of points in internal reflection ', &
-                          'coefficient = ', NkTab
-    END IF
-
-  END IF ! don't write in adjoint mode
+  IF ( BotRC == 'P' ) THEN
+    WRITE( PRTFile, * )
+    WRITE( PRTFile, * ) 'Number of points in internal reflection ', &
+                        'coefficient = ', NkTab
+  END IF
 #endif /* IHOP_WRITE_OUT */
+
   ! I/O on main thread only
   _END_MASTER(myThid)
   _BARRIER

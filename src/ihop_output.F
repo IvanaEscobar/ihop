@@ -4,6 +4,7 @@ C !INTERFACE:
       SUBROUTINE IHOP_OUTPUT( myTime, myIter, myThid )
 
 C !DESCRIPTION:
+C IESCO25: unused
 C calls subroutine that calculate diagnostic specific to IHOP
 
 C !USES:
