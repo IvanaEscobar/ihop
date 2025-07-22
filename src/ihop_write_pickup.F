@@ -1,5 +1,6 @@
 #include "IHOP_OPTIONS.h"
 
+C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
 C !ROUTINE: IHOP_WRITE_PICKUP
 
@@ -7,18 +8,19 @@ C !INTERFACE:
       SUBROUTINE IHOP_WRITE_PICKUP( permPickup,
      &                    suff, myTime, myIter, myThid )
 
-C !DESCRIPTION:
+C     !DESCRIPTION:
 C     Writes current state of passive tracers to a pickup file
 
-C !USES:
+C     !USES:
       IMPLICIT NONE
+C     == Global variables ==
 #include "SIZE.h"
 #include "EEPARAMS.h"
 #include "PARAMS.h"
 #include "IHOP_SIZE.h"
 #include "IHOP.h"
 
-C !INPUT PARAMETERS:
+C     !INPUT PARAMETERS:
 C     permPickup      :: write a permanent pickup
 C     suff            :: suffix for pickup file (eg. ckptA)
 C     myTime          :: model time
@@ -29,18 +31,16 @@ C     myThid          :: thread number
       _RL myTime
       INTEGER myIter
       INTEGER myThid
-
-C !OUTPUT PARAMETERS:
-C  none
+C     !OUTPUT PARAMETERS: None
 
 #ifdef ALLOW_IHOP
 #if (defined IHOP_3D_STATE) || (defined IHOP_2D_STATE)
 
-C     === Functions ====
+C     !FUNCTIONS:
       INTEGER  ILNBLNK
       EXTERNAL ILNBLNK
 
-C !LOCAL VARIABLES:
+C     !LOCAL VARIABLES:
 C     j           :: loop index / field number
 C     nj          :: record number
 C     fp          :: pickup-file precision

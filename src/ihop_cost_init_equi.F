@@ -41,7 +41,6 @@ C     myThid :: my thread ID
       INTEGER bi, bj, myThid
 C     !OUTPUT PARAMETERS:
       INTEGER fid2
-CEOP
 
 C     !LOCAL VARIABLES:
 #if (defined ALLOW_IHOP) && (defined ALLOW_COST)
@@ -49,6 +48,7 @@ C     !LOCAL VARIABLES:
       INTEGER irec, err
       CHARACTER*(MAX_LEN_MBUF) msgBuf
       _RL tmp_vec(2)
+CEOP
 
       IF (ihopDoNcOutput) THEN
 C Create a netcdf file

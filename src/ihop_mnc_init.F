@@ -20,6 +20,9 @@ C     !USES:
 
 C     !INPUT PARAMETERS:
       INTEGER myThid
+C    !OUTPUT PARAMETERS:
+
+C    !LOCAL VARIABLES:
 CEOP
 
 C#ifdef ALLOW_IHOP
@@ -43,5 +46,3 @@ C#endif /* ALLOW_IHOP */
 
       RETURN
       END
-
-C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|

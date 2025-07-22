@@ -26,10 +26,10 @@ C     myIter   :: Current iteration number in simulation
 C     myThid   :: my Thread Id number
       _RL     myTime
       INTEGER myIter, myThid
-CEOP
 
 #ifdef ALLOW_IHOP
 C     !LOCAL VARIABLES:
+CEOP
 
 #ifdef ALLOW_DIAGNOSTICS
       IF ( useDiagnostics ) THEN

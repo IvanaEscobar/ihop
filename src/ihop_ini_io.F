@@ -28,7 +28,6 @@ C     !INPUT PARAMETERS:
 C     myThid :: my thread ID
       INTEGER myThid
 C     !OUTPUT PARAMETERS:
-CEOP
 
 C     !FUNCTIONS:
       INTEGER  ILNBLNK
@@ -41,6 +40,7 @@ C     !LOCAL VARIABLES:
 # endif
       CHARACTER*(MAX_LEN_FNAM) namBuf
       INTEGER iL, pIL
+CEOP
 
       _BEGIN_MASTER( myThid )
 
@@ -57,11 +57,11 @@ C Create directory
         WRITE(namBuf,'(2A)') ' mkdir -p ', IHOPObs_Dir(1:iL)
         pIL = 1 + ILNBLNK( namBuf )
         WRITE(standardMessageUnit,'(3A)')
-     &  '==> SYSTEM CALL (from IHOP_INI_IO): >',namBuf(1:pIL),'<'
+     &    '==> SYSTEM CALL (from IHOP_INI_IO): >',namBuf(1:pIL),'<'
         CALL SYSTEM( namBuf(1:pIL) )
 # else
         WRITE(msgBuf,'(2A)') '** WARNING ** IHOP_INI_IO: cannot ',
-     &        'call mkdir -> please create IHOPObs_Dir manually'
+     &    'call mkdir -> please create IHOPObs_Dir manually'
         CALL PRINT_MESSAGE( msgBuf, errorMessageUnit,
      &                      SQUEEZE_RIGHT, myThid )
 # endif

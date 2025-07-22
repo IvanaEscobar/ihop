@@ -28,7 +28,6 @@ C     !INPUT PARAMETERS:
 C     myThid :: my thread ID
       INTEGER myThid
 C     !OUTPUT PARAMETERS:
-CEOP
 
 C     !FUNCTIONS:
 #ifdef ALLOW_GRDCHK
@@ -43,6 +42,7 @@ C     !LOCAL VARIABLES:
 # ifdef ALLOW_GRDCHK
       INTEGER err
 # endif /* ALLOW_GRDCHK */
+CEOP
 
 C Initialize tiled cost fxn contributions.
       DO bj = myByLo(myThid), myByHi(myThid)

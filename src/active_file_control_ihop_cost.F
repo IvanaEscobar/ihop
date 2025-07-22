@@ -90,7 +90,7 @@ C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
         IF (ihopDoNcOutput) THEN
           err = NF_GET_VARA_DOUBLE( fid, varId, 
      &          vec_start, vec_count, active_var )
-        CALL IHOP_COST_NF_ERROR('act_file_c 2',err,bi,bj,myThid)
+          CALL IHOP_COST_NF_ERROR('act_file_c 2',err,bi,bj,myThid)
 
         ELSE
           READ( fid, REC = (irec-1)*2+1 ) vec_tmp
@@ -116,7 +116,7 @@ C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
         IF (ihopDoNcOutput) THEN
           err = NF_GET_VARA_DOUBLE( fid, varId, 
      &          vec_start, vec_count, active_data_t )
-        CALL IHOP_COST_NF_ERROR('act_file_c 3',err,bi,bj,myThid)
+          CALL IHOP_COST_NF_ERROR('act_file_c 3',err,bi,bj,myThid)
 
 C Add active_var from appropriate location to data.
           active_data_t = active_data_t + active_var
@@ -124,7 +124,7 @@ C Add active_var from appropriate location to data.
 C Store the result on disk.
           err = NF_PUT_VARA_DOUBLE(fid, varId, 
      &          vec_start, vec_count, active_data_t )
-        CALL IHOP_COST_NF_ERROR('act_file_c 4',err,bi,bj,myThid)
+          CALL IHOP_COST_NF_ERROR('act_file_c 4',err,bi,bj,myThid)
 
 C Set active_var to zero.
           active_var = 0. _d 0
@@ -164,12 +164,11 @@ C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
         _BEGIN_MASTER( myThid )
 
         IF (ihopDoNcOutput) THEN
-        err = NF_GET_VARA_DOUBLE( fid, varId,
-     &        vec_start, vec_count, active_var )
-        CALL IHOP_COST_NF_ERROR('act_file_c 5',err,bi,bj,myThid)
+          err = NF_GET_VARA_DOUBLE( fid, varId,
+     &          vec_start, vec_count, active_var )
+          CALL IHOP_COST_NF_ERROR('act_file_c 5',err,bi,bj,myThid)
 
         ELSE
-
           READ( fid, REC = (irec-1)*2+1 ) vec_tmp
 #ifdef _BYTESWAPIO
           CALL MDS_BYTESWAPR8( 2, vec_tmp )
@@ -262,12 +261,12 @@ C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
         IF (ihopDoNcOutput) THEN
           err = NF_PUT_VARA_DOUBLE( fid, varId1, 
      &          vec_start, vec_count, active_var )
-        CALL IHOP_COST_NF_ERROR('act_file_c 7',err,bi,bj,myThid)
+          CALL IHOP_COST_NF_ERROR('act_file_c 7',err,bi,bj,myThid)
 
           err = NF_INQ_VARID( fid, 'ihopObs_ind_glob_tiled', varId2 )
-        CALL IHOP_COST_NF_ERROR('act_file_c 8',err,bi,bj,myThid)
+          CALL IHOP_COST_NF_ERROR('act_file_c 8',err,bi,bj,myThid)
           err = NF_PUT_VAR1_INT( fid, varId2, vec_start, irecglob )
-        CALL IHOP_COST_NF_ERROR('act_file_c 9',err,bi,bj,myThid)
+          CALL IHOP_COST_NF_ERROR('act_file_c 9',err,bi,bj,myThid)
 
         ELSE
           vec_tmp(1) = active_var
@@ -295,7 +294,7 @@ C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
         IF (ihopDoNcOutput) THEN
           err = NF_GET_VARA_DOUBLE( fid, varId1,
      &          vec_start, vec_count, active_data_t )
-        CALL IHOP_COST_NF_ERROR('act_file_c10',err,bi,bj,myThid)
+          CALL IHOP_COST_NF_ERROR('act_file_c10',err,bi,bj,myThid)
 
 C Add active_var to data.
           active_var = active_var + active_data_t
@@ -303,7 +302,7 @@ C Add active_var to data.
 
           err = NF_PUT_VARA_DOUBLE( fid, varId1,
      &          vec_start, vec_count, active_data_t )
-        CALL IHOP_COST_NF_ERROR('act_file_c11',err,bi,bj,myThid)
+          CALL IHOP_COST_NF_ERROR('act_file_c11',err,bi,bj,myThid)
 
         ELSE
           READ( fid, REC = (irec-1)*2+1 ) vec_tmp
@@ -339,7 +338,7 @@ C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
         IF (ihopDoNcOutput) THEN
           err = NF_PUT_VARA_DOUBLE( fid, varId1,
      &          vec_start, vec_count, active_var )
-        CALL IHOP_COST_NF_ERROR('act_file_c12',err,bi,bj,myThid)
+          CALL IHOP_COST_NF_ERROR('act_file_c12',err,bi,bj,myThid)
 
         ELSE
           vec_tmp(1)=active_var
