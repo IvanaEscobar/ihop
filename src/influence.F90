@@ -1,22 +1,20 @@
 #include "IHOP_OPTIONS.h"
+!---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 !BOP
-! !INTERFACE:
+!MODULE: influence
 MODULE influence
-    ! <CONTACT EMAIL="ivana@utexas.edu">
-    !   Ivana Escobar
-    ! </CONTACT>
+! <CONTACT EMAIL="ivana@utexas.edu">
+!   Ivana Escobar
+! </CONTACT>
+! !DESCRIPTION:
+!   This module contains routines for computing the influence of a beam on
+!   the pressure field.
 
-  ! Compute the beam influence, i.e. the contribution of a single beam to the
-  ! complex pressure
-  ! mbp 12/2018, based on much older subroutines
-
-  USE ihop_mod,     only: rad2deg, oneCMPLX, PRTFile, maxN, Beam, ray2D, &
-                          SrcDeclAngle, nRz_per_range
-  USE srPos_mod,    only: Pos
-! sspMod used to construct image beams in the Cerveny style beam routines
-
-! ! USES
-  implicit none
+! !USES:
+  USE ihop_mod,  only: rad2deg, oneCMPLX, PRTFile, maxN, Beam, ray2D, &
+                       SrcDeclAngle, nRz_per_range
+  USE srPos_mod, only: Pos
+  IMPLICIT NONE
 !  == Global variables ==
 #include "SIZE.h"
 #include "EEPARAMS.h"
@@ -24,51 +22,73 @@ MODULE influence
 #include "IHOP_SIZE.h"
 #include "IHOP.h"
 
+! !SCOPE: 
   PRIVATE
-
-! public interfaces
 !=======================================================================
-
-    public InfluenceGeoHatRayCen, InfluenceGeoGaussianCart, &
+  PUBLIC InfluenceGeoHatRayCen, InfluenceGeoGaussianCart, &
            InfluenceGeoHatCart, ScalePressure!, InfluenceSGB
-
 !=======================================================================
 
+! == Module variables ==
   INTEGER,              PRIVATE :: iz, ir, iS
   REAL    (KIND=_RL90), PRIVATE :: Ratio1 = 1.0D0 ! scale factor for a line source
   REAL    (KIND=_RL90), PRIVATE :: W, s, n, Amp, phase, phaseInt, &
                                    q0, q, qold, RcvrDeclAngle, rA, rB
   COMPLEX (KIND=_RL90), PRIVATE :: delay
+!EOP
 
 CONTAINS
+!---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
+! S/R InfluenceGeoHatRayCen
+! S/R InfluenceGeoHatCart
+! S/R InfluenceGeoGaussianCart
+! S/R ApplyContribution
+! S/R ScalePressure
+! FXN Hermite
+!---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
+!BOP
+! !ROUTINE: InfluenceGeoHatRayCen
+! !INTERFACE:
   SUBROUTINE InfluenceGeoHatRayCen( U, dalpha, myThid )
-    use arr_mod, only: nArr, Arr         !RG
+! !DESCRIPTION:
+!   Geometrically-spreading beams with a hat-shaped beam in ray-centered
+!   coordinates
 
-    ! Geometrically-spreading beams with a hat-shaped beam in ray-centered
-    ! coordinates
+! !USES:
+  USE arr_mod, only: nArr, Arr         !RG
 
-  !     == Routine Arguments ==
-  !     myThid :: Thread number. Unused by IESCO
-  !     msgBuf :: Used to build messages for printing.
-    INTEGER, INTENT( IN )   :: myThid
-    CHARACTER*(MAX_LEN_MBUF):: msgBuf
+! !INPUT PARAMETERS:
+! U :: complex pressure field
+! dalpha :: take-off angle, radians
+! myThid :: my thread ID
+  COMPLEX,           INTENT( INOUT ) :: U( nRz_per_range, Pos%nRR )
+  REAL (KIND=_RL90), INTENT( IN    ) :: dalpha ! take-off angle radians
+  INTEGER, INTENT( IN )              :: myThid
+! !OUTPUT PARAMETERS: U
 
-  !     == Local Variables ==
-    REAL (KIND=_RL90), INTENT( IN    ) :: dalpha ! take-off angle radians
-    COMPLEX,           INTENT( INOUT ) :: U( nRz_per_range, Pos%nRR )   ! complex pressure field
-    INTEGER              :: irA, irB, II
-    REAL (KIND=_RL90)    :: nA, nB, zr, L, dq( Beam%Nsteps - 1 )
-    REAL (KIND=_RL90)    :: znV( Beam%Nsteps ), rnV( Beam%Nsteps ), &
-                            RcvrDeclAngleV ( Beam%Nsteps )
-    COMPLEX (KIND=_RL90) :: dtau( Beam%Nsteps-1 )
-    LOGICAL :: skip_step
-
-    !!! need to add logic related to nRz_per_range
+! !LOCAL VARIABLES:
+! msgBuf :: Informational/error message buffer
+! irA, irB :: indices of receivers
+! II :: index for stepping through receivers
+! nA, nB :: normalized distances to ray
+! zr, L :: ray-centered coordinates
+! dq :: step length along ray
+! RcvrDeclAngleV :: vector of receiver declination angles
+! dtau :: delay along ray
+! skip_step :: logical to skip steps with no influence
+  CHARACTER*(MAX_LEN_MBUF) :: msgBuf
+  CHARACTER*(MAX_LEN_MBUF) :: msgBuf
+  INTEGER              :: irA, irB, II
+  REAL (KIND=_RL90)    :: nA, nB, zr, L, dq( Beam%Nsteps - 1 )
+  REAL (KIND=_RL90)    :: znV( Beam%Nsteps ), rnV( Beam%Nsteps ), &
+                           RcvrDeclAngleV ( Beam%Nsteps )
+  COMPLEX (KIND=_RL90) :: dtau( Beam%Nsteps-1 )
+  LOGICAL :: skip_step
+!EOP
 
 !$TAF init iRayCen0  = 'influence_iraycen'
 !$TAF init iRayCen1  = static, (Beam%Nsteps-1)*nRz_per_range
 !$TAF init iRayCen2  = static, (Beam%Nsteps-1)*ihop_nRR*nRz_per_range
-
 !$TAF store ray2d = iRayCen0
 
     q0   = ray2D( 1 )%c / Dalpha   ! Reference for J = q0 / q
@@ -199,8 +219,9 @@ CONTAINS
   RETURN
   END !SUBROUTINE InfluenceGeoHatRayCen
 
-  ! **********************************************************************!
-
+!---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
+!BOP
+! !ROUTINE:
   SUBROUTINE InfluenceGeoHatCart( U, Dalpha, myThid )
     use arr_mod, only: nArr, Arr         !RG
     ! Geometric, hat-shaped beams in Cartesisan coordinates
@@ -371,8 +392,9 @@ CONTAINS
   RETURN
   END !SUBROUTINE InfluenceGeoHatCart
 
-  ! **********************************************************************!
-
+!---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
+!BOP
+! !ROUTINE:
   SUBROUTINE InfluenceGeoGaussianCart( U, Dalpha, myThid )
     use arr_mod, only: nArr, Arr         !RG
 
@@ -557,7 +579,9 @@ CONTAINS
   RETURN
   END !SUBROUTINE InfluenceGeoGaussianCart
 
-! **************************************************************************** !
+!---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
+!BOP
+! !ROUTINE:
   SUBROUTINE ApplyContribution( U )
     USE writeray, only: WriteRayOutput
     USE arr_mod,  only: AddArr
@@ -624,8 +648,9 @@ CONTAINS
   RETURN
   END !SUBROUTINE ApplyContribution
 
-! **********************************************************************!
-
+!---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
+!BOP
+! !ROUTINE:
   SUBROUTINE ScalePressure( Dalpha, c, r, U, nRz, nR, RunType, freq )
 
     ! Scale the pressure field
@@ -667,8 +692,9 @@ CONTAINS
   RETURN
   END !SUBROUTINE ScalePressure
 
-  ! **********************************************************************!
-
+!---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
+!BOP
+! !ROUTINE:
   REAL (KIND=_RL90) FUNCTION Hermite( x, x1, x2 )
 
     ! Calculates a smoothing function based on the h0 hermite cubic

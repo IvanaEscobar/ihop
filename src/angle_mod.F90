@@ -65,7 +65,7 @@ CONTAINS
 ! !INTERFACE:
   SUBROUTINE ReadRayElevationAngles( Depth, TopOpt, RunType, myThid )
 ! !DESCRIPTION:
-! Read ray elevation angles from the environment file.
+!   Read ray elevation angles from the environment file.
 
 ! !USES: None
 
