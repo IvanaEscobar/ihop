@@ -16,3 +16,6 @@
 #-- MITgcm verification --
 /verification/*/tr_run.*
 /verification/*/run/*
+
+#-- VS Code --
+.vscode/
