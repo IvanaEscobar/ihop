@@ -68,7 +68,7 @@ CONTAINS
   INTEGER,           INTENT( IN ) :: myThid
 ! !OUTPUT PARAMETERS:
 ! CRCI     :: complex sound speed
-  COMPLEX (KIND=_RL90), INTENT( OUT ) :: CRCI
+  COMPLEX (KIND=_RL90) :: CRCI
 
 ! !LOCAL VARIABLES:
 ! f2 :: frequency squared
