@@ -2,26 +2,28 @@
 #include "CPP_OPTIONS.h"
 #include "IHOP_OPTIONS.h"
 
+C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
-C     !ROUTINE: IHOP_SOUND_SPEED
-C     !INTERFACE:
+C !ROUTINE: IHOP_SOUND_SPEED
+
+C !INTERFACE:
       SUBROUTINE IHOP_SOUND_SPEED(
      I                       myThid )
-C     !DESCRIPTION: \bv
+
+C     !DESCRIPTION: 
+C     o Diagnose speed of sound in seawater
+C       from the algorithm by Chen and Millero (1977).
+C       This is NOT the sound-speed that can be derived from
+C       the equation of state (EOS). It is independent of
+C       the model setup specific EOS.
+C     
 C     *==========================================================*
-C     | S/R IHOP_SOUND_SPEED
-C     | o Diagnose speed of sound in seawater
-C     |   from the algorithm by Chen and Millero (1977).
-C     |   This is NOT the sound-speed that can be derived from
-C     |   the equation of state (EOS). It is independent of
-C     |   the model setup specific EOS.
-C     |
 C     | o Reference:
 C     | C. Chen and F. J. Millero, "Speed of sound in seawater at
 C     | high pressures,"
 C     | J. Acoust. Soc. Am. 672.5, 1129-1135 (1977).
 C     *==========================================================*
-C     \ev
+
 C     !USES:
       IMPLICIT NONE
 C     == Global variables ==
@@ -29,22 +31,19 @@ C     == Global variables ==
 #include "EEPARAMS.h"
 #include "PARAMS.h"
 #include "GRID.h"
-C#include "SURFACE.h"
 #include "DYNVARS.h"
 #include "EOS.h"
 #include "IHOP_SIZE.h"
 #include "IHOP.h"
 
-C     !INPUT/OUTPUT PARAMETERS:
-C     == Routine Arguments ==
+C     !INPUT PARAMETERS:
 C     myThid :: Thread number for this instance of the routine.
       INTEGER myThid
+C     !OUTPUT PARAMETERS: None
 
-#ifdef ALLOW_IHOP
 C     !FUNCTIONS:
-C      _RL CHEN_MILLERO
-C      EXTERNAL CHEN_MILLERO
-C
+#ifdef ALLOW_IHOP
+
       _RL CHEN_MILLERO
       EXTERNAL CHEN_MILLERO
 
@@ -54,7 +53,6 @@ C
 #endif /* ALLOW_DIAGNOSTICS */
 
 C     !LOCAL VARIABLES:
-C     == Local variables ==
       INTEGER bi,bj
       INTEGER i,j,k
       LOGICAL calc_soundSpeed

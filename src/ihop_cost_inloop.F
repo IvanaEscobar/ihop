@@ -47,7 +47,6 @@ C     myThid :: my thread ID
       _RL     myTime
       INTEGER myThid
 C     !OUTPUT PARAMETERS:
-CEOP
 
 C    !LOCAL VARIABLES:
 #ifdef ALLOW_IHOP
@@ -67,6 +66,7 @@ C    !LOCAL VARIABLES:
       INTEGER ikey, itdkey
 # endif
       CHARACTER*(MAX_LEN_MBUF) msgBuf
+CEOP
 
 # ifndef ALLOW_CTRL
       optimcycle = 0

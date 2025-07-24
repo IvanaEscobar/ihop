@@ -1,35 +1,35 @@
 #include "IHOP_OPTIONS.h"
+!---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 !BOP
-! !INTERFACE:
+!MODULE: arr_mod
 MODULE arr_mod
-    ! <CONTACT EMAIL="ivana@utexas.edu">
-    !   Ivana Escobar
-    ! </CONTACT>
+! <CONTACT EMAIL="ivana@utexas.edu">
+!   Ivana Escobar
+! </CONTACT>
+! !DESCRIPTION:
+!   Contains the subroutines to read the ray arrival angles
 
+! !USES:
   USE ihop_mod,   only: rad2deg, ARRFile
-
-! ! USES
-  implicit none
-!  == Global variables ==
+  IMPLICIT NONE
+! == Global variables ==
 #include "SIZE.h"
 #include "EEPARAMS.h"
 #include "PARAMS.h"
 #include "IHOP_SIZE.h"
 #include "IHOP.h"
 
+! !SCOPE: 
   PRIVATE
-
-! public interfaces
 !=======================================================================
-
-    public WriteArrivalsASCII, WriteArrivalsBinary, initArr, &
+    PUBLIC WriteArrivalsASCII, WriteArrivalsBinary, initArr, &
            maxnArr, nArr, Arr, AddArr, U
 #ifdef IHOP_THREED
-    public nArr3D, Arr3D
+    PUBLIC nArr3D, Arr3D
 #endif /* IHOP_THREED */
-
 !=======================================================================
 
+! == Module variables ==
   INTEGER               :: maxnArr
   INTEGER, ALLOCATABLE  :: nArr( :, : )
   COMPLEX, ALLOCATABLE  :: U( :, : )
@@ -37,280 +37,351 @@ MODULE arr_mod
   INTEGER, ALLOCATABLE  :: nArr3D( :, :, : )
 #endif /* IHOP_THREED */
 
+! == Derived types ==
   TYPE Arrival
-     INTEGER :: NTopBnc, NBotBnc
-     REAL    :: SrcDeclAngle, RcvrDeclAngle, A, Phase
+    INTEGER :: NTopBnc, NBotBnc
+    REAL    :: SrcDeclAngle, RcvrDeclAngle, A, Phase
 #ifdef IHOP_THREED
-     REAL    :: SrcAzimAngle, RcvrAzimAngle
+    REAL    :: SrcAzimAngle, RcvrAzimAngle
 #endif /* IHOP_THREED */
-     COMPLEX :: delay
+    COMPLEX :: delay
   END TYPE
 
   TYPE(Arrival), ALLOCATABLE :: Arr( :, :, : )
 #ifdef IHOP_THREED
   TYPE(Arrival), ALLOCATABLE :: Arr3D( :, :, :, : )
 #endif /* IHOP_THREED */
+!EOP
 
 CONTAINS
+!---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
+! S/R initArr
+! S/R AddArr
+! S/R WriteArrivalsASCII
+! S/R WriteArrivalsBinary
+!---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
+!BOP
+! !ROUTINE: initArr
+! !INTERFACE:
 ! **************************************************************************** !
   SUBROUTINE initArr( myThid )
-  ! Allocate arrival and U variables on all MPI processes
-    USE srPos_mod,      only: Pos
-    USE ihop_mod,       only: Beam, nRz_per_range
+! !DESCRIPTION:
+! Initializes the arrival and U variables
 
-  !     == Routine Arguments ==
-  !     myThid :: Thread number. Unused by IESCO
-  !     msgBuf :: Used to build messages for printing.
-    INTEGER, INTENT( IN )   :: myThid
-    CHARACTER*(MAX_LEN_MBUF):: msgBuf
+! !USES:
+  USE srPos_mod, only: Pos
+  USE ihop_mod,  only: Beam, nRz_per_range
 
-  !     == Local Variables ==
-    INTEGER             :: iAllocStat
-    INTEGER             :: x, y
-  ! ===========================================================================
-    INTEGER, PARAMETER   :: arrStorage = 2000, minnArr = 10
-  ! ===========================================================================
+! !INPUT PARAMETERS:
+! myThid  :: my thread ID
+  INTEGER, INTENT( IN )   :: myThid
+! !OUTPUT PARAMETERS: None
 
-    IF (ALLOCATED(U))           DEALLOCATE(U)
-    IF (ALLOCATED(Arr))         DEALLOCATE(Arr)
-    IF (ALLOCATED(nArr))        DEALLOCATE(nArr)
+! !LOCAL VARIABLES:
+! msgBuf              :: Informational/error message buffer
+! iAllocStat          :: Allocation status
+! x, y                :: Dimensions of the U matrix
+! arrStorage          :: Storage for arrivals
+! minnArr             :: Minimum number of arrivals to allocate
+  CHARACTER*(MAX_LEN_MBUF):: msgBuf
+  INTEGER             :: iAllocStat
+  INTEGER             :: x, y
+  INTEGER, PARAMETER  :: arrStorage = 2000, minnArr = 10
+!EOP
 
-    SELECT CASE ( Beam%RunType( 1:1 ) )
-      CASE ( 'C', 'S', 'I' )             ! TL calculation
-        ! Allocate space for the pressure matrix
-        x = nRz_per_range
-        y = Pos%nRR
-      CASE ( 'A', 'a', 'R', 'E', 'e' )   ! Arrivals calculation
-        x = 1
-        y = 1
-      CASE DEFAULT
-        x = 1
-        y = 1
-    END SELECT
+  ! reset memory
+  IF (ALLOCATED(U))           DEALLOCATE(U)
+  IF (ALLOCATED(Arr))         DEALLOCATE(Arr)
+  IF (ALLOCATED(nArr))        DEALLOCATE(nArr)
 
-    ALLOCATE( U( x,y ), Stat = iAllocStat )
-    IF ( iAllocStat/=0 ) THEN
-#ifdef IHOP_WRITE_OUT
-      WRITE(msgBuf,'(2A)') 'ARR_MOD INITARR: ', &
-                     'Insufficient memory for TL matrix: reduce Nr*NRz'
-      CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
-      STOP 'ABNORMAL END: S/R INITARR'
-    END IF
-
-    ! for an arrivals run, allocate space for arrivals matrices
-    SELECT CASE ( Beam%RunType( 1:1 ) )
-    CASE ( 'A', 'a', 'e' )
-         ! allow space for at least minnArr arrivals
-         maxnArr = MAX( arrStorage / ( nRz_per_range * Pos%nRR ), &
-                        minnArr )
+  SELECT CASE ( Beam%RunType( 1:1 ) )
+    CASE ( 'C', 'S', 'I' ) ! TL calculation
+      ! Allocate space for the pressure matrix
+      x = nRz_per_range
+      y = Pos%nRR
+    CASE ( 'A', 'a', 'R', 'E', 'e' )  ! Arrivals calculation
+      x = 1
+      y = 1
     CASE DEFAULT
-         maxnArr = 1
-    END SELECT
+      x = 1
+      y = 1
+  END SELECT ! Beam%RunType( 1:1 )
 
-    ! init Arr, nArr
-    ALLOCATE( Arr( maxnArr, Pos%nRR, nRz_per_range ), &
-              nArr(Pos%nRR, nRz_per_range), STAT = iAllocStat )
-    IF ( iAllocStat /= 0 ) THEN
+  ALLOCATE( U( x,y ), Stat=iAllocStat )
+  IF ( iAllocStat.NE.0 ) THEN
 #ifdef IHOP_WRITE_OUT
-      WRITE(msgBuf,'(2A)') 'ARR_MOD INITARR: ', &
-          'Not enough allocation for Arr; reduce arrStorage'
-      CALL PRINT_ERROR( msgBuf,myThid )
+    WRITE(msgBuf,'(2A)') 'ARR_MOD INITARR: ', &
+      'Insufficient memory for TL matrix: reduce Nr*NRz'
+    CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
-      STOP 'ABNORMAL END: S/R IHOP_MAIN'
-    END IF
+    STOP 'ABNORMAL END: S/R INITARR'
+  ENDIF
 
-    ! init default values
-    U                         = 0.0
-    nArr                      = 0
-    Arr(:,:,:)%NTopBnc        = -1
-    Arr(:,:,:)%NBotBnc        = -1
-    Arr(:,:,:)%SrcDeclAngle   = -999.
-    Arr(:,:,:)%RcvrDeclAngle  = -999.
-    Arr(:,:,:)%A              = -999.
-    Arr(:,:,:)%Phase          = -999.
-    Arr(:,:,:)%delay          = -999.
+  ! for an arrivals run, allocate space for arrivals matrices
+  SELECT CASE ( Beam%RunType( 1:1 ) )
+  CASE ( 'A', 'a', 'e' )
+    ! allow space for at least minnArr arrivals
+    maxnArr = MAX( arrStorage / ( nRz_per_range * Pos%nRR ), &
+                  minnArr )
+  CASE DEFAULT
+    maxnArr = 1
+  END SELECT ! Beam%RunType( 1:1 )
+
+  ! init Arr, nArr
+  ALLOCATE( Arr( maxnArr, Pos%nRR, nRz_per_range ), &
+            nArr(Pos%nRR, nRz_per_range), STAT=iAllocStat )
+  IF ( iAllocStat.NE.0 ) THEN
+#ifdef IHOP_WRITE_OUT
+    WRITE(msgBuf,'(2A)') 'ARR_MOD INITARR: ', &
+      'Not enough allocation for Arr; reduce arrStorage'
+    CALL PRINT_ERROR( msgBuf,myThid )
+#endif /* IHOP_WRITE_OUT */
+    STOP 'ABNORMAL END: S/R IHOP_MAIN'
+  ENDIF
+
+  ! init default values
+  U                         = 0.0
+  nArr                      = 0
+  Arr(:,:,:)%NTopBnc        = -1
+  Arr(:,:,:)%NBotBnc        = -1
+  Arr(:,:,:)%SrcDeclAngle   = -999.
+  Arr(:,:,:)%RcvrDeclAngle  = -999.
+  Arr(:,:,:)%A              = -999.
+  Arr(:,:,:)%Phase          = -999.
+  Arr(:,:,:)%delay          = -999.
 
   END !SUBROUTINE initArr( myThid )
 
-! **************************************************************************** !
+!---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
+!BOP
+! !ROUTINE: AddArr
+! !INTERFACE:
   SUBROUTINE AddArr( afreq, iz, ir, Amp, Phase, delay, &
                      RcvrDeclAngle, NumTopBnc, NumBotBnc )
-    USE ihop_mod, only: SrcDeclAngle
+! !DESCRIPTION:
+! Adds the amplitude and delay for an arrival into Arr.
 
-    ! ADDs the amplitude and delay for an ARRival into a matrix of same.
-    ! Extra logic included to keep only the strongest arrivals.
+! !USES:
+  USE ihop_mod, only: SrcDeclAngle
 
-    ! arrivals with essentially the same phase are grouped into one
-    REAL,   PARAMETER                  :: PhaseTol = 0.05
-    INTEGER,              INTENT( IN ) :: NumTopBnc, NumBotBnc, iz, ir
-    REAL    (KIND=_RL90), INTENT( IN ) :: afreq, Amp, Phase, &
-                                          RcvrDeclAngle
-    COMPLEX (KIND=_RL90), INTENT( IN ) :: delay
-    LOGICAL              :: NewRay
-    INTEGER              :: iArr( 1 ), Nt
-    REAL                 :: AmpTot, w1, w2
 
-    Nt     = nArr( ir, iz )    ! # of arrivals
-    NewRay = .TRUE.
+! !INPUT PARAMETERS:
+! afreq              :: frequency of the arrival
+! iz                 :: receiver depth index
+! ir                 :: range index
+! Amp                :: amplitude of the arrival
+! Phase              :: phase of the arrival
+! delay              :: delay time of the arrival
+! RcvrDeclAngle      :: receiver declination angle
+! NumTopBnc          :: number of top bounces
+! NumBotBnc          :: number of bottom bounces
+  INTEGER,              INTENT( IN ) :: iz, ir, NumTopBnc, NumBotBnc
+  REAL    (KIND=_RL90), INTENT( IN ) :: afreq, Amp, Phase, &
+                                        RcvrDeclAngle
+  COMPLEX (KIND=_RL90), INTENT( IN ) :: delay
+! !OUTPUT PARAMETERS: None
 
-    ! Is this the second bracketting ray of a pair?
-    ! If so, we want to combine the arrivals to conserve space.
-    ! (test this by seeing if the arrival time is close to the previous one)
-    ! (also need that the phase is about the same to make sure surface and
-    ! direct paths are not joined)
+! !LOCAL VARIABLES:
+  REAL, PARAMETER :: PhaseTol = 0.05
+  LOGICAL         :: NewRay
+  INTEGER         :: iArr( 1 ), Nt
+  REAL            :: AmpTot, w1, w2
+!EOP
 
-    IF ( Nt >= 1 ) THEN
-       IF ( afreq * ABS( delay - Arr( Nt, ir, iz )%delay ) < PhaseTol .AND. &
-           ABS( Arr( Nt, ir, iz )%phase - Phase ) < PhaseTol ) NewRay = .FALSE.
-    END IF
+  Nt     = nArr( ir, iz )    ! # of arrivals
+  NewRay = .TRUE.
 
-    IF ( NewRay ) THEN
-       IF ( Nt >= maxnArr ) THEN       ! space available to add an arrival?
-          iArr = MINLOC( Arr( :, ir, iz )%A )   ! no: replace weakest arrival
-          IF ( Amp > Arr( iArr(1), ir, iz )%A ) THEN
-             Arr( iArr(1), ir, iz)%A             = SNGL( Amp )       ! amplitude
-             Arr( iArr(1), ir, iz)%Phase         = SNGL( Phase )     ! phase
-             Arr( iArr(1), ir, iz)%delay         = CMPLX( delay )    ! delay time
-             Arr( iArr(1), ir, iz)%SrcDeclAngle  = SNGL( SrcDeclAngle)  ! angle
-             Arr( iArr(1), ir, iz)%RcvrDeclAngle = SNGL(RcvrDeclAngle) ! angle
-             Arr( iArr(1), ir, iz)%NTopBnc       = NumTopBnc         ! # top bounces
-             Arr( iArr(1), ir, iz)%NBotBnc       = NumBotBnc         ! # bottom bounces
-          ENDIF
-       ELSE
-          nArr( ir, iz       )               = Nt + 1              ! # arrivals
-          Arr( Nt+1, ir, iz)%A             = SNGL( Amp )         ! amplitude
-          Arr( Nt+1, ir, iz)%Phase         = SNGL( Phase )       ! phase
-          Arr( Nt+1, ir, iz)%delay         = CMPLX( delay )      ! delay time
-          Arr( Nt+1, ir, iz)%SrcDeclAngle  = SNGL( SrcDeclAngle )    ! angle
-          Arr( Nt+1, ir, iz)%RcvrDeclAngle = SNGL( RcvrDeclAngle )   ! angle
-          Arr( Nt+1, ir, iz)%NTopBnc       = NumTopBnc           ! # top bounces
-          Arr( Nt+1, ir, iz)%NBotBnc       = NumBotBnc           ! # bottom bounces
-       ENDIF
-    ELSE      ! not a new ray
-       ! calculate weightings of old ray information vs. new, based on
-       ! amplitude of the arrival
-       AmpTot = Arr( Nt, ir, iz )%A + SNGL( Amp )
-       w1     = Arr( Nt, ir, iz )%A / AmpTot
-       w2     = REAL( Amp ) / AmpTot
+  ! Is this the second bracketting ray of a pair?
+  ! If so, we want to combine the arrivals to conserve space.
+  ! (test this by seeing if the arrival time is close to the previous one)
+  ! (also need that the phase is about the same to make sure surface and
+  ! direct paths are not joined)
 
-       Arr( Nt, ir, iz)%delay         =  w1 * Arr( Nt, ir, iz )%delay &
-                                       + w2 * CMPLX( delay ) ! weighted sum
-       Arr( Nt, ir, iz)%A             =  AmpTot
-       Arr( Nt, ir, iz)%SrcDeclAngle  =  w1 * Arr( Nt, ir, iz )%SrcDeclAngle &
-                                       + w2 * SNGL( SrcDeclAngle  )
-       Arr( Nt, ir, iz)%RcvrDeclAngle =  w1 * Arr( Nt, ir, iz )%RcvrDeclAngle &
-                                        + w2 * SNGL( RcvrDeclAngle )
-    ENDIF
+  IF ( Nt.GE.1 ) THEN
+    IF ( afreq * ABS( delay-Arr( Nt, ir, iz )%delay ).LT.PhaseTol &
+       .AND. ABS( Arr( Nt, ir, iz )%phase-Phase ).LT.PhaseTol ) &
+      NewRay = .FALSE.
+  ENDIF
 
+  IF ( NewRay ) THEN
+    IF ( Nt.GE.maxnArr ) THEN       ! space available to add an arrival?
+      iArr = MINLOC( Arr( :, ir, iz )%A )   ! no: replace weakest arrival
+      IF ( Amp.GT.Arr( iArr(1), ir, iz )%A ) THEN
+        Arr( iArr(1), ir, iz)%A             = SNGL( Amp )       ! amplitude
+        Arr( iArr(1), ir, iz)%Phase         = SNGL( Phase )     ! phase
+        Arr( iArr(1), ir, iz)%delay         = CMPLX( delay )    ! delay time
+        Arr( iArr(1), ir, iz)%SrcDeclAngle  = SNGL( SrcDeclAngle) ! angle
+        Arr( iArr(1), ir, iz)%RcvrDeclAngle = SNGL(RcvrDeclAngle) ! angle
+        Arr( iArr(1), ir, iz)%NTopBnc       = NumTopBnc         ! top bounces
+        Arr( iArr(1), ir, iz)%NBotBnc       = NumBotBnc         ! bottom bounces
+      ENDIF
+    ELSE
+      nArr( ir, iz     )               = Nt + 1              ! # arrivals
+      Arr( Nt+1, ir, iz)%A             = SNGL( Amp )         ! amplitude
+      Arr( Nt+1, ir, iz)%Phase         = SNGL( Phase )       ! phase
+      Arr( Nt+1, ir, iz)%delay         = CMPLX( delay )      ! delay time
+      Arr( Nt+1, ir, iz)%SrcDeclAngle  = SNGL( SrcDeclAngle )  ! angle
+      Arr( Nt+1, ir, iz)%RcvrDeclAngle = SNGL( RcvrDeclAngle ) ! angle
+      Arr( Nt+1, ir, iz)%NTopBnc       = NumTopBnc           ! top bounces
+      Arr( Nt+1, ir, iz)%NBotBnc       = NumBotBnc           ! bottom bounces
+    ENDIF !IF ( Nt.GE.maxnArr )
+
+  ELSE ! not a new ray
+    ! calculate weights of old ray information vs. new
+    AmpTot = Arr( Nt, ir, iz )%A + SNGL( Amp )
+    w1     = Arr( Nt, ir, iz )%A / AmpTot
+    w2     = REAL( Amp ) / AmpTot
+
+    Arr( Nt, ir, iz)%delay         =  w1 * Arr( Nt, ir, iz )%delay &
+                                    + w2 * CMPLX( delay ) ! weighted sum
+    Arr( Nt, ir, iz)%A             =  AmpTot
+    Arr( Nt, ir, iz)%SrcDeclAngle  =  w1 * Arr( Nt, ir, iz )%SrcDeclAngle &
+                                    + w2 * SNGL( SrcDeclAngle  )
+    Arr( Nt, ir, iz)%RcvrDeclAngle =  w1 * Arr( Nt, ir, iz )%RcvrDeclAngle &
+                                    + w2 * SNGL( RcvrDeclAngle )
+  ENDIF ! IF ( NewRay )
+
+  RETURN
   END !SUBROUTINE AddArr
 
-  ! **********************************************************************!
-
+!---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
+!BOP
+! !ROUTINE: WriteArrivalsASCII
+! !INTERFACE:
   SUBROUTINE WriteArrivalsASCII( r, Nrz, nRR, SourceType )
+! !DESCRIPTION:
+! Writes arrival data, eg. Amplitude, delay, for each eigenray in ASCII file
 
-    ! Writes the arrival data (Amplitude, delay for each eigenray)
-    ! ASCII output file
+! !USES: None
 
-    INTEGER,           INTENT( IN ) :: Nrz, nRR     ! NRz per range, nRR
-    REAL (KIND=_RL90), INTENT( IN ) :: r( Nr )      ! Rr
-    CHARACTER (LEN=1), INTENT( IN ) :: SourceType   ! Beam%RunType(4:4)
-    INTEGER             :: ir, iz, iArr
-    REAL (KIND=_RL90)   :: factor
-    CHARACTER (LEN=36)  :: arrFMT
+! !INPUT PARAMETERS:
+! r                  :: range vector
+! Nrz                :: number of receiver depths
+! nRR                :: number of ranges
+! SourceType         :: type of source (point or line)
+  REAL (KIND=_RL90), INTENT( IN ) :: r( Nr )
+  INTEGER,           INTENT( IN ) :: Nrz, nRR
+  CHARACTER (LEN=1), INTENT( IN ) :: SourceType
+! !OUTPUT PARAMETERS: None
 
-    ! In adjoint mode we do not write output besides on the first run
-    IF (IHOP_dumpfreq.LT.0) RETURN
+! !LOCAL VARIABLES:
+! ir, iz, iArr :: indices for range and depth
+! factor       :: factor for amplitude scaling
+! arrFMT      :: format for writing arrivals
+  INTEGER           :: ir, iz, iArr
+  REAL (KIND=_RL90) :: factor
+  CHARACTER*(36)    :: arrFMT
+!EOP
 
-    arrFMT='(G14.6,F10.2,F12.4,G10.2,2F14.6,2I6)'
+  ! In adjoint mode we do not write output besides on the first run
+  IF (IHOP_dumpfreq.LT.0) RETURN
 
-#ifdef IHOP_WRITE_OUT
-    WRITE( ARRFile, * ) MAXVAL( nArr( 1:nRR, 1:Nrz ) )
-#endif /* IHOP_WRITE_OUT */
-
-    DO iz = 1, Nrz
-       DO ir = 1, nRR
-          IF ( SourceType == 'X' ) THEN   ! line source
-             factor =  4.0 * SQRT( PI )
-          ELSE                            ! point source: default
-             IF ( r ( ir ) == 0 ) THEN
-                factor = 1e5                   ! avoid /0 at origin
-             ELSE
-                factor = 1. / SQRT( r( ir ) )  ! cyl. spreading
-             END IF
-          END IF
+  arrFMT='(G14.6,F10.2,F12.4,G10.2,2F14.6,2I6)'
 
 #ifdef IHOP_WRITE_OUT
-          WRITE( ARRFile, * ) nArr( ir, iz )
-          DO iArr = 1, nArr( ir, iz )
-             WRITE( ARRFile, arrFMT ) &
-             SNGL( factor )  *Arr( iArr, ir, iz )%A,             &
-             SNGL( rad2deg ) *Arr( iArr, ir, iz )%Phase,         &
-                        REAL( Arr( iArr, ir, iz )%delay ),       &
-                       AIMAG( Arr( iArr, ir, iz )%delay ),       &
-                              Arr( iArr, ir, iz )%SrcDeclAngle,  &
-                              Arr( iArr, ir, iz )%RcvrDeclAngle, &
-                              Arr( iArr, ir, iz )%NTopBnc,       &
-                              Arr( iArr, ir, iz )%NBotBnc
-          END DO  ! next arrival
+  WRITE( ARRFile,'(I0)' ) MAXVAL( nArr( 1:nRR, 1:Nrz ) )
 #endif /* IHOP_WRITE_OUT */
-       END DO  ! next receiver depth
-    END DO  ! next range
+
+  DO iz = 1, Nrz
+    DO ir = 1, nRR
+      IF ( SourceType.EQ.'X' ) THEN   ! line source
+        factor =  4.0 * SQRT( PI )
+      ELSE                            ! point source: default
+        IF ( r ( ir ).EQ.0 ) THEN
+          factor = 1e5                   ! avoid /0 at origin
+        ELSE
+          factor = 1. / SQRT( r( ir ) )  ! cyl. spreading
+        ENDIF
+
+      ENDIF ! IF ( SourceType.EQ.'X' )
+
+#ifdef IHOP_WRITE_OUT
+      WRITE( ARRFile, '(I0)' ) nArr( ir, iz )
+      DO iArr = 1, nArr( ir, iz )
+        WRITE( ARRFile, arrFMT ) &
+          SNGL( factor )  *Arr( iArr, ir, iz )%A,     &
+          SNGL( rad2deg ) *Arr( iArr, ir, iz )%Phase, &
+          REAL( Arr( iArr, ir, iz )%delay ),          &
+          AIMAG( Arr( iArr, ir, iz )%delay ),         &
+          Arr( iArr, ir, iz )%SrcDeclAngle,           &
+          Arr( iArr, ir, iz )%RcvrDeclAngle,          &
+          Arr( iArr, ir, iz )%NTopBnc,                &
+          Arr( iArr, ir, iz )%NBotBnc
+
+      ENDDO  ! next arrival
+
+#endif /* IHOP_WRITE_OUT */
+    ENDDO  ! DO ir: next range
+  ENDDO  ! DO iz: next depth
 
   RETURN
   END !SUBROUTINE WriteArrivalsASCII
 
-  ! **********************************************************************!
-
+!---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
+!BOP
+! !ROUTINE: WriteArrivalsBinary
+! !INTERFACE:
   SUBROUTINE WriteArrivalsBinary( r, Nrz, nRR, SourceType )
+! !DESCRIPTION:
+! Writes the arrival data, eg. Amplitude, delay, for each eigenray in binary
 
-    ! Writes the arrival data (amplitude, delay for each eigenray)
-    ! Binary output file
+! !USES: None
 
-    INTEGER,           INTENT( IN ) :: Nrz, nRR     ! NRz per range, nRR
-    REAL (KIND=_RL90), INTENT( IN ) :: r( Nr )      ! Rr
-    CHARACTER (LEN=1), INTENT( IN ) :: SourceType   ! Beam%RunType(4:4)
-    INTEGER                 :: ir, iz, iArr
-    REAL     (KIND=_RL90)   :: factor
+! !INPUT PARAMETERS:
+! r                  :: range vector
+! Nrz                :: number of receiver depths
+! nRR                :: number of ranges
+! SourceType         :: type of source (point or line)
+  REAL (KIND=_RL90), INTENT( IN ) :: r( Nr )
+  INTEGER,           INTENT( IN ) :: Nrz, nRR
+  CHARACTER*(1),     INTENT( IN ) :: SourceType ! Beam%RunType(4:4)
+! !OUTPUT PARAMETERS: None
 
-    ! In adjoint mode we do not write output besides on the first run
-    IF (IHOP_dumpfreq.LT.0) RETURN
+! !LOCAL VARIABLES:
+! ir, iz, iArr :: indices for range and depth
+! factor       :: factor for amplitude scaling
+  INTEGER           :: ir, iz, iArr
+  REAL (KIND=_RL90) :: factor
+!EOP  
 
-#ifdef IHOP_WRITE_OUT
-    WRITE( ARRFile ) MAXVAL( nArr( 1:nRR, 1:Nrz ) )
-#endif /* IHOP_WRITE_OUT */
-
-    DO iz = 1, Nrz
-       DO ir = 1, nRR
-          IF ( SourceType == 'X' ) THEN   ! line source
-             factor = 4.0 * SQRT( PI )
-          ELSE                            ! point source
-             IF ( r ( ir ) == 0 ) THEN
-                factor = 1e5                   ! avoid /0 at origin
-             ELSE
-                factor = 1. / SQRT( r( ir ) )  ! cyl. spreading
-             END IF
-          END IF
+  ! In adjoint mode we do not write output besides on the first run
+  IF (IHOP_dumpfreq.LT.0) RETURN
 
 #ifdef IHOP_WRITE_OUT
-          WRITE( ARRFile ) nArr( ir, iz )
-          DO iArr = 1, nArr( ir, iz )
-             ! integers written out as reals below for fast reading in Matlab
-             WRITE( ARRFile ) &
-            SNGL( factor * Arr( iArr, ir, iz )%A ),           &
-            SNGL( rad2deg *Arr( iArr, ir, iz )%Phase ),       &
-                           Arr( iArr, ir, iz )%delay,         &
-                           Arr( iArr, ir, iz )%SrcDeclAngle,  &
-                           Arr( iArr, ir, iz )%RcvrDeclAngle, &
-                     REAL( Arr( iArr, ir, iz )%NTopBnc ),     &
-                     REAL( Arr( iArr, ir, iz )%NBotBnc )
-          END DO   ! next arrival
+  WRITE( ARRFile, '(I0)' ) MAXVAL( nArr( 1:nRR, 1:Nrz ) )
 #endif /* IHOP_WRITE_OUT */
-       END DO   ! next receiver depth
-    END DO   ! next range
+
+  DO iz = 1, Nrz
+    DO ir = 1, nRR
+      IF ( SourceType.EQ.'X' ) THEN   ! line source
+        factor = 4.0 * SQRT( PI )
+      ELSE                            ! point source
+        IF ( r ( ir ).EQ.0 ) THEN
+          factor = 1e5                   ! avoid /0 at origin
+        ELSE
+          factor = 1. / SQRT( r( ir ) )  ! cyl. spreading
+        ENDIF
+      ENDIF ! IF ( SourceType.EQ.'X' )
+
+#ifdef IHOP_WRITE_OUT
+      WRITE( ARRFile, '(I0)' ) nArr( ir, iz )
+      DO iArr = 1, nArr( ir, iz )
+        ! integers written out as reals below for fast reading in Matlab
+        WRITE( ARRFile ) &
+          SNGL( factor * Arr( iArr, ir, iz )%A ),      &
+          SNGL( rad2deg * Arr( iArr, ir, iz )%Phase ), &
+          Arr( iArr, ir, iz )%delay,                   &
+          Arr( iArr, ir, iz )%SrcDeclAngle,            &
+          Arr( iArr, ir, iz )%RcvrDeclAngle,           &
+          REAL( Arr( iArr, ir, iz )%NTopBnc ),         &
+          REAL( Arr( iArr, ir, iz )%NBotBnc )
+
+      ENDDO   ! next arrival
+#endif /* IHOP_WRITE_OUT */
+    ENDDO ! DO ir: next range
+  ENDDO ! DO iz: next depth
 
   RETURN
   END !SUBROUTINE WriteArrivalsBinary
 
-  ! **********************************************************************!
 END !MODULE arr_mod

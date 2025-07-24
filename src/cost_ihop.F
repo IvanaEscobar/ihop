@@ -101,7 +101,7 @@ C File maintenance
      &           (ihopDoNcOutput) ) THEN
 C Sync tiled file so data is not lost in buffer
               err = NF_SYNC( ncidFWD(num_file,bi,bj) )
-        CALL IHOP_COST_NF_ERROR('cost_ihop 1',err,bi,bj,myThid)
+              CALL IHOP_COST_NF_ERROR('cost_ihop 1',err,bi,bj,myThid)
 
             ENDIF
 
@@ -127,7 +127,7 @@ C Open tiled files and read to buffer
 C Save tiled model equi from buffer, see PROFILES_READVECTOR
 C Combine all threads to global
                 irec = ihopObs_ind_glob_tiled(num_file,iObs,bi,bj)
-                ihopObs_buff(irec) = ihopObs_buff(irec)+ihop_modvaltmp
+                ihopObs_buff(irec) =ihopObs_buff(irec)+ihop_modvaltmp
 
               ENDIF !IF (iObs.LE.ObsNo_tiled(num_file,bi,bj))
             ENDDO !DO iObs
@@ -168,7 +168,7 @@ C Write to global netcdf file
 
 C Sync global obs
           err = NF_SYNC( ncidGLOB(num_file) )
-        CALL IHOP_COST_NF_ERROR('cost_ihop 2',err,bi,bj,myThid)
+          CALL IHOP_COST_NF_ERROR('cost_ihop 2',err,bi,bj,myThid)
 
           DO iObs = 1, NOBSMAX_IHOP
             IF (iObs.LE.ObsNo(num_file)) THEN
@@ -227,8 +227,8 @@ C Print cost function values
         num_ihop_glo = num_ihop(num_file)
 
         WRITE(msgBuf,'(A,I2,A,2D12.5)')
-     &   ' cost_ihop(', num_file, ' )= ',
-     &   objf_ihop_glo, num_ihop_glo
+     &    ' cost_ihop(', num_file, ' )= ',
+     &    objf_ihop_glo, num_ihop_glo
 
         IF (num_ihop_glo.GT.0.) 
      &    CALL PRINT_MESSAGE( msgBuf,

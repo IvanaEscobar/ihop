@@ -44,7 +44,6 @@ C     myThid    :: my thread ID
 C     !OUTPUT PARAMETERS:
 C     vec_loc   ::
       _RL     vec_loc
-CEOP
 
 C     !LOCAL VARIABLES:
 #if (defined ALLOW_IHOP) && (defined ALLOW_COST)
@@ -53,6 +52,7 @@ C tmpObsNo :: number of obs in the file
       INTEGER v1, err, varId1, tmpObsNo
       INTEGER vec_start, vec_count
       _RL     vec_tmp1(1000), vec_tmp2(1000)
+CEOP
 
       IF ( (irec.LT.ihop_minind_buff) .OR.
      &     (irec.GT.ihop_maxind_buff) .OR.
@@ -82,9 +82,9 @@ C Implies that a forward loop is calling
 #ifdef ALLOW_DEBUG
         IF (debugLevel.GE.debLevD) THEN
           WRITE(msgBuf,'(A,5I9)')
-     &     'buffer readobsfile ',
-     &     ihop_minind_buff, ihop_maxind_buff,
-     &     irec, ObsNo(fNb), tmpObsNo
+     &      'buffer readobsfile ',
+     &      ihop_minind_buff, ihop_maxind_buff,
+     &      irec, ObsNo(fNb), tmpObsNo
           CALL PRINT_MESSAGE( msgBuf,
      &      standardmessageunit, SQUEEZE_RIGHT, myThid )
         ENDIF
@@ -109,7 +109,7 @@ C Implies that a forward loop is calling
 
         IF (err.NE.NF_NOERR) THEN
           WRITE(errorMessageUnit,'(A)')
-     &     'WARNING in ihop_read_obs: record not found!!'
+     &      'WARNING in ihop_read_obs: record not found!!'
         ENDIF
 
         DO v1 = 1, vec_count

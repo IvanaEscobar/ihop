@@ -1,26 +1,27 @@
 #include "PACKAGES_CONFIG.h"
 #include "CPP_OPTIONS.h"
 
+C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
-C     !ROUTINE: CHEN_MILLERO
-C     !INTERFACE:
+C !ROUTINE: CHEN_MILLERO
+C !INTERFACE:
       _RL FUNCTION CHEN_MILLERO(i,j,k,bi,bj,
-     I                       myThid )
-C     !DESCRIPTION: \bv
+     I                          myThid )
+
+C     !DESCRIPTION:
+C     FXN: CHEN_MILLERO
+C     o Diagnose speed of sound in seawater
+C       from the algorithm by Chen and Millero (1977).
+C       This is NOT the sound-speed that can be derived from
+C       the equation of state (EOS). It is independent of
+C       the model setup specific EOS.
+
 C     *==========================================================*
-C     | FXN: CHEN_MILLERO
-C     | o Diagnose speed of sound in seawater
-C     |   from the algorithm by Chen and Millero (1977).
-C     |   This is NOT the sound-speed that can be derived from
-C     |   the equation of state (EOS). It is independent of
-C     |   the model setup specific EOS.
-C     |
-C     | o Reference:
+C     | Reference:
 C     | C. Chen and F. J. Millero, "Speed of sound in seawater at
 C     | high pressures,"
 C     | J. Acoust. Soc. Am. 672.5, 1129-1135 (1977).
 C     *==========================================================*
-C     \ev
 
 C     !USES:
       IMPLICIT NONE
@@ -32,10 +33,15 @@ C     == Global variables ==
 #include "DYNVARS.h"
 #include "EOS.h"
 
-C     !INPUT/OUTPUT PARAMETERS:
-C     == Routine Arguments ==
-C     myThid :: Thread number for this instance of the routine.
+C     !INPUT PARAMETERS:
+C     i,j,k   :: Indices of the grid point
+C     bi,bj   :: Tile indices
+C     myThid :: my thread ID
+      INTEGER i,j,k
+      INTEGER bi,bj
       INTEGER myThid
+C     !OUTPUT PARAMETERS:
+C     CHEN_MILLERO :: Speed of sound in seawater
 
 #ifdef ALLOW_IHOP
 C     !FUNCTIONS:
@@ -43,14 +49,15 @@ C     !FUNCTIONS:
       EXTERNAL SW_TEMP
 
 C     !LOCAL VARIABLES:
-C     == Local variables ==
-      INTEGER bi,bj
-      INTEGER i,j,k
+C     c0,cw,a,b,d :: Speed of sound coefficients
+C     pres :: Pressure in bar
+C     sal  :: Salinity in psu
+C     temp :: Temperature in degrees Celsius
       _RL c0,cw,a,b,d
       _RL pres,sal,temp
 CEOP
 
-C initiate parameters
+C initiate local variables
       c0   = 1402.388 _d 0
       cw   = 0. _d 0
       a    = 0. _d 0
@@ -106,8 +113,8 @@ C convert pressure to bar for Chen and Millero algorithm
       b    = -1.9220 _d -2           - 4.4200 _d -5*temp     +
      &       (7.3637 _d -5           + 1.7950 _d -7*temp)*pres
       d    = 1.727 _d -3             - 7.9836 _d -6*pres
+      
       CHEN_MILLERO  = cw + a*sal + b*sal**(3./2.) + d*sal**2
-
 #endif /* ALLOW_IHOP */
 
       RETURN

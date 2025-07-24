@@ -34,7 +34,6 @@ C     !INPUT PARAMETERS:
 C     myThid :: my thread ID
       INTEGER myThid
 C     !OUTPUT PARAMETERS:
-CBOP
 
 C     !FUNCTIONS:
       INTEGER ILNBLNK
@@ -77,6 +76,7 @@ C     !LOCAL VARIABLES:
       _RL :: depth_1, depth_2
       _RL :: lon_tmp1, lon_tmp2, lat_tmp1, lat_tmp2
       _RL :: depth_fac
+CBOP
 
       WRITE(msgBuf,'(A)') ''// CHAR(10) //
      & '                    iHOP COST general parameters :'
@@ -118,8 +118,8 @@ C     !LOCAL VARIABLES:
         IF (IL.NE.0) THEN
           WRITE(IHOPObs_File,'(A)') IHOPObs_Files(num_file)(1:IL)
           WRITE(msgBuf,'(A,I3,2A)') ''// CHAR(10) //
-     &     '                    ihop file #', num_file,
-     &     ' is ', IHOPObs_File(1:IL)
+     &      '                    ihop file #', num_file,
+     &      ' is ', IHOPObs_File(1:IL)
           CALL PRINT_MESSAGE( msgBuf,
      &         standardMessageUnit, SQUEEZE_RIGHT, myThid )
         ENDIF
@@ -142,8 +142,8 @@ C     !LOCAL VARIABLES:
         CALL IHOP_COST_NF_ERROR('init_fixed 3',err,bi,bj,myThid)
 
           WRITE(msgBuf,'(A,I9)')
-     &       '  # of observations in file                   =',
-     &       obsNo(num_file)
+     &      '  # of observations in file                   =',
+     &      obsNo(num_file)
           CALL PRINT_MESSAGE( msgBuf,
      &         standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
@@ -189,8 +189,8 @@ C     !LOCAL VARIABLES:
 
           IF (err.NE.NF_NOERR) THEN
             WRITE(msgBuf,'(3A)')
-     &       'IHOP_COST_INIT_FIXED: file ', IHOPObs_File(1:IL),
-     &       '.nc is not in the pkg/ihop cost format, check x,y,z'
+     &        'IHOP_COST_INIT_FIXED: file ', IHOPObs_File(1:IL),
+     &        '.nc is not in the pkg/ihop cost format, check x,y,z'
             CALL PRINT_ERROR( msgBuf, myThid )
           ENDIF
 
@@ -199,8 +199,8 @@ C     !LOCAL VARIABLES:
 
           IF (err.NE.NF_NOERR) THEN
            WRITE(msgBuf,'(3A)')
-     &      'IHOP_COST_INIT_FIXED: file ', IHOPObs_File(1:IL),
-     &      '.nc is not in the pkg/ihop cost format, check ihop_val'
+     &       'IHOP_COST_INIT_FIXED: file ', IHOPObs_File(1:IL),
+     &       '.nc is not in the pkg/ihop cost format, check ihop_val'
            CALL PRINT_ERROR( msgBuf, myThid )
           ENDIF
 
@@ -217,135 +217,135 @@ C     !LOCAL VARIABLES:
           IF (myProcId.EQ.0) THEN
             JL  = ILNBLNK( IHOPObs_Dir )
 
-            WRITE(fnameequincglo,'(3A)')
-     &       IHOPObs_Dir(1:JL),
-     &       IHOPObs_File(1:IL),'.equi.nc'
+            WRITE(fnameequincglo,'(3A)') IHOPObs_Dir(1:JL),
+     &        IHOPObs_File(1:IL),'.equi.nc'
 
 # ifdef ALLOW_ADJOINT_RUN
-            WRITE(adfnameequincglo,'(4A)')
-     &       IHOPObs_Dir(1:JL),'ad',
-     &       IHOPObs_File(1:IL),'.equi.nc'
+            WRITE(adfnameequincglo,'(4A)') IHOPObs_Dir(1:JL),'ad',
+     &        IHOPObs_File(1:IL),'.equi.nc'
 # endif
 # ifdef ALLOW_TANGENTLINEAR_RUN
-            WRITE(tlfnameequincglo,'(4A)')
-     &       IHOPObs_Dir(1:JL),'tl',
-     &       IHOPObs_File(1:IL),'.equi.nc'
+            WRITE(tlfnameequincglo,'(4A)') IHOPObs_Dir(1:JL),'tl',
+     &        IHOPObs_File(1:IL),'.equi.nc'
 # endif
 
             JL = ILNBLNK( fnameequincglo )
-            INQUIRE( FILE = fnameequincglo(1:JL), EXIST = exst )
-            IF (.NOT.exst) THEN
+            INQUIRE( FILE=fnameequincglo(1:JL), EXIST=exst )
+            IF ( .NOT.exst ) THEN
 ! Create NetCDF file
               err = NF_CREATE( fnameequincglo(1:JL), NF_CLOBBER,
      &              ncidGLOB(num_file) )
-        CALL IHOP_COST_NF_ERROR('init_fixed12',err,bi,bj,myThid)
+              CALL IHOP_COST_NF_ERROR('init_fixed12',err,bi,bj,myThid)
               err = NF_DEF_DIM( ncidGLOB(num_file),'iOBS',
      &              obsNo(num_file), dimId1 )
-        CALL IHOP_COST_NF_ERROR('init_fixed13',err,bi,bj,myThid)
+              CALL IHOP_COST_NF_ERROR('init_fixed13',err,bi,bj,myThid)
 
               err = NF_DEF_VAR( ncidGLOB(num_file), 'mod_val',
      &              NF_DOUBLE, 1, dimId1, varIdEquiv(1) )
-        CALL IHOP_COST_NF_ERROR('init_fixed14',err,bi,bj,myThid)
+              CALL IHOP_COST_NF_ERROR('init_fixed14',err,bi,bj,myThid)
               err = NF_PUT_ATT_DOUBLE( ncidGLOB(num_file),
      &              varIdEquiv(1), '_FillValue',
      &              NF_DOUBLE, 1, -9999. _d 0 )
-        CALL IHOP_COST_NF_ERROR('init_fixed15',err,bi,bj,myThid)
+              CALL IHOP_COST_NF_ERROR('init_fixed15',err,bi,bj,myThid)
 
               err = NF_DEF_VAR( ncidGLOB(num_file), 'mod_mask',
      &              NF_DOUBLE, 1, dimId1, varIdEquiv(2) )
-        CALL IHOP_COST_NF_ERROR('init_fixed16',err,bi,bj,myThid)
+              CALL IHOP_COST_NF_ERROR('init_fixed16',err,bi,bj,myThid)
               err = NF_PUT_ATT_DOUBLE( ncidGLOB(num_file),
      &              varIdEquiv(2), '_FillValue',
      &              NF_DOUBLE, 1, -9999. _d 0 )
-        CALL IHOP_COST_NF_ERROR('init_fixed17',err,bi,bj,myThid)
+              CALL IHOP_COST_NF_ERROR('init_fixed17',err,bi,bj,myThid)
 
 ! Write buffer to file, reopen file with WRITE permissions
               err = NF_ENDDEF( ncidGLOB(num_file) )
-        CALL IHOP_COST_NF_ERROR('init_fixed18',err,bi,bj,myThid)
+              CALL IHOP_COST_NF_ERROR('init_fixed18',err,bi,bj,myThid)
               err = NF_CLOSE( ncidGLOB(num_file) )
-        CALL IHOP_COST_NF_ERROR('init_fixed19',err,bi,bj,myThid)
+              CALL IHOP_COST_NF_ERROR('init_fixed19',err,bi,bj,myThid)
               err = NF_OPEN( fnameequincglo(1:JL), NF_WRITE, 
      &              ncidGLOB(num_file) )
-        CALL IHOP_COST_NF_ERROR('init_fixed20',err,bi,bj,myThid)
+              CALL IHOP_COST_NF_ERROR('init_fixed20',err,bi,bj,myThid)
 
             ELSE
 ! Obtain existing NetCDF file id
               err = NF_OPEN( fnameequincglo(1:JL), NF_WRITE,
      &              ncidGLOB(num_file) )
-        CALL IHOP_COST_NF_ERROR('init_fixed21',err,bi,bj,myThid)
+              CALL IHOP_COST_NF_ERROR('init_fixed21',err,bi,bj,myThid)
+
             ENDIF
 
 # ifdef ALLOW_ADJOINT_RUN
             JL = ILNBLNK( adfnameequincglo )
-            INQUIRE( FILE = adfnameequincglo(1:JL), EXIST = exst )
-            IF (.NOT.exst) THEN
+            INQUIRE( FILE=adfnameequincglo(1:JL), EXIST=exst )
+            IF ( .NOT.exst ) THEN
 ! Create NetCDF AD file
               err = NF_CREATE( adfnameequincglo(1:JL), NF_CLOBBER,
      &              ncidADGLOB(num_file) )
-        CALL IHOP_COST_NF_ERROR('init_fixed22',err,bi,bj,myThid)
+              CALL IHOP_COST_NF_ERROR('init_fixed22',err,bi,bj,myThid)
               err = NF_DEF_DIM( ncidADGLOB(num_file), 'iOBS',
      &              obsNo(num_file), dimId1 )
-        CALL IHOP_COST_NF_ERROR('init_fixed23',err,bi,bj,myThid)
+              CALL IHOP_COST_NF_ERROR('init_fixed23',err,bi,bj,myThid)
 
               err = NF_DEF_VAR( ncidADGLOB(num_file), 'mod_val',
      &              NF_DOUBLE, 1, dimId1, varIdEquiv(1) )
-        CALL IHOP_COST_NF_ERROR('init_fixed24',err,bi,bj,myThid)
+              CALL IHOP_COST_NF_ERROR('init_fixed24',err,bi,bj,myThid)
               err = NF_PUT_ATT_DOUBLE( ncidADGLOB(num_file),
      &              varIdEquiv(1), '_FillValue',
      &              NF_DOUBLE, 1, 0. _d 0 )
-        CALL IHOP_COST_NF_ERROR('init_fixed25',err,bi,bj,myThid)
+              CALL IHOP_COST_NF_ERROR('init_fixed25',err,bi,bj,myThid)
 
 ! Write buffer to file, reopen file with WRITE permissions
               err = NF_ENDDEF( ncidADGLOB(num_file) )
-        CALL IHOP_COST_NF_ERROR('init_fixed26',err,bi,bj,myThid)
+              CALL IHOP_COST_NF_ERROR('init_fixed26',err,bi,bj,myThid)
               err = NF_CLOSE( ncidADGLOB(num_file) )
-        CALL IHOP_COST_NF_ERROR('init_fixed27',err,bi,bj,myThid)
+              CALL IHOP_COST_NF_ERROR('init_fixed27',err,bi,bj,myThid)
               err = NF_OPEN( adfnameequincglo(1:JL), NF_WRITE,
      &              ncidADGLOB(num_file) )
-        CALL IHOP_COST_NF_ERROR('init_fixed28',err,bi,bj,myThid)
+              CALL IHOP_COST_NF_ERROR('init_fixed28',err,bi,bj,myThid)
 
             ELSE
 ! Obtain existing AD NetCDF file id
               err = NF_OPEN( adfnameequincglo(1:JL), NF_WRITE,
      &              ncidADGLOB(num_file) )
-        CALL IHOP_COST_NF_ERROR('init_fixed29',err,bi,bj,myThid)
+              CALL IHOP_COST_NF_ERROR('init_fixed29',err,bi,bj,myThid)
+
             ENDIF
 
 # endif
 # ifdef ALLOW_TANGENTLINEAR_RUN
             JL = ILNBLNK( tlfnameequincglo )
-            INQUIRE( FILE = tlfnameequincglo(1:JL), EXIST = exst )
-            IF (.NOT.exst) THEN
+            INQUIRE( FILE=tlfnameequincglo(1:JL), EXIST=exst )
+            IF ( .NOT.exst ) THEN
 ! Create NetCDF TL file
               err = NF_CREATE( tlfnameequincglo(1:JL), NF_CLOBBER,
      &              ncidTLGLOB(num_file) )
-        CALL IHOP_COST_NF_ERROR('init_fixed30',err,bi,bj,myThid)
+              CALL IHOP_COST_NF_ERROR('init_fixed30',err,bi,bj,myThid)
               err = NF_DEF_DIM( ncidTLGLOB(num_file), 'iOBS',
      &              obsNo(num_file), dimId1 )
-        CALL IHOP_COST_NF_ERROR('init_fixed31',err,bi,bj,myThid)
+              CALL IHOP_COST_NF_ERROR('init_fixed31',err,bi,bj,myThid)
 
               err = NF_DEF_VAR( ncidTLGLOB(num_file), 'mod_val',
      &              NF_DOUBLE, 1, dimId1, varIdEquiv(1) )
-        CALL IHOP_COST_NF_ERROR('init_fixed32',err,bi,bj,myThid)
+              CALL IHOP_COST_NF_ERROR('init_fixed32',err,bi,bj,myThid)
               err = NF_PUT_ATT_DOUBLE( ncidTLGLOB(num_file),
      &              varIdEquiv(1), '_FillValue',
      &              NF_DOUBLE, 1, 0. _d 0 )
-        CALL IHOP_COST_NF_ERROR('init_fixed33',err,bi,bj,myThid)
+              CALL IHOP_COST_NF_ERROR('init_fixed33',err,bi,bj,myThid)
 
 ! Write buffer to file, reopen file with WRITE permissions
               err = NF_ENDDEF( ncidTLGLOB(num_file) )
-        CALL IHOP_COST_NF_ERROR('init_fixed34',err,bi,bj,myThid)
+              CALL IHOP_COST_NF_ERROR('init_fixed34',err,bi,bj,myThid)
               err = NF_CLOSE( ncidTLGLOB(num_file) )
-        CALL IHOP_COST_NF_ERROR('init_fixed35',err,bi,bj,myThid)
+              CALL IHOP_COST_NF_ERROR('init_fixed35',err,bi,bj,myThid)
               err = NF_OPEN( tlfnameequincglo(1:JL), NF_WRITE,
      &              ncidTLGLOB(num_file) )
-        CALL IHOP_COST_NF_ERROR('init_fixed36',err,bi,bj,myThid)
+              CALL IHOP_COST_NF_ERROR('init_fixed36',err,bi,bj,myThid)
 
             ELSE
 ! Obtain existing TL NetCDF file id
               err = NF_OPEN( tlfnameequincglo(1:JL), NF_WRITE,
      &              ncidTLGLOB(num_file) )
-        CALL IHOP_COST_NF_ERROR('init_fixed37',err,bi,bj,myThid)
+              CALL IHOP_COST_NF_ERROR('init_fixed37',err,bi,bj,myThid)
+
             ENDIF
 # endif
 
@@ -366,15 +366,15 @@ C     !LOCAL VARIABLES:
 ! Read time
           err = NF_GET_VARA_DOUBLE( ncid, varId1a, 
      &          1, obsNo(num_file), tmpyymmdd )
-        CALL IHOP_COST_NF_ERROR('init_fixed38',err,bi,bj,myThid)
+          CALL IHOP_COST_NF_ERROR('init_fixed38',err,bi,bj,myThid)
           err = NF_GET_VARA_DOUBLE(ncid,varId1b,
      &          1, obsNo(num_file), tmphhmmss )
-        CALL IHOP_COST_NF_ERROR('init_fixed39',err,bi,bj,myThid)
+          CALL IHOP_COST_NF_ERROR('init_fixed39',err,bi,bj,myThid)
 
-          IF (err.NE.NF_NOERR) THEN
+          IF ( err.NE.NF_NOERR ) THEN
             WRITE(msgBuf,'(3A)')
-     &       'IHOP_COST_INIT_FIXED: file ', IHOPObs_File(1:IL),
-     &       '.nc was not read properly: check yyyymmdd, hhmmss.'
+     &        'IHOP_COST_INIT_FIXED: file ', IHOPObs_File(1:IL),
+     &        '.nc was not read properly: check yyyymmdd, hhmmss.'
             CALL PRINT_ERROR( msgBuf, myThid )
           ENDIF
 
@@ -390,7 +390,7 @@ C     !LOCAL VARIABLES:
      &             (tmphhmmss(nObs).LE.hhmmssMax)) )) THEN
               hh = INT(tmphhmmss(nObs)) / 10000
 
-              IF (hh.LT.hoursPerDay) THEN
+              IF ( hh.LT.hoursPerDay ) THEN
                 obsIsInRunTime = 1
 #ifdef ALLOW_CAL
                 CALL CAL_FULLDATE( INT(tmpyymmdd(nObs)),
@@ -399,7 +399,6 @@ C     !LOCAL VARIABLES:
      &               tmpdiff, myThid )
                 CALL CAL_TOSECONDS( tmpdiff, diffsecs, myThid )
 #endif /* ALLOW_CAL */
-
                 diffsecs = diffsecs+nIter0*deltaTclock
 
               ELSE
@@ -430,9 +429,10 @@ C     !LOCAL VARIABLES:
 ! Check that maximum size was not reached:
             IF (obsNo(num_file).GT.NOBSMAX_IHOP) THEN
               WRITE(msgBuf,'(3A)')
-     &         'IHOP_COST_INIT_FIXED: file ', IHOPObs_File(1:IL),
-     &         '.nc was not read properly: increase NOBSMAX_IHOP.'
+     &          'IHOP_COST_INIT_FIXED: file ', IHOPObs_File(1:IL),
+     &          '.nc was not read properly: increase NOBSMAX_IHOP.'
               CALL PRINT_ERROR( msgBuf, myThid )
+
             ENDIF
 
           ENDDO !DO nObs
@@ -442,12 +442,12 @@ C     !LOCAL VARIABLES:
 
 ! Output ihop cost init info
           WRITE(msgBuf,'(A,I9)')
-     &     '  # of ihop obs with erroneous HHMMSS values =', obsNo_hh
+     &      '  # of ihop obs with err HHMMSS values =', obsNo_hh
           CALL PRINT_MESSAGE( msgBuf,
      &         standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
           WRITE(msgBuf,'(A,I9)')
-     &     '  # of ihop obs within time period  =', obsNo(num_file)
+     &      '  # of ihop obs within time period  =', obsNo(num_file)
           CALL PRINT_MESSAGE( msgBuf,
      &         standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
@@ -471,23 +471,23 @@ C     !LOCAL VARIABLES:
               IF (weighIhopObs.EQ.1) THEN
                 err = NF_GET_VARA_DOUBLE( ncid, varId3,
      &                1, obsNo_tiled(num_file,bi,bj), tmp_uncert2 )
-        CALL IHOP_COST_NF_ERROR('init_fixed40',err,bi,bj,myThid)
+                CALL IHOP_COST_NF_ERROR('init_fixed40',err,bi,bj,myThid)
               ENDIF
 
               err = NF_GET_VARA_DOUBLE( ncid, varId4a,
      &              1, obsNo_tiled(num_file,bi,bj), tmp_lon2 )
-        CALL IHOP_COST_NF_ERROR('init_fixed40',err,bi,bj,myThid)
+              CALL IHOP_COST_NF_ERROR('init_fixed40',err,bi,bj,myThid)
               err = NF_GET_VARA_DOUBLE( ncid, varId4b,
      &              1, obsNo_tiled(num_file,bi,bj), tmp_lat2 )
-        CALL IHOP_COST_NF_ERROR('init_fixed41',err,bi,bj,myThid)
+              CALL IHOP_COST_NF_ERROR('init_fixed41',err,bi,bj,myThid)
               err = NF_GET_VARA_DOUBLE( ncid, varId4c,
      &              1, obsNo_tiled(num_file,bi,bj), tmp_depth2 )
-        CALL IHOP_COST_NF_ERROR('init_fixed42',err,bi,bj,myThid)
+              CALL IHOP_COST_NF_ERROR('init_fixed42',err,bi,bj,myThid)
 
               IF (err.NE.NF_NOERR) THEN
                 WRITE(msgBuf,'(3A)')
-     &           'IHOP_COST_INIT_FIXED: file ', IHOPObs_File(1:IL),
-     &           '.nc was not read properly: check x,y,z,uncert.'
+     &            'IHOP_COST_INIT_FIXED: file ', IHOPObs_File(1:IL),
+     &            '.nc was not read properly: check x,y,z,uncert.'
                 CALL PRINT_ERROR( msgBuf, myThid )
               ENDIF
 
@@ -649,8 +649,8 @@ C     !LOCAL VARIABLES:
 ! Check that maximum size was not reached:
                 IF (nObs.GE.NOBSMAX_IHOP) THEN
                   WRITE(msgBuf,'(3A)')
-     &             'IHOP_COST_INIT_FIXED: file ', IHOPObs_File(1:IL),
-     &             '.nc was not read properly: increase NOBSMAX_IHOP.'
+     &              'IHOP_COST_INIT_FIXED: file ',IHOPObs_File(1:IL),
+     &              '.nc not read properly: increase NOBSMAX_IHOP.'
                   CALL PRINT_ERROR( msgBuf, myThid )
                 ENDIF
 
@@ -660,14 +660,14 @@ C     !LOCAL VARIABLES:
               obsNo_tiled(num_file,bi,bj) = obsNo_valid
 
               WRITE(msgBuf,'(2(A,I4))')
-     &         '  current tile is bi,bj                      =',
-     &         bi,',',bj
+     &          '  current tile is bi,bj                      =',
+     &          bi,',',bj
               CALL PRINT_MESSAGE( msgBuf,
      &             standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
               WRITE(msgBuf,'(A,I9)')
-     &         '  # of ihop obs within tile and time period  =',
-     &         obsNo_tiled(num_file,bi,bj)
+     &          '  # of ihop obs within tile and time period  =',
+     &          obsNo_tiled(num_file,bi,bj)
               CALL PRINT_MESSAGE( msgBuf,
      &             standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
@@ -683,22 +683,22 @@ C     !LOCAL VARIABLES:
 ! ALWAYS Write to nc file
                 IF (ihopDoNcOutput) THEN
                   WRITE(fnameequinc,'(3A,2(I3.3,A))')
-     &             IHOPObs_Dir(1:JL),IHOPObs_File(1:IL),
-     &             '.',iG,'.',jG,'.equi.nc'
+     &              IHOPObs_Dir(1:JL),IHOPObs_File(1:IL),
+     &              '.',iG,'.',jG,'.equi.nc'
 # ifdef ALLOW_ADJOINT_RUN
                   WRITE(adfnameequinc,'(4A,2(I3.3,A))')
-     &             IHOPObs_Dir(1:JL),'ad',IHOPObs_File(1:IL),
-     &             '.',iG,'.',jG,'.equi.nc'
+     &              IHOPObs_Dir(1:JL),'ad',IHOPObs_File(1:IL),
+     &              '.',iG,'.',jG,'.equi.nc'
 # endif
 # ifdef ALLOW_TANGENTLINEAR_RUN
                   WRITE(tlfnameequinc,'(4A,2(I3.3,A))')
-     &             IHOPObs_Dir(1:JL),'ad',IHOPObs_File(1:IL),
-     &             '.',iG,'.',jG,'.equi.nc'
+     &              IHOPObs_Dir(1:JL),'ad',IHOPObs_File(1:IL),
+     &              '.',iG,'.',jG,'.equi.nc'
 # endif
 
                   JL = ILNBLNK( fnameequinc )
-                  INQUIRE( FILE = fnameequinc(1:JL), EXIST = exst )
-                  IF (.NOT.exst) THEN
+                  INQUIRE( FILE=fnameequinc(1:JL), EXIST=exst )
+                  IF ( .NOT.exst ) THEN
                     CALL IHOP_COST_INIT_EQUI( num_file,
      &                   ncidData(num_file), fnameequinc(1:JL),
      &                   ncidFWD(num_file,bi,bj),
@@ -708,13 +708,14 @@ C     !LOCAL VARIABLES:
 ! Obtain existing NetCDF file id
                     err = NF_OPEN( fnameequinc(1:JL), NF_WRITE,
      &                    ncidFWD(num_file,bi,bj) )
-        CALL IHOP_COST_NF_ERROR('init_fixed43',err,bi,bj,myThid)
+                    CALL IHOP_COST_NF_ERROR('init_fixed43',err,bi,bj,
+     &                myThid)
                   ENDIF
 
 # ifdef ALLOW_ADJOINT_RUN
                   JL = ILNBLNK( adfnameequinc )
-                  INQUIRE( FILE = adfnameequinc(1:JL), EXIST = exst )
-                  IF (.NOT.exst) THEN
+                  INQUIRE( FILE=adfnameequinc(1:JL), EXIST=exst )
+                  IF ( .NOT.exst ) THEN
                     CALL IHOP_COST_INIT_EQUI( num_file,
      &                   ncidData(num_file), adfnameequinc(1:JL), 
      &                   ncidAD(num_file,bi,bj),
@@ -724,14 +725,15 @@ C     !LOCAL VARIABLES:
 ! Obtain existing AD NetCDF file id
                     err = NF_OPEN( adfnameequinc(1:JL), NF_WRITE,
      &                    ncidAD(num_file,bi,bj) )
-        CALL IHOP_COST_NF_ERROR('init_fixed44',err,bi,bj,myThid)
+                    CALL IHOP_COST_NF_ERROR('init_fixed44',err,bi,bj,
+     &                myThid)
                   ENDIF
 
 # endif /* ALLOW_ADJOINT_RUN */
 # ifdef ALLOW_TANGENTLINEAR_RUN
                   JL = ILNBLNK( tlfnameequinc )
-                  INQUIRE( FILE = tlfnameequinc(1:JL), EXIST = exst )
-                  IF (.NOT.exst) THEN
+                  INQUIRE( FILE=tlfnameequinc(1:JL), EXIST=exst )
+                  IF ( .NOT.exst ) THEN
                     CALL IHOP_COST_INIT_EQUI( num_file,
      &                   ncidData(num_file),tlfnameequinc(1:JL),
      &                   ncidTL(num_file,bi,bj),
@@ -741,9 +743,11 @@ C     !LOCAL VARIABLES:
 ! Obtain existing TL NetCDF file id
                     err = NF_OPEN( tlfnameequinc(1:JL), NF_WRITE,
      &                    ncidTL(num_file,bi,bj) )
-        CALL IHOP_COST_NF_ERROR('init_fixed45',err,bi,bj,myThid)
+                    CALL IHOP_COST_NF_ERROR('init_fixed45',err,bi,bj,
+     &                myThid)
                   ENDIF
 # endif /* ALLOW_TANGENTLINEAR_RUN */
+
                 ELSE
 ! Write to binary files...
                 ENDIF !IF (ihopDoNcOutput)

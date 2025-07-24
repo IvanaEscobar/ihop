@@ -1,14 +1,19 @@
 #include "IHOP_OPTIONS.h"
 
+C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
+CBOP
+C !ROUTINE: IHOP_OUTPUT
+
 C !INTERFACE:
       SUBROUTINE IHOP_OUTPUT( myTime, myIter, myThid )
 
-C !DESCRIPTION:
-C IESCO25: unused
-C calls subroutine that calculate diagnostic specific to IHOP
+C     !DESCRIPTION:
+C     IESCO25: unused
+C     calls subroutine that calculate diagnostic specific to IHOP
 
-C !USES:
+C     !USES:
       IMPLICIT NONE
+C     == Global variables ==
 #include "SIZE.h"
 #include "EEPARAMS.h"
 #include "PARAMS.h"
@@ -19,8 +24,8 @@ C !USES:
 #ifdef ALLOW_MNC
 #endif /* ALLOW_MNC */
 
-C !INPUT PARAMETERS:
-C  myThid   :: my Thread Id number
+C     !INPUT PARAMETERS:
+C     myThid   :: my Thread Id number
       _RL     myTime
       INTEGER myIter
       INTEGER myThid
@@ -29,7 +34,7 @@ C     !FUNCTIONS:
       LOGICAL  DIFFERENT_MULTIPLE
       EXTERNAL DIFFERENT_MULTIPLE
 
-C Local Variables
+C     !LOCAL VARIABLES:
       CHARACTER*(10) suff
 #ifdef ALLOW_MNC
       CHARACTER*(1) pf

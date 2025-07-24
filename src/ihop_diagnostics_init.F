@@ -17,7 +17,6 @@ C     !USES:
 C     !INPUT/OUTPUT PARAMETERS:
 C     myThid ::  my Thread Id number
       INTEGER myThid
-CEOP
 
 #ifdef ALLOW_DIAGNOSTICS
 C     !LOCAL VARIABLES:
@@ -34,10 +33,7 @@ C     diagTitle :: local string (80c): description of field in diag
       CHARACTER*16  diagCode
       CHARACTER*16  diagUnits
       CHARACTER*(80) diagTitle
-
-C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
-
-c     IF ( useDiagnotics ) THEN
+CEOP
 
 #ifdef IHOP_3D_STATE
         diagName  = 'SVEL    '

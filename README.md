@@ -1,32 +1,32 @@
-%%
+# iHOP: Underwater acoustics for MITgcm
 
-Package ''ihop'' is a ray-trace code, for calculating acoustics.
-The package should interact with the MITgcm kernel on various levels 
-(initialisation, time-stepping, post-processing).
+`ihop` is a *new* physics package in [MITgcm](https://mitgcm.readthedocs.io/en/latest/getting_started/getting_started.html), allowing for simulations to investigate underwater acoustics. This code, based in Modern Fortran, is a ray-trace simulation of sound propagation.
 
-Development is up to date with MITgcm checkpoint68s
+The package interacts with the MITgcm kernel during initialisation, time-stepping, and in post-processing.
 
-It starts with taking hydrography at a single time-step along a track and 
-calculates arrival times. Lastly, it outputs the travel time and ray angle as
-diagnostics.
+Development is up to date with [MITgcm `checkpoint69f`](https://github.com/MITgcm/MITgcm/commit/214bfe91bf8caee3cf215213baad672483c85b49)
 
+## How-to use
+MITgcm code modifications are saved in [ihop/mitgcm_code](mitgcm_code):
+- adds `useIHOP` to `PARAMS.h`
+- inserts `pkg/ihop` in `forward_step.F`
+- allows for `SVEL` and `SLD` as GCM diagnostics using `pkg/diagnostics` with optional `pkg/mnc`
+- opens `pkg/ihop` for inclusion in **TAF** TL and AD models, can be used with and without `pkg/ecco`
 
-ADD useIHOP to PARAMS.h in the code modifications to use this package
-
-Package is dependent on the following packages:
-- *cal* for storing times of sound transmissions
-- *cost* for aggregation of acoustic cost function contributions
-
+`ihop` is dependent on the following packages:
+- `cal` for storing times of sound transmissions
+- `cost` for aggregation of acoustic cost function contributions
 
 ## Tips
+
+#### Create ihop domain
 For input, you will be asked to generate range points along a 2D plane between 
-a source and receiver. The number of range points can vary from 2 to N. The 
-position of a receiver _must_ be contained within the ranges specified, e.g. 
-`ihop_rr < ihop_ranges(N) - <step size>`. In general, the step size is 10% the 
-maximum ocean depth defined in your `.bty` file. It's recommended to place an 
-`ihop_ranges` point at the recevier lat, lon position. 
+a source and receiver. The number of range points can vary from 2 to N, and is saved in `ihop_ranges`. The position of a receiver _must_ be contained within the ranges specified, see image below for context. At ray fan initialisation, the tracing step size is 10% the maximum ocean depth defined in your `.bty` file.
+
+![ihop domain](doc/z_readme/ihop_domain_setting.png)
 
 # TO-DO
-- PYTHON: add simple input file generation
-- FORTRAN77: add simple verification problem
-- PYTHON: add synthetic observation data file generation 
+- [ ] DOC: create minimal documentation to help user get started with MITgcm+ihop
+- [ ] PYTHON: add simple input file generation
+- [ ] FORTRAN77: add simple verification problem
+- [ ] PYTHON: add synthetic observation data file generation

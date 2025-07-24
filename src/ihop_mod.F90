@@ -1,40 +1,34 @@
 #include "IHOP_OPTIONS.h"
+!---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 !BOP
-! !INTERFACE:
+!MODULE: ihop_mod
 MODULE ihop_mod
 ! <CONTACT EMAIL="ivana@utexas.edu">
 !   Ivana Escobar
 ! </CONTACT>
+! !DESCRIPTION:
+! Defines modules used in iHOP
 
-! <OVERVIEW>
-!    Defines modules used in IHOP
-! </OVERVIEW>
-
-! <DESCRIPTION>
-! </DESCRIPTION>
-
+! !USES:
   IMPLICIT NONE
 ! == Global variables ==
 #include "SIZE.h"
 #include "EEPARAMS.h"
 #include "PARAMS.h"
 
+! !SCOPE: 
   PRIVATE
-
-! public interfaces
+!=======================================================================
+  PUBLIC  rad2deg, oneCMPLX, &
+          PRTFile, RAYFile, DELFile, SHDFile, ARRFile, SSPFile, &
+          ATIFile, BTYFile, BRCFile, TRCFile, IRCFile, SBPFile, &
+          MaxN, Nrz_per_range, iStep, afreq, SrcDeclAngle,      &
+          Title, Beam, ray2D, ray2DPt, iSmallStepCtr, rxyz
 !=======================================================================
 
-    public  rad2deg, oneCMPLX, &
-            PRTFile, RAYFile, DELFile, SHDFile, ARRFile, SSPFile,&
-            ATIFile, BTYFile, BRCFile, TRCFile, IRCFile, SBPFile,&
-            MaxN, Nrz_per_range, iStep, afreq, SrcDeclAngle,     &
-            Title, Beam, ray2D, ray2DPt, iSmallStepCtr, rxyz
-
-!=======================================================================
-
+! == Module variables ==
   ! *** fixed parameters useful for ONLY ihop ***
-  REAL(KIND=_RL90), PARAMETER :: rad2deg = 180.D0 / PI
-
+  REAL(KIND=_RL90),     PARAMETER :: rad2deg = 180.D0 / PI
   COMPLEX (KIND=_RL90), PARAMETER :: oneCMPLX = ( 0.0D0, 1.0D0 )
 
   INTEGER, PARAMETER :: PRTFile = 61, &    ! standard output file
@@ -53,33 +47,33 @@ MODULE ihop_mod
   INTEGER            :: iSmallStepCtr = 0
   INTEGER            :: Nrz_per_range, iStep
   REAL (KIND=_RL90)  :: afreq, SrcDeclAngle, SrcAzimAngle
-  CHARACTER (LEN=80) :: Title
+  CHARACTER*(80)     :: Title
 
+! == Derived types ==
   ! *** Beam structure ***
-
   TYPE rxyz
-     REAL (KIND=_RL90) :: r, x, y, z
+    REAL (KIND=_RL90) :: r, x, y, z
   END TYPE rxyz
 
   TYPE BeamStructure
-     INTEGER           :: NBeams, Nimage, Nsteps, iBeamWindow
-     REAL (KIND=_RL90) :: deltas, epsMultiplier = 1, rLoop
-     CHARACTER (LEN=1) :: Component ! Pressure or displacement
-     CHARACTER (LEN=4) :: Type = 'G S '
-     CHARACTER (LEN=7) :: RunType
-     TYPE( rxyz )      :: Box
+    INTEGER           :: NBeams, Nimage, Nsteps, iBeamWindow
+    REAL (KIND=_RL90) :: deltas, epsMultiplier = 1, rLoop
+    CHARACTER*(1)     :: Component ! Pressure or displacement
+    CHARACTER*(4)     :: Type = 'G S '
+    CHARACTER*(7)     :: RunType
+    TYPE( rxyz )      :: Box
   END TYPE BeamStructure
 
   TYPE( BeamStructure ) :: Beam
 
   ! *** ray structure ***
-
   TYPE ray2DPt
-     INTEGER                :: NumTopBnc, NumBotBnc, NumTurnPt
-     REAL    (KIND=_RL90)   :: x( 2 ), t( 2 ), p( 2 ), q( 2 ), c, Amp, Phase
-     COMPLEX (KIND=_RL90)   :: tau
+    INTEGER                :: NumTopBnc, NumBotBnc, NumTurnPt
+    REAL    (KIND=_RL90)   :: x( 2 ), t( 2 ), p( 2 ), q( 2 ), c, Amp, Phase
+    COMPLEX (KIND=_RL90)   :: tau
   END TYPE ray2DPt
 
   TYPE( ray2DPt )      :: ray2D( MaxN )
+!EOP
 
 END !MODULE ihop_mod

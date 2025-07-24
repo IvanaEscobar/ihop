@@ -29,7 +29,6 @@ C     !INPUT PARAMETERS:
 C     myThid :: my thread ID
       INTEGER myThid
 C     !OUTPUT PARAMETERS:
-CEOP
 
 C    !FUNCTIONS:
       INTEGER  ILBLNK
@@ -99,6 +98,7 @@ C     iUnit  :: Work variable for IO unit number
      &      IHOPObs_Files,
      &      mult_ihop
 #endif
+CEOP
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 

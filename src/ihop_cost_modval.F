@@ -55,7 +55,6 @@ C     myThid :: my thread ID
       INTEGER myThid
 C     !OUTPUT PARAMETERS:
       _RL     modVal
-CEOP
 
 C     !LOCAL VARIABLES:
 #ifdef ALLOW_IHOP
@@ -64,6 +63,7 @@ C     !LOCAL VARIABLES:
       INTEGER maxID
       _RL     maxarrVal, arrVal(maxNArr)
       COMPLEX*8 arrAmplitude(maxNArr)
+CEOP
 
 ! ===================================================================
 ! Apply parameter-to-observable map on predicted datum
@@ -80,8 +80,8 @@ C     !LOCAL VARIABLES:
 ! Are ri and rj contained in nRR AND nRD
       IF ( (ri.GT.nRR).AND.(rj.gt.nRD) ) THEN
         WRITE(msgBuf,'(3A)')
-     &   'IHOP_COST_MODVAL:',
-     &   ' receiver range and depth ID larger than nRR and nRD.'
+     &    'IHOP_COST_MODVAL:',
+     &    ' receiver range and depth ID larger than nRR and nRD.'
         CALL PRINT_ERROR( msgBuf, myThid )
       ENDIF
 

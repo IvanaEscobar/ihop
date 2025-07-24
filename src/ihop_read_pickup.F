@@ -2,9 +2,9 @@
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
-C     !ROUTINE: IHOP_READ_PICKUP
+C !ROUTINE: IHOP_READ_PICKUP
 
-C     !INTERFACE:
+C !INTERFACE:
       SUBROUTINE IHOP_READ_PICKUP( myIter, myThid )
 
 C     !DESCRIPTION:
@@ -12,6 +12,7 @@ C     Reads current state of IHOP from a pickup file
 
 C     !USES:
       IMPLICIT NONE
+C     == Global variables ==
 #include "SIZE.h"
 #include "EEPARAMS.h"
 #include "PARAMS.h"
@@ -49,8 +50,6 @@ C     msgBuf      :: Informational/error message buffer
       CHARACTER*(8) missFldList(missFldDim)
       CHARACTER*(MAX_LEN_MBUF) msgBuf
 CEOP
-
-C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 
 C       IF ( pickupSuff.EQ.' ' ) THEN
 C        IF ( rwSuffixType.EQ.0 ) THEN

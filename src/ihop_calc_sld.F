@@ -1,20 +1,16 @@
 #include "IHOP_OPTIONS.h"
-C#include "PACKAGES_CONFIG.h"
-C#include "CPP_OPTIONS.h"
 
+C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
-C     !ROUTINE: IHOP_CALC_SLD
-C     !INTERFACE:
-      SUBROUTINE IHOP_CALC_SLD(
-     I                       bi, bj, myThid )
-C     !DESCRIPTION: \bv
-C     *==========================================================*
-C     | S/R IHOP_CALC_SLD
-C     | o Diagnose the Oceanic Sonic Layer depth
-C     | Note: output "hMixLayer" is in "r" unit, i.e., in Pa
-C     |       when using P-coordinate.
-C     *==========================================================*
-C     \ev
+C !ROUTINE: IHOP_CALC_SLD
+C !INTERFACE:
+      SUBROUTINE IHOP_CALC_SLD( bi, bj, myThid )
+
+C     !DESCRIPTION:
+C     S/R IHOP_CALC_SLD
+C     o Diagnose the Oceanic Sonic Layer depth
+C     Note: output "hMixLayer" is in "r" unit, i.e., in Pa
+C           when using P-coordinate.
 
 C     !USES:
       IMPLICIT NONE
@@ -32,21 +28,21 @@ C     == Global variables ==
 # include "IHOP.h"
 #endif
 
-C     !INPUT/OUTPUT PARAMETERS:
+C     !INPUT PARAMETERS:
 C     == Routine Arguments ==
 C     bi,bj     :: tile indices
 C     myThid    :: my Thread Id number
       INTEGER bi, bj
       INTEGER myThid
+C     !OUTPUT PARAMETERS: None
 
-C     === Functions ====
+C     !FUNCTIONS:
 #ifdef ALLOW_DIAGNOSTICS
       LOGICAL  DIAGNOSTICS_IS_ON
       EXTERNAL DIAGNOSTICS_IS_ON
 #endif /* ALLOW_DIAGNOSTICS */
 
 C     !LOCAL VARIABLES:
-C     == Local variables ==
 C     i, j, k   :: Loop counters
 C     kDir      :: downward k increment
 C     kU, kL    :: loop ranges, Up and Low
