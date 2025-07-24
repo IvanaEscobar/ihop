@@ -16,7 +16,7 @@ MODULE refCoef
 
 ! !USES:
   USE ihop_mod,   only: PRTFile, BRCFile, TRCFile, IRCFile
-  IMPLICIT
+  IMPLICIT NONE
 ! == Global variables ==
 #include "SIZE.h"
 #include "EEPARAMS.h"

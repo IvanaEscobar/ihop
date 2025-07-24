@@ -77,7 +77,6 @@ CONTAINS
 ! dtau :: delay along ray
 ! skip_step :: logical to skip steps with no influence
   CHARACTER*(MAX_LEN_MBUF) :: msgBuf
-  CHARACTER*(MAX_LEN_MBUF) :: msgBuf
   INTEGER              :: irA, irB, II
   REAL (KIND=_RL90)    :: nA, nB, zr, L, dq( Beam%Nsteps - 1 )
   REAL (KIND=_RL90)    :: znV( Beam%Nsteps ), rnV( Beam%Nsteps ), &

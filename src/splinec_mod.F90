@@ -80,7 +80,9 @@ CONTAINS
 !     CALCULATED AS THE INTEGRAL OVER THE INTERVAL DIVIDED BY THE LENGTH
 !     OF THE INTERVAL (IN C(4,N)).
 
-! !USES: None
+! !USES:
+  IMPLICIT INTEGER            (I-M)
+  IMPLICIT REAL (KIND=_RL90)  (A-H,O-Z)
 
 ! !INPUT PARAMETERS:
 ! TAU :: vector of abscissae, length N
@@ -95,13 +97,9 @@ CONTAINS
 ! !OUTPUT PARAMETERS: C
 
 ! !LOCAL VARIABLES:
-! I-M :: loop index
-! A-H, O-Z :: implicit real variables
 ! G :: temporary complex variable
 ! DTAU :: difference in abscissae
 ! DIVDF1, DIVDF3 :: temporary complex variables for derivatives
-  IMPLICIT INTEGER            (I-M)
-  IMPLICIT REAL (KIND=_RL90)  (A-H,O-Z)
   COMPLEX (KIND=_RL90) :: G, DTAU, DIVDF1, DIVDF3
 !EOP
 
@@ -245,7 +243,8 @@ CONTAINS
 !  THIS ROUTINE EVALUATES THE SPLINE, SPLINE DERIVATIVE, AND
 !  SPLINE 2ND DERIVATIVE AT THE POINT H.
 
-! !USES: None
+! !USES:
+  IMPLICIT REAL (KIND=_RL90) ( A-G, O-Z )
 
 ! !INPUT PARAMETERS:
 ! C :: matrix of coefficients, 4 rows, 4 columns
@@ -257,9 +256,7 @@ CONTAINS
 ! !OUTPUT PARAMETERS: F, FX, FXX
 
 ! !LOCAL VARIABLES:
-! A-G, O-Z :: implicit real variables
 ! HALF, SIXTH :: constants for spline evaluation
-  IMPLICIT REAL (KIND=_RL90) ( A-G, O-Z )
   REAL (KIND=_RL90), PARAMETER ::  HALF = 0.5, SIXTH = 1.0 / 6.0
 !EOP
 

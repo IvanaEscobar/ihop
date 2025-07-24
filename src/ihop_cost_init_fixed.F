@@ -708,7 +708,8 @@ CBOP
 ! Obtain existing NetCDF file id
                     err = NF_OPEN( fnameequinc(1:JL), NF_WRITE,
      &                    ncidFWD(num_file,bi,bj) )
-                    CALL IHOP_COST_NF_ERROR('init_fixed43',err,bi,bj,myThid)
+                    CALL IHOP_COST_NF_ERROR('init_fixed43',err,bi,bj,
+     &                myThid)
                   ENDIF
 
 # ifdef ALLOW_ADJOINT_RUN
@@ -724,7 +725,8 @@ CBOP
 ! Obtain existing AD NetCDF file id
                     err = NF_OPEN( adfnameequinc(1:JL), NF_WRITE,
      &                    ncidAD(num_file,bi,bj) )
-                    CALL IHOP_COST_NF_ERROR('init_fixed44',err,bi,bj,myThid)
+                    CALL IHOP_COST_NF_ERROR('init_fixed44',err,bi,bj,
+     &                myThid)
                   ENDIF
 
 # endif /* ALLOW_ADJOINT_RUN */
@@ -741,7 +743,8 @@ CBOP
 ! Obtain existing TL NetCDF file id
                     err = NF_OPEN( tlfnameequinc(1:JL), NF_WRITE,
      &                    ncidTL(num_file,bi,bj) )
-                    CALL IHOP_COST_NF_ERROR('init_fixed45',err,bi,bj,myThid)
+                    CALL IHOP_COST_NF_ERROR('init_fixed45',err,bi,bj,
+     &                myThid)
                   ENDIF
 # endif /* ALLOW_TANGENTLINEAR_RUN */
 
