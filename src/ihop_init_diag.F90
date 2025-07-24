@@ -305,7 +305,7 @@ CONTAINS
   Title( 1 :11 ) = 'iHOP3D - '
   Title( 12:80 ) = IHOP_title
 #else /* not IHOP_THREED */
-  Title( 1:9   ) = 'CRIOS: iHOP - '
+  Title( 1:9   ) = 'iHOP - '
   Title( 10:80 ) = IHOP_title
 #endif /* IHOP_THREED */
 

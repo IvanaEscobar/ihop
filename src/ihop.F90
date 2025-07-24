@@ -430,7 +430,7 @@ CONTAINS
   USE step,     only: Step2D
   USE ihop_mod, only: Beam, ray2D, iSmallStepCtr
 ! IESCO25: FOR TAF -RG
-!  USE ssp_mod,  only: evalSSP, iSegr
+  USE ssp_mod,  only: evalSSP, iSegr
 
 ! !INPUT PARAMETERS:
 ! xs     :: Source coordinates [m, m]
