@@ -777,22 +777,18 @@ C       Close all open NetCDF files
 #endif
 
 #ifdef ALLOW_PROFILES
-C      IF ( useProfiles ) THEN
-CC       Close all open NetCDF files
-C        _BEGIN_MASTER( myThid )
+C      IF ( usePROFILES ) THEN
+C        Close all open NetCDF files
 C        CALL PROFILES_NC_CLOSE( myThid )
-C        _END_MASTER( myThid )
 C      ENDIF
-#endif
+#endif /* ALLOW_PROFILES */
 
 #ifdef ALLOW_IHOP
-      IF ( useIhop ) THEN
+      IF ( useIHOP ) THEN
 C       Close all open NetCDF files
-        _BEGIN_MASTER( myThid )
         CALL IHOP_COST_NC_CLOSE( myThid )
-        _END_MASTER( myThid )
       ENDIF
-#endif
+#endif /* ALLOW_IHOP */
 
 C--   This timer encompasses the whole code
       CALL TIMER_STOP ('ALL                    [THE_MODEL_MAIN]',myThid)

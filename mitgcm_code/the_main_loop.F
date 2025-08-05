@@ -766,17 +766,18 @@ c--     Accumulate time averages of temperature, salinity
 #endif /* ALLOW_ECCO */
 
 #ifdef ALLOW_PROFILES
-      IF (usePROFILES) THEN
+      IF ( usePROFILES ) THEN
 c--   Accumulate in-situ time averages of temperature, salinity, SSH.
         CALL TIMER_START('PROFILES_INLOOP    [THE_MAIN_LOOP]', myThid)
         CALL PROFILES_INLOOP( endtime, myThid )
         CALL TIMER_STOP ('PROFILES_INLOOP    [THE_MAIN_LOOP]', myThid)
 c--   Compute all profiles cost function contributions.
-        CALL COST_PROFILES( myIter, myTime, myThid )
+        CALL PROFILES_COST( myTime, myIter, myThid )
       ENDIF
-#endif
+#endif /* ALLOW_PROFILES */
+
 #ifdef ALLOW_IHOP
-      IF (useIHOP) THEN
+      IF ( useIHOP ) THEN
 c--   Accumulate travel times
         CALL TIMER_START('IHOP_COST_INLOOP    [THE_MAIN_LOOP]', myThid)
         CALL IHOP_COST_INLOOP( endtime, myThid )

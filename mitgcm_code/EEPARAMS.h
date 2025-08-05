@@ -171,7 +171,7 @@
 !     useNest2W_child  :: use Child  2-W Nesting interface (pkg/nest2w_child)
 !     useOASIS       :: use OASIS-coupler for a multi-components set-up.
       COMMON /EEPARAMS_L/                                                                                                           &
-!    &  eeBootError, fatalError, eeEndError,                                                                                       &
+!    &  eeBootError, fatalError, eeEndError,                                                                                        &
      &  eeBootError, eeEndError, fatalError, debugMode,                                                                             &
      &  useSingleCpuIO, useSingleCpuInput, printMapIncludesZeros,                                                                   &
      &  useCubedSphereExchange, useCoupler,                                                                                         &
