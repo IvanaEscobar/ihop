@@ -1,11 +1,11 @@
 #include "IHOP_OPTIONS.h"
 
 C     ================================================================
-C     active_file_control_cost_ihop.F: Routines that handle I/O of
-C                                      tiled and global active 
-C                                      variables for adjoint
-C                                      calculations, related to NetCDF
-C                                      iHOP data files
+C     active_file_control_ihop.F: Routines that handle I/O of
+C                                 tiled and global active 
+C                                 variables for adjoint/tangent
+C                                 linear calculations, related to 
+C                                 NetCDF iHOP cost data files
 C
 C     Routines:
 C     o active_read_ihop_tile_rl  - Read an active 1D record from file
