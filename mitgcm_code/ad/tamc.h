@@ -75,7 +75,7 @@
 !                Note: defined in PTRACERS_SIZE.h if compiling pkg/ptracers
 #ifndef ALLOW_PTRACERS
       INTEGER    maxpass
-      PARAMETER( maxpass   = 3 )
+      PARAMETER( maxpass   = 2 )
 #endif
 !     maxcube :: for Multi-Dim advection, max number of horizontal directions
       INTEGER    maxcube
