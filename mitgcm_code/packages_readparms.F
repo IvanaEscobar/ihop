@@ -108,6 +108,8 @@ C       |-- ECCO_READPARMS
 C       |
 C       |-- PROFILES_READPARMS
 C       |
+C       |-- OBSFIT_READPARMS
+C       |
 C       |-- SBO_READPARMS
 C       |
 C       |-- ATM_PHYS_READPARMS
@@ -351,6 +353,11 @@ c--   Initialize ECCO package parameters
 #ifdef ALLOW_PROFILES
 C--   if usePROFILES=T, set PROFILES parameters; otherwise just return
       CALL PROFILES_READPARMS ( myThid )
+#endif
+
+#ifdef ALLOW_OBSFIT
+C--   if useOBSFIT=T, set OBSFIT parameters; otherwise just return
+      CALL OBSFIT_READPARMS ( myThid )
 #endif
 
 #ifdef ALLOW_SBO
