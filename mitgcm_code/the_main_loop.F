@@ -782,9 +782,9 @@ c--   Accumulate travel times
         CALL IHOP_COST_INLOOP( endtime, myThid )
         CALL TIMER_STOP ('IHOP_COST_INLOOP    [THE_MAIN_LOOP]', myThid)
 c--   Compute all ihop cost function contributions.
-        CALL TIMER_START('COST_IHOP   [THE_MAIN_LOOP]', myThid)
-        CALL COST_IHOP( myIter, myTime, myThid )
-        CALL TIMER_STOP ('COST_IHOP   [THE_MAIN_LOOP]', myThid)
+        CALL TIMER_START('IHOP_COST   [THE_MAIN_LOOP]', myThid)
+        CALL IHOP_COST( myIter, myTime, myThid )
+        CALL TIMER_STOP ('IHOP_COST   [THE_MAIN_LOOP]', myThid)
       ENDIF
 #endif
 
