@@ -80,7 +80,7 @@ C Implies that a forward loop is calling
        ENDIF !IF (ihop_curfile_buff.NE.fNb)
 
 #ifdef ALLOW_DEBUG
-        IF (debugLevel.GE.debLevD) THEN
+        IF ( debugLevel.GE.debLevD ) THEN
           WRITE(msgBuf,'(A,5I9)')
      &      'buffer readobsfile ',
      &      ihop_minind_buff, ihop_maxind_buff,

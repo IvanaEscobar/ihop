@@ -6,7 +6,7 @@ ihop_sound_speed.f
 ihop_cost_init_varia.f
 ihop_cost_inloop.f
 ihop_cost_modval.f
-cost_ihop.f
+ihop_cost.f
 
 angle_mod.f90
 arr_mod.f90

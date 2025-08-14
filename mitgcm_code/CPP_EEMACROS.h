@@ -121,12 +121,14 @@
 !  enable to call the corresponding R4 or R8 S/R.
 #ifdef REAL4_IS_SLOW
 #define _RS Real*8
+#define _RS90 8
 #define RS_IS_REAL8
 #define _GLOBAL_SUM_RS(a,b) CALL GLOBAL_SUM_R8 ( a, b)
 #define _GLOBAL_MAX_RS(a,b) CALL GLOBAL_MAX_R8 ( a, b )
 #define _MPI_TYPE_RS MPI_DOUBLE_PRECISION
 #else
 #define _RS Real*4
+#define _RS90 4
 #define RS_IS_REAL4
 #define _GLOBAL_SUM_RS(a,b) CALL GLOBAL_SUM_R4 ( a, b )
 #define _GLOBAL_MAX_RS(a,b) CALL GLOBAL_MAX_R4 ( a, b )

@@ -8,10 +8,10 @@
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
-C !ROUTINE: COST_IHOP
+C !ROUTINE: IHOP_COST
 
 C !INTERFACE:
-      SUBROUTINE COST_IHOP( myIter, myTime, myThid )
+      SUBROUTINE IHOP_COST( myIter, myTime, myThid )
 
 C    !DESCRIPTION:
 C    Computes iHOP data misfit for cost function
@@ -86,7 +86,7 @@ C     bi,bj :: Tile indices
       WRITE(msgBuf,'(A)') ' '
       CALL PRINT_MESSAGE( msgBuf,
      &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(A)') '== cost_ihop: begin =='
+      WRITE(msgBuf,'(A)') '== ihop_cost: begin =='
       CALL PRINT_MESSAGE( msgBuf,
      &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
@@ -101,7 +101,7 @@ C File maintenance
      &           (ihopDoNcOutput) ) THEN
 C Sync tiled file so data is not lost in buffer
               err = NF_SYNC( ncidFWD(num_file,bi,bj) )
-              CALL IHOP_COST_NF_ERROR('cost_ihop 1',err,bi,bj,myThid)
+              CALL IHOP_COST_NF_ERROR('ihop_cost 1',err,bi,bj,myThid)
 
             ENDIF
 
@@ -168,7 +168,7 @@ C Write to global netcdf file
 
 C Sync global obs
           err = NF_SYNC( ncidGLOB(num_file) )
-          CALL IHOP_COST_NF_ERROR('cost_ihop 2',err,bi,bj,myThid)
+          CALL IHOP_COST_NF_ERROR('ihop_cost 2',err,bi,bj,myThid)
 
           DO iObs = 1, NOBSMAX_IHOP
             IF (iObs.LE.ObsNo(num_file)) THEN
@@ -227,7 +227,7 @@ C Print cost function values
         num_ihop_glo = num_ihop(num_file)
 
         WRITE(msgBuf,'(A,I2,A,2D12.5)')
-     &    ' cost_ihop(', num_file, ' )= ',
+     &    ' ihop_cost(', num_file, ' )= ',
      &    objf_ihop_glo, num_ihop_glo
 
         IF (num_ihop_glo.GT.0.) 
@@ -237,7 +237,7 @@ C Print cost function values
       ENDDO !DO num_file
 # endif /* ALLOW_COST */
 
-      WRITE(msgBuf,'(A)') '== cost_ihop: end   =='
+      WRITE(msgBuf,'(A)') '== ihop_cost: end   =='
       CALL PRINT_MESSAGE( msgBuf,
      &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
       WRITE(msgBuf,'(A)') ' '

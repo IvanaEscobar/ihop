@@ -6,7 +6,7 @@
 !    ihop logical parameters
       LOGICAL ihopDoNcOutput
 
-      COMMON /ihop_cost_l/ ihopDoNcOutput
+      COMMON /IHOP_COST_L/ ihopDoNcOutput
 
 !    IHOP cost integer parameters
 !     ObsNo* :: No. of observations in a single ihop obs file, iOBS
@@ -28,7 +28,7 @@
       INTEGER ihopObs_j_tiled(NFILESMAX_IHOP,NOBSMAX_IHOP,nsx,nsy)
       INTEGER ihopObs_k_tiled(NFILESMAX_IHOP,NOBSMAX_IHOP,nsx,nsy)
       INTEGER ihopObs_sample1_ind(NFILESMAX_IHOP,NOBSMAX_IHOP)
-      COMMON /ihop_cost_i/                                                                                                          &
+      COMMON /IHOP_COST_I/                                                                                                          &
      &                  ObsNo, ObsNo_tiled,                                                                                         &
      &                  ihopObs_ind_glob, ihopObs_ind_glob_tiled,                                                                   &
      &                  ncidFWD, ncidAD, ncidTL,                                                                                    &
