@@ -58,6 +58,7 @@ C     !LOCAL VARIABLES:
       INTEGER :: num_file, hh, obsNo_hh
       INTEGER :: bi, bj, nObs, i, j, k
       INTEGER :: iG, jG
+      INTEGER :: stop_ihop_cost
       _RL :: yymmddMin, yymmddMax
       _RL :: hhmmssMin, hhmmssMax
       _RL :: tmpyymmdd(NOBSMAX_IHOP), tmphhmmss(NOBSMAX_IHOP)
@@ -77,6 +78,7 @@ C     !LOCAL VARIABLES:
       _RL :: lon_tmp1, lon_tmp2, lat_tmp1, lat_tmp2
       _RL :: depth_fac
 CBOP
+      stop_ihop_cost = 0
 
       WRITE(msgBuf,'(A)') ''// CHAR(10) //
      & '                    iHOP COST general parameters :'
@@ -433,6 +435,7 @@ CBOP
      &          '.nc was not read properly: increase NOBSMAX_IHOP.'
               CALL PRINT_ERROR( msgBuf, myThid )
 
+              stop_ihop_cost = 1
             ENDIF
 
           ENDDO !DO nObs
@@ -782,6 +785,12 @@ CBOP
       _BARRIER
 
 !===========================================================
+      CALL GLOBAL_SUM_INT( stop_ihop_cost, myThid )
+      IF ( stop_ihop_cost.GE.1 ) THEN
+        CALL ALL_PROC_DIE( myThid )
+        STOP 'ABNORMAL END: S/R IHOP_COST_INIT_FIXED'
+      ENDIF
+
       WRITE(msgBuf,'(A)') ' '// CHAR(10) //
      & '                    '//
      & '// ======================================================='
