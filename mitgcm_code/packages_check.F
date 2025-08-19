@@ -441,9 +441,9 @@ C---  Continue with standard packages (with standard usePKG flag)
       IF (usePROFILES) CALL PACKAGES_ERROR_MSG('PROFILES',' ',myThid)
 #endif
 
-#ifndef ALLOW_OBSFIT
-      IF (useOBSFIT) CALL PACKAGES_ERROR_MSG('OBSFIT',' ',myThid)
-#endif
+C#ifndef ALLOW_OBSFIT
+C      IF (useOBSFIT) CALL PACKAGES_ERROR_MSG('OBSFIT',' ',myThid)
+C#endif
 
 #ifdef ALLOW_GRDCHK
       IF (useGrdChk) CALL GRDCHK_CHECK( myThid )

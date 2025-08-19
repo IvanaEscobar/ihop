@@ -65,7 +65,7 @@ C     data.pkg namelists
      &          useGrdchk,
      &          useSMOOTH,
      &          usePROFILES,
-     &          useOBSFIT,
+C     &          useOBSFIT,
      &          useECCO,
      &          useCTRL,
      &          useSBO,
@@ -132,7 +132,7 @@ c     useGAD          =.FALSE.
       useGrdchk       =.FALSE.
       useSMOOTH       =.FALSE.
       usePROFILES     =.FALSE.
-      useOBSFIT       =.FALSE.
+C      useOBSFIT       =.FALSE.
       useECCO         =.FALSE.
       useCTRL         =.FALSE.
       useSBO          =.FALSE.
@@ -207,26 +207,26 @@ C--   packages with hard-coded switch
      &                      SQUEEZE_RIGHT, myThid )
         usePROFILES=.FALSE.
       ENDIF
-      IF (useOBSFIT) THEN
-        WRITE(msgBuf,'(2A)') '** WARNING ** pkg/obsfit uses NetCDF',
-     &   ' which is unavailable (genmake2 test failed)'
-        CALL PRINT_MESSAGE( msgBuf, errorMessageUnit,
-     &                      SQUEEZE_RIGHT, myThid )
-        WRITE(msgBuf,'(2A)') '** WARNING ** PACKAGES_BOOT:',
-     &                       ' ==> Reset useOBSFIT to FALSE'
-        CALL PRINT_MESSAGE( msgBuf, errorMessageUnit,
-     &                      SQUEEZE_RIGHT, myThid )
-        WRITE(msgBuf,'(2A)') ' PACKAGES_BOOT: undef HAVE_NETCDF',
-     &                       ' ==> Reset useOBSFIT to FALSE'
-        CALL PRINT_MESSAGE( msgBuf, standardMessageUnit,
-     &                      SQUEEZE_RIGHT, myThid )
-        useOBSFIT=.FALSE.
-      ENDIF
+C      IF (useOBSFIT) THEN
+C        WRITE(msgBuf,'(2A)') '** WARNING ** pkg/obsfit uses NetCDF',
+C     &   ' which is unavailable (genmake2 test failed)'
+C        CALL PRINT_MESSAGE( msgBuf, errorMessageUnit,
+C     &                      SQUEEZE_RIGHT, myThid )
+C        WRITE(msgBuf,'(2A)') '** WARNING ** PACKAGES_BOOT:',
+C     &                       ' ==> Reset useOBSFIT to FALSE'
+C        CALL PRINT_MESSAGE( msgBuf, errorMessageUnit,
+C     &                      SQUEEZE_RIGHT, myThid )
+C        WRITE(msgBuf,'(2A)') ' PACKAGES_BOOT: undef HAVE_NETCDF',
+C     &                       ' ==> Reset useOBSFIT to FALSE'
+C        CALL PRINT_MESSAGE( msgBuf, standardMessageUnit,
+C     &                      SQUEEZE_RIGHT, myThid )
+C        useOBSFIT=.FALSE.
+C      ENDIF
 #endif
 
 #ifdef ALLOW_CAL
       IF (usePROFILES) useCAL = .TRUE.
-      IF (useOBSFIT) useCAL = .TRUE.
+C      IF (useOBSFIT) useCAL = .TRUE.
       IF (useECCO) useCAL = .TRUE.
 # ifdef ALLOW_COST
       IF (useIHOP) useCAL = .TRUE.
