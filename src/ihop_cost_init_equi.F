@@ -102,7 +102,11 @@ C Create a netcdf file
         CALL IHOP_COST_NF_ERROR('init_equi12',err,bi,bj,myThid)
 
       ELSE !IF (ihopDoNcOutput)
-        PRINT *, "IHOP doesn't support binary model equivalents 2024"
+        WRITE(msgBuf,'(2A)') "IHOP COST doesn't support ",
+     &    "binary model equivalents 2024"
+        CALL PRINT_MESSAGE( msgBuf,
+     &       standardMessageUnit, SQUEEZE_RIGHT, myThid )
+
         OPEN( fid2, FILE = file2, FORM = 'unformatted', 
      &   STATUS = 'unknown', ACCESS = 'direct', 
      &   RECL = 2*WORDLENGTH*2 )
