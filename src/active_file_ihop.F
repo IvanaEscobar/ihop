@@ -184,6 +184,7 @@ C     !OUTPUT PARAMETERS:
 C     active_var      :: active variable array
       _RL      active_var
 CEOP
+      CHARACTER*80 msgBuf
 
 #if (defined ALLOW_IHOP) && (defined ALLOW_COST)
 
@@ -195,6 +196,10 @@ CEOP
      &     FORWARD_SIMULATION, myOptimIter, myThid )
 
 #endif
+                WRITE(msgBuf,'(A,D10.3)')
+     &          ' ESCOBAR: ihop_modval/active_var', active_var
+                CALL PRINT_MESSAGE( msgBuf,
+     &          standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
       RETURN
       END

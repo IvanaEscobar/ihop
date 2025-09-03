@@ -41,7 +41,7 @@ C     !LOCAL VARIABLES:
       CHARACTER*(MAX_LEN_MBUF) msgBuf
 CEOP
 
-      IF (debugLevel .GE. debLevA .AND. STATUS .NE. NF_NOERR) THEN
+      IF (debugLevel.GE.debLevA .AND. STATUS.NE.NF_NOERR) THEN
         IL = ILNBLNK(message)
         IF ( IL .GT. 0 ) THEN
           WRITE(msgBuf,'(2A,2I3,1X,A)')
@@ -174,10 +174,10 @@ C Data file
             CALL IHOP_COST_NF_ERROR( msgBuf, STATUS,
      &           1, 1, myThid )
 
-C Forwaruivalent (.equi) file
+C Forward equivalent (.equi) file
             STATUS = NF_CLOSE( ncidGLOB(numFile) )
             WRITE(msgBuf,'(A,I3,I8)')
-     &        'NC_CLOSE: NF_CLOSE fwd unit',
+     &        'NC_CLOSE: NF_CLOSE fwd unit g',
      &        numFile, ncidGLOB(numFile)
             CALL IHOP_COST_NF_ERROR( msgBuf, STATUS,
      &           1, 1, myThid )

@@ -180,6 +180,12 @@ C Sync global obs
               ihop_uncert = 0.
 
 C Read model equivalent from global file
+                WRITE(msgBuf,'(A,D10.3,A,D10.3)')
+     &          ' ESCOBAR: ihop_modval', ihop_modval, ' _data',
+     &          ihop_data
+                CALL PRINT_MESSAGE( msgBuf,
+     &          standardMessageUnit, SQUEEZE_RIGHT, myThid )
+
               CALL ACTIVE_READ_IHOP_GLOB( num_file,
      &             ihop_modval, iObs,
      &             .false., optimcycle, myThid,
@@ -205,6 +211,11 @@ C Read observation and uncertainty
      &           *(ihop_modval-ihop_data)
 
                 num_ihop(num_file) = num_ihop(num_file)+1
+                WRITE(msgBuf,'(A,D10.3,A,D10.3)')
+     &          ' ESCOBAR: ihop_modval', ihop_modval, ' _data',
+     &          ihop_data
+                CALL PRINT_MESSAGE( msgBuf,
+     &          standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
               ENDIF
 
