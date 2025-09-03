@@ -35,9 +35,9 @@ MODULE IHOP
 #include "SIZE.h"
 #include "GRID.h"
 #include "EEPARAMS.h"
-#ifdef ALLOW_USE_MPI
+!#ifdef ALLOW_USE_MPI
 # include "EESUPPORT.h"
-#endif
+!#endif
 #include "PARAMS.h"
 #include "IHOP_SIZE.h"
 #include "IHOP.h"
