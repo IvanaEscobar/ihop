@@ -66,9 +66,8 @@ CEOP
       CHARACTER*80 msgBuf
 
 #if (defined ALLOW_IHOP) && (defined ALLOW_COST)
-                WRITE(msgBuf,'(A,I,A,2I)')
-     &          'q ESCOBAR: ncidFWD ', ncidfwd(active_num_file,bi,bj),
-     &          ' bi,bj ', bi,bj
+                WRITE(msgBuf,'(A,I)')
+     &          'q ESCOBAR: ncidFWD ', ncidfwd(active_num_file,bi,bj)
                 CALL PRINT_MESSAGE( msgBuf,
      &          standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
