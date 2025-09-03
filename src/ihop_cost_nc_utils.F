@@ -112,43 +112,47 @@ CEOP
         DO bj = myByLo(myThid), myByHi(myThid)
           DO bi = myBxLo(myThid), myBxHi(myThid)
             DO numFile = 1, NFILESMAX_IHOP
-              IL = ILNBLNK( ihopObs_Files(numFile) )
 
-              IF (IL.NE.0) THEN
-                WRITE(msgBuf,'(A,A,5(1X,I8))')
-     &            'S/R IHOP_COST_NC_CLOSE:',
-     &            ' Closing '//ihopObs_Files(numFile)(1:IL), numFile,
-     &           ncidFWD(numFile,bi,bj),
-     &           ncidAD(numFile,bi,bj), ncidTL(numFile,bi,bj)
-                CALL PRINT_MESSAGE( msgBuf, standardMessageUnit,
-     &               SQUEEZE_RIGHT, myThid )
+              IF (obsNo_tiled(numFile,bi,bj).GT.0) THEN
+                IL = ILNBLNK( ihopObs_Files(numFile) )
+
+                IF (IL.NE.0) THEN
+                  WRITE(msgBuf,'(A,A,5(1X,I8))')
+     &              'S/R IHOP_COST_NC_CLOSE:',
+     &              ' Closing '//ihopObs_Files(numFile)(1:IL), numFile,
+     &             ncidFWD(numFile,bi,bj),
+     &             ncidAD(numFile,bi,bj), ncidTL(numFile,bi,bj)
+                  CALL PRINT_MESSAGE( msgBuf, standardMessageUnit,
+     &                 SQUEEZE_RIGHT, myThid )
 
 C Forward equivalent (.equi) file
-                STATUS = NF_CLOSE( ncidFWD(numFile,bi,bj) )
-                WRITE(msgBuf,'(A,I3,I8)')
-     &            'NC_CLOSE: NF_CLOSE fwd unit',
-     &            numFile, ncidFWD(numFile,bi,bj)
-                CALL IHOP_COST_NF_ERROR( msgBuf, STATUS,
-     &               bi, bj, myThid )
+                  STATUS = NF_CLOSE( ncidFWD(numFile,bi,bj) )
+                  WRITE(msgBuf,'(A,2I5)')
+     &              'NC_CLOSE: NF_CLOSE fwd unit',
+     &              ncidFWD(numFile,bi,bj), myprocid
+                  CALL IHOP_COST_NF_ERROR( msgBuf, STATUS,
+     &                 bi, bj, myThid )
 # ifdef ALLOW_ADJOINT_RUN
 C Adjoint equivalent (.equi) file
-                STATUS = NF_CLOSE( ncidAD(numFile,bi,bj) )
-                WRITE(msgBuf,'(A,I3,I8)')
-     &            'NC_CLOSE: NF_CLOSE adj unit',
-     &            numFile, ncidAD(numFile,bi,bj)
-                CALL IHOP_COST_NF_ERROR( msgBuf, STATUS,
-     &               bi, bj, myThid )
+                  STATUS = NF_CLOSE( ncidAD(numFile,bi,bj) )
+                  WRITE(msgBuf,'(A,I3,I8)')
+     &              'NC_CLOSE: NF_CLOSE adj unit',
+     &              numFile, ncidAD(numFile,bi,bj)
+                  CALL IHOP_COST_NF_ERROR( msgBuf, STATUS,
+     &                 bi, bj, myThid )
 # endif
 # ifdef ALLOW_TANGENTLINEAR_RUN
 C Tangent linear equivalent (.equi) file
-                STATUS = NF_CLOSE( ncidTL(numFile,bi,bj) )
-                WRITE(msgBuf,'(A,I3,I8)')
-     &            'NC_CLOSE: NF_CLOSE tlm unit',
-     &            numFile, ncidTL(numFile,bi,bj)
-                CALL IHOP_COST_NF_ERROR( msgBuf, STATUS,
-     &               bi, bj, myThid )
+                  STATUS = NF_CLOSE( ncidTL(numFile,bi,bj) )
+                  WRITE(msgBuf,'(A,I3,I8)')
+     &              'NC_CLOSE: NF_CLOSE tlm unit',
+     &              numFile, ncidTL(numFile,bi,bj)
+                  CALL IHOP_COST_NF_ERROR( msgBuf, STATUS,
+     &                 bi, bj, myThid )
 # endif
-              ENDIF !(IL.NE.0)
+                ENDIF !(IL.NE.0)
+
+              ENDIF !(obsNo_tiled.GT.0)
 
             ENDDO !DO numFile
           ENDDO !DO bi 
@@ -156,50 +160,53 @@ C Tangent linear equivalent (.equi) file
 
 ! Close global files
         DO numFile = 1, NFILESMAX_IHOP
-          IL = ILNBLNK( ihopObs_Files(numFile) )
+          IF (myProcId.EQ.0) THEN 
+            IL = ILNBLNK( ihopObs_Files(numFile) )
 
-          IF (IL.NE.0) THEN
-            WRITE(msgBuf,'(A,A,5(1X,I8))')
-     &        'S/R IHOP_COST_NC_CLOSE:',
-     &        ' Closing '//ihopObs_Files(numFile)(1:IL), numFile,
-     &       ncidData(numFile), ncidGLOB(numFile),
-     &       ncidADGLOB(numFile), ncidTLGLOB(numFile)
-            CALL PRINT_MESSAGE( msgBuf, standardMessageUnit,
-     &           SQUEEZE_RIGHT, myThid )
+            IF (IL.NE.0) THEN
+              WRITE(msgBuf,'(A,A,5(1X,I8))')
+     &          'S/R IHOP_COST_NC_CLOSE:',
+     &          ' Closing '//ihopObs_Files(numFile)(1:IL), numFile,
+     &         ncidData(numFile), ncidGLOB(numFile),
+     &         ncidADGLOB(numFile), ncidTLGLOB(numFile)
+              CALL PRINT_MESSAGE( msgBuf, standardMessageUnit,
+     &             SQUEEZE_RIGHT, myThid )
 C Data file
-            STATUS = NF_CLOSE( ncidData(numFile) )
-            WRITE(msgBuf,'(A,I3,I8)')
-     &        'NC_CLOSE: NF_CLOSE data unit',
-     &        numFile, ncidData(numFile)
-            CALL IHOP_COST_NF_ERROR( msgBuf, STATUS,
-     &           1, 1, myThid )
+              STATUS = NF_CLOSE( ncidData(numFile) )
+              WRITE(msgBuf,'(A,I3,I8)')
+     &          'NC_CLOSE: NF_CLOSE data unit',
+     &          numFile, ncidData(numFile)
+              CALL IHOP_COST_NF_ERROR( msgBuf, STATUS,
+     &             1, 1, myThid )
 
 C Forward equivalent (.equi) file
-            STATUS = NF_CLOSE( ncidGLOB(numFile) )
-            WRITE(msgBuf,'(A,I3,I8)')
-     &        'NC_CLOSE: NF_CLOSE fwd unit g',
-     &        numFile, ncidGLOB(numFile)
-            CALL IHOP_COST_NF_ERROR( msgBuf, STATUS,
-     &           1, 1, myThid )
-# ifdef W_ADJOINT_RUN
+              STATUS = NF_CLOSE( ncidGLOB(numFile) )
+              WRITE(msgBuf,'(A,2I5)')
+     &          'NC_CLOSE: NF_CLOSE ncidGLOB ',
+     &          ncidGLOB(numFile), myprocid
+              CALL IHOP_COST_NF_ERROR( msgBuf, STATUS,
+     &             1, 1, myThid )
+# ifdef ALLOW_ADJOINT_RUN
 C Adjoint equivalent (.equi) file
-            STATUS = NF_CLOSE( ncidADGLOB(numFile) )
-            WRITE(msgBuf,'(A,I3,I8)')
-     &        'NC_CLOSE: NF_CLOSE adj unit',
-     &        numFile, ncidADGLOB(numFile)
-            CALL IHOP_COST_NF_ERROR( msgBuf, STATUS,
-     &           1, 1, myThid )
+              STATUS = NF_CLOSE( ncidADGLOB(numFile) )
+              WRITE(msgBuf,'(A,I3,I8)')
+     &          'NC_CLOSE: NF_CLOSE adj unit',
+     &          numFile, ncidADGLOB(numFile)
+              CALL IHOP_COST_NF_ERROR( msgBuf, STATUS,
+     &             1, 1, myThid )
 # endif
-# ifdef W_TANGENTLINEAR_RUN
+# ifdef ALLOW_TANGENTLINEAR_RUN
 C Tangent linear equivalent (.equi) file
-            STATUS = NF_CLOSE( ncidTLGLOB(numFile) )
-            WRITE(msgBuf,'(A,I3,I8)')
-     &        'NC_CLOSE: NF_CLOSE tlm unit',
-     &        numFile, ncidTLGLOB(numFile)
-            CALL IHOP_COST_NF_ERROR( msgBuf, STATUS,
-     &           1, 1, myThid )
+              STATUS = NF_CLOSE( ncidTLGLOB(numFile) )
+              WRITE(msgBuf,'(A,I3,I8)')
+     &          'NC_CLOSE: NF_CLOSE tlm unit',
+     &          numFile, ncidTLGLOB(numFile)
+              CALL IHOP_COST_NF_ERROR( msgBuf, STATUS,
+     &             1, 1, myThid )
 # endif
-          ENDIF !(IL.NE.0)
+            ENDIF !(IL.NE.0)
+
+          ENDIF ! (myProcId.EQ.0)
 
         ENDDO !DO numFile
 
