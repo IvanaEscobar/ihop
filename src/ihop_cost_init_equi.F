@@ -16,7 +16,7 @@ C !INTERFACE:
      I                               myThid )
 
 C    !DESCRIPTION:
-C    Initialization of model equivalent NetCDF files for iHOP obs data
+C    Initialization of tiled model equivalent NetCDF files for iHOP obs data
 
 C    !USES:
       IMPLICIT NONE
@@ -103,7 +103,7 @@ C Create a netcdf file
 
       ELSE !IF (ihopDoNcOutput)
         WRITE(msgBuf,'(2A)') "IHOP COST doesn't support ",
-     &    "binary model equivalents 2024"
+     &    "binary model equivalents est.2024"
         CALL PRINT_MESSAGE( msgBuf,
      &       standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
