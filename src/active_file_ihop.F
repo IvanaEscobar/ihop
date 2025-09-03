@@ -63,8 +63,14 @@ C     !OUTPUT PARAMETERS:
 C     active_var      :: active variable array
       _RL      active_var
 CEOP
+      CHARACTER*80 msgBuf
 
 #if (defined ALLOW_IHOP) && (defined ALLOW_COST)
+                WRITE(msgBuf,'(A,I,A,2I)')
+     &          'q ESCOBAR: ncidFWD ', ncidfwd(active_num_file,bi,bj),
+     &          ' bi,bj ', bi,bj
+                CALL PRINT_MESSAGE( msgBuf,
+     &          standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
       CALL ACTIVE_READ_IHOP_TILE_RL(
      &     ncidFWD(active_num_file,bi,bj),
@@ -196,8 +202,14 @@ CEOP
      &     FORWARD_SIMULATION, myOptimIter, myThid )
 
 #endif
+                WRITE(msgBuf,'(A,2I)')
+     &          'q ESCOBAR: ncidGLOB active_num_file ',
+     &          ncidglob(active_num_file),
+     &          active_num_file
+                CALL PRINT_MESSAGE( msgBuf,
+     &          standardMessageUnit, SQUEEZE_RIGHT, myThid )
                 WRITE(msgBuf,'(A,D10.3)')
-     &          ' ESCOBAR: ihop_modval/active_var', active_var
+     &          ' ESCOBAR: ihop_modval/active_var ', active_var
                 CALL PRINT_MESSAGE( msgBuf,
      &          standardMessageUnit, SQUEEZE_RIGHT, myThid )
 

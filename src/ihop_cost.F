@@ -124,6 +124,11 @@ C Open tiled files and read to buffer
      &              .false., optimcycle, bi, bj, myThid,
      &              ihop_dummy(num_file,bi,bj) )
 
+                WRITE(msgBuf,'(A,D10.3,A,2I,A,I)')
+     &          'q ESCOBAR: ihop_modvaltmp ', ihop_modvaltmp, 
+     &          ' bi,bj ', bi,bj, ' myprocID ', myprocID
+                CALL PRINT_MESSAGE( msgBuf,
+     &          standardMessageUnit, SQUEEZE_RIGHT, myThid )
 C Save tiled model equi from buffer, see PROFILES_READVECTOR
 C Combine all threads to global
                 irec = ihopObs_ind_glob_tiled(num_file,iObs,bi,bj)
@@ -157,6 +162,11 @@ C Extract model equi
               ihop_modval = ihop_modval+ihopObs_modval_glob(iObs)
 
 C Write to global netcdf file
+                WRITE(msgBuf,'(A,D10.3,A,D10.3,A,I)')
+     &          'q ESCOBAR: ihop_modval ', ihop_modval, ' modval_glob ',
+     &          ihopObs_modval_glob(iObs), ' iobs ', iobs
+                CALL PRINT_MESSAGE( msgBuf,
+     &          standardMessageUnit, SQUEEZE_RIGHT, myThid )
               CALL ACTIVE_WRITE_IHOP_GLOB( num_file,
      &             ihop_modval,
      &             iObs, optimcycle, myThid,
@@ -180,9 +190,9 @@ C Sync global obs
               ihop_uncert = 0.
 
 C Read model equivalent from global file
-                WRITE(msgBuf,'(A,D10.3,A,D10.3)')
-     &          ' ESCOBAR: ihop_modval', ihop_modval, ' _data',
-     &          ihop_data
+                WRITE(msgBuf,'(A,2I)')
+     &          'q ESCOBAR: ncidglob num_file ', ncidGlob(num_file),
+     &          num_file
                 CALL PRINT_MESSAGE( msgBuf,
      &          standardMessageUnit, SQUEEZE_RIGHT, myThid )
 

@@ -266,12 +266,20 @@ CBOP
               err = NF_OPEN( fnameequincglo(1:JL), NF_WRITE, 
      &              ncidGLOB(num_file) )
               CALL IHOP_COST_NF_ERROR('init_fixed20',err,1,1,myThid)
+                    WRITE(msgBuf,'(A,2I)') "q ESCOBAR: init ncidglob ",
+     &              ncidglob(num_file), myprocid
+      CALL PRINT_MESSAGE( msgBuf,
+     &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
             ELSE
 ! Obtain existing NetCDF file id
               err = NF_OPEN( fnameequincglo(1:JL), NF_WRITE,
      &              ncidGLOB(num_file) )
               CALL IHOP_COST_NF_ERROR('init_fixed21',err,1,1,myThid)
+                    WRITE(msgBuf,'(A,2I)') "q ESCOBAR:reopen ncidglob ",
+     &              ncidglob(num_file), myprocid
+      CALL PRINT_MESSAGE( msgBuf,
+     &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
             ENDIF
 
@@ -677,8 +685,8 @@ CBOP
 !===========================================================
 ! Create files for model counterparts to ihop obs
 !===========================================================
-                    WRITE(msgBuf,'(A,3I)') "ESCOBAR : init_fixed ",
-     &              obsno_tiled(num_file,bi,bj), bi,bj
+                    WRITE(msgBuf,'(A,I)') "ESCOBAR: init_fixed ",
+     &              obsno_tiled(num_file,bi,bj)
       CALL PRINT_MESSAGE( msgBuf,
      &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
               IF (obsNo_tiled(num_file,bi,bj).GT.0) THEN
@@ -711,17 +719,21 @@ CBOP
      &                   ncidFWD(num_file,bi,bj),
      &                   obsNo_tiled(num_file,bi,bj),
      &                   bi, bj, myThid )
-                    WRITE(msgBuf,'(A,3I)') "ESCOBAR : ",
-     &              ncidFWD(num_file,bi,bj), bi,bj
+
+                    WRITE(msgBuf,'(A,2I)') "q ESCOBAR : init ncidfwd ",
+     &              ncidFWD(num_file,bi,bj), myprocid
       CALL PRINT_MESSAGE( msgBuf,
      &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
-
                   ELSE
 ! Obtain existing NetCDF file id
                     err = NF_OPEN( fnameequinc(1:JL), NF_WRITE,
      &                    ncidFWD(num_file,bi,bj) )
                     CALL IHOP_COST_NF_ERROR('init_fixed43',err,bi,bj,
      &                myThid)
+                    WRITE(msgBuf,'(A,2I)') "q ESCOBAR: reopen ncidfwd ",
+     &              ncidFWD(num_file,bi,bj), myprocid 
+      CALL PRINT_MESSAGE( msgBuf,
+     &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
                   ENDIF
 
 # ifdef ALLOW_ADJOINT_RUN
@@ -761,7 +773,7 @@ CBOP
 # endif /* ALLOW_TANGENTLINEAR_RUN */
 
                 ELSE
-! Write to binary files...
+! Write to binary files... UNSUPPORTED
                 ENDIF !IF (ihopDoNcOutput)
 
               ENDIF !IF (obsNo_tiled(num_file,bi,bj).GT.0)
