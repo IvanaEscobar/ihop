@@ -16,13 +16,17 @@ MODULE arr_mod
 #include "SIZE.h"
 #include "EEPARAMS.h"
 #include "PARAMS.h"
+#ifdef ALLOW_USE_MPI
+# include "EESUPPORT.h"
+#endif
 #include "IHOP_SIZE.h"
 #include "IHOP.h"
 
 ! !SCOPE: 
   PRIVATE
 !=======================================================================
-    PUBLIC WriteArrivalsASCII, WriteArrivalsBinary, initArr, &
+    PUBLIC WriteArrivalsASCII, WriteArrivalsBinary, &
+           initArr, BcastArr,&
            maxnArr, nArr, Arr, AddArr, U
 #ifdef IHOP_THREED
     PUBLIC nArr3D, Arr3D
@@ -40,11 +44,11 @@ MODULE arr_mod
 ! == Derived types ==
   TYPE Arrival
     INTEGER :: NTopBnc, NBotBnc
-    REAL    :: SrcDeclAngle, RcvrDeclAngle, A, Phase
+    REAL (KIND=_RL90)    :: SrcDeclAngle, RcvrDeclAngle, A, Phase
 #ifdef IHOP_THREED
-    REAL    :: SrcAzimAngle, RcvrAzimAngle
+    REAL (KIND=_RL90)    :: SrcAzimAngle, RcvrAzimAngle
 #endif /* IHOP_THREED */
-    COMPLEX :: delay
+    COMPLEX (KIND=_RL90) :: delay
   END TYPE
 
   TYPE(Arrival), ALLOCATABLE :: Arr( :, :, : )
@@ -383,5 +387,49 @@ CONTAINS
 
   RETURN
   END !SUBROUTINE WriteArrivalsBinary
+!---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
+!BOP
+! !ROUTINE: BcastArr
+! !INTERFACE:
+  SUBROUTINE BcastArr( rank, comm )
+! !DESCRIPTION:
+! Broadcasts the arrival data, eg. Amplitude, delay, to all MPI ranks
+
+! !USES:
+    USE ihop_mod,  only: prtfile, nrz_per_range
+    USE srPos_mod, only: Pos
+
+! !INPUT PARAMETERS:
+! rank :: MPI rank
+! comm :: MPI_COMM_WORLD
+  INTEGER,           INTENT( IN ) :: rank, comm
+! !OUTPUT PARAMETERS: None
+
+! !LOCAL VARIABLES:
+! nai,naj,naz :: indices for range and depth
+  INTEGER :: nai, naj,nak
+  INTEGER :: ierr
+!EOP  
+
+#ifdef ALLOW_USE_MPI
+  ! We are on MPI rank 0
+  CALL MPI_Bcast(nArr, Pos%nRR*nRz_per_range, MPI_INTEGER, rank, comm, ierr)
+
+  DO nai = 1,nrz_per_range
+    DO naj = 1,Pos%nRR
+      DO nak = 1,maxNArr
+        CALL MPI_Bcast( Arr(nak,naj,nai)%A, 1, MPI_DOUBLE, rank, comm, ierr)
+        CALL MPI_Bcast( Arr(nak,naj,nai)%Phase, 1, MPI_DOUBLE, rank, comm, ierr)
+        CALL MPI_Bcast( Arr(nak,naj,nai)%SrcDeclAngle, 1, MPI_DOUBLE, rank, comm, ierr)
+        CALL MPI_Bcast( Arr(nak,naj,nai)%RcvrDeclAngle, 1, MPI_DOUBLE, rank, comm, ierr)
+        CALL MPI_Bcast( Arr(nak,naj,nai)%delay, 1, MPI_COMPLEX, rank, comm, ierr)
+
+      ENDDO
+    ENDDO
+  ENDDO
+#endif /* ALLOW_USE_MPI */
+
+  RETURN
+  END !SUBROUTINE BcastArr
 
 END !MODULE arr_mod

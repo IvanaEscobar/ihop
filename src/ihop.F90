@@ -80,6 +80,7 @@ CONTAINS
   USE refCoef,        only: writeRefCoef 
   USE beampat,        only: writePat
   USE ihop_mod,       only: Beam
+  USE arr_mod,        only: BcastArr
 
 ! !INPUT PARAMETERS:
 ! myTime   :: time in seconds
@@ -163,7 +164,10 @@ CONTAINS
     CALL CPU_TIME( Tstop  )
   ENDIF ! IF ( myProcId.EQ.0 )
 #ifdef ALLOW_USE_MPI
-  IF ( usingMPI ) CALL MPI_BARRIER(MPI_COMM_WORLD, mpiRC)
+  IF ( usingMPI ) THEN
+    CALL MPI_BARRIER(MPI_COMM_WORLD, mpiRC)
+    CALL BcastArr( myProcId, MPI_COMM_WORLD )
+  ENDIF
 #endif
 
 #ifdef IHOP_WRITE_OUT
