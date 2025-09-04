@@ -165,8 +165,8 @@ CONTAINS
   ENDIF ! IF ( myProcId.EQ.0 )
 #ifdef ALLOW_USE_MPI
   IF ( usingMPI ) THEN
-    CALL MPI_BARRIER(MPI_COMM_WORLD, mpiRC)
-    CALL BcastArr( myProcId, MPI_COMM_WORLD )
+    CALL MPI_BARRIER( MPI_COMM_WORLD, mpiRC )
+    CALL BcastArr( 0, MPI_COMM_WORLD )
   ENDIF
 #endif
 

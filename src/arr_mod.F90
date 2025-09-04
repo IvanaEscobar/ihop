@@ -478,7 +478,7 @@ CONTAINS
 !BOP
 ! !ROUTINE: BcastArr
 ! !INTERFACE:
-  SUBROUTINE BcastArr( rank, comm )
+  SUBROUTINE BcastArr( root, comm )
 ! !DESCRIPTION:
 ! Broadcasts the arrival data, eg. Amplitude, delay, to all MPI ranks
 
@@ -490,9 +490,9 @@ CONTAINS
 !      MPI_REAL, MPI_COMPLEX, MPI_INTEGER
 
 ! !INPUT PARAMETERS:
-! rank :: MPI rank
+! root :: MPI root
 ! comm :: MPI_COMM_WORLD; pre mpi_f08 is an INTEGER
-  INTEGER, INTENT( IN ) :: rank
+  INTEGER, INTENT( IN ) :: root
   INTEGER, INTENT( IN ) :: comm
 ! !OUTPUT PARAMETERS: None
 
@@ -521,14 +521,14 @@ CONTAINS
 #ifdef ALLOW_USE_MPI
   ! We are on MPI rank 0
   arrSize = SIZE(nArr)
-  CALL MPI_Bcast(nArr, arrSize, MPI_INTEGER, rank, comm, ierr)
+  CALL MPI_Bcast(nArr, arrSize, MPI_INTEGER, root, comm, ierr)
 
   ! Broadcast MPI Arrival to all ranks, and free storage
   arrSize = SIZE(Arr)
-  CALL MPI_Bcast( Arr, arrSize, MPI_IHOP_ARRIVAL, rank, comm, ierr )
+  CALL MPI_Bcast( Arr, arrSize, MPI_IHOP_ARRIVAL, root, comm, ierr )
 
-  CALL MPI_Type_free(MPI_IHOP_ARRIVAL, ierr)
-  MPI_IHOP_ARRIVAL = MPI_DATATYPE_NULL
+  !CALL MPI_Type_free(MPI_IHOP_ARRIVAL, ierr)
+  !MPI_IHOP_ARRIVAL = MPI_DATATYPE_NULL
 #endif /* ALLOW_USE_MPI */
 
   RETURN
