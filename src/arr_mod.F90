@@ -11,9 +11,6 @@ MODULE arr_mod
 
 ! !USES:
   USE ihop_mod,   only: rad2deg, ARRFile
-#ifdef ALLOW_USE_MPI
-  USE mpi_f08, only: MPI_Datatype
-#endif /* ALLOW_USE_MPI */
   IMPLICIT NONE
 ! == Global variables ==
 #include "SIZE.h"
@@ -59,7 +56,8 @@ MODULE arr_mod
   TYPE(Arrival), ALLOCATABLE :: Arr3D( :, :, :, : )
 #endif /* IHOP_THREED */
 #ifdef ALLOW_USE_MPI
-  TYPE(MPI_Datatype) :: MPI_IHOP_ARRIVAL
+  INTEGER :: MPI_IHOP_ARRIVAL = MPI_DATATYPE_NULL
+  LOGICAL :: ARRIVAL_TYPE_COMMITTED = .false.
 #endif /* ALLOW_USE_MPI */
 !EOP
 
@@ -81,11 +79,6 @@ CONTAINS
 ! !USES:
   USE srPos_mod, only: Pos
   USE ihop_mod,  only: Beam, nRz_per_range
-#ifdef ALLOW_USE_MPI
-  USE mpi_f08, only: MPI_Datatype, MPI_DATATYPE_NULL, &
-      MPI_DOUBLE_PRECISION, MPI_DOUBLE_COMPLEX, &
-      MPI_REAL, MPI_COMPLEX, MPI_INTEGER
-#endif /* ALLOW_USE_MPI */
 
 ! !INPUT PARAMETERS:
 ! myThid  :: my thread ID
@@ -107,12 +100,10 @@ CONTAINS
 ! base, addr :: base and address for current Arrival datatype and parameters
 ! ty         :: datatype of each Arrival parameter
 ! MPI_RL, MPI_CL :: MPI type depending on _RL90
-! MPI_IHOP_ARRIVAL :: MPI derived type based on Arrival
-  INTEGER :: ierr, n, bl(7)
+  INTEGER(KIND=MPI_ADDRESS_KIND) :: disp(7), base, addr(7)
+  INTEGER :: ierr, n, bl(7), ty(7)
+  INTEGER :: MPI_RL, MPI_CL
   TYPE( Arrival ) :: singleArr
-  INTEGER(MPI_ADDRESS_KIND) :: disp(7), base, addr
-  TYPE(MPI_Datatype) :: ty(7)
-  TYPE(MPI_Datatype) :: MPI_RL, MPI_CL
 #endif
 !EOP
 
@@ -122,7 +113,7 @@ CONTAINS
   IF (ALLOCATED(nArr))        DEALLOCATE(nArr)
 
 #ifdef ALLOW_USE_MPI
-  MPI_IHOP_ARRIVAL = MPI_DATATYPE_NULL
+  IF (ARRIVAL_TYPE_COMMITTED) RETURN
 
   ! Build Arrival MPI type
   IF (STORAGE_SIZE( singleArr%Phase ).EQ.64) THEN
@@ -135,53 +126,43 @@ CONTAINS
     STOP "ABNORMAL END MPI_DATATYPE: Unsupported _RL90 size for MPI"
   ENDIF
 
-  n=0
+  ! Initiate all bl to 1 since all Arr parameters are scalars
+  bl=1
   CALL MPI_Get_address(singleArr, base, ierr)
 
-  CALL MPI_Get_address(singleArr%NTopBnc, addr, ierr)
-  n=n+1
-  disp(n)=addr-base
-  bl(n)=1
+  n=1
+  CALL MPI_Get_address(singleArr%NTopBnc, addr(n), ierr)
   ty(n)=MPI_INTEGER
 
-  CALL MPI_Get_address(singleArr%NBotBnc, addr, ierr)
   n=n+1
-  disp(n)=addr-base
-  bl(n)=1
+  CALL MPI_Get_address(singleArr%NBotBnc, addr(n), ierr)
   ty(n)=MPI_INTEGER
 
-  CALL MPI_Get_address(singleArr%SrcDeclAngle, addr, ierr)
   n=n+1
-  disp(n)=addr-base
-  bl(n)=1
+  CALL MPI_Get_address(singleArr%SrcDeclAngle, addr(n), ierr)
   ty(n)=MPI_RL
 
-  CALL MPI_Get_address(singleArr%RcvrDeclAngle, addr, ierr)
   n=n+1
-  disp(n)=addr-base
-  bl(n)=1
+  CALL MPI_Get_address(singleArr%RcvrDeclAngle, addr(n), ierr)
   ty(n)=MPI_RL
 
-  CALL MPI_Get_address(singleArr%A, addr, ierr)
   n=n+1
-  disp(n)=addr-base
-  bl(n)=1
+  CALL MPI_Get_address(singleArr%A, addr(n), ierr)
   ty(n)=MPI_RL
 
-  CALL MPI_Get_address(singleArr%Phase, addr, ierr)
   n=n+1
-  disp(n)=addr-base
-  bl(n)=1
+  CALL MPI_Get_address(singleArr%Phase, addr(n), ierr)
   ty(n)=MPI_RL
 
-  CALL MPI_Get_address(singleArr%delay, addr, ierr)
   n=n+1
-  disp(n)=addr-base
-  bl(n)=1
+  CALL MPI_Get_address(singleArr%delay, addr(n), ierr)
   ty(n)=MPI_CL
+
+  disp(1:n)=addr(1:n)-base
 
   CALL MPI_Type_create_struct(n, bl, disp, ty, MPI_IHOP_ARRIVAL, ierr)
   CALL MPI_Type_commit(MPI_IHOP_ARRIVAL, ierr)
+  ARRIVAL_TYPE_COMMITTED = .true.
 #endif /* ALLOW_USE_MPI */
 
   SELECT CASE ( Beam%RunType( 1:1 ) )
@@ -485,9 +466,6 @@ CONTAINS
 ! !USES:
   USE ihop_mod,  only: prtfile, nrz_per_range
   USE srPos_mod, only: Pos
-  USE mpi_f08, only: MPI_Datatype, MPI_DATATYPE_NULL
-!      MPI_DOUBLE_PRECISION, MPI_DOUBLE_COMPLEX, &
-!      MPI_REAL, MPI_COMPLEX, MPI_INTEGER
 
 ! !INPUT PARAMETERS:
 ! root :: MPI root
@@ -504,18 +482,6 @@ CONTAINS
 ! singleArr  :: derived type of one Arrival
   INTEGER :: arrSize
   INTEGER :: ierr, n, bl(7)
-!  TYPE( Arrival ) :: singleArr
-!#ifdef ALLOW_USE_MPI
-!! disp       :: address for new MPI datatype Arrival parameter
-!! base, addr :: base and address for current Arrival datatype and parameters
-!! ty         :: datatype of each Arrival parameter
-!! MPI_RL, MPI_CL :: MPI type depending on _RL90
-!! MPI_IHOP_ARRIVAL :: MPI derived type based on Arrival
-!  INTEGER(MPI_ADDRESS_KIND) :: disp(7), base, addr
-!  TYPE(MPI_Datatype) :: ty(7)
-!  TYPE(MPI_Datatype) :: MPI_RL, MPI_CL
-!  TYPE(MPI_Datatype) :: MPI_IHOP_ARRIVAL = MPI_DATATYPE_NULL
-!#endif
 !EOP  
 
 #ifdef ALLOW_USE_MPI
@@ -533,5 +499,25 @@ CONTAINS
 
   RETURN
   END !SUBROUTINE BcastArr
+
+!---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
+!BOP
+! !ROUTINE: free_ihop_arrival
+! !INTERFACE:
+  SUBROUTINE free_ihop_arrival(myThid)
+! !DESCRIPTION:
+! Free arrival datatype
+    INTEGER, INTENT( IN ) :: myThid
+    INTEGER :: ierr
+
+#ifdef ALLOW_USE_MPI
+    IF (ARRIVAL_TYPE_COMMITTED) THEN
+      CALL MPI_Type_free(MPI_IHOP_ARRIVAL, ierr)
+      MPI_IHOP_ARRIVAL = MPI_DATATYPE_NULL
+      ARRIVAL_TYPE_COMMITTED = .false.
+    ENDIF
+#endif
+  RETURN
+  END !SUBROUTINE free_ihop_arrival
 
 END !MODULE arr_mod
