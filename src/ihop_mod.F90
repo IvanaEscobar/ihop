@@ -22,7 +22,7 @@ MODULE ihop_mod
   PUBLIC  rad2deg, oneCMPLX, &
           PRTFile, RAYFile, DELFile, SHDFile, ARRFile, SSPFile, &
           ATIFile, BTYFile, BRCFile, TRCFile, IRCFile, SBPFile, &
-          MaxN, Nrz_per_range, iStep, afreq, SrcDeclAngle,      &
+          MaxN, nRz_per_range, iStep, afreq, SrcDeclAngle,      &
           Title, Beam, ray2D, ray2DPt, iSmallStepCtr, rxyz
 !=======================================================================
 
@@ -45,7 +45,7 @@ MODULE ihop_mod
 
   ! *** varying parameters for ihop ***
   INTEGER            :: iSmallStepCtr = 0
-  INTEGER            :: Nrz_per_range, iStep
+  INTEGER            :: nRz_per_range, iStep
   REAL (KIND=_RL90)  :: afreq, SrcDeclAngle, SrcAzimAngle
   CHARACTER*(80)     :: Title
 
