@@ -387,6 +387,7 @@ CONTAINS
 
   RETURN
   END !SUBROUTINE WriteArrivalsBinary
+
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 !BOP
 ! !ROUTINE: BcastArr
@@ -396,37 +397,112 @@ CONTAINS
 ! Broadcasts the arrival data, eg. Amplitude, delay, to all MPI ranks
 
 ! !USES:
-    USE ihop_mod,  only: prtfile, nrz_per_range
-    USE srPos_mod, only: Pos
+  USE ihop_mod,  only: prtfile, nrz_per_range
+  USE srPos_mod, only: Pos
+  USE mpi_f08, only: MPI_Datatype, MPI_DATATYPE_NULL, &
+      MPI_DOUBLE_PRECISION, MPI_DOUBLE_COMPLEX, &
+      MPI_REAL, MPI_COMPLEX, MPI_INTEGER
 
 ! !INPUT PARAMETERS:
 ! rank :: MPI rank
 ! comm :: MPI_COMM_WORLD
-  INTEGER,           INTENT( IN ) :: rank, comm
+  INTEGER,          INTENT( IN ) :: rank
+#ifdef ALLOW_USE_MPI
+  INTEGER,          INTENT( IN ) :: comm
+#endif
 ! !OUTPUT PARAMETERS: None
 
 ! !LOCAL VARIABLES:
-! nai,naj,naz :: indices for range and depth
-  INTEGER :: nai, naj,nak
-  INTEGER :: ierr
+! arrSize    :: indices for range and depth
+! ierr       :: MPI return code
+! n          :: number of Arrival parameters
+! bl         :: size of each Arrival parameter
+! singleArr  :: derived type of one Arrival
+  INTEGER :: arrSize
+  INTEGER :: ierr, n, bl(7)
+  TYPE( Arrival ) :: singleArr
+#ifdef ALLOW_USE_MPI
+! disp       :: address for new MPI datatype Arrival parameter
+! base, addr :: base and address for current Arrival datatype and parameters
+! ty         :: datatype of each Arrival parameter
+! MPI_RL, MPI_CL :: MPI type depending on _RL90
+! MPI_IHOP_ARRIVAL :: MPI derived type based on Arrival
+  INTEGER(MPI_ADDRESS_KIND) :: disp(7), base, addr
+  TYPE(MPI_Datatype) :: ty(7)
+  TYPE(MPI_Datatype) :: MPI_RL, MPI_CL
+  TYPE(MPI_Datatype) :: MPI_IHOP_ARRIVAL = MPI_DATATYPE_NULL
+#endif
 !EOP  
 
 #ifdef ALLOW_USE_MPI
   ! We are on MPI rank 0
-  CALL MPI_Bcast(nArr, Pos%nRR*nRz_per_range, MPI_INTEGER, rank, comm, ierr)
+  arrSize = SIZE(nArr)
+  CALL MPI_Bcast(nArr, arrSize, MPI_INTEGER, rank, comm, ierr)
 
-  DO nai = 1,nrz_per_range
-    DO naj = 1,Pos%nRR
-      DO nak = 1,maxNArr
-        CALL MPI_Bcast( Arr(nak,naj,nai)%A, 1, MPI_DOUBLE, rank, comm, ierr)
-        CALL MPI_Bcast( Arr(nak,naj,nai)%Phase, 1, MPI_DOUBLE, rank, comm, ierr)
-        CALL MPI_Bcast( Arr(nak,naj,nai)%SrcDeclAngle, 1, MPI_DOUBLE, rank, comm, ierr)
-        CALL MPI_Bcast( Arr(nak,naj,nai)%RcvrDeclAngle, 1, MPI_DOUBLE, rank, comm, ierr)
-        CALL MPI_Bcast( Arr(nak,naj,nai)%delay, 1, MPI_COMPLEX, rank, comm, ierr)
+  ! Build Arrival MPI type
+  IF (STORAGE_SIZE( singleArr%Phase ).EQ.64) THEN
+    MPI_RL = MPI_DOUBLE_PRECISION
+    MPI_CL = MPI_DOUBLE_COMPLEX
+  ELSEIF (STORAGE_SIZE( singleArr%Phase ).EQ.32) THEN
+    MPI_RL = MPI_REAL
+    MPI_CL = MPI_COMPLEX
+  ELSE
+    STOP "ABNORMAL END MPI_DATATYPE: Unsupported _RL90 size for MPI"
+  ENDIF
 
-      ENDDO
-    ENDDO
-  ENDDO
+  n=0
+  CALL MPI_Get_address(singleArr, base, ierr)
+
+  CALL MPI_Get_address(singleArr%NTopBnc, addr, ierr)
+  n=n+1
+  disp(n)=addr-base
+  bl(n)=1
+  ty(n)=MPI_INTEGER
+
+  CALL MPI_Get_address(singleArr%NBotBnc, addr, ierr)
+  n=n+1
+  disp(n)=addr-base
+  bl(n)=1
+  ty(n)=MPI_INTEGER
+
+  CALL MPI_Get_address(singleArr%SrcDeclAngle, addr, ierr)
+  n=n+1
+  disp(n)=addr-base
+  bl(n)=1
+  ty(n)=MPI_RL
+
+  CALL MPI_Get_address(singleArr%RcvrDeclAngle, addr, ierr)
+  n=n+1
+  disp(n)=addr-base
+  bl(n)=1
+  ty(n)=MPI_RL
+
+  CALL MPI_Get_address(singleArr%A, addr, ierr)
+  n=n+1
+  disp(n)=addr-base
+  bl(n)=1
+  ty(n)=MPI_RL
+
+  CALL MPI_Get_address(singleArr%Phase, addr, ierr)
+  n=n+1
+  disp(n)=addr-base
+  bl(n)=1
+  ty(n)=MPI_RL
+
+  CALL MPI_Get_address(singleArr%delay, addr, ierr)
+  n=n+1
+  disp(n)=addr-base
+  bl(n)=1
+  ty(n)=MPI_CL
+
+  CALL MPI_Type_create_struct(n, bl, disp, ty, MPI_IHOP_ARRIVAL, ierr)
+  CALL MPI_Type_commit(MPI_IHOP_ARRIVAL, ierr)
+
+  ! Broadcast MPI Arrival to all ranks, and free storage
+  arrSize = SIZE(Arr)
+  CALL MPI_Bcast( Arr, arrSize, MPI_IHOP_ARRIVAL, rank, comm, ierr )
+  CALL MPI_Type_free(MPI_IHOP_ARRIVAL, ierr)
+  MPI_IHOP_ARRIVAL = MPI_DATATYPE_NULL
 #endif /* ALLOW_USE_MPI */
 
   RETURN
