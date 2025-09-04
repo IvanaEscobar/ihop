@@ -405,11 +405,9 @@ CONTAINS
 
 ! !INPUT PARAMETERS:
 ! rank :: MPI rank
-! comm :: MPI_COMM_WORLD
-  INTEGER,          INTENT( IN ) :: rank
-#ifdef ALLOW_USE_MPI
-  INTEGER,          INTENT( IN ) :: comm
-#endif
+! comm :: MPI_COMM_WORLD; pre mpi_f08 is an INTEGER
+  INTEGER, INTENT( IN ) :: rank
+  INTEGER, INTENT( IN ) :: comm
 ! !OUTPUT PARAMETERS: None
 
 ! !LOCAL VARIABLES:
