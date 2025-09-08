@@ -266,20 +266,12 @@ CBOP
               err = NF_OPEN( fnameequincglo(1:JL), NF_WRITE, 
      &              ncidGLOB(num_file) )
               CALL IHOP_COST_NF_ERROR('init_fixed20',err,1,1,myThid)
-                    WRITE(msgBuf,'(A,2I)') "q ESCOBAR: init ncidglob ",
-     &              ncidglob(num_file), myprocid
-      CALL PRINT_MESSAGE( msgBuf,
-     &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
             ELSE
 ! Obtain existing NetCDF file id
               err = NF_OPEN( fnameequincglo(1:JL), NF_WRITE,
      &              ncidGLOB(num_file) )
               CALL IHOP_COST_NF_ERROR('init_fixed21',err,1,1,myThid)
-                    WRITE(msgBuf,'(A,2I)') "q ESCOBAR:reopen ncidglob ",
-     &              ncidglob(num_file), myprocid
-      CALL PRINT_MESSAGE( msgBuf,
-     &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
             ENDIF
 
@@ -409,6 +401,8 @@ CBOP
      &               tmpdiff, myThid )
                 CALL CAL_TOSECONDS( tmpdiff, diffsecs, myThid )
 #endif /* ALLOW_CAL */
+
+! Convert to absolute time in seconds
                 diffsecs = diffsecs+nIter0*deltaTclock
 
               ELSE
@@ -509,7 +503,8 @@ CBOP
 
 ! In a valid time?
                 IF ( (tmp_ihopObs_time(nObs).LT.0. _d 0) .OR.
-     &               (tmp_ihopObs_time(nObs).GT.modelend-modelstart) )
+     &               (tmp_ihopObs_time(nObs).GT.modelend) .OR.
+     &               (tmp_ihopObs_time(nObs).LT.modelstart) )
      &          THEN
                   ihopObsInTile = 0
                 ENDIF
@@ -685,10 +680,6 @@ CBOP
 !===========================================================
 ! Create files for model counterparts to ihop obs
 !===========================================================
-                    WRITE(msgBuf,'(A,I)') "ESCOBAR: init_fixed ",
-     &              obsno_tiled(num_file,bi,bj)
-      CALL PRINT_MESSAGE( msgBuf,
-     &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
               IF (obsNo_tiled(num_file,bi,bj).GT.0) THEN
 ! Kludge until unstructered tiles
                 iG=bi+(myXGlobalLo-1)/sNx
@@ -720,20 +711,12 @@ CBOP
      &                   obsNo_tiled(num_file,bi,bj),
      &                   bi, bj, myThid )
 
-                    WRITE(msgBuf,'(A,2I)') "q ESCOBAR : init ncidfwd ",
-     &              ncidFWD(num_file,bi,bj), myprocid
-      CALL PRINT_MESSAGE( msgBuf,
-     &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
                   ELSE
 ! Obtain existing NetCDF file id
                     err = NF_OPEN( fnameequinc(1:JL), NF_WRITE,
      &                    ncidFWD(num_file,bi,bj) )
                     CALL IHOP_COST_NF_ERROR('init_fixed43',err,bi,bj,
      &                myThid)
-                    WRITE(msgBuf,'(A,2I)') "q ESCOBAR: reopen ncidfwd ",
-     &              ncidFWD(num_file,bi,bj), myprocid 
-      CALL PRINT_MESSAGE( msgBuf,
-     &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
                   ENDIF
 
 # ifdef ALLOW_ADJOINT_RUN
