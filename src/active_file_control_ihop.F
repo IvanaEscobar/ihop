@@ -419,10 +419,6 @@ C     !LOCAL VARIABLES:
 
         err = NF_INQ_VARID( fid, ihop_nameequi, varId )
         CALL IHOP_COST_NF_ERROR('act_file_c13',err,1,1,myThid)
-                WRITE(msgBuf,'(2A,I)')
-     &          ' ESCOBAR: ihop_namequi ', ihop_nameequi, varId
-                CALL PRINT_MESSAGE( msgBuf,
-     &          standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
       ENDIF
 
@@ -437,10 +433,6 @@ C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
         err = NF_GET_VARA_DOUBLE( fid, varId, 
      &        vec_start, vec_count, active_var )
         CALL IHOP_COST_NF_ERROR('act_file_c14',err,1,1,myThid)
-                WRITE(msgBuf,'(A,F10.2,I)')
-     &          ' ESCOBAR: RL active_var ', active_var, varId
-                CALL PRINT_MESSAGE( msgBuf,
-     &          standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
         _END_MASTER( myThid )
 
