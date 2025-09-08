@@ -121,48 +121,49 @@ SUBROUTINE ReadPat( myThid )
 ! SUBROUTINE: writePat
 ! !INTERFACE:
   SUBROUTINE writePat( myThid )
-! !DESCRIPTION:
-! Writes the source beam pattern to an output file.
-
-! !USES:
-  USE ihop_mod, only: PRTFile
-
-! !INPUT PARAMETERS:
-! myThid  :: my thread ID
-  INTEGER, INTENT( IN )   :: myThid
-! !OUTPUT PARAMETERS: None
-
-! !LOCAL VARIABLES:
-! msgBuf :: Informational/error message buffer
-! I      :: Loop index
-  CHARACTER*(MAX_LEN_MBUF):: msgBuf
-  INTEGER :: I
-!EOP
-
-  ! I/O on main thread only
-  _BEGIN_MASTER(myThid)
-
-#ifdef IHOP_WRITE_OUT
-  IF ( SBPFlag.EQ.'*' ) THEN
-    WRITE( PRTFile, * )
-    WRITE( PRTFile, * ) '______________________________'
-    WRITE( PRTFile, * ) 'Using source beam pattern file'
-    
-    WRITE( PRTFile, * ) 'Number of source beam pattern points', NSBPPts
-
-    WRITE( PRTFile, * )
-    WRITE( PRTFile, * ) ' Angle (degrees)  Power (dB)'
-
-    DO I = 1, NSBPPts
-      WRITE( PRTFile, FMT = "( 2G11.3 )" ) SrcBmPat( I, : )
-    END DO
-  END IF
-#endif /* IHOP_WRITE_OUT */
-
-  ! I/O on main thread only
-  _END_MASTER(myThid)
-  _BARRIER
-
+      ! IESCO25: UNUSED for now
+!! !DESCRIPTION:
+!! Writes the source beam pattern to an output file.
+!
+!! !USES:
+!  USE ihop_mod, only: PRTFile
+!
+!! !INPUT PARAMETERS:
+!! myThid  :: my thread ID
+!  INTEGER, INTENT( IN )   :: myThid
+!! !OUTPUT PARAMETERS: None
+!
+!! !LOCAL VARIABLES:
+!! msgBuf :: Informational/error message buffer
+!! I      :: Loop index
+!  CHARACTER*(MAX_LEN_MBUF):: msgBuf
+!  INTEGER :: I
+!!EOP
+!
+!  ! I/O on main thread only
+!  _BEGIN_MASTER(myThid)
+!
+!#ifdef IHOP_WRITE_OUT
+!  IF ( SBPFlag.EQ.'*' ) THEN
+!    WRITE( PRTFile, * )
+!    WRITE( PRTFile, * ) '______________________________'
+!    WRITE( PRTFile, * ) 'Using source beam pattern file'
+!    
+!    WRITE( PRTFile, * ) 'Number of source beam pattern points', NSBPPts
+!
+!    WRITE( PRTFile, * )
+!    WRITE( PRTFile, * ) ' Angle (degrees)  Power (dB)'
+!
+!    DO I = 1, NSBPPts
+!      WRITE( PRTFile, FMT = "( 2G11.3 )" ) SrcBmPat( I, : )
+!    END DO
+!  END IF
+!#endif /* IHOP_WRITE_OUT */
+!
+!  ! I/O on main thread only
+!  _END_MASTER(myThid)
+!  _BARRIER
+!
   RETURN
   END !SUBROUTINE writePat
 

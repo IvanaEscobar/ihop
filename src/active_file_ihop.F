@@ -63,7 +63,6 @@ C     !OUTPUT PARAMETERS:
 C     active_var      :: active variable array
       _RL      active_var
 CEOP
-      CHARACTER*80 msgBuf
 
 #if (defined ALLOW_IHOP) && (defined ALLOW_COST)
 
@@ -185,7 +184,6 @@ C     !OUTPUT PARAMETERS:
 C     active_var      :: active variable array
       _RL      active_var
 CEOP
-      CHARACTER*80 msgBuf
 
 #if (defined ALLOW_IHOP) && (defined ALLOW_COST)
 

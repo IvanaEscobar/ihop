@@ -404,7 +404,6 @@ C     myThid :: my thread ID
 C     !OUTPUT PARAMETERS:
       _RL      active_var
 CEOP
-      CHARACTER*80 msgBuf
 
 C     !LOCAL VARIABLES:
 #if (defined ALLOW_IHOP) && (defined ALLOW_COST)
