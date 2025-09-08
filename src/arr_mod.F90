@@ -26,7 +26,7 @@ MODULE arr_mod
   PRIVATE
 !=======================================================================
     PUBLIC WriteArrivalsASCII, WriteArrivalsBinary, &
-           initArr, BcastArr,&
+           initArr, BcastArr, free_ihop_arrival,&
            maxnArr, nArr, Arr, AddArr, U
 #ifdef IHOP_THREED
     PUBLIC nArr3D, Arr3D

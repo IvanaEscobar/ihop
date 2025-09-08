@@ -17,6 +17,9 @@ C     !DESCRIPTION:
 C     Extract ihop model counterparts for cost function data misfit
 
 C     !USES:
+#ifdef ALLOW_USE_MPI
+      USE arr_mod, only: free_ihop_arrival
+#endif
       IMPLICIT NONE
 C == Global variables ===
 #include "SIZE.h"
@@ -65,7 +68,6 @@ C    !LOCAL VARIABLES:
       INTEGER max1, max2, max3
       INTEGER ikey, itdkey
 # endif
-      CHARACTER*(80) msgBuf
 CEOP
 
 # ifndef ALLOW_CTRL
@@ -97,11 +99,6 @@ CEOP
                   CALL IHOP_COST_MODVAL( ihop_modVal, num_file,
      &                 1, 1, myTime, myThid )
 
-                WRITE(msgBuf,'(A,F10.3)')
-     &          'qq ESCOBAR: inloop modval ', ihop_modval
-                CALL PRINT_MESSAGE( msgBuf,
-     &          standardMessageUnit, SQUEEZE_RIGHT, myThid )
-
                   CALL ACTIVE_WRITE_IHOP_TILE( num_file,
      &                 ihop_modVal, nObs, optimcycle, bi, bj, myThid,
      &                 ihop_dummy(num_file,bi,bj) )
@@ -112,6 +109,13 @@ CEOP
           ENDDO !DO num_file
         ENDDO !DO bi
       ENDDO !DO bj
+
+
+#  ifdef ALLOW_USE_MPI
+      IF (myTime.EQ.endTime) THEN
+          CALL free_ihop_arrival( myThid )
+      ENDIF
+#  endif 
 
       _END_MASTER( myThid )
 
