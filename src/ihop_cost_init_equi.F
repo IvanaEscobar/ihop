@@ -16,7 +16,7 @@ C !INTERFACE:
      I                               myThid )
 
 C    !DESCRIPTION:
-C    Initialization of model equivalent NetCDF files for iHOP obs data
+C    Initialization of tiled model equivalent NetCDF files for iHOP obs data
 
 C    !USES:
       IMPLICIT NONE
@@ -102,7 +102,11 @@ C Create a netcdf file
         CALL IHOP_COST_NF_ERROR('init_equi12',err,bi,bj,myThid)
 
       ELSE !IF (ihopDoNcOutput)
-        PRINT *, "IHOP doesn't support binary model equivalents 2024"
+        WRITE(msgBuf,'(2A)') "IHOP COST doesn't support ",
+     &    "binary model equivalents est.2024"
+        CALL PRINT_MESSAGE( msgBuf,
+     &       standardMessageUnit, SQUEEZE_RIGHT, myThid )
+
         OPEN( fid2, FILE = file2, FORM = 'unformatted', 
      &   STATUS = 'unknown', ACCESS = 'direct', 
      &   RECL = 2*WORDLENGTH*2 )

@@ -17,6 +17,9 @@ C     !DESCRIPTION:
 C     Extract ihop model counterparts for cost function data misfit
 
 C     !USES:
+#ifdef ALLOW_USE_MPI
+      USE arr_mod, only: free_ihop_arrival
+#endif
       IMPLICIT NONE
 C == Global variables ===
 #include "SIZE.h"
@@ -65,7 +68,6 @@ C    !LOCAL VARIABLES:
       INTEGER max1, max2, max3
       INTEGER ikey, itdkey
 # endif
-      CHARACTER*(MAX_LEN_MBUF) msgBuf
 CEOP
 
 # ifndef ALLOW_CTRL
@@ -92,6 +94,8 @@ CEOP
 #  endif
                   ihop_modVal = 0
 
+                  ! ESCO25: 1,1 means we only consider a single receiver
+                  ! range and depth
                   CALL IHOP_COST_MODVAL( ihop_modVal, num_file,
      &                 1, 1, myTime, myThid )
 
@@ -105,6 +109,13 @@ CEOP
           ENDDO !DO num_file
         ENDDO !DO bi
       ENDDO !DO bj
+
+
+#  ifdef ALLOW_USE_MPI
+      IF (myTime.EQ.endTime) THEN
+          CALL free_ihop_arrival( myThid )
+      ENDIF
+#  endif 
 
       _END_MASTER( myThid )
 

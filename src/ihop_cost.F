@@ -180,6 +180,7 @@ C Sync global obs
               ihop_uncert = 0.
 
 C Read model equivalent from global file
+
               CALL ACTIVE_READ_IHOP_GLOB( num_file,
      &             ihop_modval, iObs,
      &             .false., optimcycle, myThid,

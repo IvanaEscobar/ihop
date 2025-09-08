@@ -16,13 +16,17 @@ MODULE arr_mod
 #include "SIZE.h"
 #include "EEPARAMS.h"
 #include "PARAMS.h"
+#ifdef ALLOW_USE_MPI
+# include "EESUPPORT.h"
+#endif
 #include "IHOP_SIZE.h"
 #include "IHOP.h"
 
 ! !SCOPE: 
   PRIVATE
 !=======================================================================
-    PUBLIC WriteArrivalsASCII, WriteArrivalsBinary, initArr, &
+    PUBLIC WriteArrivalsASCII, WriteArrivalsBinary, &
+           initArr, BcastArr, free_ihop_arrival,&
            maxnArr, nArr, Arr, AddArr, U
 #ifdef IHOP_THREED
     PUBLIC nArr3D, Arr3D
@@ -40,17 +44,21 @@ MODULE arr_mod
 ! == Derived types ==
   TYPE Arrival
     INTEGER :: NTopBnc, NBotBnc
-    REAL    :: SrcDeclAngle, RcvrDeclAngle, A, Phase
+    REAL (KIND=_RL90)    :: SrcDeclAngle, RcvrDeclAngle, A, Phase
 #ifdef IHOP_THREED
-    REAL    :: SrcAzimAngle, RcvrAzimAngle
+    REAL (KIND=_RL90)    :: SrcAzimAngle, RcvrAzimAngle
 #endif /* IHOP_THREED */
-    COMPLEX :: delay
+    COMPLEX (KIND=_RL90) :: delay
   END TYPE
 
   TYPE(Arrival), ALLOCATABLE :: Arr( :, :, : )
 #ifdef IHOP_THREED
   TYPE(Arrival), ALLOCATABLE :: Arr3D( :, :, :, : )
 #endif /* IHOP_THREED */
+#ifdef ALLOW_USE_MPI
+  INTEGER :: MPI_IHOP_ARRIVAL = MPI_DATATYPE_NULL
+  LOGICAL :: ARRIVAL_TYPE_COMMITTED = .false.
+#endif /* ALLOW_USE_MPI */
 !EOP
 
 CONTAINS
@@ -86,13 +94,76 @@ CONTAINS
   CHARACTER*(MAX_LEN_MBUF):: msgBuf
   INTEGER             :: iAllocStat
   INTEGER             :: x, y
-  INTEGER, PARAMETER  :: arrStorage = 2000, minnArr = 10
+  INTEGER, PARAMETER  :: arrStorage = 100, minnArr = 10
+#ifdef ALLOW_USE_MPI
+! disp       :: address for new MPI datatype Arrival parameter
+! base, addr :: base and address for current Arrival datatype and parameters
+! ty         :: datatype of each Arrival parameter
+! MPI_RL, MPI_CL :: MPI type depending on _RL90
+  INTEGER(KIND=MPI_ADDRESS_KIND) :: disp(7), base, addr(7)
+  INTEGER :: ierr, n, bl(7), ty(7)
+  INTEGER :: MPI_RL, MPI_CL
+  TYPE( Arrival ) :: singleArr
+#endif
 !EOP
 
   ! reset memory
   IF (ALLOCATED(U))           DEALLOCATE(U)
   IF (ALLOCATED(Arr))         DEALLOCATE(Arr)
   IF (ALLOCATED(nArr))        DEALLOCATE(nArr)
+
+#ifdef ALLOW_USE_MPI
+  IF (ARRIVAL_TYPE_COMMITTED) RETURN
+
+  ! Build Arrival MPI type
+  IF (STORAGE_SIZE( singleArr%Phase ).EQ.64) THEN
+    MPI_RL = MPI_DOUBLE_PRECISION
+    MPI_CL = MPI_DOUBLE_COMPLEX
+  ELSEIF (STORAGE_SIZE( singleArr%Phase ).EQ.32) THEN
+    MPI_RL = MPI_REAL
+    MPI_CL = MPI_COMPLEX
+  ELSE
+    STOP "ABNORMAL END MPI_DATATYPE: Unsupported _RL90 size for MPI"
+  ENDIF
+
+  ! Initiate all bl to 1 since all Arr parameters are scalars
+  bl=1
+  CALL MPI_Get_address(singleArr, base, ierr)
+
+  n=1
+  CALL MPI_Get_address(singleArr%NTopBnc, addr(n), ierr)
+  ty(n)=MPI_INTEGER
+
+  n=n+1
+  CALL MPI_Get_address(singleArr%NBotBnc, addr(n), ierr)
+  ty(n)=MPI_INTEGER
+
+  n=n+1
+  CALL MPI_Get_address(singleArr%SrcDeclAngle, addr(n), ierr)
+  ty(n)=MPI_RL
+
+  n=n+1
+  CALL MPI_Get_address(singleArr%RcvrDeclAngle, addr(n), ierr)
+  ty(n)=MPI_RL
+
+  n=n+1
+  CALL MPI_Get_address(singleArr%A, addr(n), ierr)
+  ty(n)=MPI_RL
+
+  n=n+1
+  CALL MPI_Get_address(singleArr%Phase, addr(n), ierr)
+  ty(n)=MPI_RL
+
+  n=n+1
+  CALL MPI_Get_address(singleArr%delay, addr(n), ierr)
+  ty(n)=MPI_CL
+
+  disp(1:n)=addr(1:n)-base
+
+  CALL MPI_Type_create_struct(n, bl, disp, ty, MPI_IHOP_ARRIVAL, ierr)
+  CALL MPI_Type_commit(MPI_IHOP_ARRIVAL, ierr)
+  ARRIVAL_TYPE_COMMITTED = .true.
+#endif /* ALLOW_USE_MPI */
 
   SELECT CASE ( Beam%RunType( 1:1 ) )
     CASE ( 'C', 'S', 'I' ) ! TL calculation
@@ -383,5 +454,70 @@ CONTAINS
 
   RETURN
   END !SUBROUTINE WriteArrivalsBinary
+
+!---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
+!BOP
+! !ROUTINE: BcastArr
+! !INTERFACE:
+  SUBROUTINE BcastArr( root, comm )
+! !DESCRIPTION:
+! Broadcasts the arrival data, eg. Amplitude, delay, to all MPI ranks
+
+! !USES:
+  USE ihop_mod,  only: prtfile, nrz_per_range
+  USE srPos_mod, only: Pos
+
+! !INPUT PARAMETERS:
+! root :: MPI root
+! comm :: MPI_COMM_WORLD; pre mpi_f08 is an INTEGER
+  INTEGER, INTENT( IN ) :: root
+  INTEGER, INTENT( IN ) :: comm
+! !OUTPUT PARAMETERS: None
+
+! !LOCAL VARIABLES:
+! arrSize    :: indices for range and depth
+! ierr       :: MPI return code
+! n          :: number of Arrival parameters
+! bl         :: size of each Arrival parameter
+! singleArr  :: derived type of one Arrival
+  INTEGER :: arrSize
+  INTEGER :: ierr, n, bl(7)
+!EOP  
+
+#ifdef ALLOW_USE_MPI
+  ! We are on MPI rank 0
+  arrSize = SIZE(nArr)
+  CALL MPI_Bcast(nArr, arrSize, MPI_INTEGER, root, comm, ierr)
+
+  ! Broadcast MPI Arrival to all ranks, and free storage
+  arrSize = SIZE(Arr)
+  CALL MPI_Bcast( Arr, arrSize, MPI_IHOP_ARRIVAL, root, comm, ierr )
+
+  !CALL MPI_Type_free(MPI_IHOP_ARRIVAL, ierr)
+  !MPI_IHOP_ARRIVAL = MPI_DATATYPE_NULL
+#endif /* ALLOW_USE_MPI */
+
+  RETURN
+  END !SUBROUTINE BcastArr
+
+!---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
+!BOP
+! !ROUTINE: free_ihop_arrival
+! !INTERFACE:
+  SUBROUTINE free_ihop_arrival(myThid)
+! !DESCRIPTION:
+! Free arrival datatype
+    INTEGER, INTENT( IN ) :: myThid
+    INTEGER :: ierr
+
+#ifdef ALLOW_USE_MPI
+    IF (ARRIVAL_TYPE_COMMITTED) THEN
+      CALL MPI_Type_free(MPI_IHOP_ARRIVAL, ierr)
+      MPI_IHOP_ARRIVAL = MPI_DATATYPE_NULL
+      ARRIVAL_TYPE_COMMITTED = .false.
+    ENDIF
+#endif
+  RETURN
+  END !SUBROUTINE free_ihop_arrival
 
 END !MODULE arr_mod

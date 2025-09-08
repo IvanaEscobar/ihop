@@ -83,6 +83,7 @@ CEOP
      &    'IHOP_COST_MODVAL:',
      &    ' receiver range and depth ID larger than nRR and nRD.'
         CALL PRINT_ERROR( msgBuf, myThid )
+        STOP "ABNORMAL END: S/R IHOP_COST_MODVAL"
       ENDIF
 
 ! Calc arrival amplitude with cylindrical spreading to receiver range
@@ -111,7 +112,6 @@ CEOP
       modVal = REAL( Arr( maxID,ri,rj )%delay )
 
 ! ray storage of top arrival...
-
 #endif /* ALLOW_IHOP */
 
       RETURN
