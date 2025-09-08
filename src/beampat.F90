@@ -122,23 +122,23 @@ SUBROUTINE ReadPat( myThid )
 ! !INTERFACE:
   SUBROUTINE writePat( myThid )
       ! IESCO25: UNUSED for now
-!! !DESCRIPTION:
-!! Writes the source beam pattern to an output file.
-!
+! !DESCRIPTION:
+! Writes the source beam pattern to an output file.
+
 !! !USES:
 !  USE ihop_mod, only: PRTFile
 !
-!! !INPUT PARAMETERS:
-!! myThid  :: my thread ID
-!  INTEGER, INTENT( IN )   :: myThid
-!! !OUTPUT PARAMETERS: None
+! !INPUT PARAMETERS:
+! myThid  :: my thread ID
+  INTEGER, INTENT( IN )   :: myThid
+! !OUTPUT PARAMETERS: None
 !
 !! !LOCAL VARIABLES:
 !! msgBuf :: Informational/error message buffer
 !! I      :: Loop index
 !  CHARACTER*(MAX_LEN_MBUF):: msgBuf
 !  INTEGER :: I
-!!EOP
+!EOP
 !
 !  ! I/O on main thread only
 !  _BEGIN_MASTER(myThid)
