@@ -287,7 +287,6 @@ CONTAINS
         Arr( iArr(1), ir, iz)%NBotBnc       = NumBotBnc         ! bottom bounces
       ENDIF
     ELSE
-      nArr( ir, iz     )               = Nt + 1              ! # arrivals
       Arr( Nt+1, ir, iz)%A             = SNGL( Amp )         ! amplitude
       Arr( Nt+1, ir, iz)%Phase         = SNGL( Phase )       ! phase
       Arr( Nt+1, ir, iz)%delay         = CMPLX( delay )      ! delay time
@@ -295,6 +294,7 @@ CONTAINS
       Arr( Nt+1, ir, iz)%RcvrDeclAngle = SNGL( RcvrDeclAngle ) ! angle
       Arr( Nt+1, ir, iz)%NTopBnc       = NumTopBnc           ! top bounces
       Arr( Nt+1, ir, iz)%NBotBnc       = NumBotBnc           ! bottom bounces
+      Nt               = Nt+1              ! # arrivals
     ENDIF !IF ( Nt.GE.maxnArr )
 
   ELSE ! not a new ray
@@ -312,6 +312,7 @@ CONTAINS
                                     + w2 * SNGL( RcvrDeclAngle )
   ENDIF ! IF ( NewRay )
 
+  Narr(ir,iz) = Nt
   RETURN
   END !SUBROUTINE AddArr
 
