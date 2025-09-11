@@ -44,8 +44,8 @@ MODULE srpos_mod
 
 ! == Derived types ==
   TYPE Position
-    INTEGER              :: NSx = 1, NSy = 1, NSz = 1, & ! # of x,y,z coords
-                            NRz = 1, NRr = 1, nTheta = 1 ! # of z,r,theta coord`s
+    INTEGER              :: nSX = 1, nSY = 1, nSZ = 1, & ! # of x,y,z coords
+                            nRZ = 1, nRR = 1, nTheta = 1 ! # of z,r,theta coord`s
     REAL                 :: Delta_r, Delta_theta
     INTEGER,           ALLOCATABLE :: iSz( : ), iRz( : )
     REAL (KIND=_RL90), ALLOCATABLE :: Sx( : ), Sy( : ), Sz( : )          ! Source x, y, z coordinates
