@@ -127,7 +127,7 @@ CEOP
 
 C Forward equivalent (.equi) file
                   STATUS = NF_CLOSE( ncidFWD(numFile,bi,bj) )
-                  WRITE(msgBuf,'(A,2I5)')
+                  WRITE(msgBuf,'(A,2I8)')
      &              'NC_CLOSE: NF_CLOSE fwd unit',
      &              ncidFWD(numFile,bi,bj), myprocid
                   CALL IHOP_COST_NF_ERROR( msgBuf, STATUS,
@@ -181,7 +181,7 @@ C Data file
 
 C Forward equivalent (.equi) file
               STATUS = NF_CLOSE( ncidGLOB(numFile) )
-              WRITE(msgBuf,'(A,2I5)')
+              WRITE(msgBuf,'(A,2I8)')
      &          'NC_CLOSE: NF_CLOSE ncidGLOB ',
      &          ncidGLOB(numFile), myprocid
               CALL IHOP_COST_NF_ERROR( msgBuf, STATUS,

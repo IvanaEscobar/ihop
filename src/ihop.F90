@@ -308,7 +308,7 @@ CONTAINS
     ! Trace beams: IESCO25 MPI distribute this loop!
     DeclinationAngle: DO iAlpha = 1, Angles%nAlpha
 
-!$TAF store ray2d,arr,nArr,u = IHOPCore2
+!!$TAF store ray2d,arr,nArr,u = IHOPCore2
 
       ! take-off declination angle in degrees
       SrcDeclAngle = Angles%adeg( iAlpha )
@@ -332,7 +332,7 @@ CONTAINS
 !$TAF store amp0,beam%runtype,beam%nsteps = IHOPCore2
 ! IESCO24: Store derived type by data type: Bdry from bdry_mod
 ! Scalar components:
-!$TAF store bdry%top%hs%cp,bdry%top%hs%cs,bdry%top%hs%rho = IHOPCore2
+!!$TAF store bdry%top%hs%cp,bdry%top%hs%cs,bdry%top%hs%rho = IHOPCore2
 ! Fixed arrays:
 ! Allocatable arrays:
 
