@@ -27,7 +27,7 @@ MODULE arr_mod
 !=======================================================================
     PUBLIC WriteArrivalsASCII, WriteArrivalsBinary, &
            initArr, BcastArr, free_ihop_arrival,&
-           maxnArr, nArr, Arr, AddArr, U
+           maxnArr, nArrival, Arr, AddArr, U
 #ifdef IHOP_THREED
     PUBLIC nArr3D, Arr3D
 #endif /* IHOP_THREED */
@@ -35,7 +35,7 @@ MODULE arr_mod
 
 ! == Module variables ==
   INTEGER               :: maxnArr
-  INTEGER, ALLOCATABLE  :: nArr( :, : )
+  INTEGER, ALLOCATABLE  :: nArrival( :, : )
   COMPLEX, ALLOCATABLE  :: U( :, : )
 #ifdef IHOP_THREED
   INTEGER, ALLOCATABLE  :: nArr3D( :, :, : )
@@ -110,7 +110,7 @@ CONTAINS
   ! reset memory
   IF (ALLOCATED(U))           DEALLOCATE(U)
   IF (ALLOCATED(Arr))         DEALLOCATE(Arr)
-  IF (ALLOCATED(nArr))        DEALLOCATE(nArr)
+  IF (ALLOCATED(nArrival))    DEALLOCATE(nArrival)
 
 #ifdef ALLOW_USE_MPI
   IF (ARRIVAL_TYPE_COMMITTED) RETURN
@@ -198,9 +198,9 @@ CONTAINS
     maxnArr = 1
   END SELECT ! Beam%RunType( 1:1 )
 
-  ! init Arr, nArr
+  ! init Arr, nArrival
   ALLOCATE( Arr( maxnArr, Pos%nRR, nRz_per_range ), &
-            nArr(Pos%nRR, nRz_per_range), STAT=iAllocStat )
+            nArrival(Pos%nRR, nRz_per_range), STAT=iAllocStat )
   IF ( iAllocStat.NE.0 ) THEN
 #ifdef IHOP_WRITE_OUT
     WRITE(msgBuf,'(2A)') 'ARR_MOD INITARR: ', &
@@ -212,7 +212,7 @@ CONTAINS
 
   ! init default values
   U                         = 0.0
-  nArr                      = 0
+  nArrival                  = 0
   Arr(:,:,:)%NTopBnc        = -1
   Arr(:,:,:)%NBotBnc        = -1
   Arr(:,:,:)%SrcDeclAngle   = -999.
@@ -259,7 +259,7 @@ CONTAINS
   REAL            :: AmpTot, w1, w2
 !EOP
 
-  Nt     = nArr( ir, iz )    ! # of arrivals
+  Nt     = nArrival( ir, iz )    ! # of arrivals
   NewRay = .TRUE.
 
   ! Is this the second bracketting ray of a pair?
@@ -312,7 +312,7 @@ CONTAINS
                                     + w2 * SNGL( RcvrDeclAngle )
   ENDIF ! IF ( NewRay )
 
-  Narr(ir,iz) = Nt
+  nArrival(ir,iz) = Nt
   RETURN
   END !SUBROUTINE AddArr
 
@@ -351,7 +351,7 @@ CONTAINS
   arrFMT='(G14.6,F10.2,F12.4,G10.2,2F14.6,2I6)'
 
 #ifdef IHOP_WRITE_OUT
-  WRITE( ARRFile,'(I0)' ) MAXVAL( nArr( 1:nRR, 1:Nrz ) )
+  WRITE( ARRFile,'(I0)' ) MAXVAL( nArrival( 1:nRR, 1:Nrz ) )
 #endif /* IHOP_WRITE_OUT */
 
   DO iz = 1, Nrz
@@ -368,8 +368,8 @@ CONTAINS
       ENDIF ! IF ( SourceType.EQ.'X' )
 
 #ifdef IHOP_WRITE_OUT
-      WRITE( ARRFile, '(I0)' ) nArr( ir, iz )
-      DO iArr = 1, nArr( ir, iz )
+      WRITE( ARRFile, '(I0)' ) nArrival( ir, iz )
+      DO iArr = 1, nArrival( ir, iz )
         WRITE( ARRFile, arrFMT ) &
           SNGL( factor )  *Arr( iArr, ir, iz )%A,     &
           SNGL( rad2deg ) *Arr( iArr, ir, iz )%Phase, &
@@ -420,7 +420,7 @@ CONTAINS
   IF (IHOP_dumpfreq.LT.0) RETURN
 
 #ifdef IHOP_WRITE_OUT
-  WRITE( ARRFile, '(I0)' ) MAXVAL( nArr( 1:nRR, 1:Nrz ) )
+  WRITE( ARRFile, '(I0)' ) MAXVAL( nArrival( 1:nRR, 1:Nrz ) )
 #endif /* IHOP_WRITE_OUT */
 
   DO iz = 1, Nrz
@@ -436,8 +436,8 @@ CONTAINS
       ENDIF ! IF ( SourceType.EQ.'X' )
 
 #ifdef IHOP_WRITE_OUT
-      WRITE( ARRFile, '(I0)' ) nArr( ir, iz )
-      DO iArr = 1, nArr( ir, iz )
+      WRITE( ARRFile, '(I0)' ) nArrival( ir, iz )
+      DO iArr = 1, nArrival( ir, iz )
         ! integers written out as reals below for fast reading in Matlab
         WRITE( ARRFile ) &
           SNGL( factor * Arr( iArr, ir, iz )%A ),      &
@@ -487,8 +487,8 @@ CONTAINS
 
 #ifdef ALLOW_USE_MPI
   ! We are on MPI rank 0
-  arrSize = SIZE(nArr)
-  CALL MPI_Bcast(nArr, arrSize, MPI_INTEGER, root, comm, ierr)
+  arrSize = SIZE(nArrival)
+  CALL MPI_Bcast(nArrival, arrSize, MPI_INTEGER, root, comm, ierr)
 
   ! Broadcast MPI Arrival to all ranks, and free storage
   arrSize = SIZE(Arr)

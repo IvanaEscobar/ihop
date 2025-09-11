@@ -1134,12 +1134,12 @@ CONTAINS
 
 ! !USES:
   USE ssp_mod,    only: SSP
-  USE arr_mod,    only: nArr, Arr, U
+  USE arr_mod,    only: nArrival, Arr, U
   USE ihop_mod,   only: ray2D, MaxN, iStep
 
   ! From arr_mod.f90
   U                         = 0.
-  nArr                      = 0
+  nArrival(:,:)             = 0
   Arr(:,:,:)%NTopBnc        = -1
   Arr(:,:,:)%NBotBnc        = -1
   Arr(:,:,:)%SrcDeclAngle   = -999.

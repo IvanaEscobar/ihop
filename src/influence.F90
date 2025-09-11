@@ -55,7 +55,7 @@ CONTAINS
 !   coordinates
 
 ! !USES:
-!  USE arr_mod, only: nArr, Arr         !RG
+!  USE arr_mod, only: nArrival, Arr         !RG
   USE angle_mod, only: Angles
 
 ! !INPUT PARAMETERS:
@@ -188,7 +188,7 @@ CONTAINS
 
         ! Compute influence for each receiver
         DO ir = irA + 1 - II, irB + II, SIGN(1, irB - irA)
-!!$TAF store Arr(:,ir,iz),nArr(ir,iz) = iRayCen2
+!!$TAF store Arr(:,ir,iz),nArrival(ir,iz) = iRayCen2
           W = (Pos%RR(ir) - rA) / (rB - rA)  ! relative range between rR
           n = ABS(nA + W * (nB - nA))
           q = ray2D(iS - 1)%q(1) + W * dq(iS - 1)  ! interpolated amplitude
@@ -235,7 +235,7 @@ CONTAINS
 !   coordinates. When Beam%Type(1:1)='G' or '^'
 
 ! !USES:
-!   USE arr_mod, only: nArr, Arr !RG
+!   USE arr_mod, only: nArrival, Arr !RG
   USE angle_mod, only: Angles
 
 ! !INPUT PARAMETERS:
@@ -310,7 +310,7 @@ CONTAINS
       dtauds = ray2D( iS   )%tau    - ray2D( iS-1 )%tau
 
       !IESCO22: q only changes signs on direct paths, no top/bot bounces
-      IF( q.LE.0. .AND. qOld.GT.0. .OR. q.GE.0. .AND. qOld.LT.0. )&
+      IF( q.LE.0. .AND. qOld.GT.0. .OR. q.GE.0. .AND. qOld.LT.0. ) &
         phase = phase + PI / 2.   ! phase shifts at caustics
       qOld = q
 
@@ -320,9 +320,9 @@ CONTAINS
 
       ! depth limits of beam; IESCO22: a large range of about 1/2 box depth
       IF ( ABS( rayt( 1 ) ).GT.0.5 ) THEN   ! shallow angle ray
-        zmin   = min( x_ray( 2 ), ray2D( iS )%x( 2 ) ) - RadiusMax
-        zmax   = max( x_ray( 2 ), ray2D( iS )%x( 2 ) ) + RadiusMax
-      ELSE                                 ! steep angle ray
+        zmin = min( x_ray( 2 ), ray2D( iS )%x( 2 ) ) - RadiusMax
+        zmax = max( x_ray( 2 ), ray2D( iS )%x( 2 ) ) + RadiusMax
+      ELSE                                  ! steep angle ray
         zmin = -HUGE( zmin )
         zmax = +HUGE( zmax )
       ENDIF
@@ -344,10 +344,10 @@ CONTAINS
           ENDIF
 
           RcvrDepths: DO iz = 1, nRz_per_range
-!!$TAF store Arr(:,ir,iz),nArr(ir,iz),q = iiitape3
+!!$TAF store Arr(:,ir,iz),nArrival(ir,iz),q = iiitape3
             ! is x_rcvr( 2, iz ) contained in ( zmin, zmax )?
-            IF (      x_rcvr( 2, iz ) .GE. zmin &
-                .AND. x_rcvr( 2, iz ) .LE. zmax ) THEN
+            IF (      x_rcvr( 2, iz ).GE.zmin &
+                .AND. x_rcvr( 2, iz ).LE.zmax ) THEN
               ! normalized proportional distance along ray
               s = DOT_PRODUCT( x_rcvr( :, iz ) - x_ray, rayt ) / rlen
               ! normal distance to ray
@@ -426,7 +426,7 @@ CONTAINS
 !   beam window: kills beams outside e**(-0.5 * ibwin**2 )
 
 ! !USES:
-!    USE arr_mod, only: nArr, Arr         !RG
+!    USE arr_mod, only: nArrival, Arr         !RG
   USE angle_mod, only: Angles
 
 ! !INPUT PARAMETERS:
@@ -547,7 +547,7 @@ CONTAINS
            inRcvrRanges ) THEN
 
         RcvrDepths: DO iz = 1, nRz_per_range
-!!$TAF store arr,nArr,q = iGauCart3
+!!$TAF store arr,nArrival,q = iGauCart3
           IF ( Beam%RunType( 5 : 5 ).EQ.'I' ) THEN
             x_rcvr = [ Pos%RR( ir ), Pos%RZ( ir ) ]   ! irregular   grid
           ELSE
