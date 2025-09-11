@@ -49,21 +49,20 @@ CONTAINS
 !BOP
 ! !ROUTINE: InfluenceGeoHatRayCen
 ! !INTERFACE:
-  SUBROUTINE InfluenceGeoHatRayCen( U, dalpha, myThid )
+  SUBROUTINE InfluenceGeoHatRayCen( U, myThid )
 ! !DESCRIPTION:
 !   Geometrically-spreading beams with a hat-shaped beam in ray-centered
 !   coordinates
 
 ! !USES:
-  USE arr_mod, only: nArr, Arr         !RG
+!  USE arr_mod, only: nArr, Arr         !RG
+  USE angle_mod, only: Angles
 
 ! !INPUT PARAMETERS:
 ! U :: complex pressure field
-! dalpha :: take-off angle, radians
 ! myThid :: my thread ID
-  COMPLEX,           INTENT( INOUT ) :: U( nRz_per_range, Pos%nRR )
-  REAL (KIND=_RL90), INTENT( IN    ) :: dalpha ! take-off angle radians
-  INTEGER, INTENT( IN )              :: myThid
+  COMPLEX, INTENT( INOUT ) :: U( nRz_per_range, Pos%nRR )
+  INTEGER, INTENT( IN )    :: myThid
 ! !OUTPUT PARAMETERS: U
 
 ! !LOCAL VARIABLES:
@@ -90,7 +89,7 @@ CONTAINS
 !$TAF init iRayCen2  = static, (Beam%Nsteps-1)*ihop_nRR*nRz_per_range
 !$TAF store ray2d = iRayCen0
 
-  q0   = ray2D( 1 )%c / Dalpha   ! Reference for J = q0 / q
+  q0   = ray2D( 1 )%c / Angles%Dalpha   ! Reference for J = q0 / q
 
   dq   = ray2D( 2:Beam%Nsteps )%q( 1 ) - ray2D( 1:Beam%Nsteps-1 )%q( 1 )
   dtau = ray2D( 2:Beam%Nsteps )%tau    - ray2D( 1:Beam%Nsteps-1 )%tau
@@ -189,7 +188,7 @@ CONTAINS
 
         ! Compute influence for each receiver
         DO ir = irA + 1 - II, irB + II, SIGN(1, irB - irA)
-!$TAF store Arr(:,ir,iz),nArr(ir,iz) = iRayCen2
+!!$TAF store Arr(:,ir,iz),nArr(ir,iz) = iRayCen2
           W = (Pos%RR(ir) - rA) / (rB - rA)  ! relative range between rR
           n = ABS(nA + W * (nB - nA))
           q = ray2D(iS - 1)%q(1) + W * dq(iS - 1)  ! interpolated amplitude
@@ -230,22 +229,20 @@ CONTAINS
 !BOP
 ! !ROUTINE: InfluenceGeoHatCart
 ! !INTERFACE:
-  SUBROUTINE InfluenceGeoHatCart( U, Dalpha, myThid )
+  SUBROUTINE InfluenceGeoHatCart( U, myThid )
 ! !DESCRIPTION:
 !   Geometrically-spreading beams with a hat-shaped beam in Cartesian
-!   coordinates
+!   coordinates. When Beam%Type(1:1)='G' or '^'
 
 ! !USES:
-   USE arr_mod, only: nArr, Arr !RG
+!   USE arr_mod, only: nArr, Arr !RG
+  USE angle_mod, only: Angles
 
 ! !INPUT PARAMETERS:
 ! U :: complex pressure field
-! Dalpha :: take-off angle, radians
 ! myThid :: my thread ID
-  REAL (KIND=_RL90), INTENT( IN    ) :: & ! take-off angle, radians
-                                          Dalpha   ! angular spacing
-  COMPLEX,           INTENT( INOUT ) :: U( nRz_per_range, Pos%nRR )
-  INTEGER, INTENT( IN )   :: myThid
+  COMPLEX, INTENT( INOUT ) :: U( nRz_per_range, Pos%nRR )
+  INTEGER, INTENT( IN )    :: myThid
 ! !OUTPUT PARAMETERS: U
 
 ! !LOCAL VARIABLES:
@@ -268,7 +265,7 @@ CONTAINS
 !$TAF init iiitape2 = static, (Beam%Nsteps-1)*ihop_nRR
 !$TAF init iiitape3 = static, (Beam%Nsteps-1)*ihop_nRR*nRz_per_range
 
-  q0           = ray2D( 1 )%c / Dalpha   ! Reference for J = q0 / q
+  q0           = ray2D( 1 )%c / Angles%Dalpha   ! Reference for J = q0 / q
   phase        = 0.0
   qOld         = ray2D( 1 )%q( 1 )       ! old KMAH index
   rA           = ray2D( 1 )%x( 1 )       ! range at start of ray, typically 0
@@ -347,7 +344,7 @@ CONTAINS
           ENDIF
 
           RcvrDepths: DO iz = 1, nRz_per_range
-!$TAF store Arr(:,ir,iz),nArr(ir,iz),q = iiitape3
+!!$TAF store Arr(:,ir,iz),nArr(ir,iz),q = iiitape3
             ! is x_rcvr( 2, iz ) contained in ( zmin, zmax )?
             IF (      x_rcvr( 2, iz ) .GE. zmin &
                 .AND. x_rcvr( 2, iz ) .LE. zmax ) THEN
@@ -422,22 +419,21 @@ CONTAINS
 !BOP
 ! !ROUTINE: InfluenceGeoGaussianCart
 ! !INTERFACE:
-  SUBROUTINE InfluenceGeoGaussianCart( U, Dalpha, myThid )
+  SUBROUTINE InfluenceGeoGaussianCart( U, myThid )
 ! !DESCRIPTION:
 !   Geometrically-spreading beams with a Gaussian beam in Cartesian
-!   coordinates.
+!   coordinates. When Beam%Type(1:1)='B'
 !   beam window: kills beams outside e**(-0.5 * ibwin**2 )
 
 ! !USES:
-    USE arr_mod, only: nArr, Arr         !RG
+!    USE arr_mod, only: nArr, Arr         !RG
+  USE angle_mod, only: Angles
 
 ! !INPUT PARAMETERS:
 ! U :: complex pressure field
-! Dalpha :: take-off angle, radians
 ! myThid :: my thread ID
-  COMPLEX,       INTENT( INOUT )  :: U( nRz_per_range, Pos%nRR )
-  REAL (KIND=_RL90), INTENT( IN ) :: Dalpha
-  INTEGER,           INTENT( IN )   :: myThid
+  COMPLEX, INTENT( INOUT ) :: U( nRz_per_range, Pos%nRR )
+  INTEGER, INTENT( IN )    :: myThid
 ! !OUTPUT PARAMETERS: U
 
 ! !LOCAL VARIABLES:
@@ -461,7 +457,7 @@ CONTAINS
 !$TAF init iGauCart1 = static, (Beam%Nsteps-1)
 !$TAF init iGauCart2 = static, (Beam%Nsteps-1)*ihop_nRR
 !$TAF init iGauCart3 = static, (Beam%Nsteps-1)*ihop_nRR*nRz_per_range
-  q0     = ray2D( 1 )%c / Dalpha   ! Reference for J = q0 / q
+  q0     = ray2D( 1 )%c / Angles%Dalpha   ! Reference for J = q0 / q
   phase  = 0
   qOld   = ray2D( 1 )%q( 1 )       ! used to track KMAH index
   rA     = ray2D( 1 )%x( 1 )       ! range at start of ray
@@ -551,7 +547,7 @@ CONTAINS
            inRcvrRanges ) THEN
 
         RcvrDepths: DO iz = 1, nRz_per_range
-!$TAF store arr,nArr,q = iGauCart3
+!!$TAF store arr,nArr,q = iGauCart3
           IF ( Beam%RunType( 5 : 5 ).EQ.'I' ) THEN
             x_rcvr = [ Pos%RR( ir ), Pos%RZ( ir ) ]   ! irregular   grid
           ELSE
@@ -643,28 +639,38 @@ CONTAINS
 
 ! !LOCAL VARIABLES:
 ! tmpDelay :: temporary array for delay values
-  REAL(KIND=_RL90) :: tmpDelay(maxN)
+  INTEGER :: i
+  REAL(KIND=_RL90) :: tmpX(maxN), tmpY(maxN), tmpDelay(maxN)
 !EOP
 
+! initiate temporary arrays
+  tmpX = 0.
+  tmpY = 0.
   tmpDelay = 0.
+  DO i = 1,iS
+    tmpX(i) = ray2D(i)%x(1)
+    tmpY(i) = ray2D(i)%x(2)
+    tmpDelay(i) = REAL(ray2D(i)%tau)
+  ENDDO
+
+! write rays and delays
   SELECT CASE( Beam%RunType( 1:1 ) )
   CASE ( 'E' )                ! eigenrays
     U=U
-    tmpDelay = 0.
+!    tmpDelay = 0.
     CALL WriteRayOutput( RAYFile, iS,         &
-      ray2D(1:iS)%x(1), ray2D(1:iS)%x(2),     &
+      tmpX(1:iS), tmpY(1:iS),                 &
       ray2D(iS)%NumTopBnc, ray2D(iS)%NumBotBnc )
 
   CASE ( 'e' )                ! eigenrays AND arrivals
     U=U
-    tmpDelay = 0.
-    CALL WriteRayOutput( RAYFile, iS,           &
-      ray2D(1:iS)%x(1), ray2D(1:iS)%x(2),     &
+!    tmpDelay = 0.
+    CALL WriteRayOutput( RAYFile, iS,         &
+      tmpX(1:iS), tmpY(1:iS),                 &
       ray2D(iS)%NumTopBnc, ray2D(iS)%NumBotBnc )
     IF (writeDelay) THEN
-      tmpDelay = REAL(ray2D(1:iS)%tau)
-      CALL WriteRayOutput( DELFile, iS,             &
-        tmpDelay, ray2D(1:iS)%x(2),               &
+      CALL WriteRayOutput( DELFile, iS,       &
+        tmpDelay(1:iS), tmpY(1:iS),           &
         ray2D(iS)%NumTopBnc, ray2D(iS)%NumBotBnc )
     ENDIF
 
@@ -673,16 +679,16 @@ CONTAINS
 
   CASE ( 'A', 'a' )           ! arrivals
     U=U
-    tmpDelay = 0.
+!    tmpDelay = 0.
     CALL AddArr( afreq, iz, ir, Amp, phaseInt, delay,  &
       RcvrDeclAngle, ray2D( iS )%NumTopBnc, ray2D( iS )%NumBotBnc )
 
   CASE ( 'C' )                ! coherent TL
-    tmpDelay = 0.
+!    tmpDelay = 0.
     U = U + CMPLX( Amp * EXP( -oneCMPLX * ( afreq * delay - phaseInt ) ) )
 
   CASE ( 'S', 'I' )                ! incoherent/semicoherent TL
-    tmpDelay = 0.
+!    tmpDelay = 0.
     IF ( Beam%Type( 1:1 ).EQ.'B' ) THEN   ! Gaussian beam
       U = U + SNGL( SQRT( 2. * PI ) &
             * ( Amp * EXP( AIMAG( afreq * delay ) ) )**2 )
@@ -692,7 +698,7 @@ CONTAINS
     ENDIF
 
   CASE DEFAULT                ! incoherent/semicoherent TL
-    tmpDelay = 0.
+!    tmpDelay = 0.
     IF ( Beam%Type( 1:1 ).EQ.'B' ) THEN   ! Gaussian beam
       U = U + SNGL( SQRT( 2. * PI ) &
             * ( Amp * EXP( AIMAG( afreq * delay ) ) )**2 )
@@ -710,14 +716,14 @@ CONTAINS
 !BOP
 ! !ROUTINE: ScalePressure
 ! !INTERFACE:
-  SUBROUTINE ScalePressure( Dalpha, c, r, U, nRz, nR, RunType, freq )
+  SUBROUTINE ScalePressure( c, r, U, nRz, nR, RunType, freq )
 ! !DESCRIPTION:
 !   Scale the pressure field U according to the run type and range.
 
-! !USES: None
+! !USES:
+  USE angle_mod, only: Angles
 
 ! !INPUT PARAMETERS:
-! Dalpha :: angular spacing between rays, radians
 ! c :: nominal sound speed, m/s
 ! r :: Rr ranges, m
 ! U :: complex pressure field
@@ -725,7 +731,7 @@ CONTAINS
 ! nR :: number of ranges in the pressure field
 ! RunType :: run type, e.g. 'C' for Cerveny Gaussian beams in Cartesian coordinates
 ! freq :: source frequency, Hz
-  REAL (KIND=_RL90), INTENT( IN    ) :: Dalpha, c, r( nR )
+  REAL (KIND=_RL90), INTENT( IN    ) :: c, r( nR )
   COMPLEX,           INTENT( INOUT ) :: U( nRz, nR )
   INTEGER,           INTENT( IN    ) :: nRz, nR
   CHARACTER*(5),     INTENT( IN    ) :: RunType
@@ -741,9 +747,9 @@ CONTAINS
   ! Compute scale factor for field
   SELECT CASE ( RunType( 2:2 ) )
   CASE ( 'C' )   ! Cerveny Gaussian beams in Cartesian coordinates
-    const = -Dalpha * SQRT( freq ) / c
+    const = -Angles%Dalpha * SQRT( freq ) / c
   CASE ( 'R' )   ! Cerveny Gaussian beams in Ray-centered coordinates
-    const = -Dalpha * SQRT( freq ) / c
+    const = -Angles%Dalpha * SQRT( freq ) / c
   CASE DEFAULT
     const = -1.0
   END SELECT

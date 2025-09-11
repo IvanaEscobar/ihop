@@ -154,3 +154,11 @@
 !$TAF FUNCTION NF_SYNC   INPUT = 1
 !$TAF SUBROUTINE IHOP_COST_NF_ERROR   INPUT = 1,2,3,4,5
 !$TAF SUBROUTINE IHOP_COST_NC_CLOSE   INPUT = 1
+
+!     *==========================================================*
+!     | MPI functions that are passive                           |
+!     *==========================================================*
+!$TAF SUBROUTINE arr_mod::free_ihop_arrival INPUT   = 1
+!$TAF SUBROUTINE arr_mod::bcastarr          INPUT   = 1,2
+!$TAF SUBROUTINE MPI_barrier INPUT = 1,2
+!$TAF SUBROUTINE MPI_comm_rank INPUT = 1,2,3

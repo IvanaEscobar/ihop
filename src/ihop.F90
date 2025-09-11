@@ -98,7 +98,7 @@ CONTAINS
   CHARACTER*(MAX_LEN_MBUF):: msgBuf
   REAL :: Tstart, Tstop
 #ifdef ALLOW_USE_MPI
-  INTEGER :: mpiRC
+  INTEGER :: mpiRC, locProcID
   mpiRC  = 0
 #endif
 
@@ -110,7 +110,7 @@ CONTAINS
 
   ! Only do IO and computation on a single process!
   IF ( .NOT.usingMPI .AND. IHOP_dumpfreq.GE.0 ) THEN
-    myProcId=0
+    locProcID=0
 
     ! open PRTFile
     CALL initPRTFile( myTime, myIter, myThid )
@@ -129,11 +129,11 @@ CONTAINS
 
 #ifdef ALLOW_USE_MPI
   ELSE ! using MPI
-    CALL MPI_COMM_RANK( MPI_COMM_MODEL, mpiMyId, mpiRC )
-    myProcId = mpiMyId
+    !CALL MPI_COMM_RANK( MPI_COMM_MODEL, mpiMyId, mpiRC )
+    locProcID = myProcID
 
     ! Hard coded write on single proc
-    IF ( myProcId.EQ.0 .AND. IHOP_dumpfreq.GE.0 ) THEN
+    IF ( locProcID.EQ.0 .AND. IHOP_dumpfreq.GE.0 ) THEN
       ! open PRTFile
       CALL initPRTFile( myTime, myIter, myThid )
 
@@ -149,7 +149,7 @@ CONTAINS
       ! Open output files:
       CALL OpenOutputFiles( IHOP_fileroot, myTime, myIter, myThid )
 
-    ENDIF ! IF ( myProcId.EQ.0 ) 
+    ENDIF ! IF ( locProcID.EQ.0 ) 
 
 #endif /* ALLOW_USE_MPI */
   ENDIF ! IF ( .NOT.usingMPI )
@@ -158,11 +158,11 @@ CONTAINS
   CALL setSSP( myThid )
 
   ! Run IHOP solver on a single processor
-  IF ( myProcId.EQ.0 ) THEN
+  IF ( locProcID.EQ.0 ) THEN
     CALL CPU_TIME( Tstart )
     CALL IHOPCore( myThid )
     CALL CPU_TIME( Tstop  )
-  ENDIF ! IF ( myProcId.EQ.0 )
+  ENDIF ! IF ( locProcID.EQ.0 )
 #ifdef ALLOW_USE_MPI
   IF ( usingMPI ) THEN
     CALL MPI_BARRIER( MPI_COMM_WORLD, mpiRC )
@@ -171,7 +171,7 @@ CONTAINS
 #endif
 
 #ifdef IHOP_WRITE_OUT
-  IF ( myProcId.EQ.0 .AND. IHOP_dumpfreq.GE.0 ) THEN
+  IF ( locProcID.EQ.0 .AND. IHOP_dumpfreq.GE.0 ) THEN
     WRITE(msgBuf, '(A)' )
     CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
     WRITE(msgBuf, '(A,G15.3,A)' ) 'CPU Time = ', Tstop-Tstart, 's'
@@ -195,7 +195,7 @@ CONTAINS
       STOP "ABNORMAL END: S/R IHOP_MAIN"
     END SELECT
 
-  ENDIF ! IF ( myProcId.EQ.0 )
+  ENDIF ! IF ( locProcID.EQ.0 )
 #endif /* IHOP_WRITE_OUT */
 
   RETURN
@@ -213,7 +213,7 @@ CONTAINS
   USE ssp_mod,   only: evalSSP, iSegr  !RG
   USE angle_mod, only: Angles, iAlpha
   USE srPos_mod, only: Pos
-  USE arr_mod,   only: WriteArrivalsASCII, WriteArrivalsBinary, nArr, U
+  USE arr_mod,   only: WriteArrivalsASCII, WriteArrivalsBinary, U
   USE writeRay,  only: WriteRayOutput
   USE influence, only: InfluenceGeoHatRayCen, InfluenceGeoGaussianCart, &
                        InfluenceGeoHatCart, ScalePressure
@@ -275,13 +275,13 @@ CONTAINS
     SELECT CASE ( Beam%RunType( 1:1 ) )
     CASE ( 'C','S','I' ) ! TL calculation, zero out pressure matrix
       U = 0.0
-      nArr = 0
+      !nArr = 0
     CASE ( 'A','a','e' )   ! Arrivals calculation, zero out arrival matrix
       U = 0.0
-      nArr = 0
+      !nArr = 0
     CASE DEFAULT ! Ray tracing only
       U = 0.0
-      nArr = 0
+      !nArr = 0
     END SELECT
 
     CALL evalSSP(  xs, c, cimag, gradc, crr, crz, czz, rho, myThid  )
@@ -374,14 +374,14 @@ CONTAINS
           ELSE ! Compute the contribution to the field
             SELECT CASE ( Beam%Type( 1:1 ) )
             CASE ( 'g' )
-              CALL InfluenceGeoHatRayCen( U, Angles%Dalpha, myThid )
+              CALL InfluenceGeoHatRayCen( U, myThid )
             CASE ( 'B' )
-              CALL InfluenceGeoGaussianCart( U, Angles%Dalpha, &
+              CALL InfluenceGeoGaussianCart( U, &
                 myThid )
             CASE ( 'G','^' )
-              CALL InfluenceGeoHatCart( U, Angles%Dalpha, myThid )
+              CALL InfluenceGeoHatCart( U, myThid )
             CASE DEFAULT !IEsco22: thesis is in default behavior
-              CALL InfluenceGeoHatCart( U, Angles%Dalpha, myThid )
+              CALL InfluenceGeoHatCart( U, myThid )
             END SELECT
 
           ENDIF ! IF ( Beam%RunType(1:1).EQ.'R')
@@ -393,7 +393,7 @@ CONTAINS
     ! Write results to disk
     SELECT CASE ( Beam%RunType( 1:1 ) )
     CASE ( 'C', 'S', 'I' )   ! TL calculation
-      CALL ScalePressure( Angles%Dalpha, ray2D( 1 )%c, Pos%RR, U, &
+      CALL ScalePressure( ray2D( 1 )%c, Pos%RR, U, &
                           nRz_per_range, Pos%nRR, Beam%RunType, &
                           IHOP_freq )
       iRec = 10 + nRz_per_range * ( is-1 )
