@@ -26,11 +26,14 @@ MODULE arr_mod
   PRIVATE
 !=======================================================================
     PUBLIC WriteArrivalsASCII, WriteArrivalsBinary, &
-           initArr, BcastArr, free_ihop_arrival,&
+           initArr, BcastArr, &
            maxnArr, nArrival, Arr, AddArr, U
 #ifdef IHOP_THREED
     PUBLIC nArr3D, Arr3D
 #endif /* IHOP_THREED */
+#ifdef ALLOW_USE_MPI
+    PUBLIC free_ihop_arrival
+#endif /* ALLOW_USE_MPI */
 !=======================================================================
 
 ! == Module variables ==
@@ -95,16 +98,6 @@ CONTAINS
   INTEGER             :: iAllocStat
   INTEGER             :: x, y
   INTEGER, PARAMETER  :: arrStorage = 100, minnArr = 10
-#ifdef ALLOW_USE_MPI
-! disp       :: address for new MPI datatype Arrival parameter
-! base, addr :: base and address for current Arrival datatype and parameters
-! ty         :: datatype of each Arrival parameter
-! MPI_RL, MPI_CL :: MPI type depending on _RL90
-  INTEGER(KIND=MPI_ADDRESS_KIND) :: disp(7), base, addr(7)
-  INTEGER :: ierr, n, bl(7), ty(7)
-  INTEGER :: MPI_RL, MPI_CL
-  TYPE( Arrival ) :: singleArr
-#endif
 !EOP
 
   ! reset memory
@@ -112,58 +105,6 @@ CONTAINS
   IF (ALLOCATED(Arr))         DEALLOCATE(Arr)
   IF (ALLOCATED(nArrival))    DEALLOCATE(nArrival)
 
-#ifdef ALLOW_USE_MPI
-  IF (ARRIVAL_TYPE_COMMITTED) RETURN
-
-  ! Build Arrival MPI type
-  IF (STORAGE_SIZE( singleArr%Phase ).EQ.64) THEN
-    MPI_RL = MPI_DOUBLE_PRECISION
-    MPI_CL = MPI_DOUBLE_COMPLEX
-  ELSEIF (STORAGE_SIZE( singleArr%Phase ).EQ.32) THEN
-    MPI_RL = MPI_REAL
-    MPI_CL = MPI_COMPLEX
-  ELSE
-    STOP "ABNORMAL END MPI_DATATYPE: Unsupported _RL90 size for MPI"
-  ENDIF
-
-  ! Initiate all bl to 1 since all Arr parameters are scalars
-  bl=1
-  CALL MPI_Get_address(singleArr, base, ierr)
-
-  n=1
-  CALL MPI_Get_address(singleArr%NTopBnc, addr(n), ierr)
-  ty(n)=MPI_INTEGER
-
-  n=n+1
-  CALL MPI_Get_address(singleArr%NBotBnc, addr(n), ierr)
-  ty(n)=MPI_INTEGER
-
-  n=n+1
-  CALL MPI_Get_address(singleArr%SrcDeclAngle, addr(n), ierr)
-  ty(n)=MPI_RL
-
-  n=n+1
-  CALL MPI_Get_address(singleArr%RcvrDeclAngle, addr(n), ierr)
-  ty(n)=MPI_RL
-
-  n=n+1
-  CALL MPI_Get_address(singleArr%A, addr(n), ierr)
-  ty(n)=MPI_RL
-
-  n=n+1
-  CALL MPI_Get_address(singleArr%Phase, addr(n), ierr)
-  ty(n)=MPI_RL
-
-  n=n+1
-  CALL MPI_Get_address(singleArr%delay, addr(n), ierr)
-  ty(n)=MPI_CL
-
-  disp(1:n)=addr(1:n)-base
-
-  CALL MPI_Type_create_struct(n, bl, disp, ty, MPI_IHOP_ARRIVAL, ierr)
-  CALL MPI_Type_commit(MPI_IHOP_ARRIVAL, ierr)
-  ARRIVAL_TYPE_COMMITTED = .true.
-#endif /* ALLOW_USE_MPI */
 
   SELECT CASE ( Beam%RunType( 1:1 ) )
     CASE ( 'C', 'S', 'I' ) ! TL calculation
@@ -210,6 +151,11 @@ CONTAINS
     STOP 'ABNORMAL END: S/R IHOP_MAIN'
   ENDIF
 
+#ifdef ALLOW_USE_MPI
+! create MPI DerivedType
+  CALL ArrivalTypeInit( Arr(1,1,1) )
+
+#endif /* ALLOW_USE_MPI */
   ! init default values
   U                         = 0.0
   nArrival(:,:)             = 0
@@ -485,24 +431,53 @@ CONTAINS
 ! singleArr  :: derived type of one Arrival
   INTEGER :: arrSize
   INTEGER :: ierr, n, bl(7)
+  CHARACTER*180 :: MSGBUF
 !EOP  
+integer :: eh, ierr_local, elen, myrank
+character(len=MPI_MAX_ERROR_STRING) :: estr
+
+call MPI_Comm_rank(comm, myrank, ierr)
+
+!* 1) Ensure every rank actually has the custom type: */
+if (MPI_IHOP_ARRIVAL .eq. MPI_DATATYPE_NULL) then
+  write(msgbuf,*) 'ESCOBARRank', myrank, &
+      'MPI_IHOP_ARRIVAL is NULL; (re)building now'
+  call print_error(msgbuf,1)
+  call ArrivalTypeInit(Arr(1,1,1))   ! safe to call; will no-op if already committed
+end if
+
+!* 2) Temporarily force errors to return instead of aborting immediately: */
+call MPI_Comm_set_errhandler(comm, MPI_ERRORS_RETURN, ierr)
+
 
 #ifdef ALLOW_USE_MPI
   ! We are on MPI rank 0
   arrSize = SIZE(nArrival)
-  CALL MPI_Bcast(nArrival, arrSize, MPI_INTEGER, root, comm, ierr)
+  CALL MPI_Bcast(nArrival, arrSize, MPI_INTEGER, root, comm, ierr_local)
+if (ierr_local .ne. MPI_SUCCESS) then
+  call MPI_Error_string(ierr_local, estr, elen, ierr)
+  write(msgbuf,*) 'ESCOBARRank', myrank, 'Bcast(nArr) failed: ', trim(estr(1:elen))
+  CALL PRINT_ERROR(msgbuf,1)
+  call MPI_Abort(comm, 1, ierr)
+end if
 
   ! Broadcast MPI Arrival to all ranks, and free storage
   arrSize = SIZE(Arr)
-  CALL MPI_Bcast( Arr, arrSize, MPI_IHOP_ARRIVAL, root, comm, ierr )
-
-  !CALL MPI_Type_free(MPI_IHOP_ARRIVAL, ierr)
-  !MPI_IHOP_ARRIVAL = MPI_DATATYPE_NULL
+  CALL MPI_Bcast( Arr, arrSize, MPI_IHOP_ARRIVAL, root, comm, ierr_local )
+if (ierr_local .ne. MPI_SUCCESS) then
+  call MPI_Error_string(ierr_local, estr, elen, ierr)
+  write(msgbuf,*) 'ESCOBARRank', myrank, 'Bcast(Arr) failed: ', &
+      trim(estr(1:elen)), &
+             '  MPI_IHOP_ARRIVAL=', MPI_IHOP_ARRIVAL
+  CALL PRINT_ERROR(msgbuf,1)
+  call MPI_Abort(comm, 2, ierr)
+end if
 #endif /* ALLOW_USE_MPI */
 
   RETURN
   END !SUBROUTINE BcastArr
 
+#ifdef ALLOW_USE_MPI
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 !BOP
 ! !ROUTINE: free_ihop_arrival
@@ -513,14 +488,91 @@ CONTAINS
     INTEGER, INTENT( IN ) :: myThid
     INTEGER :: ierr
 
-#ifdef ALLOW_USE_MPI
     IF (ARRIVAL_TYPE_COMMITTED) THEN
       CALL MPI_Type_free(MPI_IHOP_ARRIVAL, ierr)
       MPI_IHOP_ARRIVAL = MPI_DATATYPE_NULL
       ARRIVAL_TYPE_COMMITTED = .false.
     ENDIF
-#endif
   RETURN
   END !SUBROUTINE free_ihop_arrival
+
+!---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
+!BOP
+! !ROUTINE: ArrivalTypeInti
+! !INTERFACE:
+  SUBROUTINE ArrivalTypeInit( singleArrival )
+! !DESCRIPTION:
+! Initializes the arrival MPI Datatype
+
+! !USES: None
+
+! !INPUT PARAMETERS:
+  TYPE( Arrival ), INTENT( IN ) :: singleArrival
+! !OUTPUT PARAMETERS: None
+
+! !LOCAL VARIABLES:
+! disp       :: address for new MPI datatype Arrival parameter
+! base, addr :: base and address for current Arrival datatype and parameters
+! ty         :: datatype of each Arrival parameter
+! MPI_RL, MPI_CL :: MPI type depending on _RL90
+  INTEGER(KIND=MPI_ADDRESS_KIND) :: disp(7), base, addr(7)
+  INTEGER :: ierr, n, bl(7), ty(7)
+  INTEGER :: MPI_RL, MPI_CL
+!EOP
+
+  IF (ARRIVAL_TYPE_COMMITTED) RETURN
+
+  ! Build Arrival MPI type
+  IF (STORAGE_SIZE( singleArrival%Phase ).EQ.64) THEN
+    MPI_RL = MPI_DOUBLE_PRECISION
+    MPI_CL = MPI_DOUBLE_COMPLEX
+  ELSEIF (STORAGE_SIZE( singleArrival%Phase ).EQ.32) THEN
+    MPI_RL = MPI_REAL
+    MPI_CL = MPI_COMPLEX
+  ELSE
+    STOP "ABNORMAL END MPI_DATATYPE: Unsupported _RL90 size for MPI"
+  ENDIF
+
+  ! Initiate all bl to 1 since all Arr parameters are scalars
+  bl=1
+  CALL MPI_Get_address(singleArrival, base, ierr)
+
+  n=1
+  CALL MPI_Get_address(singleArrival%NTopBnc, addr(n), ierr)
+  ty(n)=MPI_INTEGER
+
+  n=n+1
+  CALL MPI_Get_address(singleArrival%NBotBnc, addr(n), ierr)
+  ty(n)=MPI_INTEGER
+
+  n=n+1
+  CALL MPI_Get_address(singleArrival%SrcDeclAngle, addr(n), ierr)
+  ty(n)=MPI_RL
+
+  n=n+1
+  CALL MPI_Get_address(singleArrival%RcvrDeclAngle, addr(n), ierr)
+  ty(n)=MPI_RL
+
+  n=n+1
+  CALL MPI_Get_address(singleArrival%A, addr(n), ierr)
+  ty(n)=MPI_RL
+
+  n=n+1
+  CALL MPI_Get_address(singleArrival%Phase, addr(n), ierr)
+  ty(n)=MPI_RL
+
+  n=n+1
+  CALL MPI_Get_address(singleArrival%delay, addr(n), ierr)
+  ty(n)=MPI_CL
+
+  disp(1:n)=addr(1:n)-base
+
+  CALL MPI_Type_create_struct(n, bl, disp, ty, MPI_IHOP_ARRIVAL, ierr)
+  CALL MPI_Type_commit(MPI_IHOP_ARRIVAL, ierr)
+  ARRIVAL_TYPE_COMMITTED = .true.
+
+RETURN
+END
+#endif /* ALLOW_USE_MPI */
 
 END !MODULE arr_mod
