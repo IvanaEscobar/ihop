@@ -149,9 +149,12 @@
 !     *==========================================================*
 !     | NetCDF functions that are passive                        |
 !     *==========================================================*
-!$TAF FUNCTION NF_OPEN   INPUT = 1,2,3
-!$TAF FUNCTION NF_CLOSE  INPUT = 1
-!$TAF FUNCTION NF_SYNC   INPUT = 1
+!$TAF FUNCTION NF_OPEN                INPUT = 1,2,3
+!$TAF FUNCTION NF_CLOSE               INPUT = 1
+!$TAF FUNCTION NF_SYNC                INPUT = 1
+!$TAF FUNCTION NF_STRERROR            INPUT = 1
+!$TAF FUNCTION NF_INQ_VARID           INPUT = 1,2,3
+!$TAF FUNCTION NF_PUT_VARA_DOUBLE     INPUT = 1,2,3,4,5
 !$TAF SUBROUTINE IHOP_COST_NF_ERROR   INPUT = 1,2,3,4,5
 !$TAF SUBROUTINE IHOP_COST_NC_CLOSE   INPUT = 1
 
