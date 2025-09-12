@@ -26,13 +26,12 @@ MODULE arr_mod
   PRIVATE
 !=======================================================================
     PUBLIC WriteArrivalsASCII, WriteArrivalsBinary, &
-           initArr, BcastArr, &
-           maxnArr, nArrival, Arr, AddArr, U
+           initArr, maxnArr, nArrival, Arr, AddArr, U
 #ifdef IHOP_THREED
     PUBLIC nArr3D, Arr3D
 #endif /* IHOP_THREED */
 #ifdef ALLOW_USE_MPI
-    PUBLIC free_ihop_arrival
+    PUBLIC free_ihop_arrival, BcastArr
 #endif /* ALLOW_USE_MPI */
 !=======================================================================
 
@@ -412,9 +411,7 @@ CONTAINS
 ! !DESCRIPTION:
 ! Broadcasts the arrival data, eg. Amplitude, delay, to all MPI ranks
 
-! !USES:
-  USE ihop_mod,  only: prtfile, nrz_per_range
-  USE srPos_mod, only: Pos
+! !USES: None
 
 ! !INPUT PARAMETERS:
 ! root :: MPI root
@@ -426,52 +423,22 @@ CONTAINS
 ! !LOCAL VARIABLES:
 ! arrSize    :: indices for range and depth
 ! ierr       :: MPI return code
-! n          :: number of Arrival parameters
-! bl         :: size of each Arrival parameter
-! singleArr  :: derived type of one Arrival
   INTEGER :: arrSize
-  INTEGER :: ierr, n, bl(7)
-  CHARACTER*180 :: MSGBUF
+  INTEGER :: ierr
 !EOP  
-integer :: eh, ierr_local, elen, myrank
-character(len=MPI_MAX_ERROR_STRING) :: estr
-
-call MPI_Comm_rank(comm, myrank, ierr)
-
-!* 1) Ensure every rank actually has the custom type: */
-if (MPI_IHOP_ARRIVAL .eq. MPI_DATATYPE_NULL) then
-  write(msgbuf,*) 'ESCOBARRank', myrank, &
-      'MPI_IHOP_ARRIVAL is NULL; (re)building now'
-  call print_error(msgbuf,1)
-  call ArrivalTypeInit(Arr(1,1,1))   ! safe to call; will no-op if already committed
-end if
-
-!* 2) Temporarily force errors to return instead of aborting immediately: */
-call MPI_Comm_set_errhandler(comm, MPI_ERRORS_RETURN, ierr)
-
 
 #ifdef ALLOW_USE_MPI
+  IF ( MPI_IHOP_ARRIVAL.EQ.MPI_DATATYPE_NULL ) THEN
+    CALL ArrivalTypeInit( Arr(1,1,1) )
+  ENDIF
+
   ! We are on MPI rank 0
   arrSize = SIZE(nArrival)
-  CALL MPI_Bcast(nArrival, arrSize, MPI_INTEGER, root, comm, ierr_local)
-if (ierr_local .ne. MPI_SUCCESS) then
-  call MPI_Error_string(ierr_local, estr, elen, ierr)
-  write(msgbuf,*) 'ESCOBARRank', myrank, 'Bcast(nArr) failed: ', trim(estr(1:elen))
-  CALL PRINT_ERROR(msgbuf,1)
-  call MPI_Abort(comm, 1, ierr)
-end if
+  CALL MPI_Bcast( nArrival, arrSize, MPI_INTEGER, root, comm, ierr )
 
   ! Broadcast MPI Arrival to all ranks, and free storage
   arrSize = SIZE(Arr)
-  CALL MPI_Bcast( Arr, arrSize, MPI_IHOP_ARRIVAL, root, comm, ierr_local )
-if (ierr_local .ne. MPI_SUCCESS) then
-  call MPI_Error_string(ierr_local, estr, elen, ierr)
-  write(msgbuf,*) 'ESCOBARRank', myrank, 'Bcast(Arr) failed: ', &
-      trim(estr(1:elen)), &
-             '  MPI_IHOP_ARRIVAL=', MPI_IHOP_ARRIVAL
-  CALL PRINT_ERROR(msgbuf,1)
-  call MPI_Abort(comm, 2, ierr)
-end if
+  CALL MPI_Bcast( Arr, arrSize, MPI_IHOP_ARRIVAL, root, comm, ierr )
 #endif /* ALLOW_USE_MPI */
 
   RETURN
@@ -493,6 +460,7 @@ end if
       MPI_IHOP_ARRIVAL = MPI_DATATYPE_NULL
       ARRIVAL_TYPE_COMMITTED = .false.
     ENDIF
+
   RETURN
   END !SUBROUTINE free_ihop_arrival
 

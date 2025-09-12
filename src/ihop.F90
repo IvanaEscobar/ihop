@@ -80,7 +80,9 @@ CONTAINS
   USE refCoef,        only: writeRefCoef 
   USE beampat,        only: writePat
   USE ihop_mod,       only: Beam
+#ifdef ALLOW_USE_MPI
   USE arr_mod,        only: BcastArr
+#endif
 
 ! !INPUT PARAMETERS:
 ! myTime   :: time in seconds
