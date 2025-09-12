@@ -212,7 +212,7 @@ CONTAINS
 
   ! init default values
   U                         = 0.0
-  nArrival                  = 0
+  nArrival(:,:)             = 0
   Arr(:,:,:)%NTopBnc        = -1
   Arr(:,:,:)%NBotBnc        = -1
   Arr(:,:,:)%SrcDeclAngle   = -999.
@@ -287,14 +287,14 @@ CONTAINS
         Arr( iArr(1), ir, iz)%NBotBnc       = NumBotBnc         ! bottom bounces
       ENDIF
     ELSE
-      Arr( Nt+1, ir, iz)%A             = SNGL( Amp )         ! amplitude
-      Arr( Nt+1, ir, iz)%Phase         = SNGL( Phase )       ! phase
-      Arr( Nt+1, ir, iz)%delay         = CMPLX( delay )      ! delay time
-      Arr( Nt+1, ir, iz)%SrcDeclAngle  = SNGL( SrcDeclAngle )  ! angle
-      Arr( Nt+1, ir, iz)%RcvrDeclAngle = SNGL( RcvrDeclAngle ) ! angle
-      Arr( Nt+1, ir, iz)%NTopBnc       = NumTopBnc           ! top bounces
-      Arr( Nt+1, ir, iz)%NBotBnc       = NumBotBnc           ! bottom bounces
-      Nt               = Nt+1              ! # arrivals
+      Nt                             = Nt+1                ! # arrivals
+      Arr( Nt, ir, iz)%A             = SNGL( Amp )         ! amplitude
+      Arr( Nt, ir, iz)%Phase         = SNGL( Phase )       ! phase
+      Arr( Nt, ir, iz)%delay         = CMPLX( delay )      ! delay time
+      Arr( Nt, ir, iz)%SrcDeclAngle  = SNGL( SrcDeclAngle )  ! angle
+      Arr( Nt, ir, iz)%RcvrDeclAngle = SNGL( RcvrDeclAngle ) ! angle
+      Arr( Nt, ir, iz)%NTopBnc       = NumTopBnc           ! top bounces
+      Arr( Nt, ir, iz)%NBotBnc       = NumBotBnc           ! bottom bounces
     ENDIF !IF ( Nt.GE.maxnArr )
 
   ELSE ! not a new ray
@@ -312,7 +312,9 @@ CONTAINS
                                     + w2 * SNGL( RcvrDeclAngle )
   ENDIF ! IF ( NewRay )
 
+  ! Pass Nt to global Narrival
   nArrival(ir,iz) = Nt
+
   RETURN
   END !SUBROUTINE AddArr
 

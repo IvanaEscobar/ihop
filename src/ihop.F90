@@ -212,8 +212,7 @@ CONTAINS
   USE ssp_mod,   only: evalSSP, iSegr  !RG
   USE angle_mod, only: Angles, iAlpha
   USE srPos_mod, only: Pos
-  USE arr_mod,   only: WriteArrivalsASCII, WriteArrivalsBinary, U!, &
-!      nArrival
+  USE arr_mod,   only: WriteArrivalsASCII, WriteArrivalsBinary, U
   USE writeRay,  only: WriteRayOutput
   USE influence, only: InfluenceGeoHatRayCen, InfluenceGeoGaussianCart, &
                        InfluenceGeoHatCart, ScalePressure
@@ -272,19 +271,6 @@ CONTAINS
     xs = [ zeroRL, Pos%SZ( is ) ]  ! assuming source @ r=0
     ! Reset U and nArrival for each new source depth
     U=0.0
-    !nArrival = 0
-
-    !SELECT CASE ( Beam%RunType( 1:1 ) )
-    !CASE ( 'C','S','I' ) ! TL calculation, zero out pressure matrix
-    !  U = 0.0
-    !  nArrival = 0
-    !CASE ( 'A','a','e' )   ! Arrivals calculation, zero out arrival matrix
-    !  U = 0.0
-    !  nArrival = 0
-    !CASE DEFAULT ! Ray tracing only
-    !  U = 0.0
-    !  nArrival = 0
-    !END SELECT
 
     CALL evalSSP(  xs, c, cimag, gradc, crr, crz, czz, rho, myThid  )
 
@@ -310,7 +296,7 @@ CONTAINS
     ! Trace beams: IESCO25 MPI distribute this loop!
     DeclinationAngle: DO iAlpha = 1, Angles%nAlpha
 
-!!$TAF store ray2d,arr,nArrival,u = IHOPCore2
+!!$TAF store ray2d,arr,u = IHOPCore2
 
       ! take-off declination angle in degrees
       SrcDeclAngle = Angles%adeg( iAlpha )
