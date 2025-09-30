@@ -58,10 +58,10 @@ C Create a netcdf file
         CALL IHOP_COST_NF_ERROR('init_equi 2',err,bi,bj,myThid)
 
         err = NF_DEF_VAR( fid2, 'ihopObs_ind_glob_tiled',
-     &        NF_INT, 1, dimId,varId(1) )
+     &        NF_INT, 1, dimId, varId(1) )
         CALL IHOP_COST_NF_ERROR('init_equi 3',err,bi,bj,myThid)
         err = NF_PUT_ATT_INT( fid2, varId(1),
-     &        '_FillValue', NF_INT, 1, -9999 )
+     &        '_FillValue', NF_INT, 1, 0 )
         CALL IHOP_COST_NF_ERROR('init_equi 4',err,bi,bj,myThid)
 
 ! If 'ihop_val' exists in data file, then add info to equi file
@@ -72,14 +72,14 @@ C Create a netcdf file
      &          NF_DOUBLE, 1, dimId, varId(2) )
         CALL IHOP_COST_NF_ERROR('init_equi 6',err,bi,bj,myThid)
           err = NF_PUT_ATT_DOUBLE( fid2, varId(2),
-     &          '_FillValue', NF_DOUBLE, 1, -9999. _d 0 )
+     &          '_FillValue', NF_DOUBLE, 1, 0. _d 0 )
         CALL IHOP_COST_NF_ERROR('init_equi 7',err,bi,bj,myThid)
 
           err = NF_DEF_VAR( fid2, ihop_namemask,
      &          NF_DOUBLE, 1, dimId, varId(3) )
         CALL IHOP_COST_NF_ERROR('init_equi 8',err,bi,bj,myThid)
           err = NF_PUT_ATT_DOUBLE(fid2,varId(3),
-     &          '_FillValue', NF_DOUBLE, 1, -9999. _d 0 )
+     &          '_FillValue', NF_DOUBLE, 1, 0. _d 0 )
         CALL IHOP_COST_NF_ERROR('init_equi 9',err,bi,bj,myThid)
 
         ELSE
