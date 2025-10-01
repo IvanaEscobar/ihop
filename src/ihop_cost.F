@@ -11,7 +11,7 @@ CBOP
 C !ROUTINE: IHOP_COST
 
 C !INTERFACE:
-      SUBROUTINE IHOP_COST( myIter, myTime, myThid )
+      SUBROUTINE IHOP_COST( myTime, myIter, myThid )
 
 C    !DESCRIPTION:
 C    Computes iHOP data misfit for cost function

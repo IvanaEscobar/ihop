@@ -99,8 +99,9 @@ CONTAINS
 ! mpiRC :: MPI return code
   CHARACTER*(MAX_LEN_MBUF):: msgBuf
   REAL :: Tstart, Tstop
+  INTEGER :: locProcID
 #ifdef ALLOW_USE_MPI
-  INTEGER :: mpiRC, locProcID
+  INTEGER :: mpiRC
   mpiRC  = 0
 #endif
 

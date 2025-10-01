@@ -725,7 +725,7 @@ c--     Accumulate in-situ time averages of theta, salt, and SSH.
 #endif
 c--     Accumulate in-situ acoutsic travel times.
         CALL TIMER_START('IHOP_COST_INLOOP   [MAIN_DO_LOOP]', myThid)
-        CALL IHOP_COST_INLOOP( myTime, myThid )
+        CALL IHOP_COST_INLOOP( myTime, myIter, myThid )
         CALL TIMER_STOP ('IHOP_COST_INLOOP   [MAIN_DO_LOOP]', myThid)
       ENDIF
 #endif /* ALLOW_IHOP */
@@ -801,11 +801,11 @@ c--   Compute all obsfit cost function contributions.
       IF ( useIHOP ) THEN
 c--   Accumulate travel times
         CALL TIMER_START('IHOP_COST_INLOOP    [THE_MAIN_LOOP]', myThid)
-        CALL IHOP_COST_INLOOP( endtime, myThid )
+        CALL IHOP_COST_INLOOP( endtime, myIter, myThid )
         CALL TIMER_STOP ('IHOP_COST_INLOOP    [THE_MAIN_LOOP]', myThid)
 c--   Compute all ihop cost function contributions.
         CALL TIMER_START('IHOP_COST   [THE_MAIN_LOOP]', myThid)
-        CALL IHOP_COST( myIter, myTime, myThid )
+        CALL IHOP_COST( myTime, myIter, myThid )
         CALL TIMER_STOP ('IHOP_COST   [THE_MAIN_LOOP]', myThid)
       ENDIF
 #endif /* ALLOW_IHOP */

@@ -11,7 +11,7 @@ CBOP
 C !ROUTINE: IHOP_COST_INLOOP
 
 C !INTERFACE:
-      SUBROUTINE IHOP_COST_INLOOP( myTime, myThid )
+      SUBROUTINE IHOP_COST_INLOOP( myTime, myIter, myThid )
 
 C     !DESCRIPTION:
 C     Extract ihop model counterparts for cost function data misfit
@@ -46,8 +46,10 @@ C == Global variables ===
 
 C     !INPUT PARAMETERS:
 C     myTime :: Current time in simulation
+C     myIter :: Current iteration number in simulation
 C     myThid :: my thread ID
       _RL     myTime
+      INTEGER myIter
       INTEGER myThid
 C     !OUTPUT PARAMETERS:
 
@@ -84,7 +86,7 @@ CEOP
         DO bi = 1, nSx
           DO num_file = 1, NFILESMAX_IHOP
             DO nObs = 1, NOBSMAX_IHOP
-              IF (nObs.LE.ObsNo_tiled(num_file,bi,bj)) THEN
+              IF ( nObs.LE.ObsNo_tiled(num_file,bi,bj) ) THEN
                 IF ( (ihopObs_time(num_file,nObs,bi,bj).GE.
      &                myTime) .AND.
      &               (ihopObs_time(num_file,nObs,bi,bj).LT.
@@ -95,12 +97,14 @@ CEOP
                   ihop_modVal = 0
 
                   ! ESCO25: 1,1 means we only consider a single receiver
-                  ! range and depth
+                  ! range and depth. We also do NO time avg, and can
+                  ! ignore reading previously recorded values
                   CALL IHOP_COST_MODVAL( ihop_modVal, num_file,
      &                 1, 1, myTime, myThid )
 
-                  CALL ACTIVE_WRITE_IHOP_TILE( num_file,
-     &                 ihop_modVal, nObs, optimcycle, bi, bj, myThid,
+                  CALL ACTIVE_WRITE_IHOP_TILE( 
+     &                 num_file, ihop_modVal,
+     &                 nObs, optimcycle, bi, bj, myThid,
      &                 ihop_dummy(num_file,bi,bj) )
 
                 ENDIF !IF ( (ihopObs_time
