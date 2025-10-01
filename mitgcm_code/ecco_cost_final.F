@@ -124,7 +124,7 @@ c the adjoint, pkg/autodiff most likely require cost though.
 #ifdef ALLOW_OBSFIT
       INTEGER num_file_obs
       _RL no_obsfit(NFILESMAX_OBS)
-C#endif
+#endif
 #ifdef ALLOW_IHOP
       INTEGER num_file_ihop
       _RL no_ihop(NFILESMAX_IHOP)
