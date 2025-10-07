@@ -132,7 +132,7 @@ CONTAINS
   CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
   WRITE(msgBuf,'(A)')
   CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-  WRITE(msgBuf,'(A,I10)') 'Number of beams in elevation   = ', &
+  WRITE(msgBuf,'(A,I5)') 'Number of beams in elevation   = ', &
    Angles%nAlpha
   CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
   IF ( Angles%iSingle_alpha.GT.0 ) THEN
@@ -737,12 +737,12 @@ CONTAINS
     WRITE( RAYFile, '(3A)'    ) '''', Title( 1:50 ), ''''
     WRITE( RAYFile, '(F10.3)' ) IHOP_freq
     WRITE( RAYFile, '(3I6)'   ) Pos%nSX, Pos%nSY, Pos%nSZ
-    WRITE( RAYFile, '(I)'     ) Angles%nAlpha
+    WRITE( RAYFile, '(I5)'    ) Angles%nAlpha
     WRITE( RAYFile, '(F10.4)' ) Bdry%Top%HS%Depth
     WRITE( RAYFile, '(F10.4)' ) Bdry%Bot%HS%Depth
 #ifdef IHOP_THREED
-    WRITE( RAYFile, '(2I)' ) Angles%nAlpha, Angles%nBeta
-    WRITE( RAYFile, '(A)'  ) '''xyz'''
+    WRITE( RAYFile, '(2I5)' ) Angles%nAlpha, Angles%nBeta
+    WRITE( RAYFile, '(A)'   ) '''xyz'''
 #else /* IHOP_THREED */
     WRITE( RAYFile, '(A)'  ) '''rz'''
 #endif /* IHOP_THREED */
@@ -758,12 +758,12 @@ CONTAINS
       WRITE( DELFile, '(3A)'    ) '''', Title( 1:50 ), ''''
       WRITE( DELFile, '(F10.3)' ) IHOP_freq
       WRITE( DELFile, '(3I6)'   ) Pos%nSX, Pos%nSY, Pos%nSZ
-      WRITE( DELFile, '(I)'     ) Angles%nAlpha
+      WRITE( DELFile, '(I5)'    ) Angles%nAlpha
       WRITE( DELFile, '(F10.4)' ) Bdry%Top%HS%Depth
       WRITE( DELFile, '(F10.4)' ) Bdry%Bot%HS%Depth
 #ifdef IHOP_THREED
-      WRITE( DELFile, '(2I)' ) Angles%nAlpha, Angles%nBeta
-      WRITE( DELFile, '(A)'  ) '''xyz'''
+      WRITE( DELFile, '(2I5)' ) Angles%nAlpha, Angles%nBeta
+      WRITE( DELFile, '(A)'   ) '''xyz'''
 # else /* IHOP_THREED */
       WRITE( DELFile, '(A)'  ) '''rz'''
 # endif /* IHOP_THREED */
@@ -818,12 +818,12 @@ CONTAINS
     WRITE( RAYFile, '(3A)'    ) '''', Title( 1:50 ), ''''
     WRITE( RAYFile, '(F10.3)' ) IHOP_freq
     WRITE( RAYFile, '(3I6)'   ) Pos%nSX, Pos%nSY, Pos%nSZ
-    WRITE( RAYFile, '(I)'     ) Angles%nAlpha
+    WRITE( RAYFile, '(I5)'    ) Angles%nAlpha
     WRITE( RAYFile, '(F10.4)' ) Bdry%Top%HS%Depth
     WRITE( RAYFile, '(F10.4)' ) Bdry%Bot%HS%Depth
 # ifdef IHOP_THREED
-    WRITE( RAYFile, '(2I)' ) Angles%nAlpha, Angles%nBeta
-    WRITE( RAYFile, '(A)'  ) '''xyz'''
+    WRITE( RAYFile, '(2I5)' ) Angles%nAlpha, Angles%nBeta
+    WRITE( RAYFile, '(A)'   ) '''xyz'''
 # else /* IHOP_THREED */
     WRITE( RAYFile, '(A)'  ) '''rz'''
 # endif /* IHOP_THREED */
@@ -838,12 +838,12 @@ CONTAINS
       WRITE( DELFile, '(3A)'    ) '''', Title( 1:50 ), ''''
       WRITE( DELFile, '(F10.3)' ) IHOP_freq
       WRITE( DELFile, '(3I6)'   ) Pos%nSX, Pos%nSY, Pos%nSZ
-      WRITE( DELFile, '(I)'     ) Angles%nAlpha
+      WRITE( DELFile, '(I5)'    ) Angles%nAlpha
       WRITE( DELFile, '(F10.4)' ) Bdry%Top%HS%Depth
       WRITE( DELFile, '(F10.4)' ) Bdry%Bot%HS%Depth
 #ifdef IHOP_THREED
-      WRITE( DELFile, '(2I)' ) Angles%nAlpha, Angles%nBeta
-      WRITE( DELFile, '(A)'  ) '''xyz'''
+      WRITE( DELFile, '(2I5)' ) Angles%nAlpha, Angles%nBeta
+      WRITE( DELFile, '(A)'   ) '''xyz'''
 # else /* IHOP_THREED */
       WRITE( DELFile, '(A)'  ) '''rz'''
 # endif /* IHOP_THREED */
