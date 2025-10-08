@@ -17,6 +17,7 @@
 ! Place CPP define/undef flag here
 #define IHOP_DEBUG
 
+! Allow writing to PRTFile and RAY/DEL/ARR Files
 #define IHOP_WRITE_OUT
 
 ! Three-dimensional sound propagation
@@ -36,6 +37,10 @@
 ! multiple sound receivers; e.g. a VLA
 #undef IHOP_MULTIPLE_RECEIVER_DEPTHS
 #undef IHOP_MULTIPLE_RECEIVER_RANGES
+
+!!! ihop cost options !!!
+! QoI as J = C^2
+#define TEST_IHOP_COST
 
 #endif /* ALLOW_IHOP */
 #endif /* IHOP_OPTIONS_H */

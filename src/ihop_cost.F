@@ -79,6 +79,9 @@ C     bi,bj :: Tile indices
       _RL  ihopObs_buff(NOBSMAX_IHOP)
       _RL  ihopObs_modval_glob(NOBSMAX_IHOP)
 # endif
+# ifdef TEST_IHOP_COST
+      INTEGER i,j,k
+# endif
 
 # ifndef ALLOW_CTRL
       optimcycle = 0
@@ -99,6 +102,29 @@ CADJ INIT tapelev_ihop_cost = COMMON, NFILESMAX_IHOP
         _BEGIN_MASTER( myThid )
 
 # ifdef ALLOW_COST
+#  ifdef TEST_IHOP_COST
+      DO num_file = 1, NFILESMAX_IHOP
+      DO bj=1,nSy
+        DO bi=1,nSx
+          DO k=1,Nr
+          DO j=1-oly,sNy+oly
+            DO i=1-olx,sNx+olx
+              objf_ihop(num_file) = objf_ihop(num_file) + 
+     &                              ihop_ssp(i,j,k,bi,bj)**2
+
+            ENDDO !DO i
+          ENDDO !DO j
+          ENDDO !DO k
+        ENDDO !DO bi
+      ENDDO !DO bj
+              WRITE(msgBuf,'(A,G12.4)') 'QoI sum(C2): ', 
+     &                                  objf_ihop(num_file)
+      CALL PRINT_MESSAGE( msgBuf,
+     &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
+      ENDDO !DO num_file
+
+
+#  else /* TEST_IHOP_COST */
       DO num_file = 1, NFILESMAX_IHOP
 
 C File maintenance
@@ -221,12 +247,12 @@ C Calc misfit
               IF (ihop_uncert.GT.zeroRL) THEN
                 ihop_weight = 1. _d 0 / (ihop_uncert*ihop_uncert)
 
-                objf_ihop(num_file) = objf_ihop(num_file)
-     &           +ihop_weight
-     &           *(ihop_modval-ihop_data)
-     &           *(ihop_modval-ihop_data)
+                objf_ihop(num_file) = objf_ihop(num_file) + 
+     &                                ihop_weight
+     &                                *(ihop_modval-ihop_data)
+     &                                *(ihop_modval-ihop_data)
 
-                num_ihop(num_file) = num_ihop(num_file)+1
+                num_ihop(num_file) = num_ihop(num_file) + 1
 
               ENDIF
 
@@ -237,6 +263,7 @@ C Calc misfit
 
       ENDDO !DO num_file
 
+#  endif /* TEST_IHOP_COST */
 # endif /* ALLOW_COST */
 
       _END_MASTER( myThid )
