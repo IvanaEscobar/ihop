@@ -537,8 +537,8 @@ C#endif
 
 #ifdef ALLOW_GENERIC_ADVDIFF
 C-    Check generic AdvDiff setting and related overlap minimum size:
+C     for this reason, called after other ${pkg}_check S/R
       IF ( useGAD ) CALL GAD_CHECK( myThid )
-#endif
 #endif
 
 C---  Exclusive packages (which cannot be used together):
