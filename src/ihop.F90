@@ -80,7 +80,9 @@ CONTAINS
   USE refCoef,        only: writeRefCoef 
   USE beampat,        only: writePat
   USE ihop_mod,       only: Beam
+#ifdef ALLOW_USE_MPI
   USE arr_mod,        only: BcastArr
+#endif
 
 ! !INPUT PARAMETERS:
 ! myTime   :: time in seconds
@@ -97,6 +99,7 @@ CONTAINS
 ! mpiRC :: MPI return code
   CHARACTER*(MAX_LEN_MBUF):: msgBuf
   REAL :: Tstart, Tstop
+  INTEGER :: locProcID
 #ifdef ALLOW_USE_MPI
   INTEGER :: mpiRC
   mpiRC  = 0
@@ -110,7 +113,7 @@ CONTAINS
 
   ! Only do IO and computation on a single process!
   IF ( .NOT.usingMPI .AND. IHOP_dumpfreq.GE.0 ) THEN
-    myProcId=0
+    locProcID=0
 
     ! open PRTFile
     CALL initPRTFile( myTime, myIter, myThid )
@@ -129,11 +132,10 @@ CONTAINS
 
 #ifdef ALLOW_USE_MPI
   ELSE ! using MPI
-    CALL MPI_COMM_RANK( MPI_COMM_MODEL, mpiMyId, mpiRC )
-    myProcId = mpiMyId
+    locProcID = myProcID
 
     ! Hard coded write on single proc
-    IF ( myProcId.EQ.0 .AND. IHOP_dumpfreq.GE.0 ) THEN
+    IF ( locProcID.EQ.0 .AND. IHOP_dumpfreq.GE.0 ) THEN
       ! open PRTFile
       CALL initPRTFile( myTime, myIter, myThid )
 
@@ -149,7 +151,7 @@ CONTAINS
       ! Open output files:
       CALL OpenOutputFiles( IHOP_fileroot, myTime, myIter, myThid )
 
-    ENDIF ! IF ( myProcId.EQ.0 ) 
+    ENDIF ! IF ( locProcID.EQ.0 ) 
 
 #endif /* ALLOW_USE_MPI */
   ENDIF ! IF ( .NOT.usingMPI )
@@ -158,11 +160,11 @@ CONTAINS
   CALL setSSP( myThid )
 
   ! Run IHOP solver on a single processor
-  IF ( myProcId.EQ.0 ) THEN
+  IF ( locProcID.EQ.0 ) THEN
     CALL CPU_TIME( Tstart )
     CALL IHOPCore( myThid )
     CALL CPU_TIME( Tstop  )
-  ENDIF ! IF ( myProcId.EQ.0 )
+  ENDIF ! IF ( locProcID.EQ.0 )
 #ifdef ALLOW_USE_MPI
   IF ( usingMPI ) THEN
     CALL MPI_BARRIER( MPI_COMM_WORLD, mpiRC )
@@ -171,7 +173,7 @@ CONTAINS
 #endif
 
 #ifdef IHOP_WRITE_OUT
-  IF ( myProcId.EQ.0 .AND. IHOP_dumpfreq.GE.0 ) THEN
+  IF ( locProcID.EQ.0 .AND. IHOP_dumpfreq.GE.0 ) THEN
     WRITE(msgBuf, '(A)' )
     CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
     WRITE(msgBuf, '(A,G15.3,A)' ) 'CPU Time = ', Tstop-Tstart, 's'
@@ -195,7 +197,7 @@ CONTAINS
       STOP "ABNORMAL END: S/R IHOP_MAIN"
     END SELECT
 
-  ENDIF ! IF ( myProcId.EQ.0 )
+  ENDIF ! IF ( locProcID.EQ.0 )
 #endif /* IHOP_WRITE_OUT */
 
   RETURN
@@ -213,7 +215,7 @@ CONTAINS
   USE ssp_mod,   only: evalSSP, iSegr  !RG
   USE angle_mod, only: Angles, iAlpha
   USE srPos_mod, only: Pos
-  USE arr_mod,   only: WriteArrivalsASCII, WriteArrivalsBinary, nArr, U
+  USE arr_mod,   only: WriteArrivalsASCII, WriteArrivalsBinary, U
   USE writeRay,  only: WriteRayOutput
   USE influence, only: InfluenceGeoHatRayCen, InfluenceGeoGaussianCart, &
                        InfluenceGeoHatCart, ScalePressure
@@ -270,19 +272,8 @@ CONTAINS
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   SourceDepth: DO is = 1, Pos%nSZ
     xs = [ zeroRL, Pos%SZ( is ) ]  ! assuming source @ r=0
-
-    ! Reset U and nArr for each new source depth
-    SELECT CASE ( Beam%RunType( 1:1 ) )
-    CASE ( 'C','S','I' ) ! TL calculation, zero out pressure matrix
-      U = 0.0
-      nArr = 0
-    CASE ( 'A','a','e' )   ! Arrivals calculation, zero out arrival matrix
-      U = 0.0
-      nArr = 0
-    CASE DEFAULT ! Ray tracing only
-      U = 0.0
-      nArr = 0
-    END SELECT
+    ! Reset U and nArrival for each new source depth
+    U=0.0
 
     CALL evalSSP(  xs, c, cimag, gradc, crr, crz, czz, rho, myThid  )
 
@@ -308,7 +299,7 @@ CONTAINS
     ! Trace beams: IESCO25 MPI distribute this loop!
     DeclinationAngle: DO iAlpha = 1, Angles%nAlpha
 
-!$TAF store ray2d,arr,nArr,u = IHOPCore2
+!!$TAF store ray2d,arr,u = IHOPCore2
 
       ! take-off declination angle in degrees
       SrcDeclAngle = Angles%adeg( iAlpha )
@@ -332,7 +323,7 @@ CONTAINS
 !$TAF store amp0,beam%runtype,beam%nsteps = IHOPCore2
 ! IESCO24: Store derived type by data type: Bdry from bdry_mod
 ! Scalar components:
-!$TAF store bdry%top%hs%cp,bdry%top%hs%cs,bdry%top%hs%rho = IHOPCore2
+!!$TAF store bdry%top%hs%cp,bdry%top%hs%cs,bdry%top%hs%rho = IHOPCore2
 ! Fixed arrays:
 ! Allocatable arrays:
 
@@ -349,9 +340,11 @@ CONTAINS
             WRITE(msgBuf,'(A,I7,F10.2)') 'Tracing ray ', &
               iAlpha, SrcDeclAngle
             ! In adjoint mode we do not write output besides on the first run
-            IF (IHOP_dumpfreq.GE.0) &
+            IF (IHOP_dumpfreq.GE.0) THEN
               CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
-            FLUSH( PRTFile )
+              FLUSH( PRTFile )
+            ENDIF
+
           ENDIF
 #endif /* IHOP_WRITE_OUT */
 
@@ -374,14 +367,13 @@ CONTAINS
           ELSE ! Compute the contribution to the field
             SELECT CASE ( Beam%Type( 1:1 ) )
             CASE ( 'g' )
-              CALL InfluenceGeoHatRayCen( U, Angles%Dalpha, myThid )
+              CALL InfluenceGeoHatRayCen( U, myThid )
             CASE ( 'B' )
-              CALL InfluenceGeoGaussianCart( U, Angles%Dalpha, &
-                myThid )
+              CALL InfluenceGeoGaussianCart( U, myThid )
             CASE ( 'G','^' )
-              CALL InfluenceGeoHatCart( U, Angles%Dalpha, myThid )
+              CALL InfluenceGeoHatCart( U, myThid )
             CASE DEFAULT !IEsco22: thesis is in default behavior
-              CALL InfluenceGeoHatCart( U, Angles%Dalpha, myThid )
+              CALL InfluenceGeoHatCart( U, myThid )
             END SELECT
 
           ENDIF ! IF ( Beam%RunType(1:1).EQ.'R')
@@ -393,7 +385,7 @@ CONTAINS
     ! Write results to disk
     SELECT CASE ( Beam%RunType( 1:1 ) )
     CASE ( 'C', 'S', 'I' )   ! TL calculation
-      CALL ScalePressure( Angles%Dalpha, ray2D( 1 )%c, Pos%RR, U, &
+      CALL ScalePressure( ray2D( 1 )%c, Pos%RR, U, &
                           nRz_per_range, Pos%nRR, Beam%RunType, &
                           IHOP_freq )
       iRec = 10 + nRz_per_range * ( is-1 )

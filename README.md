@@ -30,3 +30,14 @@ a source and receiver. The number of range points can vary from 2 to N, and is s
 - [ ] PYTHON: add simple input file generation
 - [ ] FORTRAN77: add simple verification problem
 - [ ] PYTHON: add synthetic observation data file generation
+
+# Citing
+```
+@software{ihop,
+    author={Ivana Escobar},
+    title = {{ihop}: Underwater Acoustics for MITgcm},
+    version = {0.4},
+    year = {2025},
+    url = {https://github.com/IvanaEscobar/ihop/tree/v0.4}
+}
+```

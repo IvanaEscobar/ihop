@@ -123,13 +123,6 @@ c They provide the fields to be stored.
 #   include "GCHEM_SIZE.h"
 #   include "GCHEM_FIELDS.h"
 #  endif
-#  ifdef ALLOW_IHOP
-#   include "IHOP_SIZE.h"
-#   include "IHOP.h"
-#   ifdef ALLOW_COST
-#    include "IHOP_COST.h"
-#   endif
-#  endif
 #  ifdef ALLOW_CFC
 #   include "CFC.h"
 #  endif
@@ -217,6 +210,13 @@ C-- keep tamc.h here without ALLOW_AUTODIFF_TAMC for ALLOW_TAMC_CHECKPOINTING
 #  ifdef ALLOW_OBSFIT
 #   include "OBSFIT_SIZE.h"
 #   include "OBSFIT.h"
+#  endif
+#  ifdef ALLOW_IHOP
+#   include "IHOP_SIZE.h"
+#   include "IHOP.h"
+#   ifdef ALLOW_COST
+#    include "IHOP_COST.h"
+#   endif
 #  endif
 #  ifdef ALLOW_ECCO
 #   include "ecco_cost.h"
@@ -375,9 +375,9 @@ CADJ STORE r_low_si                 = tapelev_init, key=1
 CADJ STORE co2atmos = tapelev_init, key = 1
 CADJ STORE alpha    = tapelev_init, key = 1
 # endif
-# ifdef ALLOW_IHOP
-!!ADJ STORE IHOP vars here to tapelev_init (?)
-# endif
+!# ifdef ALLOW_IHOP
+!!!ADJ STORE IHOP vars here to tapelev_init (?)
+!# endif
 #endif
 
 #ifdef ALLOW_OPENAD
@@ -531,10 +531,10 @@ CADJ INIT comlev1_bibj_k_ptracers = COMMON,
 CADJ &    nchklev_1*nSx*nSy*PTRACERS_num*Nr
 #   endif /* ALLOW_PTRACERS */
 c--
-#   ifdef ALLOW_IHOP
-! for ssp_mod>gcmSSP; make local?
-!$TAF INIT comlev1_bibj_ij_ihop = COMMON, nchklev_1*nSx*nSy*(2*OLy+sNy)*(2*OLx+sNx)
-#   endif /* ALLOW_IHOP */
+!#   ifdef ALLOW_IHOP
+!! for ssp_mod>gcmSSP; make local?
+!!$TAF INIT comlev1_bibj_ij_ihop = COMMON, nchklev_1*nSx*nSy*(2*OLy+sNy)*(2*OLx+sNx)
+!#   endif /* ALLOW_IHOP */
 c--
 #   ifdef ALLOW_MOM_COMMON
 #   ifndef AUTODIFF_DISABLE_LEITH
@@ -683,9 +683,9 @@ C--   Reset the model iteration counter and the model time.
 #endif /* ALLOW_AUTODIFF */
 
 #ifdef ALLOW_ECCO
-      IF ( useECCO ) then
+      IF ( useECCO ) THEN
 # ifdef ALLOW_DEBUG
-        IF (debugMode) CALL DEBUG_CALL('cost_averagesfields',myThid)
+        IF (debugMode) CALL DEBUG_CALL('COST_AVERAGESFIELDS',myThid)
 # endif
 c--   Accumulate time averages of temperature, salinity
         CALL TIMER_START('COST_AVERAGESFIELDS [MAIN_DO_LOOP]',myThid)
@@ -695,55 +695,40 @@ c--   Accumulate time averages of temperature, salinity
 #endif /* ALLOW_ECCO */
 
 #ifdef ALLOW_PROFILES
-      IF (usePROFILES) THEN
+      IF ( usePROFILES ) THEN
 #ifdef ALLOW_DEBUG
-        IF (debugMode) CALL DEBUG_CALL('profiles_inloop',myThid)
+        IF (debugMode) CALL DEBUG_CALL('PROFILES_INLOOP',myThid)
 #endif
 c--     Accumulate in-situ time averages of theta, salt, and SSH.
-#ifdef ALLOW_AUTODIFF
-C--   Reset the model iteration counter and the model time.
-        myIter = nIter0 + (iloop-1)
-        myTime = startTime + deltaTClock*(iloop-1)
-#endif
         CALL TIMER_START('PROFILES_INLOOP    [MAIN_DO_LOOP]', myThid)
         CALL PROFILES_INLOOP( myTime, myThid )
         CALL TIMER_STOP ('PROFILES_INLOOP    [MAIN_DO_LOOP]', myThid)
       ENDIF
-#endif
+#endif /* ALLOW_PROFILES */
 
 #ifdef ALLOW_OBSFIT
-      IF (useOBSFIT) THEN
+      IF ( useOBSFIT ) THEN
 #ifdef ALLOW_DEBUG
-        IF (debugMode) CALL DEBUG_CALL('obsfit_inloop',myThid)
+        IF (debugMode) CALL DEBUG_CALL('OBSFIT_INLOOP',myThid)
 #endif
 c--     Accumulate in-situ time averages of theta, salt, and SSH.
-#ifdef ALLOW_AUTODIFF
-C--   Reset the model iteration counter and the model time.
-        myIter = nIter0 + (iloop-1)
-        myTime = startTime + deltaTClock*(iloop-1)
-#endif
         CALL TIMER_START('OBSFIT_INLOOP      [MAIN_DO_LOOP]', myThid)
-        CALL OBSFIT_INLOOP( myTime, myThid )
+        CALL OBSFIT_INLOOP( myTime, myIter, myThid )
         CALL TIMER_STOP ('OBSFIT_INLOOP      [MAIN_DO_LOOP]', myThid)
       ENDIF
-#endif
+#endif /* ALLOW_OBSFIT */
 
 #ifdef ALLOW_IHOP
       IF (useIHOP) THEN
 #ifdef ALLOW_DEBUG
-        IF (debugMode) CALL DEBUG_CALL('ihop_cost_inloop',myThid)
+        IF (debugMode) CALL DEBUG_CALL('IHOP_COST_INLOOP',myThid)
 #endif
 c--     Accumulate in-situ acoutsic travel times.
-#ifdef ALLOW_AUTODIFF
-C--   Reset the model iteration counter and the model time.
-        myIter = nIter0 + (iloop-1)
-        myTime = startTime + deltaTClock*(iloop-1)
-#endif
-        CALL TIMER_START('IHOP_COST_INLOOP    [MAIN_DO_LOOP]', myThid)
-        CALL IHOP_COST_INLOOP( myTime, myThid )
-        CALL TIMER_STOP ('IHOP_COST_INLOOP    [MAIN_DO_LOOP]', myThid)
+        CALL TIMER_START('IHOP_COST_INLOOP   [MAIN_DO_LOOP]', myThid)
+        CALL IHOP_COST_INLOOP( myTime, myIter, myThid )
+        CALL TIMER_STOP ('IHOP_COST_INLOOP   [MAIN_DO_LOOP]', myThid)
       ENDIF
-#endif
+#endif /* ALLOW_IHOP */
 
       CALL TIMER_START('MAIN_DO_LOOP        [THE_MAIN_LOOP]', myThid)
       CALL MAIN_DO_LOOP( iloop, myTime, myIter, myThid )
@@ -802,31 +787,31 @@ c--   Compute all profiles cost function contributions.
 #endif /* ALLOW_PROFILES */
 
 #ifdef ALLOW_OBSFIT
-      IF (useOBSFIT) THEN
+      IF ( useOBSFIT ) THEN
 c--   Accumulate in-situ time averages of temperature, salinity, SSH.
         CALL TIMER_START('OBSFIT_INLOOP      [THE_MAIN_LOOP]', myThid)
-        CALL OBSFIT_INLOOP( endtime, myThid )
+        CALL OBSFIT_INLOOP( endtime, myIter, myThid )
         CALL TIMER_STOP ('OBSFIT_INLOOP      [THE_MAIN_LOOP]', myThid)
 c--   Compute all obsfit cost function contributions.
-        CALL OBSFIT_COST( myIter, myTime, myThid )
+        CALL OBSFIT_COST( myTime, myIter, myThid )
       ENDIF
-#endif
+#endif /* ALLOW_OBSFIT */
 
 #ifdef ALLOW_IHOP
       IF ( useIHOP ) THEN
 c--   Accumulate travel times
         CALL TIMER_START('IHOP_COST_INLOOP    [THE_MAIN_LOOP]', myThid)
-        CALL IHOP_COST_INLOOP( endtime, myThid )
+        CALL IHOP_COST_INLOOP( endtime, myIter, myThid )
         CALL TIMER_STOP ('IHOP_COST_INLOOP    [THE_MAIN_LOOP]', myThid)
 c--   Compute all ihop cost function contributions.
         CALL TIMER_START('IHOP_COST   [THE_MAIN_LOOP]', myThid)
-        CALL IHOP_COST( myIter, myTime, myThid )
+        CALL IHOP_COST( myTime, myIter, myThid )
         CALL TIMER_STOP ('IHOP_COST   [THE_MAIN_LOOP]', myThid)
       ENDIF
-#endif
+#endif /* ALLOW_IHOP */
 
 #ifdef ALLOW_ECCO
-      IF ( useECCO ) then
+      IF ( useECCO ) THEN
 c--   Compute all ecco cost function contributions.
         CALL TIMER_START('ECCO_COST_DRIVER   [THE_MAIN_LOOP]', myThid)
         CALL ECCO_COST_DRIVER ( endTime, myIter, myThid )

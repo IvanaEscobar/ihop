@@ -336,7 +336,7 @@ C--   Initialise the cost parameters
 #endif
 
 #ifdef ALLOW_GRDCHK
-C--   if useGrdChk=T, set gradient-check parameters; otherwise just return
+C--   if useGrdChk=T, set gradient check parameters; otherwise just return
       CALL GRDCHK_READPARMS( myThid )
 #endif
 

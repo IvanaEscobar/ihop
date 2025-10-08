@@ -19,7 +19,7 @@ C     !DESCRIPTION:
 C     Computes ihop predicted datum
 
 C     !USES:
-      USE arr_mod,  only: Arr, nArr, maxNArr
+      USE arr_mod,  only: Arr, nArrival, maxNArr
       USE srPos_mod,only: Pos
       USE ihop_mod, only: rad2deg
       IMPLICIT NONE
@@ -87,7 +87,7 @@ CEOP
       ENDIF
 
 ! Calc arrival amplitude with cylindrical spreading to receiver range
-      DO ii = 1, nArr(ri,rj)
+      DO ii = 1, nArrival(ri,rj)
         arrAmplitude(ii) = Arr(ii,ri,rj)%A / SQRT( Pos%RR(ri) )
      &   * EXP( CMPLX(0,1)*rad2deg*Arr(ii,ri,rj)%Phase )
 
@@ -100,7 +100,7 @@ CEOP
       maxarrVal = arrVal(1)
       maxID = 1
 
-      DO ii = 1, nArr(ri,rj)
+      DO ii = 1, nArrival(ri,rj)
 !$TAF store maxarrVal = ihop_modVal
         IF (arrVal(ii)>maxarrVal) THEN
           maxarrVal = arrVal(ii)

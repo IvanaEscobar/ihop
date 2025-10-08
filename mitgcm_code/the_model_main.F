@@ -777,11 +777,18 @@ C       Close all open NetCDF files
 #endif
 
 #ifdef ALLOW_PROFILES
-C      IF ( usePROFILES ) THEN
-C        Close all open NetCDF files
-C        CALL PROFILES_NC_CLOSE( myThid )
-C      ENDIF
+      IF ( usePROFILES ) THEN
+C       Close all open NetCDF files
+        CALL PROFILES_NC_CLOSE( myThid )
+      ENDIF
 #endif /* ALLOW_PROFILES */
+
+#ifdef ALLOW_OBSFIT
+      IF ( useOBSFIT ) THEN
+C       Close all open NetCDF files
+        CALL OBSFIT_NC_CLOSE( myThid )
+      ENDIF
+#endif /* ALLOW_OBSFIT */
 
 #ifdef ALLOW_IHOP
       IF ( useIHOP ) THEN

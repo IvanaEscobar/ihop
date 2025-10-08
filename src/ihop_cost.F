@@ -11,7 +11,7 @@ CBOP
 C !ROUTINE: IHOP_COST
 
 C !INTERFACE:
-      SUBROUTINE IHOP_COST( myIter, myTime, myThid )
+      SUBROUTINE IHOP_COST( myTime, myIter, myThid )
 
 C    !DESCRIPTION:
 C    Computes iHOP data misfit for cost function
@@ -48,16 +48,17 @@ C     myTime :: Current time in simulation
 C     myIter :: Current time-step number
 C     myThid :: my thread ID
       _RL     myTime
-      INTEGER myIter, myThid
+      INTEGER myIter
+      INTEGER myThid
 C     !OUTPUT PARAMETERS:
 CEOP
 
+#ifdef ALLOW_IHOP
 C     !FUNCTIONS:
       INTEGER  ILNBLNK
       EXTERNAL ILNBLNK
 
 C     !LOCAL VARIABLES:
-#ifdef ALLOW_IHOP
 C     bi,bj :: Tile indices
       INTEGER bi,bj
       INTEGER num_file, iObs
@@ -78,6 +79,9 @@ C     bi,bj :: Tile indices
       _RL  ihopObs_buff(NOBSMAX_IHOP)
       _RL  ihopObs_modval_glob(NOBSMAX_IHOP)
 # endif
+# ifdef TEST_IHOP_COST
+      INTEGER i,j,k
+# endif
 
 # ifndef ALLOW_CTRL
       optimcycle = 0
@@ -90,13 +94,42 @@ C     bi,bj :: Tile indices
       CALL PRINT_MESSAGE( msgBuf,
      &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
+C Initialise local storage
+#ifdef ALLOW_AUTODIFF_TAMC
+CADJ INIT tapelev_ihop_cost = COMMON, NFILESMAX_IHOP
+#endif
+
         _BEGIN_MASTER( myThid )
 
 # ifdef ALLOW_COST
+#  ifdef TEST_IHOP_COST
       DO num_file = 1, NFILESMAX_IHOP
+      DO bj=1,nSy
+        DO bi=1,nSx
+          DO k=1,Nr
+          DO j=1-oly,sNy+oly
+            DO i=1-olx,sNx+olx
+              objf_ihop(num_file) = objf_ihop(num_file) + 
+     &                              ihop_ssp(i,j,k,bi,bj)**2
+
+            ENDDO !DO i
+          ENDDO !DO j
+          ENDDO !DO k
+        ENDDO !DO bi
+      ENDDO !DO bj
+              WRITE(msgBuf,'(A,G12.4)') 'QoI sum(C2): ', 
+     &                                  objf_ihop(num_file)
+      CALL PRINT_MESSAGE( msgBuf,
+     &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
+      ENDDO !DO num_file
+
+
+#  else /* TEST_IHOP_COST */
+      DO num_file = 1, NFILESMAX_IHOP
+
+C File maintenance
         DO bj = 1, nSy
           DO bi = 1, nSx
-C File maintenance
             IF ( (ObsNo_tiled(num_file,bi,bj).GT.0) .AND.
      &           (ihopDoNcOutput) ) THEN
 C Sync tiled file so data is not lost in buffer
@@ -109,7 +142,7 @@ C Sync tiled file so data is not lost in buffer
         ENDDO !DO bj
 
         DO iObs = 1, NOBSMAX_IHOP
-          ihopObs_buff(iObs) = 0.0
+          ihopObs_buff(iObs) = zeroRL
         ENDDO
 
         DO bj = 1, nSy
@@ -117,17 +150,18 @@ C Sync tiled file so data is not lost in buffer
 C Open tiled files and read to buffer
             DO iObs = 1, NOBSMAX_IHOP
               IF (iObs.LE.ObsNo_tiled(num_file,bi,bj)) THEN
-                ihop_modvaltmp = 0.
+                ihop_modvaltmp = zeroRL
 
-                CALL ACTIVE_READ_IHOP_TILE( num_file,
-     &              ihop_modvaltmp, iObs,
-     &              .false., optimcycle, bi, bj, myThid,
-     &              ihop_dummy(num_file,bi,bj) )
+                CALL ACTIVE_READ_IHOP_TILE( 
+     I              num_file,
+     O              ihop_modvaltmp, 
+     I              iObs,.false., optimcycle, bi, bj, myThid,
+     I              ihop_dummy(num_file,bi,bj) )
 
 C Save tiled model equi from buffer, see PROFILES_READVECTOR
 C Combine all threads to global
                 irec = ihopObs_ind_glob_tiled(num_file,iObs,bi,bj)
-                ihopObs_buff(irec) =ihopObs_buff(irec)+ihop_modvaltmp
+                ihopObs_buff(irec)=ihopObs_buff(irec)+ihop_modvaltmp
 
               ENDIF !IF (iObs.LE.ObsNo_tiled(num_file,bi,bj))
             ENDDO !DO iObs
@@ -143,69 +177,82 @@ C Combine MPI processes
 
         ENDDO !DO iObs
 
+#ifdef ALLOW_AUTODIFF_TAMC
+C     Not really necessary, but cheap (for small NFILESMAX_IHOP)
+C     and avoids some hidden recomputations.
+CADJ STORE ihopObs_modval_glob
+CADJ &     = tapelev_ihop_cost, key = num_file, kind = isbyte
+#endif
+
         IF (myProcId.EQ.0) THEN
 C Loop over global obs
           DO iObs = 1, NOBSMAX_IHOP
-C TAF active var init
-            ihop_globaldummy(num_file) = 0
-
+CC TAF active var init
+C            ihop_globaldummy(num_file) = 0
+C
             IF (iObs.LE.ObsNo(num_file)) THEN
-              ihop_modval = 0.
-C ESCO Future dev: add time and space averaging here ...
+              ihop_modval = zeroRL
+C ESCO Future dev: add time and space averaging here ... see pkg/obsfit
 
 C Extract model equi
               ihop_modval = ihop_modval+ihopObs_modval_glob(iObs)
 
 C Write to global netcdf file
-              CALL ACTIVE_WRITE_IHOP_GLOB( num_file,
-     &             ihop_modval,
-     &             iObs, optimcycle, myThid,
-     &             ihop_globaldummy(num_file) )
+              CALL ACTIVE_WRITE_IHOP_GLOB( 
+     I             num_file, ihop_modval,
+     I             iObs, optimcycle, myThid,
+     I             ihop_globaldummy(num_file) )
 
             ENDIF !IF (iObs.LE.ObsNo(num_file))
 
           ENDDO !DO iObs
 
+#ifdef ALLOW_AUTODIFF_TAMC
+CADJ STORE ihop_globaldummy(num_file)
+CADJ &     = tapelev_ihop_cost, key = num_file, kind = isbyte
+#endif
+
 C Sync global obs
           err = NF_SYNC( ncidGLOB(num_file) )
-          CALL IHOP_COST_NF_ERROR('ihop_cost 2',err,bi,bj,myThid)
+          CALL IHOP_COST_NF_ERROR(
+     &         'IHOP_COST: NF_SYNC ncidGLOB',err,0,0,myThid )
 
           DO iObs = 1, NOBSMAX_IHOP
             IF (iObs.LE.ObsNo(num_file)) THEN
-#  ifdef ALLOW_AUTODIFF_TAMC
-!$TAF STORE ihop_globaldummy = comlev1, key=ikey_dynamics, byte=isbyte
-#  endif
-              ihop_modval = 0.
-              ihop_data = 0.
-              ihop_uncert = 0.
+              ihop_modval = zeroRL
+              ihop_data   = zeroRL
+              ihop_uncert = zeroRL
 
 C Read model equivalent from global file
-
-              CALL ACTIVE_READ_IHOP_GLOB( num_file,
-     &             ihop_modval, iObs,
-     &             .false., optimcycle, myThid,
-     &             ihop_globaldummy(num_file) )
+              CALL ACTIVE_READ_IHOP_GLOB( 
+     I             num_file,
+     O             ihop_modval, 
+     I             iObs,.false., optimcycle, myThid,
+     I             ihop_globaldummy(num_file) )
 
 C Read observation and uncertainty
-              CALL IHOP_COST_READ_OBS( num_file,  1,
-     &             ihopObs_ind_glob(num_file,iObs),
-     &             ihop_data, myThid )
+              CALL IHOP_COST_READ_OBS( 
+     I             num_file,  1, ihopObs_ind_glob(num_file,iObs),
+     O             ihop_data, 
+     I             myThid )
 
-              CALL IHOP_COST_READ_OBS( num_file, -1,
-     &             ihopObs_ind_glob(num_file,iObs),
-     &             ihop_uncert, myThid )
+              CALL IHOP_COST_READ_OBS(
+     I             num_file, -1, ihopObs_ind_glob(num_file,iObs),
+     O             ihop_uncert,
+     I             myThid )
 
-              IF (ihop_data.EQ.-9999) ihop_uncert = 0.
+              IF (ihop_data.EQ.-9999) ihop_uncert = zeroRL
 
-              IF (ihop_uncert.GT.0.) THEN
-                ihop_weight = 1. / (ihop_uncert*ihop_uncert)
+C Calc misfit
+              IF (ihop_uncert.GT.zeroRL) THEN
+                ihop_weight = 1. _d 0 / (ihop_uncert*ihop_uncert)
 
-                objf_ihop(num_file) = objf_ihop(num_file)
-     &           +ihop_weight
-     &           *(ihop_modval-ihop_data)
-     &           *(ihop_modval-ihop_data)
+                objf_ihop(num_file) = objf_ihop(num_file) + 
+     &                                ihop_weight
+     &                                *(ihop_modval-ihop_data)
+     &                                *(ihop_modval-ihop_data)
 
-                num_ihop(num_file) = num_ihop(num_file)+1
+                num_ihop(num_file) = num_ihop(num_file) + 1
 
               ENDIF
 
@@ -216,6 +263,7 @@ C Read observation and uncertainty
 
       ENDDO !DO num_file
 
+#  endif /* TEST_IHOP_COST */
 # endif /* ALLOW_COST */
 
       _END_MASTER( myThid )
@@ -231,7 +279,7 @@ C Print cost function values
      &    ' ihop_cost(', num_file, ' )= ',
      &    objf_ihop_glo, num_ihop_glo
 
-        IF (num_ihop_glo.GT.0.) 
+        IF (num_ihop_glo.GT.zeroRL) 
      &    CALL PRINT_MESSAGE( msgBuf,
      &         standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
@@ -244,7 +292,6 @@ C Print cost function values
       WRITE(msgBuf,'(A)') ' '
       CALL PRINT_MESSAGE( msgBuf,
      &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
-
 #endif /* ALLOW_IHOP */
 
       RETURN
