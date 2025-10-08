@@ -58,7 +58,7 @@ C Read NetCDF input: setting the acoustic domain
           ihop_file = IHOP_interpfile
       END IF
       err = NF_OPEN(ihop_file, NF_NOWRITE, ncid)
-      CALL IHOP_COST_NF_ERROR('init_fixed 1',err,1,1,myThid)
+      CALL IHOP_COST_NF_ERROR('INIT_FIXED NF_OPEN',err,1,1,myThid)
       IF (err .NE. NF_NOERR) THEN
         WRITE(msgBuf, '(2A)') 'S/R IHOP_INIT_FIXED: ',
      &    'NetCDF IHOP input file NOT found'

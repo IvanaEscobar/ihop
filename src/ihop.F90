@@ -340,9 +340,11 @@ CONTAINS
             WRITE(msgBuf,'(A,I7,F10.2)') 'Tracing ray ', &
               iAlpha, SrcDeclAngle
             ! In adjoint mode we do not write output besides on the first run
-            IF (IHOP_dumpfreq.GE.0) &
+            IF (IHOP_dumpfreq.GE.0) THEN
               CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
-            FLUSH( PRTFile )
+              FLUSH( PRTFile )
+            ENDIF
+
           ENDIF
 #endif /* IHOP_WRITE_OUT */
 
