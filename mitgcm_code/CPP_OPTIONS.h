@@ -104,10 +104,6 @@
 
 !-- Model formulation options:
 
-! o Allow/exclude "Exact Convervation" of fluid in Free-Surface formulation
-!   that ensures that d/dt(eta) is exactly equal to - Div.Transport
-#define EXACT_CONSERV
-
 ! o Allow the use of Non-Linear Free-Surface formulation
 !   this implies that grid-cell thickness (hFactors) varies with time
 #undef NONLIN_FRSURF
