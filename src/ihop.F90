@@ -236,7 +236,7 @@ CONTAINS
 ! msgBuf :: Informational/error message buffer
 ! IBPvec :: Index of beam pattern
 ! ibp    :: Index of beam pattern
-! is     :: Index of source depth
+! iH     :: Index of source depth
 ! iBeamWindow2 :: Index of beam window
 ! Irz1   :: Index of receiver depth
 ! iRec   :: Index of receiver
@@ -256,7 +256,7 @@ CONTAINS
 ! rho   :: Density
 ! tmpDelay :: Temporary delay array for ray tracing
   CHARACTER*(MAX_LEN_MBUF):: msgBuf
-  INTEGER :: IBPvec(1), ibp, is, iBeamWindow2, Irz1, iRec, &
+  INTEGER :: IBPvec(1), ibp, iH, iBeamWindow2, Irz1, iRec, &
              nAlphaOpt, nSteps
   REAL(KIND=_RL90) :: Amp0, DalphaOpt, xs(2), RadMax, s, &
                       c, cimag, gradc(2), crr, crz, czz, rho
@@ -270,8 +270,8 @@ CONTAINS
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !         begin solve         !
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  SourceDepth: DO is = 1, Pos%nSZ
-    xs = [ zeroRL, Pos%SZ( is ) ]  ! assuming source @ r=0
+  SourceDepth: DO iH = 1, Pos%nSZ
+    xs = [ zeroRL, Pos%SZ( iH ) ]  ! assuming source @ r=0
     ! Reset U and nArrival for each new source depth
     U=0.0
 
@@ -388,7 +388,7 @@ CONTAINS
       CALL ScalePressure( ray2D( 1 )%c, Pos%RR, U, &
                           nRz_per_range, Pos%nRR, Beam%RunType, &
                           IHOP_freq )
-      iRec = 10 + nRz_per_range * ( is-1 )
+      iRec = 10 + nRz_per_range * ( iH-1 )
       RcvrDepth: DO Irz1 = 1, nRz_per_range
         iRec = iRec + 1
         WRITE( SHDFile, REC=iRec ) U( Irz1, 1:Pos%nRR )
@@ -440,7 +440,7 @@ CONTAINS
 
 ! !LOCAL VARIABLES:
 ! msgBuf :: Informational/error message buffer
-! is, is1 :: indices for ray step
+! iH, iH1 :: indices for ray step
 ! c, cimag :: sound speed and its imaginary part
 ! gradc :: gradient of sound speed
 ! crr, crz, czz :: radial, vertical, and axial components of sound speed
@@ -458,7 +458,7 @@ CONTAINS
 ! continue_steps :: Logical flag to continue ray steps
 ! reflect :: Logical flag for ray reflection
   CHARACTER*(MAX_LEN_MBUF):: msgBuf
-  INTEGER           :: is, is1
+  INTEGER           :: iH, iH1
   REAL (KIND=_RL90) :: c, cimag, gradc(2), crr, crz, czz, rho
   REAL (KIND=_RL90) :: dEndTop(2), dEndBot(2), TopnInt(2), BotnInt(2), &
                        ToptInt(2), BottInt(2), rayt(2), raytOld(2)
@@ -528,29 +528,29 @@ CONTAINS
       CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
 #endif /* IHOP_WRITE_OUT */
   ELSE
-    ! Trace the beam (Reflect2D increments the step index, is)
-    is = 0
+    ! Trace the beam (Reflect2D increments the step index, iH)
+    iH = 0
     continue_steps = .true.
     reflect=.false.
 
     Stepping: DO istep = 1, maxN-1
-!$TAF store is,bdry,beam,continue_steps,distbegbot,distbegtop = TraceRay2D
+!$TAF store iH,bdry,beam,continue_steps,distbegbot,distbegtop = TraceRay2D
 
       IF ( continue_steps ) THEN
-        is  = is + 1 ! old step
-        is1 = is + 1 ! new step forward
+        iH  = iH + 1 ! old step
+        iH1 = iH + 1 ! new step forward
 
-!$TAF store is,isegbot,isegtop,rbotseg,rtopseg = TraceRay2D
+!$TAF store iH,isegbot,isegtop,rbotseg,rtopseg = TraceRay2D
 !$TAF store ray2d = TraceRay2D
 
-        CALL Step2D( ray2D( is ), ray2D( is1 ), &
+        CALL Step2D( ray2D( iH ), ray2D( iH1 ), &
           Top( IsegTop )%x, Top( IsegTop )%n,   &
           Bot( IsegBot )%x, Bot( IsegBot )%n, myThid )
 
         ! IESCO22: turning point check
-        IF ( is.GT.1 ) THEN
-          rayt    = ray2D(is1)%x - ray2D(is)%x
-          raytOld = ray2D(is )%x - ray2D(is-1)%x
+        IF ( iH.GT.1 ) THEN
+          rayt    = ray2D(iH1)%x - ray2D(iH)%x
+          raytOld = ray2D(iH )%x - ray2D(iH-1)%x
 
           IF ( ALL(rayt.EQ.0.0) ) THEN
             declAlpha = 0.0
@@ -566,14 +566,14 @@ CONTAINS
 
           RayTurn = ( declAlpha.LE.0.0d0 .AND. declAlphaOld.GT.0.0d0 .OR. &
                       declAlpha.GE.0.0d0 .AND. declAlphaOld.LT.0.0d0 )
-          IF (RayTurn) ray2D( is1 )%NumTurnPt = ray2D( is )%NumTurnPt + 1
+          IF (RayTurn) ray2D( iH1 )%NumTurnPt = ray2D( iH )%NumTurnPt + 1
 
-        ENDIF ! IF ( is.GT.1 )
+        ENDIF ! IF ( iH.GT.1 )
 
         ! New altimetry segment?
-        IF ( ray2D( is1 )%x( 1 ).LT.rTopSeg( 1 ) .OR. &
-             ray2D( is1 )%x( 1 ).GT.rTopSeg( 2 ) ) THEN
-          CALL GetTopSeg( ray2D( is1 )%x( 1 ), myThid )
+        IF ( ray2D( iH1 )%x( 1 ).LT.rTopSeg( 1 ) .OR. &
+             ray2D( iH1 )%x( 1 ).GT.rTopSeg( 2 ) ) THEN
+          CALL GetTopSeg( ray2D( iH1 )%x( 1 ), myThid )
 
           IF ( atiType( 2:2 ).EQ.'L' ) THEN
             ! ATIFile geoacoustic info from new segment, cp
@@ -585,9 +585,9 @@ CONTAINS
         ENDIF
 
         ! New bathymetry segment?
-        IF ( ray2D( is1 )%x( 1 ).LT.rBotSeg( 1 ) .OR. &
-             ray2D( is1 )%x( 1 ).GT.rBotSeg( 2 ) ) THEN
-          CALL GetBotSeg( ray2D( is1 )%x( 1 ), myThid )
+        IF ( ray2D( iH1 )%x( 1 ).LT.rBotSeg( 1 ) .OR. &
+             ray2D( iH1 )%x( 1 ).GT.rBotSeg( 2 ) ) THEN
+          CALL GetBotSeg( ray2D( iH1 )%x( 1 ), myThid )
 
           IF ( btyType( 2:2 ).EQ.'L' ) THEN
             ! BTYFile geoacoustic info from new segment, cp
@@ -599,11 +599,11 @@ CONTAINS
         ENDIF
 
         ! *** Reflections ***
-        ! Tests ray at step is IS inside, and ray at step is+1 IS outside
-        ! DistBeg is the distance at step is,   which is saved
-        ! DistEnd is the distance at step is+1, which needs to be calculated
+        ! Tests ray at step iH IS inside, and ray at step iH+1 IS outside
+        ! DistBeg is the distance at step iH,   which is saved
+        ! DistEnd is the distance at step iH+1, which needs to be calculated
 
-        CALL Distances2D( ray2D( is1 )%x,  &
+        CALL Distances2D( ray2D( iH1 )%x,  &
           Top( IsegTop )%x, Bot( IsegBot )%x, dEndTop,    dEndBot, &
           Top( IsegTop )%n, Bot( IsegBot )%n, DistEndTop, DistEndBot )
 
@@ -626,12 +626,12 @@ CONTAINS
             ToptInt = Top( IsegTop )%t
           ENDIF
 
-!$TAF store is,isegtop = TraceRay2D
-          CALL Reflect2D( is, Bdry%Top%HS, 'TOP', ToptInt, TopnInt, &
+!$TAF store iH,isegtop = TraceRay2D
+          CALL Reflect2D( iH, Bdry%Top%HS, 'TOP', ToptInt, TopnInt, &
             Top( IsegTop )%kappa, RTop, NTopPTS, myThid )
 
-!$TAF store is,isegbot = TraceRay2D
-          CALL Distances2D( ray2D( is+1 )%x, &
+!$TAF store iH,iSegbot = TraceRay2D
+          CALL Distances2D( ray2D( iH+1 )%x, &
             Top( IsegTop )%x, Bot( IsegBot )%x, dEndTop,    dEndBot, &
             Top( IsegTop )%n, Bot( IsegBot )%n, DistEndTop, DistEndBot )
 
@@ -653,12 +653,12 @@ CONTAINS
             BottInt = Bot( IsegBot )%t
           ENDIF
 
-!$TAF store is,isegbot = TraceRay2D
-          CALL Reflect2D( is, Bdry%Bot%HS, 'BOT', BottInt, BotnInt, &
+!$TAF store iH,isegbot = TraceRay2D
+          CALL Reflect2D( iH, Bdry%Bot%HS, 'BOT', BottInt, BotnInt, &
             Bot( IsegBot )%kappa, RBot, NBotPTS, myThid )
 
-!$TAF store is,isegbot = TraceRay2D
-          CALL Distances2D( ray2D( is+1 )%x, &
+!$TAF store iH,isegbot = TraceRay2D
+          CALL Distances2D( ray2D( iH+1 )%x, &
             Top( IsegTop )%x, Bot( IsegBot )%x, dEndTop,    dEndBot, &
             Top( IsegTop )%n, Bot( IsegBot )%n, DistEndTop, DistEndBot )
 
@@ -672,16 +672,16 @@ CONTAINS
         ! or exceeded storage limit?
         ! IESCO22: Rewriting for debugging with gcov
         WRITE(msgBuf,'(A)') ' '
-        IF ( ray2D( is+1 )%x( 1 ).GT.Beam%Box%R ) THEN
+        IF ( ray2D( iH+1 )%x( 1 ).GT.Beam%Box%R ) THEN
           WRITE(msgBuf,'(A)') 'TraceRay2D: ray left Box%R'
           endRay=.TRUE.
-        ELSEIF ( ray2D( is+1 )%x( 1 ).LT.0 ) THEN
+        ELSEIF ( ray2D( iH+1 )%x( 1 ).LT.0 ) THEN
           WRITE(msgBuf,'(A)') 'TraceRay2D: ray left Box r=0'
           endRay=.TRUE.
-        ELSEIF ( ray2D( is+1 )%x( 2 ).GT.Beam%Box%Z ) THEN
+        ELSEIF ( ray2D( iH+1 )%x( 2 ).GT.Beam%Box%Z ) THEN
           WRITE(msgBuf,'(A)') 'TraceRay2D: ray left Box%Z'
           endRay=.TRUE.
-        ELSEIF ( ABS( ray2D( is+1 )%Amp ).LT.0.005 ) THEN
+        ELSEIF ( ABS( ray2D( iH+1 )%Amp ).LT.0.005 ) THEN
           WRITE(msgBuf,'(A)') 'TraceRay2D: ray lost energy'
           endRay=.TRUE.
         ELSEIF ( DistBegTop.LT.0.0 .AND. DistEndTop.LT.0.0 ) THEN
@@ -690,7 +690,7 @@ CONTAINS
         ELSEIF ( DistBegBot.LT.0.0 .AND. DistEndBot.LT.0.0 ) THEN
           WRITE(msgBuf,'(A)') 'TraceRay2D: ray escaped bot bound'
           endRay=.TRUE.
-        ELSEIF ( is.GE.maxN-3 ) THEN
+        ELSEIF ( iH.GE.maxN-3 ) THEN
           WRITE(msgBuf,'(2A)') 'WARNING: TraceRay2D: Check storage ',&
                                 'for ray trajectory'
           endRay=.TRUE.
@@ -707,10 +707,10 @@ CONTAINS
 #endif /* IHOP_WRITE_OUT */
 
         IF (INDEX(msgBuf, 'TraceRay2D').EQ.1) THEN
-          Beam%Nsteps = is+1
+          Beam%Nsteps = iH+1
           continue_steps = .false.
         ELSEIF (INDEX(msgBuf, 'WARNING: TraceRay2D').EQ.1) THEN
-          Beam%Nsteps = is
+          Beam%Nsteps = iH
           continue_steps = .false.
         ELSE
           continue_steps = .true.
@@ -769,12 +769,12 @@ CONTAINS
 !BOP
 ! !ROUTINE: Reflect2D
 ! !INTERFACE:
-  SUBROUTINE Reflect2D( is, HS, BotTop, tBdry, nBdry, kappa, RefC, Npts, &
+  SUBROUTINE Reflect2D( iH, HS, BotTop, tBdry, nBdry, kappa, RefC, Npts, &
                         myThid )
 ! !DESCRIPTION:
 !   Reflects a ray at the boundary, using the reflection coefficient
 !   and the boundary properties. The ray is reflected in the same x, and
-!   basis vectors are updated. The reflected ray is stored in ray2D(is+1).
+!   basis vectors are updated. The reflected ray is stored in ray2D(iH+1).
 
 ! !USES:
   USE ssp_mod,  only: evalSSP
@@ -783,7 +783,7 @@ CONTAINS
   USE ihop_mod, only: Beam, ray2D, rad2deg, afreq
 
 ! !INPUT PARAMETERS:
-! is     :: Step index of the ray to be reflected
+! iH     :: Step index of the ray to be reflected
 ! HS     :: Half-space properties at the boundary
 ! BotTop :: 'TOP' or 'BOT' for top or bottom boundary reflection
 ! tBdry  :: Tangent vector to the boundary at the reflection point [m, m]
@@ -792,18 +792,18 @@ CONTAINS
 ! RefC   :: Reflection coefficient at the boundary
 ! Npts   :: Number of points in the reflection coefficient array
 ! myThid :: my thread ID
-  INTEGER,              INTENT( INOUT ) :: is
+  INTEGER,              INTENT( INOUT ) :: iH
   TYPE( HSInfo ),       INTENT( IN ) :: HS
   CHARACTER (LEN=3),    INTENT( IN ) :: BotTop
   REAL (KIND=_RL90),    INTENT( IN ) :: tBdry(2), nBdry(2), kappa
   TYPE(ReflectionCoef), INTENT( IN ) :: RefC( Npts )
   INTEGER,              INTENT( IN ) :: Npts
   INTEGER,              INTENT( IN ) :: myThid
-! !OUTPUT PARAMETERS: is
+! !OUTPUT PARAMETERS: iH
 
 ! !LOCAL VARIABLES:
 ! msgBuf :: Informational/error message buffer
-! is1    :: Step index of the reflected ray
+! iH1    :: Step index of the reflected ray
 ! c, cimag :: Sound speed and its imaginary part
 ! gradc  :: Gradient of sound speed
 ! crr, crz, czz :: Radial, vertical, and axial components of sound speed
@@ -823,7 +823,7 @@ CONTAINS
 ! ch, a, b, d, sb, delta, ddelta :: Parameters for beam shift
 ! RInt :: Local derived type for reflection coefficient
   CHARACTER*(MAX_LEN_MBUF) :: msgBuf
-  INTEGER              :: is1
+  INTEGER              :: iH1
   REAL (KIND=_RL90)    :: c, cimag, gradc( 2 ), crr, crz, czz, &
                           rho
   REAL (KIND=_RL90)    :: RM, RN, Tg, Th, rayt( 2 ), rayn( 2 ), &
@@ -844,33 +844,33 @@ CONTAINS
   Rint%theta = -999.0
 
   ! increment stepping counters
-  is  = is + 1 ! old step
-  is1 = is + 1 ! new step reflected (same x, updated basis vectors)
+  iH  = iH + 1 ! old step
+  iH1 = iH + 1 ! new step reflected (same x, updated basis vectors)
 
-!$TAF store ray2D(is)%t = reflect2d1
-  Tg = DOT_PRODUCT( ray2D( is )%t, tBdry )  ! ray tan projected along boundary
-  Th = DOT_PRODUCT( ray2D( is )%t, nBdry )  ! ray tan projected normal boundary
+!$TAF store ray2D(iH)%t = reflect2d1
+  Tg = DOT_PRODUCT( ray2D( iH )%t, tBdry )  ! ray tan projected along boundary
+  Th = DOT_PRODUCT( ray2D( iH )%t, nBdry )  ! ray tan projected normal boundary
 
-  ray2D( is1 )%NumTopBnc = ray2D( is )%NumTopBnc
-  ray2D( is1 )%NumBotBnc = ray2D( is )%NumBotBnc
-  ray2D( is1 )%x         = ray2D( is )%x
-  ray2D( is1 )%t         = ray2D( is )%t - 2.0 * Th * nBdry ! change ray direction
+  ray2D( iH1 )%NumTopBnc = ray2D( iH )%NumTopBnc
+  ray2D( iH1 )%NumBotBnc = ray2D( iH )%NumBotBnc
+  ray2D( iH1 )%x         = ray2D( iH )%x
+  ray2D( iH1 )%t         = ray2D( iH )%t - 2.0 * Th * nBdry ! change ray direction
 
   ! Calculate change in curvature, kappa
   ! Based on formulas given by Muller, Geoph. J. R.A.S., 79 (1984).
 
   ! Get c
-  CALL evalSSP( ray2D( is )%x, c, cimag, gradc, crr, crz, czz, rho, myThid )
+  CALL evalSSP( ray2D( iH )%x, c, cimag, gradc, crr, crz, czz, rho, myThid )
 
   ! unmodified unit ray tangent and normal
-  rayt = c * ray2D( is )%t                              ! unit tangent to ray
+  rayt = c * ray2D( iH )%t                              ! unit tangent to ray
   rayn = [ -rayt( 2 ), rayt( 1 ) ]                      ! unit normal  to ray
 
   ! reflected unit ray tangent and normal
-  rayt_tilde = c * ray2D( is1 )%t                       ! unit tangent to ray
+  rayt_tilde = c * ray2D( iH1 )%t                       ! unit tangent to ray
   rayn_tilde = -[ -rayt_tilde( 2 ), rayt_tilde( 1 ) ]   ! unit normal  to ray
 
-  ! get the jumps (this could be simplified, e.g. jump in rayt is
+  ! get the jumps (this could be simplified, e.g. jump in rayt iH
   ! roughly 2 * Th * nbdry
   cnjump = -DOT_PRODUCT( gradc, rayn_tilde - rayn  )
   csjump = -DOT_PRODUCT( gradc, rayt_tilde - rayt )
@@ -895,21 +895,21 @@ CONTAINS
     RN = RN
   END SELECT
 
-  ray2D( is1 )%c   = c
-  ray2D( is1 )%tau = ray2D( is )%tau
-  ray2D( is1 )%p   = ray2D( is )%p + ray2D( is )%q * RN
-  ray2D( is1 )%q   = ray2D( is )%q
+  ray2D( iH1 )%c   = c
+  ray2D( iH1 )%tau = ray2D( iH )%tau
+  ray2D( iH1 )%p   = ray2D( iH )%p + ray2D( iH )%q * RN
+  ray2D( iH1 )%q   = ray2D( iH )%q
 
   ! account for phase change
 
 
   SELECT CASE ( HS%BC )
   CASE ( 'R' )                 ! rigid
-    ray2D( is1 )%Amp   = ray2D( is )%Amp
-    ray2D( is1 )%Phase = ray2D( is )%Phase
+    ray2D( iH1 )%Amp   = ray2D( iH )%Amp
+    ray2D( iH1 )%Phase = ray2D( iH )%Phase
   CASE ( 'V' )                 ! vacuum
-    ray2D( is1 )%Amp   = ray2D( is )%Amp
-    ray2D( is1 )%Phase = ray2D( is )%Phase + PI
+    ray2D( iH1 )%Amp   = ray2D( iH )%Amp
+    ray2D( iH1 )%Phase = ray2D( iH )%Phase + PI
   CASE ( 'F' )                 ! file
 !$TAF store rint = reflect2d1
     ! angle of incidence (relative to normal to bathymetry)
@@ -923,8 +923,8 @@ CONTAINS
     IF ( RInt%theta.GT.90. ) RInt%theta = 180. - RInt%theta 
 
     CALL InterpolateReflectionCoefficient( RInt, RefC, Npts )
-    ray2D( is1 )%Amp   = ray2D( is )%Amp * RInt%R
-    ray2D( is1 )%Phase = ray2D( is )%Phase + RInt%phi
+    ray2D( iH1 )%Amp   = ray2D( iH )%Amp * RInt%R
+    ray2D( iH1 )%Phase = ray2D( iH )%Phase + RInt%phi
 
   CASE ( 'A', 'G' )     ! half-space
     kx = afreq * Tg    ! wavenumber in direction parallel      to bathymetry
@@ -960,19 +960,19 @@ CONTAINS
     Refl =  - ( rho*f - oneCMPLX * kz*g ) / ( rho*f + oneCMPLX*kz*g )
 
     IF ( ABS( Refl ).LT.1.0E-5 ) THEN   ! kill a ray that has lost its energy in reflection
-      ray2D( is1 )%Amp   = 0.0
-      ray2D( is1 )%Phase = ray2D( is )%Phase
+      ray2D( iH1 )%Amp   = 0.0
+      ray2D( iH1 )%Phase = ray2D( iH )%Phase
 
     ELSE
-      ray2D( is1 )%Amp   = ABS( Refl ) * ray2D(  is )%Amp
-      ray2D( is1 )%Phase = ray2D( is )%Phase + &
+      ray2D( iH1 )%Amp   = ABS( Refl ) * ray2D(  iH )%Amp
+      ray2D( iH1 )%Phase = ray2D( iH )%Phase + &
                             ATAN2( AIMAG( Refl ), REAL( Refl ) )
 
       IF ( Beam%Type( 4:4 ).EQ.'S' ) THEN   ! beam displacement & width change (Seongil's version)
-        ch = ray2D( is )%c / conjg( HS%cP )
-        co = ray2D( is )%t( 1 ) * ray2D( is )%c
-        si = ray2D( is )%t( 2 ) * ray2D( is )%c
-        ck = afreq / ray2D( is )%c
+        ch = ray2D( iH )%c / conjg( HS%cP )
+        co = ray2D( iH )%t( 1 ) * ray2D( iH )%c
+        si = ray2D( iH )%t( 2 ) * ray2D( iH )%c
+        ck = afreq / ray2D( iH )%c
 
         a   = 2 * HS%rho * ( 1 - ch * ch )
         b   = co * co - ch * ch
@@ -987,7 +987,7 @@ CONTAINS
             delta = 0.0
         ENDIF
 
-        pdelta  = real( delta ) / ( ray2D( is )%c / co)
+        pdelta  = real( delta ) / ( ray2D( iH )%c / co)
         ddelta  = -a / ( ck*sb*d ) - a*cco / ssi / (ck*sb*d) &
                   + a*cco / (ck*b*sb*d) &
                   -a*co / si / (ck*sb*d*d) &
@@ -1001,13 +1001,13 @@ CONTAINS
         ! segments after the ray displacement.
 
         theta_bot = datan( tBdry( 2 ) / tBdry( 1 ))  ! bottom angle
-        ray2D( is1 )%x( 1 ) = ray2D( is1 )%x( 1 ) + real( delta ) &
+        ray2D( iH1 )%x( 1 ) = ray2D( iH1 )%x( 1 ) + real( delta ) &
                               * dcos( theta_bot )   ! range displacement
-        ray2D( is1 )%x( 2 ) = ray2D( is1 )%x( 2 ) + real( delta ) &
+        ray2D( iH1 )%x( 2 ) = ray2D( iH1 )%x( 2 ) + real( delta ) &
                               * dsin( theta_bot )   ! depth displacement
-        ray2D( is1 )%tau    = ray2D( is1 )%tau + pdelta  ! phase change
-        ray2D( is1 )%q      = ray2D( is1 )%q + sddelta * rddelta * si * c &
-                              * ray2D( is )%p   ! beam-width change
+        ray2D( iH1 )%tau    = ray2D( iH1 )%tau + pdelta  ! phase change
+        ray2D( iH1 )%q      = ray2D( iH1 )%q + sddelta * rddelta * si * c &
+                              * ray2D( iH )%p   ! beam-width change
                           
       ENDIF ! IF ( Beam%Type( 4:4 ).EQ.'S' )
 
@@ -1027,9 +1027,9 @@ CONTAINS
 
   ! Update top/bottom bounce counter
   IF (BotTop.EQ.'TOP') THEN
-    ray2D( is+1 )%NumTopBnc = ray2D( is )%NumTopBnc + 1
+    ray2D( iH+1 )%NumTopBnc = ray2D( iH )%NumTopBnc + 1
   ELSEIF ( BotTop.EQ.'BOT' ) THEN
-    ray2D( is+1 )%NumBotBnc = ray2D( is )%NumBotBnc + 1
+    ray2D( iH+1 )%NumBotBnc = ray2D( iH )%NumBotBnc + 1
   ELSE
 #ifdef IHOP_WRITE_OUT
     WRITE(msgBuf,'(2A)') 'IHOP Reflect2D: ', &

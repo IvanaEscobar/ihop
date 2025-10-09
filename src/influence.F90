@@ -30,7 +30,7 @@ MODULE influence
 !=======================================================================
 
 ! == Module variables ==
-  INTEGER,              PRIVATE :: iz, ir, iS
+  INTEGER,              PRIVATE :: iz, ir, iH
   REAL    (KIND=_RL90), PRIVATE :: Ratio1 = 1.0D0 ! scale factor for a line source
   REAL    (KIND=_RL90), PRIVATE :: W, s, n, Amp, phase, phaseInt, &
                                    q0, q, qold, RcvrDeclAngle, rA, rB
@@ -138,20 +138,20 @@ CONTAINS
                1 )
     ENDIF
 
-    Stepping: DO iS = 2, Beam%Nsteps
+    Stepping: DO iH = 2, Beam%Nsteps
 !$TAF store ira,irb,na,nb,phase,qold,ra = iRayCen1
       skip_step = .FALSE.
 
       ! Compute ray-centered coordinates, (znV, rnV)
 
       ! If normal is parallel to TL-line, skip to the next step on ray
-      IF ( ABS(znV(iS)).LT.1D-10 ) THEN
+      IF ( ABS(znV(iH)).LT.1D-10 ) THEN
         skip_step = .TRUE.
         rB = 1D10
 
       ELSE
-        nB = (zR - ray2D(iS)%x(2)) / znV(iS)
-        rB = ray2D(iS)%x(1) + nB * rnV(iS)
+        nB = (zR - ray2D(iH)%x(2)) / znV(iH)
+        rB = ray2D(iH)%x(1) + nB * rnV(iH)
 
         ! Find index of receiver: assumes uniform spacing in Pos%RR
         irB = MAX(MIN(INT((rB - Pos%RR(1)) / Pos%Delta_r) + 1, &
@@ -159,8 +159,8 @@ CONTAINS
                   1)
 
         ! Detect and skip duplicate points (happens at boundary reflection)
-        IF ( ABS(ray2D(iS)%x(1) - ray2D(iS - 1)%x(1)).LT. &
-             1.0D3 * SPACING(ray2D(iS)%x(1)) &
+        IF ( ABS(ray2D(iH)%x(1) - ray2D(iH - 1)%x(1)).LT. &
+             1.0D3 * SPACING(ray2D(iH)%x(1)) &
              .OR. irA.EQ.irB ) THEN
           rA = rB
           nA = nB
@@ -168,11 +168,11 @@ CONTAINS
           skip_step = .TRUE.
         ENDIF
 
-      ENDIF ! IF ( ABS(znV(iS)).LT.1D-10 )
+      ENDIF ! IF ( ABS(znV(iH)).LT.1D-10 )
 
       IF ( .NOT.skip_step ) THEN
         !!! this should be pre-computed
-        q = ray2D(iS - 1)%q(1)
+        q = ray2D(iH - 1)%q(1)
         ! if phase shifts at caustics
         IF ((q.LE.0.0D0 .AND. qOld.GT.0.0D0) .OR. &
             (q.GE.0.0D0 .AND. qOld.LT.0.0D0)) &
@@ -180,7 +180,7 @@ CONTAINS
 
         qOld = q
 
-        RcvrDeclAngle = RcvrDeclAngleV(iS)
+        RcvrDeclAngle = RcvrDeclAngleV(iH)
 
         ! *** Compute contributions to bracketted receivers ***
         II = 0
@@ -191,16 +191,16 @@ CONTAINS
 !!$TAF store Arr(:,ir,iz),nArrival(ir,iz) = iRayCen2
           W = (Pos%RR(ir) - rA) / (rB - rA)  ! relative range between rR
           n = ABS(nA + W * (nB - nA))
-          q = ray2D(iS - 1)%q(1) + W * dq(iS - 1)  ! interpolated amplitude
+          q = ray2D(iH - 1)%q(1) + W * dq(iH - 1)  ! interpolated amplitude
           L = ABS(q) / q0   ! beam radius
 
           IF ( n.LT.L ) THEN  ! in beam window: update delay, Amp, phase
 !$TAF store w = iRayCen2
-            delay = ray2D(iS - 1)%tau + W * dtau(iS - 1)
-            Amp = ray2D(iS)%Amp / SQRT(ABS(q))
+            delay = ray2D(iH - 1)%tau + W * dtau(iH - 1)
+            Amp = ray2D(iH)%Amp / SQRT(ABS(q))
             W = (L - n) / L  ! hat function: 1 on center, 0 on edge
             Amp = Amp * W
-            phaseInt = ray2D(iS - 1)%Phase + phase
+            phaseInt = ray2D(iH - 1)%Phase + phase
             !!! this should be precomputed
             IF ((q.LE.0.0D0 .AND. qOld.GT.0.0D0) .OR. &
                 (q.GE.0.0D0 .AND. qOld.LT.0.0D0)) &
@@ -281,13 +281,13 @@ CONTAINS
   IF ( Beam%RunType( 4:4 ).EQ.'R' ) &
     Ratio1 = SQRT( ABS( COS( SrcDeclAngle / rad2deg ) ) )
 
-  Stepping: DO iS = 2, Beam%Nsteps
+  Stepping: DO iH = 2, Beam%Nsteps
 !$TAF store phase,qold,ra = iiitape1
-    rB     = ray2D( iS   )%x( 1 )
-    x_ray  = ray2D( iS-1 )%x
+    rB     = ray2D( iH   )%x( 1 )
+    x_ray  = ray2D( iH-1 )%x
 
     ! compute normalized tangent (we need to measure the step length)
-    rayt = ray2D( iS )%x - x_ray
+    rayt = ray2D( iH )%x - x_ray
     IF ( ALL(rayt.EQ.0.0) ) THEN
       rlen = 0.0
     ELSE
@@ -295,7 +295,7 @@ CONTAINS
     ENDIF
 
     ! if duplicate point in ray, skip to next step along the ray
-    IF ( rlen.GE.1.0D3*SPACING( ray2D( iS )%x( 1 ) ) ) THEN
+    IF ( rlen.GE.1.0D3*SPACING( ray2D( iH )%x( 1 ) ) ) THEN
 !$TAF store rlen,rayt= iiitape1
       rayt = rayt / rlen                    ! unit tangent of ray @ A
       rayn = [ -rayt( 2 ), rayt( 1 ) ]      ! unit normal  of ray @ A
@@ -305,9 +305,9 @@ CONTAINS
         RcvrDeclAngle = rad2deg * ATAN2( rayt( 2 ), rayt( 1 ) )
       ENDIF
 
-      q      = ray2D( iS-1 )%q( 1 )
-      dqds   = ray2D( iS   )%q( 1 ) - q
-      dtauds = ray2D( iS   )%tau    - ray2D( iS-1 )%tau
+      q      = ray2D( iH-1 )%q( 1 )
+      dqds   = ray2D( iH   )%q( 1 ) - q
+      dtauds = ray2D( iH   )%tau    - ray2D( iH-1 )%tau
 
       !IESCO22: q only changes signs on direct paths, no top/bot bounces
       IF( q.LE.0. .AND. qOld.GT.0. .OR. q.GE.0. .AND. qOld.LT.0. ) &
@@ -315,13 +315,13 @@ CONTAINS
       qOld = q
 
       ! Radius calc from beam radius projected onto vertical line
-      RadiusMax = MAX( ABS( q ), ABS( ray2D( iS )%q( 1 ) ) ) &
+      RadiusMax = MAX( ABS( q ), ABS( ray2D( iH )%q( 1 ) ) ) &
                / q0 / ABS( rayt( 1 ) ) ! IESCO24: AKA rayn( 2 )
 
       ! depth limits of beam; IESCO22: a large range of about 1/2 box depth
       IF ( ABS( rayt( 1 ) ).GT.0.5 ) THEN   ! shallow angle ray
-        zmin = min( x_ray( 2 ), ray2D( iS )%x( 2 ) ) - RadiusMax
-        zmax = max( x_ray( 2 ), ray2D( iS )%x( 2 ) ) + RadiusMax
+        zmin = min( x_ray( 2 ), ray2D( iH )%x( 2 ) ) - RadiusMax
+        zmax = max( x_ray( 2 ), ray2D( iH )%x( 2 ) ) + RadiusMax
       ELSE                                  ! steep angle ray
         zmin = -HUGE( zmin )
         zmax = +HUGE( zmax )
@@ -366,9 +366,9 @@ CONTAINS
                                     SQUEEZE_RIGHT, myThid )
 #endif /* IHOP_WRITE_OUT */
                 ! interpolated delay
-                delay    = ray2D( iS-1 )%tau + s*dtauds
-                Amp      = Ratio1 * SQRT( ray2D( iS )%c / ABS( q ) ) &
-                            * ray2D( iS )%Amp
+                delay    = ray2D( iH-1 )%tau + s*dtauds
+                Amp      = Ratio1 * SQRT( ray2D( iH )%c / ABS( q ) ) &
+                            * ray2D( iH )%Amp
                 ! hat function: 1 on center, 0 on edge
                 W        = ( RadiusMax - n ) / RadiusMax
                 Amp      = Amp*W
@@ -378,7 +378,7 @@ CONTAINS
                   phaseInt = phase + PI / 2.   ! phase shifts at caustics
                   ! IESCO22: shouldn't this be = phaseInt + PI/2
                 ELSE
-                  phaseInt = ray2D( iS-1 )%Phase + phase
+                  phaseInt = ray2D( iH-1 )%Phase + phase
                 ENDIF
 
                 CALL ApplyContribution( U( iz, ir ) )
@@ -479,14 +479,14 @@ CONTAINS
     Ratio1 = 1 / SQRT( 2.*PI )
   ENDIF
 
-  Stepping: DO iS = 2, Beam%Nsteps
+  Stepping: DO iH = 2, Beam%Nsteps
 !$TAF store phase,qold,ra = iGauCart1
-    rB    = ray2D( iS   )%x( 1 )
-    x_ray = ray2D( iS-1 )%x
+    rB    = ray2D( iH   )%x( 1 )
+    x_ray = ray2D( iH-1 )%x
 
     ! compute normalized tangent (compute it because we need to measure the
     ! step length)
-    rayt = ray2D( iS )%x - ray2D( iS-1 )%x
+    rayt = ray2D( iH )%x - ray2D( iH-1 )%x
     IF ( ALL(rayt.EQ.0.) ) THEN
       rlen = 0.0
     ELSE
@@ -494,7 +494,7 @@ CONTAINS
     ENDIF
 
     ! if duplicate point in ray, skip to next step along the ray
-    IF ( rlen.GE.1.0D3 * SPACING( ray2D( iS )%x( 1 ) ) ) THEN
+    IF ( rlen.GE.1.0D3 * SPACING( ray2D( iH )%x( 1 ) ) ) THEN
 
 !$TAF store rlen,rayt = iGauCart1
     rayt = rayt / rlen
@@ -505,9 +505,9 @@ CONTAINS
       RcvrDeclAngle = rad2deg * ATAN2( rayt( 2 ), rayt( 1 ) )
     ENDIF
 
-    q      = ray2D( iS-1 )%q( 1 )
-    dqds   = ray2D( iS )%q( 1 ) - q
-    dtauds = ray2D( iS )%tau    - ray2D( iS-1 )%tau
+    q      = ray2D( iH-1 )%q( 1 )
+    dqds   = ray2D( iH )%q( 1 ) - q
+    dtauds = ray2D( iH )%tau    - ray2D( iH-1 )%tau
 
     !IESCO22: q only changes signs on direct paths, no top/bot bounces
     IF ( q.LE.0.0 .AND. qOld.GT.0.0 .OR. q.GE.0.0 .AND. qOld.LT.0.0 ) &
@@ -516,11 +516,11 @@ CONTAINS
     qOld = q
 
     ! calculate beam width beam radius projected onto vertical line
-    lambda    = ray2D( iS-1 )%c / IHOP_freq
-    sigma     = MAX( ABS( q ), ABS( ray2D( iS )%q( 1 ) ) ) &
+    lambda    = ray2D( iH-1 )%c / IHOP_freq
+    sigma     = MAX( ABS( q ), ABS( ray2D( iH )%q( 1 ) ) ) &
                / q0 / ABS( rayt( 1 ) ) ! IESCO24: AKA rayn( 2 )
     sigma     = MAX( sigma, &
-                     MIN( 0.2*IHOP_freq*REAL( ray2D( iS )%tau ), &
+                     MIN( 0.2*IHOP_freq*REAL( ray2D( iH )%tau ), &
                         PI*lambda ) )
     ! Note on min: "Weinberg and Keenan suggest limiting a beam to a
     !               point, by imposing a minimum beam width of pilambda."
@@ -530,8 +530,8 @@ CONTAINS
 
     ! depth limits of beam; IESCO22: a large range of about 1/2 box depth
     IF ( ABS( rayt( 1 ) ).GT.0.5 ) THEN   ! shallow angle ray
-      zmin   = min( ray2D( iS-1 )%x( 2 ), ray2D( iS )%x( 2 ) ) - RadiusMax
-      zmax   = max( ray2D( iS-1 )%x( 2 ), ray2D( iS )%x( 2 ) ) + RadiusMax
+      zmin   = min( ray2D( iH-1 )%x( 2 ), ray2D( iH )%x( 2 ) ) - RadiusMax
+      zmax   = max( ray2D( iH-1 )%x( 2 ), ray2D( iH )%x( 2 ) ) + RadiusMax
     ELSE                                 ! steep angle ray
       zmin = -HUGE( zmin )
       zmax = +HUGE( zmax )
@@ -565,7 +565,7 @@ CONTAINS
             ! beam radius; IESCO22 smaller then previous RadiusMax
             sigma = ABS( q / q0 )
             sigma = MAX( sigma, &
-                        MIN( 0.2*IHOP_freq*REAL( ray2D( iS )%tau ), &
+                        MIN( 0.2*IHOP_freq*REAL( ray2D( iH )%tau ), &
                               PI*lambda ) )
 
             IF ( n.LT.BeamWindow*sigma ) THEN   ! Within beam window?
@@ -578,13 +578,13 @@ CONTAINS
 #endif /* IHOP_WRITE_OUT */
               ! interpolated delay
               A        = ABS( q0 / q )
-              delay    = ray2D( iS-1 )%tau + s*dtauds
-              Amp      = Ratio1 * SQRT( ray2D( iS )%c / ABS( q ) ) &
-                          * ray2D( iS )%Amp
+              delay    = ray2D( iH-1 )%tau + s*dtauds
+              Amp      = Ratio1 * SQRT( ray2D( iH )%c / ABS( q ) ) &
+                          * ray2D( iH )%Amp
               ! W : Gaussian decay
               W        = EXP( -0.5*( n / sigma )**2 ) / ( sigma*A )
               Amp      = Amp*W
-              phaseInt = ray2D( iS )%Phase + phase
+              phaseInt = ray2D( iH )%Phase + phase
               IF ( q.LE.0.0d0 .AND. qOld.GT.0.0d0 .OR. &
                    q.GE.0.0d0 .AND. qOld.LT.0.0d0 ) &
                 phaseInt = phase + PI / 2.  ! phase shifts at caustics
@@ -647,7 +647,7 @@ CONTAINS
   tmpX = 0.
   tmpY = 0.
   tmpDelay = 0.
-  DO i = 1,iS
+  DO i = 1,iH
     tmpX(i) = ray2D(i)%x(1)
     tmpY(i) = ray2D(i)%x(2)
     tmpDelay(i) = REAL(ray2D(i)%tau)
@@ -658,30 +658,30 @@ CONTAINS
   CASE ( 'E' )                ! eigenrays
     U=U
 !    tmpDelay = 0.
-    CALL WriteRayOutput( RAYFile, iS,         &
-      tmpX(1:iS), tmpY(1:iS),                 &
-      ray2D(iS)%NumTopBnc, ray2D(iS)%NumBotBnc )
+    CALL WriteRayOutput( RAYFile, iH,         &
+      tmpX(1:iH), tmpY(1:iH),                 &
+      ray2D(iH)%NumTopBnc, ray2D(iH)%NumBotBnc )
 
   CASE ( 'e' )                ! eigenrays AND arrivals
     U=U
 !    tmpDelay = 0.
-    CALL WriteRayOutput( RAYFile, iS,         &
-      tmpX(1:iS), tmpY(1:iS),                 &
-      ray2D(iS)%NumTopBnc, ray2D(iS)%NumBotBnc )
+    CALL WriteRayOutput( RAYFile, iH,         &
+      tmpX(1:iH), tmpY(1:iH),                 &
+      ray2D(iH)%NumTopBnc, ray2D(iH)%NumBotBnc )
     IF (writeDelay) THEN
-      CALL WriteRayOutput( DELFile, iS,       &
-        tmpDelay(1:iS), tmpY(1:iS),           &
-        ray2D(iS)%NumTopBnc, ray2D(iS)%NumBotBnc )
+      CALL WriteRayOutput( DELFile, iH,       &
+        tmpDelay(1:iH), tmpY(1:iH),           &
+        ray2D(iH)%NumTopBnc, ray2D(iH)%NumBotBnc )
     ENDIF
 
     CALL AddArr( afreq, iz, ir, Amp, phaseInt, delay,  &
-      RcvrDeclAngle, ray2D( iS )%NumTopBnc, ray2D( iS )%NumBotBnc )
+      RcvrDeclAngle, ray2D( iH )%NumTopBnc, ray2D( iH )%NumBotBnc )
 
   CASE ( 'A', 'a' )           ! arrivals
     U=U
 !    tmpDelay = 0.
     CALL AddArr( afreq, iz, ir, Amp, phaseInt, delay,  &
-      RcvrDeclAngle, ray2D( iS )%NumTopBnc, ray2D( iS )%NumBotBnc )
+      RcvrDeclAngle, ray2D( iH )%NumTopBnc, ray2D( iH )%NumBotBnc )
 
   CASE ( 'C' )                ! coherent TL
 !    tmpDelay = 0.
