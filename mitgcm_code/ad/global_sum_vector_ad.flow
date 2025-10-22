@@ -9,17 +9,17 @@
 !$TAF SUBROUTINE glb_sum_vec ADNAME  = glb_sum_advec 
 !$TAF SUBROUTINE glb_sum_vec FTLNAME = glb_sum_vec 
 
-!$TAF SUBROUTINE global_sum_vector_rl INPUT   = 1, 2, 3, 4
+!$TAF SUBROUTINE global_sum_vector_rl INPUT   = 1, 2,    4
 !$TAF SUBROUTINE global_sum_vector_rl OUTPUT  =       3
-!$TAF SUBROUTINE global_sum_vector_rl ACTIVE  =       3
-!$TAF SUBROUTINE global_sum_vector_rl DEPEND  = 1, 2,    4
+!$TAF SUBROUTINE global_sum_vector_rl ACTIVE  =    2, 3
+!$TAF SUBROUTINE global_sum_vector_rl DEPEND  = 1,       4
 !$TAF SUBROUTINE global_sum_vector_rl ADNAME  = global_sum_advector_rl 
 !$TAF SUBROUTINE global_sum_vector_rl FTLNAME = global_sum_vector_rl 
 
-!$TAF SUBROUTINE global_sum_vector_rs INPUT   = 1, 2, 3, 4
+!$TAF SUBROUTINE global_sum_vector_rs INPUT   = 1, 2,    4
 !$TAF SUBROUTINE global_sum_vector_rs OUTPUT  =       3
-!$TAF SUBROUTINE global_sum_vector_rs ACTIVE  =       3
-!$TAF SUBROUTINE global_sum_vector_rs DEPEND  = 1, 2,    4
+!$TAF SUBROUTINE global_sum_vector_rs ACTIVE  =    2, 3
+!$TAF SUBROUTINE global_sum_vector_rs DEPEND  = 1,       4
 !$TAF SUBROUTINE global_sum_vector_rs ADNAME  = global_sum_advector_rs 
 !$TAF SUBROUTINE global_sum_vector_rs FTLNAME = global_sum_vector_rs 
 

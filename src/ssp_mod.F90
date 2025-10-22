@@ -1011,6 +1011,7 @@ USE splinec_mod,  only: splineall
   INTEGER :: iallocstat
   INTEGER :: bi,bj, i,j,k, ii,jj
   INTEGER :: njj(IHOP_NPTS_RANGE)
+  INTEGER :: nZnR_size
   REAL (KIND=_RL90)             :: dcdz, tolerance
   REAL (KIND=_RL90), ALLOCATABLE:: tileSSP(:,:,:,:), tmpSSP(:,:,:), globSSP(:)
 ! IESCO24
@@ -1031,11 +1032,13 @@ USE splinec_mod,  only: splineall
   njj       = 0
   dcdz      = 0.0 _d 0
   tolerance = 5 _d -5
+  nZnR_size = SSP%nZ*SSP%nR
 
   IF(ALLOCATED(tileSSP)) DEALLOCATE(tileSSP)
   IF(ALLOCATED(globSSP)) DEALLOCATE(globSSP)
-  ALLOCATE( tileSSP(SSP%nZ,SSP%nR,nSx,nSy), tmpSSP(nSx,nSy,SSP%nZ*SSP%nR), &
-            globSSP(SSP%nZ*SSP%nR), STAT=iallocstat )
+  ALLOCATE( tileSSP(SSP%nZ,SSP%nR,nSx,nSy), &
+            tmpSSP(nSx,nSy,nZnR_size), &
+            globSSP(nZnR_size), STAT=iallocstat )
   IF ( iallocstat.NE.0 ) THEN
 # ifdef IHOP_WRITE_OUT
     WRITE(msgBuf,'(2A)') 'SSPMOD gcmSSP: ', &
@@ -1164,7 +1167,7 @@ USE splinec_mod,  only: splineall
     ENDDO
   ENDDO
 
-  CALL GLOBAL_SUM_VECTOR_RL(SSP%nZ*SSP%nR,tmpSSP,globSSP,myThid)
+  CALL GLOBAL_SUM_VECTOR_RL(nZnR_size,tmpSSP,globSSP,myThid)
 
   ! reshape ssp to matrix
   k = 1
