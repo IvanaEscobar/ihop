@@ -81,6 +81,11 @@ C     bi,bj :: Tile indices
 # endif
 # ifdef TEST_IHOP_COST
       INTEGER i,j,k
+      _RL objf_ihop_tloc(nSx,nSy)
+      _RL objf_ihop_gloc
+      integer ig, jg
+      integer itlo,ithi
+      integer jtlo,jthi
 # endif
 
 # ifndef ALLOW_CTRL
@@ -99,32 +104,65 @@ C Initialise local storage
 CADJ INIT tapelev_ihop_cost = COMMON, NFILESMAX_IHOP
 #endif
 
-        _BEGIN_MASTER( myThid )
-
 # ifdef ALLOW_COST
 #  ifdef TEST_IHOP_COST
-      DO num_file = 1, NFILESMAX_IHOP
-      DO bj=1,nSy
-        DO bi=1,nSx
-          DO k=1,Nr
-          DO j=1-oly,sNy+oly
-            DO i=1-olx,sNx+olx
-              objf_ihop(num_file) = objf_ihop(num_file) + 
-     &                              ihop_ssp(i,j,k,bi,bj)**2
+      jtlo = mybylo(mythid)
+      jthi = mybyhi(mythid)
+      itlo = mybxlo(mythid)
+      ithi = mybxhi(mythid)
 
-            ENDDO !DO i
-          ENDDO !DO j
-          ENDDO !DO k
-        ENDDO !DO bi
-      ENDDO !DO bj
-              WRITE(msgBuf,'(A,G12.4)') 'QoI sum(C2): ', 
-     &                                  objf_ihop(num_file)
-      CALL PRINT_MESSAGE( msgBuf,
-     &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
-      ENDDO !DO num_file
+      DO num_file=1,NFILESMAX_IHOP
+C-- Reset local variables
+       do bj = jtlo,jthi
+       do bi = itlo,ithi
+        objf_ihop_tloc(bi,bj) = 0.
+       ENDDO
+       ENDDO
+       objf_ihop_gloc = 0.
 
+       DO bj = jtlo,jthi
+       DO bi = itlo,ithi
+        DO k=1,5
+        DO j=1,sNy
+        jg = myYGlobalLo-1+(bj-1)*sNy+j
+        DO i=1,sNx
+         ig = myXGlobalLo-1+(bi-1)*sNx+i
+
+         IF (jg.GE.35 .AND. jg.LE.40 .AND. 
+     &       ig.GE.20 .AND. ig.LE.25 ) THEN
+           objf_ihop_tloc(bi,bj) = objf_ihop_tloc(bi,bj)
+     &      + ihop_ssp(i,j,k,bi,bj)*ihop_ssp(i,j,k,bi,bj)
+         ENDIF
+
+        ENDDO !DO i
+        ENDDO !DO j
+        ENDDO !DO k
+
+        WRITE(msgBuf,'(A,E22.17)') 'QoI sum(C2) tiled: ', 
+     &                      objf_ihop_tloc(bi,bj)
+        CALL PRINT_MESSAGE( msgBuf,
+     &      standardMessageUnit, SQUEEZE_RIGHT, myThid )
+
+       ENDDO !DO bi
+       ENDDO !DO bj
+
+c--   Do global summation.
+       CALL GLOBAL_SUM_TILE_RL( objf_ihop_tloc,objf_ihop_gloc,myThid )
+
+       _BEGIN_MASTER( myThid )
+       objf_ihop(num_file) = objf_ihop(num_file) + objf_ihop_gloc
+       _END_MASTER( myThid )
+
+       WRITE(msgBuf,'(A,E22.17)') 'QoI sum(C2) global: ', 
+     &                      objf_ihop(num_file)
+       CALL PRINT_MESSAGE( msgBuf,
+     &      standardMessageUnit, SQUEEZE_RIGHT, myThid )
+
+       ENDDO !DO num_file
 
 #  else /* TEST_IHOP_COST */
+      _BEGIN_MASTER( myThid )
+
       DO num_file = 1, NFILESMAX_IHOP
 
 C File maintenance
@@ -263,10 +301,9 @@ C Calc misfit
 
       ENDDO !DO num_file
 
+      _END_MASTER( myThid )
 #  endif /* TEST_IHOP_COST */
 # endif /* ALLOW_COST */
-
-      _END_MASTER( myThid )
 
 # ifdef ALLOW_COST
 C Print cost function values
