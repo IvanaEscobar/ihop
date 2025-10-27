@@ -19,9 +19,11 @@ C     !DESCRIPTION:
 C     Computes ihop predicted datum
 
 C     !USES:
+#ifdef ALLOW_IHOP
       USE arr_mod,  only: Arr, nArrival, maxNArr
       USE srPos_mod,only: Pos
       USE ihop_mod, only: rad2deg
+#endif
       IMPLICIT NONE
 C == Global variables ===
 #include "SIZE.h"
