@@ -472,6 +472,14 @@ CONTAINS
 
   ! Initial conditions (IC)
   iSmallStepCtr = 0
+  c = 0.
+  cimag = 0.
+  gradc = 0.
+  crr = 0.
+  crz = 0.
+  czz = 0.
+  rho = 0.
+
   CALL evalSSP( xs, c, cimag, gradc, crr, crz, czz, rho, myThid )
   IF ( c.EQ.0 ) STOP "ABNORMAL END: S/R TRACERAY2D"
 

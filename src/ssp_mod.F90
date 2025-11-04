@@ -591,6 +591,10 @@ USE splinec_mod,  only: splineall
   REAL (KIND=_RL90)   :: c1, c2, cz1, cz2, cr, cz, s1, s2, delta_r, delta_z
 !EOP
 
+  ! INIT variables
+  c1 = 0.
+  c2 = 0.
+
   ! *** Section to return SSP info ***
 
   ! IESCO22: iSegz is the depth segment index containing x depth
