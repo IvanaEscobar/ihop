@@ -30,7 +30,8 @@ MODULE ssp_mod
 ! !SCOPE: 
   PRIVATE
 !=======================================================================
-  PUBLIC initSSP, setSSP, evalSSP, SSP, &
+  PUBLIC init_fixed_SSP, init_varia_SSP, setSSP, evalSSP, &
+         Grid, SSP, &
          alphaR, betaR, alphaI, betaI, rhoR, iSegz, iSegr
 !=======================================================================
 
@@ -86,7 +87,11 @@ MODULE ssp_mod
 
 CONTAINS
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
-! S/R initSSP
+! S/R init_fixed_SSP
+! S/R ReadSSP
+! S/R init_fixed_Grid
+! S/R init_varia_SSP
+
 ! S/R setSSP
 ! S/R evalSSP
 ! S/R n2Linear
@@ -94,15 +99,13 @@ CONTAINS
 ! S/R cPCHIP
 ! S/R cCubic
 ! S/R Quad
-! S/R ReadSSP
-! S/R init_fixed_SSP
 ! S/R gcmSSP
 ! S/R writeSSP
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 !BOP
-! !ROUTINE: initSSP
+! !ROUTINE: init_fixed_SSP
 ! !INTERFACE:
-  SUBROUTINE initSSP( myThid )
+  SUBROUTINE init_fixed_SSP( myThid )
 ! !DESCRIPTION:
 !   Initialize the SSP derived type and set the SSP structures.
 
@@ -120,11 +123,321 @@ CONTAINS
   IF (useSSPFile) THEN
     CALL ReadSSP( myThid )
   ELSE
-    CALL init_fixed_SSP( myThid )
+    CALL init_fixed_Grid( myThid )
   END IF
 
   RETURN
-  END !SUBROUTINE initSSP
+  END !SUBROUTINE init_fixed_SSP
+
+!---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
+!BOP
+! !ROUTINE: ReadSSP (LEGACY)
+! !INTERFACE:
+  SUBROUTINE ReadSSP( myThid )
+! !DESCRIPTION:
+!   Read SSP [m/s] from file and populate SSPStructure: SSP.
+
+! !USES:
+  USE atten_mod, only: CRCI
+  USE ihop_mod,  only: SSPFile
+  USE bdry_mod,  only: Bdry
+! IESCO24
+! fT = 1000 ONLY for acousto-elastic halfspaces, I will have to pass this
+! parameter in a different way after ssp_mod is split btwn fixed and varia
+! USE initenvihop, only: fT
+
+! !INPUT PARAMETERS:
+! myThid :: my thread ID
+  INTEGER, INTENT( IN ) :: myThid
+! !OUTPUT PARAMETERS: None
+
+! !LOCAL VARIABLES:
+! msgBuf :: Informational/error message buffer
+! Depth :: Depth of the bottom boundary
+! bPower :: Power for attenuation calculation
+! fT :: Frequency for attenuation calculation
+  CHARACTER*(MAX_LEN_MBUF):: msgBuf
+  REAL (KIND=_RL90) :: Depth
+  REAL (KIND=_RL90) :: bPower, fT
+!EOP
+
+  ! IESCO24 fT init
+  bPower = 1.0
+  fT = 1000.0
+  Depth = Bdry%Bot%HS%Depth
+
+  ! I/O on main thread only
+  _BEGIN_MASTER(myThid)
+
+  ! OPEN SSPFile to read
+  OPEN ( FILE=TRIM(IHOP_fileroot) // '.ssp', UNIT=SSPFile, &
+    FORM='FORMATTED', STATUS='OLD', IOSTAT=iostat )
+  IF ( IOSTAT.NE.0 ) THEN   ! successful open?
+#ifdef IHOP_WRITE_OUT
+    WRITE(msgBuf,'(A)') 'SSPMOD ReadSSP: Unable to open the SSP file'
+    CALL PRINT_ERROR( msgBuf,myThid )
+#endif /* IHOP_WRITE_OUT */
+    STOP 'ABNORMAL END: S/R ReadSSP'
+  ENDIF
+
+  READ( SSPFile,  * ) Grid%nR, Grid%nZ
+
+  ALLOCATE( SSP%cMat( Grid%nZ, Grid%nR ), &
+            SSP%czMat( Grid%nZ-1, Grid%nR ), &
+            Grid%Seg%R( Grid%nR ), &
+            STAT=iallocstat )
+  IF ( iallocstat.NE.0 ) THEN
+#ifdef IHOP_WRITE_OUT
+    WRITE(msgBuf,'(2A)') 'SSPMOD ReadSSP: ', &
+      'Insufficient memory to store SSP'
+    CALL PRINT_ERROR( msgBuf,myThid )
+#endif /* IHOP_WRITE_OUT */
+    STOP 'ABNORMAL END: S/R ReadSSP'
+  ENDIF
+
+  ! Initiate to nonsense
+  SSP%cMat  = -99.0 _d 0
+  SSP%czMat = -99.0 _d 0
+
+  ! Set SSP contents
+  READ( SSPFile,  * ) Grid%Seg%R( 1:Grid%nR )
+  Grid%Seg%R = 1000.0 * Grid%Seg%R   ! convert km to m
+
+  READ( SSPFile,  * ) Grid%Z( 1:Grid%nZ )
+
+  DO iz = 1, Grid%nZ
+    READ(  SSPFile, * ) SSP%cMat( iz, : )
+  ENDDO
+
+  CLOSE( SSPFile )
+
+  Grid%nPts = 1
+  DO iz = 1, MaxSSP
+    alphaR = SSP%cMat( iz, 1 )
+
+    SSP%c(iz) = CRCI( Grid%Z(iz), alphaR, alphaI, Grid%AttenUnit, bPower, fT, &
+                      myThid )
+    Grid%rho(iz) = rhoR !IEsco22: set to a default value of 1
+
+    ! verify depths are monotone increasing
+    IF ( iz.GT.1 ) THEN
+      IF ( Grid%Z( iz ).LE.Grid%Z( iz-1 ) ) THEN
+#ifdef IHOP_WRITE_OUT
+        WRITE(msgBuf,'(2A,F10.2)') 'SSPMOD ReadSSP: ', &
+          'The depths in the SSP must be monotone increasing', Grid%Z(iz)
+        CALL PRINT_ERROR( msgBuf,myThid )
+#endif /* IHOP_WRITE_OUT */
+        STOP 'ABNORMAL END: S/R ReadSSP'
+      ENDIF
+    ENDIF
+
+    ! compute gradient, cz
+    IF ( iz.GT.1 ) SSP%cz( iz-1 ) = ( SSP%c( iz ) - SSP%c( iz-1 ) ) / &
+                                    ( Grid%Z( iz ) - Grid%Z( iz-1 ) )
+
+    ! Did we read the last point?
+    IF ( ABS( Grid%Z( iz ) - Depth ).LT.100.*EPSILON( 1.0e0 ) ) THEN
+      IF ( Grid%nPts.EQ.1 ) THEN
+#ifdef IHOP_WRITE_OUT
+        WRITE(msgBuf,'(2A)') 'SSPMOD ReadSSP: ', &
+          'The SSP must have at least 2 points'
+        CALL PRINT_ERROR( msgBuf,myThid )
+#endif /* IHOP_WRITE_OUT */
+            STOP 'ABNORMAL END: S/R ReadSSP'
+      ENDIF
+
+      RETURN
+
+    ENDIF ! IF ( ABS( Grid%Z( iz ) - Depth ).LT.100.*EPSILON( 1.0e0 ) )
+
+    Grid%nPts = Grid%nPts + 1
+
+  ENDDO ! DO iz = 1, Grid%nZ
+
+  ! Fall through means too many points in the profile
+#ifdef IHOP_WRITE_OUT
+  WRITE(msgBuf,'(2A)') 'SSPMOD ReadSSP: ', &
+    'Number of SSP points exceeds limit'
+  CALL PRINT_ERROR( msgBuf,myThid )
+#endif /* IHOP_WRITE_OUT */
+  STOP 'ABNORMAL END: S/R ReadSSP'
+
+  ! I/O on main thread only
+  _END_MASTER(myThid)
+
+  RETURN
+  END !SUBROUTINE ReadSSP
+
+!---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
+!BOP
+! !ROUTINE: init_fixed_Grid
+! !INTERFACE:
+  SUBROUTINE init_fixed_Grid( myThid )
+! !DESCRIPTION:
+!   Initialize SSP Grid parameters that do not change within a time series.
+! Sets Grid%nR,nZ,Seg%R, and ihop_sumweights
+
+! !USES:
+  USE bdry_mod, only: Bdry
+
+! !INPUT PARAMETERS:
+! myThid :: my thread ID
+  INTEGER, INTENT( IN ) :: myThid
+! !OUTPUT PARAMETERS: None
+
+! !LOCAL VARIABLES:
+! msgBuf :: Informational/error message buffer
+! skip_range :: Flag to skip range interpolation
+! iallocstat :: Allocation status
+! bi, bj, i, j, k, ii, jj :: GCM domain loop indices
+! nii, njj :: Number of IDW points in range
+! tolerance :: Tolerance for IDW interpolation
+  CHARACTER*(MAX_LEN_MBUF):: msgBuf
+  LOGICAL :: skip_range
+  INTEGER :: iallocstat
+  INTEGER :: bi,bj, i,j,k, ii,jj
+  INTEGER :: nii(IHOP_NPTS_RANGE), njj(IHOP_NPTS_RANGE)
+  REAL (KIND=_RL90) :: tolerance
+
+  ! init local vars
+  skip_range =.false.
+  nii(:)    = 0
+  njj(:)    = 0
+  tolerance  = 5 _d -5
+
+  ! init default Grid values (only fixed memory vars)
+  Grid%nPts = -1
+  Grid%Z    = -999.0
+  Grid%rho  = -999.0
+
+  ! set ihop SSP Grid size
+  Grid%nZ = Nr+2 ! add z=0 z=Depth layers to GCM Nr
+  Grid%nR = IHOP_NPTS_RANGE
+  Grid%nPts = Grid%nZ
+
+  ! set Grid%Z from rC, rkSign=-1 used bc ihop uses +ive depths
+  Grid%Z( 1 )            = 0.0 _d 0
+  Grid%Z( 2:(Grid%nZ-1) ) = rkSign*rC( 1:Nr )
+  Grid%Z( Grid%nZ )       = Bdry%Bot%HS%Depth ! rkSign*rF(Nr+1)*1.05
+
+  ! set Grid%Seg%R from data.ihop -> ihop_ranges
+  !IF (ALLOCATED(Grid%Seg%R)) DEALLOCATE(Grid%Seg%R)
+  ALLOCATE( Grid%Seg%R( Grid%nR ), STAT=iallocstat )
+  IF ( iallocstat.NE.0 ) THEN
+# ifdef IHOP_WRITE_OUT
+    WRITE(msgBuf,'(2A)') 'SSPMOD init_fixed_Grid: ', &
+      'Insufficient memory to store Grid%Seg%R'
+    CALL PRINT_ERROR( msgBuf,myThid )
+# endif /* IHOP_WRITE_OUT */
+      STOP 'ABNORMAL END: S/R init_fixed_Grid'
+  ENDIF
+
+  Grid%Seg%R( 1:Grid%nR ) = ihop_ranges( 1:Grid%nR )
+  ! Modify from [m] to [km]
+  Grid%Seg%R = 1000.0 * Grid%Seg%R
+
+  !==================================================
+  ! IDW Interpolate: COMPARING with LAT LONs (xC, yC)
+  !==================================================
+  ! Sum IDW weights
+  DO ii = 1, Grid%nR
+    ihop_sumweights(ii,:) = sum(ihop_idw_weights(ii,:))
+  ENDDO
+
+  ! Adapt IDW interpolation by bathymetry
+  DO bj=myByLo(myThid),myByHi(myThid)
+    DO bi=myBxLo(myThid),myBxHi(myThid)
+      DO j=1,sNy
+        DO i=1,sNx
+          DO ii=1, Grid%nR
+            skip_range = .FALSE.
+
+            DO jj=1,IHOP_npts_idw
+              IF ( ABS(xC(i, j, bi, bj) - ihop_xc(ii, jj)).LE.tolerance .AND. &
+                   ABS(yC(i, j, bi, bj) - ihop_yc(ii, jj)).LE.tolerance ) THEN
+                DO k=1,Nr
+    ! No IDW interpolation on xc, yc centered ranges
+    IF ( nii(ii).EQ.1 .AND. k.GT.njj(ii) ) THEN
+      skip_range = .TRUE.
+    ENDIF
+
+    IF ( .NOT.skip_range ) THEN
+      IF ( hFacC(i, j, k, bi, bj).EQ.0. ) THEN
+        ihop_sumweights(ii, k) = &
+          ihop_sumweights(ii, k) - ihop_idw_weights(ii, jj)
+
+        ! No interpolation on xc, yc centered ranges
+        IF ( ihop_idw_weights(ii, jj).EQ.0. ) THEN
+          ihop_sumweights(ii, k:Nr) = 0.0
+          nii(ii) = 1
+          njj(ii) = k
+        ENDIF
+
+      ENDIF ! IF ( hFacC(i, j, k, bi, bj).EQ.0. )
+
+      ! Set TINY and negative values to 0.0
+      IF (ihop_sumweights(ii, k).LT.1D-13) ihop_sumweights(ii, k) = 0.0
+
+    ENDIF ! IF ( .NOT.skip_range )
+                ENDDO !k
+              ENDIF
+            ENDDO !jj
+          ENDDO !ii
+        ENDDO !i
+      ENDDO !j
+    ENDDO !bi
+  ENDDO !bj
+
+  RETURN
+  END !SUBROUTINE init_fixed_Grid
+
+!---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
+!BOP
+! !ROUTINE: init_varia_SSP
+! !INTERFACE:
+  SUBROUTINE init_varia_SSP( myThid )
+! !DESCRIPTION:
+!   Initialize the fixed SSP parameters that do not change within a time series.
+! Sets SSP%c,cz,cMat,czMat
+
+! !USES: None
+
+! !INPUT PARAMETERS:
+! myThid :: my thread ID
+  INTEGER, INTENT( IN ) :: myThid
+! !OUTPUT PARAMETERS: None
+
+! !LOCAL VARIABLES:
+! msgBuf :: Informational/error message buffer
+! iallocstat :: Allocation status
+#ifdef IHOP_WRITE_OUT
+  CHARACTER*(MAX_LEN_MBUF):: msgBuf
+#endif /* IHOP_WRITE_OUT */
+  INTEGER :: iallocstat
+
+  ! ONLY ALLOCATE cmat and czmat, to be filled per ihop run
+  ALLOCATE( SSP%cMat( Grid%nZ, Grid%nR ), &
+            SSP%czMat( Grid%nZ-1, Grid%nR ), &
+            STAT=iallocstat )
+  IF ( iallocstat.NE.0 ) THEN
+#ifdef IHOP_WRITE_OUT
+    WRITE(msgBuf,'(2A)') 'SSPMOD init_fixed_SSP: ', &
+      'Insufficient memory to store SSP%cMat, SSP%czMat'
+    CALL PRINT_ERROR( msgBuf,myThid )
+#endif /* IHOP_WRITE_OUT */
+      STOP 'ABNORMAL END: S/R init_fixed_SSP'
+  ENDIF
+
+  ! Initiate to nonsense
+  SSP%cMat  = -99.0 _d 0
+  SSP%czMat = -99.0 _d 0
+
+  ! init default SSP values (only fixed memory vars)
+  SSP%c    = -99.0 _d 0
+  SSP%cz   = -99.0 _d 0
+
+  RETURN
+  END !SUBROUTINE init_varia_SSP
 
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 !BOP
@@ -420,7 +733,7 @@ CONTAINS
 
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 !BOP
-! !ROUTINE: initSSP
+! !ROUTINE: cPCHIP
 ! !INTERFACE:
   SUBROUTINE cPCHIP( x, c, cimag, gradc, crr, crz, czz, rho, myThid )
 ! !DESCRIPTION:
@@ -701,287 +1014,6 @@ USE splinec_mod,  only: splineall
   !IESCO22: for thesis, czz=crr=0, and rho=1 at all times
   RETURN
   END !SUBROUTINE Quad
-
-!---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
-!BOP
-! !ROUTINE: ReadSSP
-! !INTERFACE:
-  SUBROUTINE ReadSSP( myThid )
-! !DESCRIPTION:
-!   Read SSP [m/s] from file and populate SSPStructure: SSP.
-
-! !USES:
-  USE atten_mod, only: CRCI
-  USE ihop_mod,  only: SSPFile
-  USE bdry_mod,  only: Bdry
-! IESCO24
-! fT = 1000 ONLY for acousto-elastic halfspaces, I will have to pass this
-! parameter in a different way after ssp_mod is split btwn fixed and varia
-! USE initenvihop, only: fT
-
-! !INPUT PARAMETERS:
-! myThid :: my thread ID
-  INTEGER, INTENT( IN ) :: myThid
-! !OUTPUT PARAMETERS: None
-
-! !LOCAL VARIABLES:
-! msgBuf :: Informational/error message buffer
-! Depth :: Depth of the bottom boundary
-! bPower :: Power for attenuation calculation
-! fT :: Frequency for attenuation calculation
-  CHARACTER*(MAX_LEN_MBUF):: msgBuf
-  REAL (KIND=_RL90) :: Depth
-  REAL (KIND=_RL90) :: bPower, fT
-!EOP
-
-  ! IESCO24 fT init
-  bPower = 1.0
-  fT = 1000.0
-  Depth = Bdry%Bot%HS%Depth
-
-  ! I/O on main thread only
-  _BEGIN_MASTER(myThid)
-
-  ! OPEN SSPFile to read
-  OPEN ( FILE=TRIM(IHOP_fileroot) // '.ssp', UNIT=SSPFile, &
-    FORM='FORMATTED', STATUS='OLD', IOSTAT=iostat )
-  IF ( IOSTAT.NE.0 ) THEN   ! successful open?
-#ifdef IHOP_WRITE_OUT
-    WRITE(msgBuf,'(A)') 'SSPMOD ReadSSP: Unable to open the SSP file'
-    CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
-    STOP 'ABNORMAL END: S/R ReadSSP'
-  ENDIF
-
-  READ( SSPFile,  * ) Grid%nR, Grid%nZ
-
-  ALLOCATE( SSP%cMat( Grid%nZ, Grid%nR ), &
-            SSP%czMat( Grid%nZ-1, Grid%nR ), &
-            Grid%Seg%R( Grid%nR ), &
-            STAT=iallocstat )
-  IF ( iallocstat.NE.0 ) THEN
-#ifdef IHOP_WRITE_OUT
-    WRITE(msgBuf,'(2A)') 'SSPMOD ReadSSP: ', &
-      'Insufficient memory to store SSP'
-    CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
-    STOP 'ABNORMAL END: S/R ReadSSP'
-  ENDIF
-
-  ! Initiate to nonsense
-  SSP%cMat  = -99.0 _d 0
-  SSP%czMat = -99.0 _d 0
-
-  ! Set SSP contents
-  READ( SSPFile,  * ) Grid%Seg%R( 1:Grid%nR )
-  Grid%Seg%R = 1000.0 * Grid%Seg%R   ! convert km to m
-
-  READ( SSPFile,  * ) Grid%Z( 1:Grid%nZ )
-
-  DO iz = 1, Grid%nZ
-    READ(  SSPFile, * ) SSP%cMat( iz, : )
-  ENDDO
-
-  CLOSE( SSPFile )
-
-  Grid%nPts = 1
-  DO iz = 1, MaxSSP
-    alphaR = SSP%cMat( iz, 1 )
-
-    SSP%c(iz) = CRCI( Grid%Z(iz), alphaR, alphaI, Grid%AttenUnit, bPower, fT, &
-                      myThid )
-    Grid%rho(iz) = rhoR !IEsco22: set to a default value of 1
-
-    ! verify depths are monotone increasing
-    IF ( iz.GT.1 ) THEN
-      IF ( Grid%Z( iz ).LE.Grid%Z( iz-1 ) ) THEN
-#ifdef IHOP_WRITE_OUT
-        WRITE(msgBuf,'(2A,F10.2)') 'SSPMOD ReadSSP: ', &
-          'The depths in the SSP must be monotone increasing', Grid%Z(iz)
-        CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
-        STOP 'ABNORMAL END: S/R ReadSSP'
-      ENDIF
-    ENDIF
-
-    ! compute gradient, cz
-    IF ( iz.GT.1 ) SSP%cz( iz-1 ) = ( SSP%c( iz ) - SSP%c( iz-1 ) ) / &
-                                    ( Grid%Z( iz ) - Grid%Z( iz-1 ) )
-
-    ! Did we read the last point?
-    IF ( ABS( Grid%Z( iz ) - Depth ).LT.100.*EPSILON( 1.0e0 ) ) THEN
-      IF ( Grid%nPts.EQ.1 ) THEN
-#ifdef IHOP_WRITE_OUT
-        WRITE(msgBuf,'(2A)') 'SSPMOD ReadSSP: ', &
-          'The SSP must have at least 2 points'
-        CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
-            STOP 'ABNORMAL END: S/R ReadSSP'
-      ENDIF
-
-      RETURN
-
-    ENDIF ! IF ( ABS( Grid%Z( iz ) - Depth ).LT.100.*EPSILON( 1.0e0 ) )
-
-    Grid%nPts = Grid%nPts + 1
-
-  ENDDO ! DO iz = 1, Grid%nZ
-
-  ! Fall through means too many points in the profile
-#ifdef IHOP_WRITE_OUT
-  WRITE(msgBuf,'(2A)') 'SSPMOD ReadSSP: ', &
-    'Number of SSP points exceeds limit'
-  CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
-  STOP 'ABNORMAL END: S/R ReadSSP'
-
-  ! I/O on main thread only
-  _END_MASTER(myThid)
-
-  RETURN
-  END !SUBROUTINE ReadSSP
-
-!---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
-!BOP
-! !ROUTINE: init_fixed_ssp
-! !INTERFACE:
-  SUBROUTINE init_fixed_ssp( myThid )
-! !DESCRIPTION:
-!   Initialize the fixed SSP parameters that do not change within a time series.
-! Sets Grid%nR,nZ,Seg%R, and ihop_sumweights
-
-! !USES:
-  USE bdry_mod, only: Bdry
-
-! !INPUT PARAMETERS:
-! myThid :: my thread ID
-  INTEGER, INTENT( IN ) :: myThid
-! !OUTPUT PARAMETERS: None
-
-! !LOCAL VARIABLES:
-! msgBuf :: Informational/error message buffer
-! skip_range :: Flag to skip range interpolation
-! iallocstat :: Allocation status
-! bi, bj, i, j, k, ii, jj :: GCM domain loop indices
-! nii, njj :: Number of IDW points in range
-! tolerance :: Tolerance for IDW interpolation
-  CHARACTER*(MAX_LEN_MBUF):: msgBuf
-  LOGICAL :: skip_range
-  INTEGER :: iallocstat
-  INTEGER :: bi,bj, i,j,k, ii,jj
-  INTEGER :: nii(IHOP_NPTS_RANGE), njj(IHOP_NPTS_RANGE)
-  REAL (KIND=_RL90) :: tolerance
-
-  ! init local vars
-  skip_range =.false.
-  nii(:)    = 0
-  njj(:)    = 0
-  tolerance  = 5 _d -5
-
-  ! init default SSP values (only fixed memory vars)
-  Grid%nPts = -1
-  Grid%Z    = -999.0
-  Grid%rho  = -999.0
-  SSP%c    = -999.0
-  SSP%cz   = -999.0
-
-  ! set ihop SSP grid size
-  Grid%nZ = Nr+2 ! add z=0 z=Depth layers to GCM Nr
-  Grid%nR = IHOP_NPTS_RANGE
-  Grid%nPts = Grid%nZ
-
-  ! set Grid%Z from rC, rkSign=-1 used bc ihop uses +ive depths
-  Grid%Z( 1 )            = 0.0 _d 0
-  Grid%Z( 2:(Grid%nZ-1) ) = rkSign*rC( 1:Nr )
-  Grid%Z( Grid%nZ )       = Bdry%Bot%HS%Depth ! rkSign*rF(Nr+1)*1.05
-
-  ! set Grid%Seg%R from data.ihop -> ihop_ranges
-  !IF (ALLOCATED(Grid%Seg%R)) DEALLOCATE(Grid%Seg%R)
-  ALLOCATE( Grid%Seg%R( Grid%nR ), STAT=iallocstat )
-  IF ( iallocstat.NE.0 ) THEN
-# ifdef IHOP_WRITE_OUT
-    WRITE(msgBuf,'(2A)') 'SSPMOD init_fixed_SSP: ', &
-      'Insufficient memory to store Grid%Seg%R'
-    CALL PRINT_ERROR( msgBuf,myThid )
-# endif /* IHOP_WRITE_OUT */
-      STOP 'ABNORMAL END: S/R init_fixed_SSP'
-  ENDIF
-
-  Grid%Seg%R( 1:Grid%nR ) = ihop_ranges( 1:Grid%nR )
-  ! Modify from [m] to [km]
-  Grid%Seg%R = 1000.0 * Grid%Seg%R
-
-  ! ONLY ALLOCATE cmat and czmat, to be filled per ihop run
-  ALLOCATE( SSP%cMat( Grid%nZ, Grid%nR ), &
-            SSP%czMat( Grid%nZ-1, Grid%nR ), &
-            STAT=iallocstat )
-  IF ( iallocstat.NE.0 ) THEN
-# ifdef IHOP_WRITE_OUT
-    WRITE(msgBuf,'(2A)') 'SSPMOD init_fixed_SSP: ', &
-      'Insufficient memory to store SSP%cMat, SSP%czMat'
-    CALL PRINT_ERROR( msgBuf,myThid )
-# endif /* IHOP_WRITE_OUT */
-      STOP 'ABNORMAL END: S/R init_fixed_SSP'
-  ENDIF
-
-  ! Initiate to nonsense
-  SSP%cMat  = -99.0 _d 0
-  SSP%czMat = -99.0 _d 0
-
-  !==================================================
-  ! IDW Interpolate: COMPARING with LAT LONs (xC, yC)
-  !==================================================
-  ! Sum IDW weights
-  DO ii = 1, Grid%nR
-    ihop_sumweights(ii,:) = sum(ihop_idw_weights(ii,:))
-  ENDDO
-
-  ! Adapt IDW interpolation by bathymetry
-  DO bj=myByLo(myThid),myByHi(myThid)
-    DO bi=myBxLo(myThid),myBxHi(myThid)
-      DO j=1,sNy
-        DO i=1,sNx
-          DO ii=1, Grid%nR
-            skip_range = .FALSE.
-
-            DO jj=1,IHOP_npts_idw
-              IF ( ABS(xC(i, j, bi, bj) - ihop_xc(ii, jj)).LE.tolerance .AND. &
-                   ABS(yC(i, j, bi, bj) - ihop_yc(ii, jj)).LE.tolerance ) THEN
-                DO k=1,Nr
-    ! No IDW interpolation on xc, yc centered ranges
-    IF ( nii(ii).EQ.1 .AND. k.GT.njj(ii) ) THEN
-      skip_range = .TRUE.
-    ENDIF
-
-    IF ( .NOT.skip_range ) THEN
-      IF ( hFacC(i, j, k, bi, bj).EQ.0. ) THEN
-        ihop_sumweights(ii, k) = &
-          ihop_sumweights(ii, k) - ihop_idw_weights(ii, jj)
-
-        ! No interpolation on xc, yc centered ranges
-        IF ( ihop_idw_weights(ii, jj).EQ.0. ) THEN
-          ihop_sumweights(ii, k:Nr) = 0.0
-          nii(ii) = 1
-          njj(ii) = k
-        ENDIF
-
-      ENDIF ! IF ( hFacC(i, j, k, bi, bj).EQ.0. )
-
-      ! Set TINY and negative values to 0.0
-      IF (ihop_sumweights(ii, k).LT.1D-13) ihop_sumweights(ii, k) = 0.0
-
-    ENDIF ! IF ( .NOT.skip_range )
-                ENDDO !k
-              ENDIF
-            ENDDO !jj
-          ENDDO !ii
-        ENDDO !i
-      ENDDO !j
-    ENDDO !bi
-  ENDDO !bj
-
-  RETURN
-  END !SUBROUTINE init_fixed_ssp
 
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 !BOP

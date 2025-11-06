@@ -38,7 +38,7 @@ CONTAINS
   ! USES:
   USE bdry_mod,  only: Bdry, HSInfo, initATI, initBTY
   USE srpos_mod, only: Pos, ReadSXSY, ReadSZRz, ReadRcvrRanges, ReadFreqVec
-  USE ssp_mod,   only: Grid, SSP, initSSP, alphar
+  USE ssp_mod,   only: Grid, init_fixed_SSP, alphar
   USE ihop_mod,  only: Beam, rxyz, nRz_per_range
   USE angle_mod, only: Angles, ReadRayElevationAngles
 #ifdef IHOP_THREED
@@ -120,9 +120,6 @@ CONTAINS
   Grid%Type = ''
   Grid%AttenUnit = ''
 
-  SSP%c  = -1.
-  SSP%cz = -1.
-
   Beam%nBeams = -1
   Beam%nImage = -1
   Beam%nSteps = -1
@@ -173,7 +170,7 @@ CONTAINS
 
 
   ! *** SSP parameters ***
-  CALL initSSP( myThid )
+  CALL init_fixed_SSP( myThid )
 
   ! set Bdry%Top%HS%Depth from first Grid%Z
   Bdry%Top%HS%Depth = Grid%Z(1)
@@ -321,7 +318,7 @@ CONTAINS
 
 ! !USES:
   USE atten_mod, only: T, Salinity, pH, z_bar, iBio, NBioLayers, bio
-  USE ssp_mod,   only: SSP
+  USE ssp_mod,   only: Grid
 !     == Global Variables ==
 #include "SIZE.h"
 #include "EEPARAMS.h"
@@ -352,13 +349,13 @@ CONTAINS
   ! In adjoint mode we do not write output besides on the first run
   IF (IHOP_dumpfreq.LT.0) RETURN
 
-  ! SSP approximation options
+  ! SSP grid approximation options
   SELECT CASE ( Grid%Type )
   CASE ( 'N','C','P','S','Q','A' )
   CASE DEFAULT
 #ifdef IHOP_WRITE_OUT
     WRITE(msgBuf,'(2A)') 'INIT_FIXED_ENV ReadTopOpt: ', &
-      'Unknown option for SSP approximation'
+      'Unknown option for SSP Grid approximation'
     CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
     STOP 'ABNORMAL END: S/R ReadTopOpt'

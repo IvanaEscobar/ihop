@@ -11,7 +11,7 @@ C     o initialization for netcdf ihop acoustic domain; pass to f90 code
 C     started: Ivana Escobar July-2023
 
 C     !USES:
-      USE ihop_init_mod, only: init_fixed_env
+      USE ihop_init_mod, only: INIT_FIXED_ENV
       IMPLICIT NONE
 C == Global Variables ==
 #include "EEPARAMS.h"
