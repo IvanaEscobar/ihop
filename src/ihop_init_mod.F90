@@ -38,7 +38,7 @@ CONTAINS
   ! USES:
   USE bdry_mod,  only: Bdry, HSInfo, initATI, initBTY
   USE srpos_mod, only: Pos, ReadSXSY, ReadSZRz, ReadRcvrRanges, ReadFreqVec
-  USE ssp_mod,   only: SSP, initSSP, alphar
+  USE ssp_mod,   only: Grid, SSP, initSSP, alphar
   USE ihop_mod,  only: Beam, rxyz, nRz_per_range
   USE angle_mod, only: Angles, ReadRayElevationAngles
 #ifdef IHOP_THREED
@@ -80,7 +80,7 @@ CONTAINS
   ! Primarily, the parameters are related to the acoustic grid:
   ! - From initenvihop.F90:initEnv
   !   - Bdry%Top, Bdry%Bot,
-  !     SSP%AttenUnit,Type,nR,nZ,z,SSP%Seg%R,
+  !     Grid%AttenUnit,Type,nR,nZ,z,Grid%Seg%R,
   !     Pos%SX,SY,nSZ,nRZ,SZ,Rz,Ws,ISZ,Wr,Irz,nRR,Rr,Delta_r,
   !     Beam%RunType,Deltas,Nimage,iBeamWindow,Component,Multiplier,rloop,
   !     Beam%Box%R,Box%Z,Type,
@@ -110,16 +110,18 @@ CONTAINS
   Pos%Delta_r = -999.
   Pos%Delta_theta = -999.
 
-  SSP%nPts = -1.
-  SSP%nR = -1.
-  SSP%nX = -1.
-  SSP%nY = -1.
-  SSP%nZ = -1.
-  SSP%Z = -1.
-  SSP%rho = -1.
-  SSP%c = -1.
-  SSP%Type = ''
-  SSP%AttenUnit = ''
+  Grid%nPts = -1.
+  Grid%nR = -1.
+  Grid%nX = -1.
+  Grid%nY = -1.
+  Grid%nZ = -1.
+  Grid%Z  = -1.
+  Grid%rho = -1.
+  Grid%Type = ''
+  Grid%AttenUnit = ''
+
+  SSP%c  = -1.
+  SSP%cz = -1.
 
   Beam%nBeams = -1
   Beam%nImage = -1
@@ -173,8 +175,8 @@ CONTAINS
   ! *** SSP parameters ***
   CALL initSSP( myThid )
 
-  ! set Bdry%Top%HS%Depth from first SSP%Z
-  Bdry%Top%HS%Depth = SSP%Z(1)
+  ! set Bdry%Top%HS%Depth from first Grid%Z
+  Bdry%Top%HS%Depth = Grid%Z(1)
   ! set water column depth
   Depth = Bdry%Bot%HS%Depth - Bdry%Top%HS%Depth
 
@@ -342,16 +344,16 @@ CONTAINS
   CHARACTER*(MAX_LEN_MBUF) :: msgBuf
 !EOP
 
-  SSP%Type  = IHOP_TopOpt( 1:1 )
+  Grid%Type = IHOP_TopOpt( 1:1 )
   BC        = IHOP_TopOpt( 2:2 )
   AttenUnit = IHOP_TopOpt( 3:4 )
-  SSP%AttenUnit = AttenUnit
+  Grid%AttenUnit = AttenUnit
 
   ! In adjoint mode we do not write output besides on the first run
   IF (IHOP_dumpfreq.LT.0) RETURN
 
   ! SSP approximation options
-  SELECT CASE ( SSP%Type )
+  SELECT CASE ( Grid%Type )
   CASE ( 'N','C','P','S','Q','A' )
   CASE DEFAULT
 #ifdef IHOP_WRITE_OUT

@@ -11,7 +11,7 @@ MODULE step
 
 ! !USES:
   USE ihop_mod, only: Beam, ray2DPt
-  USE ssp_mod,  only: evalSSP, SSP, iSegz, iSegr
+  USE ssp_mod,  only: Grid, evalSSP, iSegz, iSegr
   IMPLICIT NONE
 ! == Global variables ==
 #include "SIZE.h"
@@ -199,7 +199,7 @@ CONTAINS
 ! !INPUT PARAMETERS:
 ! x0 :: the ray coordinate at the beginning of the step
 ! urayt :: the unit tangent vector at the ray coordinate
-! iSegz0, iSegr0 :: SSP segment indices for the ray
+! iSegz0, iSegr0 :: SSP Grid segment indices for the ray
 ! Topx, Topn :: the top boundary coordinate and normal
 ! Botx, Botn :: the bottom boundary coordinate and normal
   REAL (KIND=_RL90), INTENT( IN    ) :: x0( 2 ), urayt( 2 )
@@ -224,10 +224,10 @@ CONTAINS
   ! interface crossing in depth
   hInt = huge( hInt ) ! Largest _RL90 number available
   IF ( ABS( urayt( 2 ) ).GT.EPSILON( hInt ) ) THEN
-    IF       ( SSP%Z( iSegz0   ).GT.x(  2 ) ) THEN
-      hInt = ( SSP%Z( iSegz0   ) - x0( 2 ) ) / urayt( 2 )
-    ELSEIF   ( SSP%Z( iSegz0+1 ).LT.x(  2 ) ) THEN
-      hInt = ( SSP%Z( iSegz0+1 ) - x0( 2 ) ) / urayt( 2 )
+    IF       ( Grid%Z( iSegz0   ).GT.x(  2 ) ) THEN
+      hInt = ( Grid%Z( iSegz0   ) - x0( 2 ) ) / urayt( 2 )
+    ELSEIF   ( Grid%Z( iSegz0+1 ).LT.x(  2 ) ) THEN
+      hInt = ( Grid%Z( iSegz0+1 ) - x0( 2 ) ) / urayt( 2 )
     ELSE
       ! Do nothing
       hInt = hInt
@@ -255,9 +255,9 @@ CONTAINS
   rSeg( 2 ) = MIN( rTopSeg( 2 ), rBotSeg( 2 ) )
 
 !$TAF store rseg = reducestep2d
-  IF ( SSP%Type.EQ.'Q' ) THEN ! Quad: 2D range-dependent SSP
-    rSeg( 1 ) = MAX( rSeg( 1 ), SSP%Seg%R( iSegr0     ) )
-    rSeg( 2 ) = MIN( rSeg( 2 ), SSP%Seg%R( iSegr0 + 1 ) )
+  IF ( Grid%Type.EQ.'Q' ) THEN ! Quad: 2D range-dependent SSP Grid
+    rSeg( 1 ) = MAX( rSeg( 1 ), Grid%Seg%R( iSegr0     ) )
+    rSeg( 2 ) = MIN( rSeg( 2 ), Grid%Seg%R( iSegr0 + 1 ) )
   ENDIF
 
   ! interface crossing in range
