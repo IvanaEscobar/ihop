@@ -174,7 +174,7 @@ CONTAINS
     FORM='FORMATTED', STATUS='OLD', IOSTAT=iostat )
   IF ( IOSTAT.NE.0 ) THEN   ! successful open?
 #ifdef IHOP_WRITE_OUT
-    WRITE(msgBuf,'(A)') 'SSPMOD ReadSSP: Unable to open the SSP file'
+    WRITE(msgBuf,'(A)') 'SSP_MOD::ReadSSP: Unable to open the SSP file'
     CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
     STOP 'ABNORMAL END: S/R ReadSSP'
@@ -188,7 +188,7 @@ CONTAINS
             STAT=iallocstat )
   IF ( iallocstat.NE.0 ) THEN
 #ifdef IHOP_WRITE_OUT
-    WRITE(msgBuf,'(2A)') 'SSPMOD ReadSSP: ', &
+    WRITE(msgBuf,'(2A)') 'SSP_MOD::ReadSSP: ', &
       'Insufficient memory to store SSP'
     CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
@@ -223,7 +223,7 @@ CONTAINS
     IF ( iz.GT.1 ) THEN
       IF ( Grid%Z( iz ).LE.Grid%Z( iz-1 ) ) THEN
 #ifdef IHOP_WRITE_OUT
-        WRITE(msgBuf,'(2A,F10.2)') 'SSPMOD ReadSSP: ', &
+        WRITE(msgBuf,'(2A,F10.2)') 'SSP_MOD::ReadSSP: ', &
           'The depths in the SSP must be monotone increasing', Grid%Z(iz)
         CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
@@ -239,7 +239,7 @@ CONTAINS
     IF ( ABS( Grid%Z( iz ) - Depth ).LT.100.*EPSILON( 1.0e0 ) ) THEN
       IF ( Grid%nPts.EQ.1 ) THEN
 #ifdef IHOP_WRITE_OUT
-        WRITE(msgBuf,'(2A)') 'SSPMOD ReadSSP: ', &
+        WRITE(msgBuf,'(2A)') 'SSP_MOD::ReadSSP: ', &
           'The SSP must have at least 2 points'
         CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
@@ -256,7 +256,7 @@ CONTAINS
 
   ! Fall through means too many points in the profile
 #ifdef IHOP_WRITE_OUT
-  WRITE(msgBuf,'(2A)') 'SSPMOD ReadSSP: ', &
+  WRITE(msgBuf,'(2A)') 'SSP_MOD::ReadSSP: ', &
     'Number of SSP points exceeds limit'
   CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
@@ -325,7 +325,7 @@ CONTAINS
   ALLOCATE( Grid%Seg%R( Grid%nR ), STAT=iallocstat )
   IF ( iallocstat.NE.0 ) THEN
 # ifdef IHOP_WRITE_OUT
-    WRITE(msgBuf,'(2A)') 'SSPMOD init_fixed_Grid: ', &
+    WRITE(msgBuf,'(2A)') 'SSP_MOD::init_fixed_Grid: ', &
       'Insufficient memory to store Grid%Seg%R'
     CALL PRINT_ERROR( msgBuf,myThid )
 # endif /* IHOP_WRITE_OUT */
@@ -421,11 +421,11 @@ CONTAINS
             STAT=iallocstat )
   IF ( iallocstat.NE.0 ) THEN
 #ifdef IHOP_WRITE_OUT
-    WRITE(msgBuf,'(2A)') 'SSPMOD init_fixed_SSP: ', &
+    WRITE(msgBuf,'(2A)') 'SSP_MOD::init_varia_SSP: ', &
       'Insufficient memory to store SSP%cMat, SSP%czMat'
     CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
-      STOP 'ABNORMAL END: S/R init_fixed_SSP'
+      STOP 'ABNORMAL END: S/R init_varia_SSP'
   ENDIF
 
   ! Initiate to nonsense
@@ -543,7 +543,7 @@ CONTAINS
 
   CASE DEFAULT
 #ifdef IHOP_WRITE_OUT
-    WRITE(msgBuf,'(A)') 'SSPMOD setSSP: Invalid SSP profile option'
+    WRITE(msgBuf,'(A)') 'SSP_MOD::setSSP: Invalid SSP profile option'
     CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
     STOP 'ABNORMAL END: S/R setSSP'
@@ -598,7 +598,7 @@ CONTAINS
     ! In adjoint mode we do not write output besides on the first run
     IF ( IHOP_dumpfreq.GE.0 ) &
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(A)') 'SSPMOD evalSSP: Invalid SSP profile option'
+    WRITE(msgBuf,'(A)') 'SSP_MOD::evalSSP: Invalid SSP profile option'
     CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
     STOP 'ABNORMAL END: S/R evalSSP'
@@ -939,7 +939,7 @@ USE splinec_mod,  only: splineall
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
       WRITE(msgBuf,'(A,2F13.4)') ' x = ( r, z ) = ', x
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(2A)') 'SSPMOD Quad: ', &
+      WRITE(msgBuf,'(2A)') 'SSP_MOD::Quad: ', &
         'ray is outside the box where the soundspeed is defined'
       CALL PRINT_ERROR( msgBuf,myThid )
     ENDIF
@@ -968,7 +968,7 @@ USE splinec_mod,  only: splineall
 #ifdef IHOP_WRITE_OUT
     WRITE(msgBuf, *) delta_z, s2, iSegz, Grid%Z(iSegz)
     CALL PRINT_ERROR( msgBuf,myThid )
-    WRITE(msgBuf,'(2A)') 'SSPMOD Quad: ', &
+    WRITE(msgBuf,'(2A)') 'SSP_MOD::Quad: ', &
       'depth is not monotonically increasing in Grid%Z'
     CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
@@ -1083,7 +1083,7 @@ USE splinec_mod,  only: splineall
             globSSP(nZnR_size), STAT=iallocstat )
   IF ( iallocstat.NE.0 ) THEN
 # ifdef IHOP_WRITE_OUT
-    WRITE(msgBuf,'(2A)') 'SSPMOD gcmSSP: ', &
+    WRITE(msgBuf,'(2A)') 'SSP_MOD::gcmSSP: ', &
       'Insufficient memory to store tileSSP and/or globSSP'
     CALL PRINT_ERROR( msgBuf,myThid )
 # endif /* IHOP_WRITE_OUT */
@@ -1233,14 +1233,14 @@ USE splinec_mod,  only: splineall
     DO iz = 1,Grid%nZ
       alphaR = SSP%cMat( iz, 1 )
 
-      SSP%c(iz) = CRCI( Grid%Z(iz), alphaR, alphaI, Grid%AttenUnit, bPower, fT, &
-                          myThid )
+      SSP%c(iz) = CRCI( Grid%Z(iz), alphaR, alphaI, Grid%AttenUnit, &
+                        bPower, fT, myThid )
       Grid%rho(iz) = rhoR
 
       IF ( iz.GT.1 ) THEN
         IF ( Grid%Z( iz ).LE.Grid%Z( iz-1 ) ) THEN
 #ifdef IHOP_WRITE_OUT
-          WRITE( msgBuf,'(2A)' ) 'SSPMOD gcmSSP: ', &
+          WRITE( msgBuf,'(2A)' ) 'SSP_MOD::gcmSSP: ', &
             'The depths in the SSP must be monotone increasing'
           CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* IHOP_WRITE_OUT */
