@@ -18,8 +18,8 @@ C    Computes iHOP data misfit for cost function
 
 C    !USES:
 #if (defined ALLOW_IHOP) && (defined TEST_IHOP_COST)
-C     For Grid%nR,nZ, SSP%cMat
-      USE ssp_mod, only: Grid, SSP
+CC     For Grid%nR,nZ, SSP%cMat
+C      USE ssp_mod, only: Grid, SSP
 
 #endif
       IMPLICIT NONE
@@ -129,25 +129,25 @@ C-- Reset local variables
 
        DO bj = jtlo,jthi
        DO bi = itlo,ithi
-CC-- OPTION 1: tile-wise summation: F77 Sound Speed
-C        DO k=1,5
-C        DO j=1,sNy
-C        jg = myYGlobalLo-1+(bj-1)*sNy+j
-C        DO i=1,sNx
-C         ig = myXGlobalLo-1+(bi-1)*sNx+i
-C
-C         IF (jg.GE.35 .AND. jg.LE.40 .AND. 
-C     &       ig.GE.20 .AND. ig.LE.25 ) THEN
-CC         IF (jg.GE.25 .AND. jg.LE.45 .AND. 
-CC     &       ig.GE.10 .AND. ig.LE.30 ) THEN
-C           objf_ihop_tloc(bi,bj) = objf_ihop_tloc(bi,bj)
-C     &      + ihop_ssp(i,j,k,bi,bj)*ihop_ssp(i,j,k,bi,bj)
-C         ENDIF
-C
-C        ENDDO !DO i
-C        ENDDO !DO j
-C        ENDDO !DO k
-CC-- tile-wise summation: F77 Sound Speed END
+C-- OPTION 1: tile-wise summation: F77 Sound Speed
+        DO k=1,5
+        DO j=1,sNy
+        jg = myYGlobalLo-1+(bj-1)*sNy+j
+        DO i=1,sNx
+         ig = myXGlobalLo-1+(bi-1)*sNx+i
+
+         IF (jg.GE.35 .AND. jg.LE.40 .AND. 
+     &       ig.GE.20 .AND. ig.LE.25 ) THEN
+C         IF (jg.GE.25 .AND. jg.LE.45 .AND. 
+C     &       ig.GE.10 .AND. ig.LE.30 ) THEN
+           objf_ihop_tloc(bi,bj) = objf_ihop_tloc(bi,bj)
+     &      + ihop_ssp(i,j,k,bi,bj)*ihop_ssp(i,j,k,bi,bj)
+         ENDIF
+
+        ENDDO !DO i
+        ENDDO !DO j
+        ENDDO !DO k
+C-- tile-wise summation: F77 Sound Speed END
 
         WRITE(msgBuf,'(A,E22.17)') 'QoI sum(C2) tiled: ', 
      &                      objf_ihop_tloc(bi,bj)
@@ -157,16 +157,16 @@ CC-- tile-wise summation: F77 Sound Speed END
        ENDDO !DO bi
        ENDDO !DO bj
 
-C-- OPTION 2: global summation: F90 Sound Speed
-       DO j = 1,Grid%nR
-       DO k = 1,Grid%nZ
-C        print *, "ESCOBAR: SSP", SSP%cMat(k,j)
-         objf_ihop_gloc = objf_ihop_gloc 
-     &    + SSP%cMat(k,j)*SSP%cMat(k,j)
-
-       ENDDO !DO j
-       ENDDO !DO k
-C-- global summation: F90 Sound Speed END
+CC-- OPTION 2: global summation: F90 Sound Speed
+C       DO j = 1,Grid%nR
+C       DO k = 1,Grid%nZ
+CC        print *, "ESCOBAR: SSP", SSP%cMat(k,j)
+C         objf_ihop_gloc = objf_ihop_gloc 
+C     &    + SSP%cMat(k,j)*SSP%cMat(k,j)
+C
+C       ENDDO !DO j
+C       ENDDO !DO k
+CC-- global summation: F90 Sound Speed END
 
 Cc--   Do global summation, if using tile-wise summation
 C       IF ( objf_ihop_tloc(1,1).NE.0 ) THEN

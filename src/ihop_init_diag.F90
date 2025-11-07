@@ -1152,11 +1152,11 @@ CONTAINS
   IF (useSSPFile) THEN
     ! don't reset values, they've been read in from a file -_-
   ELSE
-    SSP%cmat   = 1.0
-    SSP%czmat  = 1.0
+    SSP%cmat   = -99.0
+    SSP%czmat  = -99.0
 #ifdef IHOP_THREED
-    SSP%cmat3  = 1.0
-    SSP%czmat3 = 1.0
+    SSP%cmat3  = -99.0
+    SSP%czmat3 = -99.0
 #endif /* IHOP_THREED */
   ENDIF ! IF (useSSPFile)
 

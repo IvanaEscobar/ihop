@@ -316,7 +316,7 @@ CONTAINS
   Grid%nPts = Grid%nZ
 
   ! set Grid%Z from rC, rkSign=-1 used bc ihop uses +ive depths
-  Grid%Z( 1 )            = 0.0 _d 0
+  Grid%Z( 1 )             = 0.0 _d 0
   Grid%Z( 2:(Grid%nZ-1) ) = rkSign*rC( 1:Nr )
   Grid%Z( Grid%nZ )       = Bdry%Bot%HS%Depth ! rkSign*rF(Nr+1)*1.05
 
@@ -416,6 +416,8 @@ CONTAINS
   INTEGER :: iallocstat
 
   ! ONLY ALLOCATE cmat and czmat, to be filled per ihop run
+  IF (ALLOCATED( SSP%cMat )) DEALLOCATE( SSP%cMat )
+  IF (ALLOCATED( SSP%czMat )) DEALLOCATE( SSP%czMat )
   ALLOCATE( SSP%cMat( Grid%nZ, Grid%nR ), &
             SSP%czMat( Grid%nZ-1, Grid%nR ), &
             STAT=iallocstat )
