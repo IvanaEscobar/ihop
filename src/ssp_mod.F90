@@ -475,7 +475,7 @@ CONTAINS
 ! Fixed arrays
 !$TAF store ssp%c = setssp1
 ! Allocatable arrays
-!$TAF store ssp%cmat,ssp%czmat,ssp%seg%r = setssp1
+!$TAF store ssp%cmat,ssp%czmat,grid%seg%r = setssp1
 
   ! init defaults for ssp_mod scoped arrays
   n2    = (-1.,-1.)
