@@ -18,9 +18,9 @@ C    Computes iHOP data misfit for cost function
 
 C    !USES:
 #if (defined ALLOW_IHOP) && (defined TEST_IHOP_COST)
-C     For ssp%cmat
-      USE ssp_mod, only: SSP
-
+CC     For ssp%cmat
+C      USE ssp_mod, only: SSP
+C
 #endif
       IMPLICIT NONE
 C == Global variables ===
@@ -170,8 +170,9 @@ CC-- global summation: F90 Sound Speed END
 C
 Cc--   Do global summation, if using tile-wise summation
 C       IF ( objf_ihop_tloc(1,1).NE.0 ) THEN
-         CALL GLOBAL_SUM_TILE_RL( objf_ihop_tloc,objf_ihop_gloc,myThid )
+C         CALL GLOBAL_SUM_TILE_RL( objf_ihop_tloc,objf_ihop_gloc,myThid )
 C       ENDIF
+       CALL GLOBAL_SUM_TILE_RL( objf_ihop_tloc,objf_ihop_gloc,myThid )
 
        _BEGIN_MASTER( myThid )
        objf_ihop(num_file) = objf_ihop(num_file) + objf_ihop_gloc
