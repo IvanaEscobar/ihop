@@ -40,7 +40,8 @@ implicit none
 private
 public :: evalssp
 public :: evalssp_tl
-public :: initssp
+public :: init_fixed_ssp
+public :: init_varia_ssp
 public :: setssp
 public :: setssp_tl
 
@@ -397,7 +398,7 @@ type, private :: rxyz_vector
   real(kind=8), allocatable :: r(:)
 end type
 
-type, private :: sspstructure
+type, private :: sspgrid
   integer :: npts
   integer :: nr
   integer :: nx
@@ -405,16 +406,19 @@ type, private :: sspstructure
   integer :: nz
   real(kind=8) :: z(maxssp)
   real(kind=8) :: rho(maxssp)
-  complex(kind=8) :: c(maxssp)
-  complex(kind=8) :: cz(maxssp)
-  real(kind=8), allocatable :: cmat(:,:)
-  real(kind=8), allocatable :: czmat(:,:)
   type(rxyz_vector) :: seg
   character(len=1) :: type
   character(len=2) :: attenunit
 end type
 
-type, private :: sspstructure_tl
+type, private :: sspvariable
+  complex(kind=8) :: c(maxssp)
+  complex(kind=8) :: cz(maxssp)
+  real(kind=8), allocatable :: cmat(:,:)
+  real(kind=8), allocatable :: czmat(:,:)
+end type
+
+type, private :: sspvariable_tl
   complex(kind=8) :: c_tl(maxssp)
   complex(kind=8) :: cz_tl(maxssp)
   real(kind=8), allocatable :: cmat_tl(:,:)
@@ -1255,8 +1259,9 @@ real(kind=8), private :: w_tl
 !==============================================
 ! declare derived type variables
 !==============================================
-type(sspstructure), public :: ssp
-type(sspstructure_tl), public :: ssp_tl
+type(sspgrid), public :: grid
+type(sspvariable), public :: ssp
+type(sspvariable_tl), public :: ssp_tl
 
 !==============================================
 ! declare external procedures and functions
@@ -1336,16 +1341,16 @@ contains
   real(kind=8) :: hspline
 
   isegz = 1
-  if (x(2) < ssp%z(isegz) .or. x(2) > ssp%z(isegz+1)) then
+  if (x(2) < grid%z(isegz) .or. x(2) > grid%z(isegz+1)) then
     foundz =  .false. 
-    do iz = 2, ssp%npts
-      if (x(2) < ssp%z(iz) .and. ( .not. foundz)) then
+    do iz = 2, grid%npts
+      if (x(2) < grid%z(iz) .and. ( .not. foundz)) then
         isegz = iz-1
         foundz =  .true. 
       endif
     end do
   endif
-  hspline = x(2)-ssp%z(isegz)
+  hspline = x(2)-grid%z(isegz)
   call splineall( cspln(1,isegz),hspline,c_cmplx,cz_cmplx,czz_cmplx )
   c = dble(c_cmplx)
   cimag = aimag(c_cmplx)
@@ -1353,8 +1358,8 @@ contains
   czz = dble(czz_cmplx)
   crr = 0.0d0
   crz = 0.0d0
-  w = (x(2)-ssp%z(isegz))/(ssp%z(isegz+1)-ssp%z(isegz))
-  rho = (1.0d0-w)*ssp%rho(isegz)+w*ssp%rho(isegz+1)
+  w = (x(2)-grid%z(isegz))/(grid%z(isegz+1)-grid%z(isegz))
+  rho = (1.0d0-w)*grid%rho(isegz)+w*grid%rho(isegz+1)
   end subroutine ccubic
   subroutine ccubic_tl( x, x_tl, c, c_tl, cimag, cimag_tl, gradc, gradc_tl, crr, crz, crz_tl, czz, czz_tl, rho, rho_tl, mythid )
 !******************************************************************
@@ -1411,17 +1416,17 @@ contains
 ! TANGENT LINEAR AND FUNCTION STATEMENTS
 !----------------------------------------------
   isegz = 1
-  if (x(2) < ssp%z(isegz) .or. x(2) > ssp%z(isegz+1)) then
+  if (x(2) < grid%z(isegz) .or. x(2) > grid%z(isegz+1)) then
     foundz =  .false. 
-    do iz = 2, ssp%npts
-      if (x(2) < ssp%z(iz) .and. ( .not. foundz)) then
+    do iz = 2, grid%npts
+      if (x(2) < grid%z(iz) .and. ( .not. foundz)) then
         isegz = iz-1
         foundz =  .true. 
       endif
     end do
   endif
   hspline_tl = x_tl(2)
-  hspline = x(2)-ssp%z(isegz)
+  hspline = x(2)-grid%z(isegz)
   call splineall_tl( cspln(1,isegz),cspln_tl(1,isegz),hspline,hspline_tl,c_cmplx,c_cmplx_tl,cz_cmplx,cz_cmplx_tl,czz_cmplx,czz_cmplx_tl )
   c_tl = real(c_cmplx_tl)
   c = dble(c_cmplx)
@@ -1434,10 +1439,10 @@ contains
   crr = 0.0d0
   crz_tl = 0._ikind2
   crz = 0.0d0
-  w_tl = x_tl(2)/(ssp%z(isegz+1)-ssp%z(isegz))
-  w = (x(2)-ssp%z(isegz))/(ssp%z(isegz+1)-ssp%z(isegz))
-  rho_tl = w_tl*((-ssp%rho(isegz))+ssp%rho(isegz+1))
-  rho = (1.0d0-w)*ssp%rho(isegz)+w*ssp%rho(isegz+1)
+  w_tl = x_tl(2)/(grid%z(isegz+1)-grid%z(isegz))
+  w = (x(2)-grid%z(isegz))/(grid%z(isegz+1)-grid%z(isegz))
+  rho_tl = w_tl*((-grid%rho(isegz))+grid%rho(isegz+1))
+  rho = (1.0d0-w)*grid%rho(isegz)+w*grid%rho(isegz+1)
 
   end subroutine ccubic_tl
   subroutine clinear( x, c, cimag, gradc, crr, crz, czz, rho, mythid )
@@ -1463,23 +1468,23 @@ contains
   real(kind=8), intent(in) :: x(2)
 
   isegz = 1
-  if (x(2) < ssp%z(isegz) .or. x(2) > ssp%z(isegz+1)) then
+  if (x(2) < grid%z(isegz) .or. x(2) > grid%z(isegz+1)) then
     foundz =  .false. 
-    do iz = 2, ssp%npts
-      if (x(2) < ssp%z(iz) .and. ( .not. foundz)) then
+    do iz = 2, grid%npts
+      if (x(2) < grid%z(iz) .and. ( .not. foundz)) then
         isegz = iz-1
         foundz =  .true. 
       endif
     end do
   endif
-  c = real(ssp%c(isegz)+(x(2)-ssp%z(isegz))*ssp%cz(isegz))
-  cimag = aimag(ssp%c(isegz)+(x(2)-ssp%z(isegz))*ssp%cz(isegz))
+  c = real(ssp%c(isegz)+(x(2)-grid%z(isegz))*ssp%cz(isegz))
+  cimag = aimag(ssp%c(isegz)+(x(2)-grid%z(isegz))*ssp%cz(isegz))
   gradc = [ 0.0d0,real(ssp%cz(isegz)) ]
   crr = 0.0d0
   crz = 0.0d0
   czz = 0.0d0
-  w = (x(2)-ssp%z(isegz))/(ssp%z(isegz+1)-ssp%z(isegz))
-  rho = (1.0d0-w)*ssp%rho(isegz)+w*ssp%rho(isegz+1)
+  w = (x(2)-grid%z(isegz))/(grid%z(isegz+1)-grid%z(isegz))
+  rho = (1.0d0-w)*grid%rho(isegz)+w*grid%rho(isegz+1)
   end subroutine clinear
   subroutine clinear_tl( x, x_tl, c, c_tl, cimag, cimag_tl, gradc, gradc_tl, crr, crz, crz_tl, czz, czz_tl, rho, rho_tl, mythid )
 !******************************************************************
@@ -1520,19 +1525,19 @@ contains
 ! TANGENT LINEAR AND FUNCTION STATEMENTS
 !----------------------------------------------
   isegz = 1
-  if (x(2) < ssp%z(isegz) .or. x(2) > ssp%z(isegz+1)) then
+  if (x(2) < grid%z(isegz) .or. x(2) > grid%z(isegz+1)) then
     foundz =  .false. 
-    do iz = 2, ssp%npts
-      if (x(2) < ssp%z(iz) .and. ( .not. foundz)) then
+    do iz = 2, grid%npts
+      if (x(2) < grid%z(iz) .and. ( .not. foundz)) then
         isegz = iz-1
         foundz =  .true. 
       endif
     end do
   endif
-  c_tl = real(ssp_tl%c_tl(isegz)+ssp_tl%cz_tl(isegz)*(x(2)-ssp%z(isegz))+x_tl(2)*ssp%cz(isegz))
-  c = real(ssp%c(isegz)+(x(2)-ssp%z(isegz))*ssp%cz(isegz))
-  cimag_tl = aimag(ssp_tl%c_tl(isegz))+aimag((x(2)-ssp%z(isegz))*ssp_tl%cz_tl(isegz))+aimag(ssp%cz(isegz)*x_tl(2))
-  cimag = aimag(ssp%c(isegz)+(x(2)-ssp%z(isegz))*ssp%cz(isegz))
+  c_tl = real(ssp_tl%c_tl(isegz)+ssp_tl%cz_tl(isegz)*(x(2)-grid%z(isegz))+x_tl(2)*ssp%cz(isegz))
+  c = real(ssp%c(isegz)+(x(2)-grid%z(isegz))*ssp%cz(isegz))
+  cimag_tl = aimag(ssp_tl%c_tl(isegz))+aimag((x(2)-grid%z(isegz))*ssp_tl%cz_tl(isegz))+aimag(ssp%cz(isegz)*x_tl(2))
+  cimag = aimag(ssp%c(isegz)+(x(2)-grid%z(isegz))*ssp%cz(isegz))
   gradc_tl = [ 0.d0,real(ssp_tl%cz_tl(isegz)) ]
   gradc = [ 0.0d0,real(ssp%cz(isegz)) ]
   crr = 0.0d0
@@ -1540,10 +1545,10 @@ contains
   crz = 0.0d0
   czz_tl = 0._ikind2
   czz = 0.0d0
-  w_tl = x_tl(2)/(ssp%z(isegz+1)-ssp%z(isegz))
-  w = (x(2)-ssp%z(isegz))/(ssp%z(isegz+1)-ssp%z(isegz))
-  rho_tl = w_tl*((-ssp%rho(isegz))+ssp%rho(isegz+1))
-  rho = (1.0d0-w)*ssp%rho(isegz)+w*ssp%rho(isegz+1)
+  w_tl = x_tl(2)/(grid%z(isegz+1)-grid%z(isegz))
+  w = (x(2)-grid%z(isegz))/(grid%z(isegz+1)-grid%z(isegz))
+  rho_tl = w_tl*((-grid%rho(isegz))+grid%rho(isegz+1))
+  rho = (1.0d0-w)*grid%rho(isegz)+w*grid%rho(isegz+1)
 
   end subroutine clinear_tl
   subroutine cpchip( x, c, cimag, gradc, crr, crz, czz, rho, mythid )
@@ -1575,16 +1580,16 @@ contains
   real(kind=8) :: xt
 
   isegz = 1
-  if (x(2) < ssp%z(isegz) .or. x(2) > ssp%z(isegz+1)) then
+  if (x(2) < grid%z(isegz) .or. x(2) > grid%z(isegz+1)) then
     foundz =  .false. 
-    do iz = 2, ssp%npts
-      if (x(2) < ssp%z(iz) .and. ( .not. foundz)) then
+    do iz = 2, grid%npts
+      if (x(2) < grid%z(iz) .and. ( .not. foundz)) then
         isegz = iz-1
         foundz =  .true. 
       endif
     end do
   endif
-  xt = x(2)-ssp%z(isegz)
+  xt = x(2)-grid%z(isegz)
   c_cmplx = ccoef(1,isegz)+(ccoef(2,isegz)+(ccoef(3,isegz)+ccoef(4,isegz)*xt)*xt)*xt
   c = real(c_cmplx)
   cimag = aimag(c_cmplx)
@@ -1592,8 +1597,8 @@ contains
   crr = 0.0d0
   crz = 0.0d0
   czz = real(2.0d0*ccoef(3,isegz)+6.0d0*ccoef(4,isegz)*xt)
-  w = (x(2)-ssp%z(isegz))/(ssp%z(isegz+1)-ssp%z(isegz))
-  rho = (1.0d0-w)*ssp%rho(isegz)+w*ssp%rho(isegz+1)
+  w = (x(2)-grid%z(isegz))/(grid%z(isegz+1)-grid%z(isegz))
+  rho = (1.0d0-w)*grid%rho(isegz)+w*grid%rho(isegz+1)
   end subroutine cpchip
   subroutine cpchip_tl( x, x_tl, c, c_tl, cimag, cimag_tl, gradc, gradc_tl, crr, crz, crz_tl, czz, czz_tl, rho, rho_tl, mythid )
 !******************************************************************
@@ -1641,17 +1646,17 @@ contains
 ! TANGENT LINEAR AND FUNCTION STATEMENTS
 !----------------------------------------------
   isegz = 1
-  if (x(2) < ssp%z(isegz) .or. x(2) > ssp%z(isegz+1)) then
+  if (x(2) < grid%z(isegz) .or. x(2) > grid%z(isegz+1)) then
     foundz =  .false. 
-    do iz = 2, ssp%npts
-      if (x(2) < ssp%z(iz) .and. ( .not. foundz)) then
+    do iz = 2, grid%npts
+      if (x(2) < grid%z(iz) .and. ( .not. foundz)) then
         isegz = iz-1
         foundz =  .true. 
       endif
     end do
   endif
   xt_tl = x_tl(2)
-  xt = x(2)-ssp%z(isegz)
+  xt = x(2)-grid%z(isegz)
   c_cmplx_tl = ((ccoef_tl(4,isegz)*xt+ccoef_tl(3,isegz))*xt+ccoef_tl(2,isegz))*xt+ccoef_tl(1,isegz)+xt_tl*(ccoef(2,isegz)+(ccoef(3,isegz)+ccoef(4,&
 &isegz)*xt)*xt+(ccoef(3,isegz)+ccoef(4,isegz)*xt+ccoef(4,isegz)*xt)*xt)
   c_cmplx = ccoef(1,isegz)+(ccoef(2,isegz)+(ccoef(3,isegz)+ccoef(4,isegz)*xt)*xt)*xt
@@ -1667,10 +1672,10 @@ contains
   crz = 0.0d0
   czz_tl = real(6*ccoef_tl(4,isegz)*xt+2*ccoef_tl(3,isegz)+6*xt_tl*ccoef(4,isegz))
   czz = real(2.0d0*ccoef(3,isegz)+6.0d0*ccoef(4,isegz)*xt)
-  w_tl = x_tl(2)/(ssp%z(isegz+1)-ssp%z(isegz))
-  w = (x(2)-ssp%z(isegz))/(ssp%z(isegz+1)-ssp%z(isegz))
-  rho_tl = w_tl*((-ssp%rho(isegz))+ssp%rho(isegz+1))
-  rho = (1.0d0-w)*ssp%rho(isegz)+w*ssp%rho(isegz+1)
+  w_tl = x_tl(2)/(grid%z(isegz+1)-grid%z(isegz))
+  w = (x(2)-grid%z(isegz))/(grid%z(isegz+1)-grid%z(isegz))
+  rho_tl = w_tl*((-grid%rho(isegz))+grid%rho(isegz+1))
+  rho = (1.0d0-w)*grid%rho(isegz)+w*grid%rho(isegz+1)
 
   end subroutine cpchip_tl
   subroutine evalssp( x, c, cimag, gradc, crr, crz, czz, rho, mythid )
@@ -1700,7 +1705,7 @@ contains
 !==============================================
   character(len=max_len_mbuf) :: msgbuf
 
-  select case ( ssp%type )
+  select case ( grid%type )
   case ('N')
     call n2linear( x,c,cimag,gradc,crr,crz,czz,rho,mythid )
   case ('C')
@@ -1712,11 +1717,11 @@ contains
   case ('Q')
     call quad( x,c,cimag,gradc,crr,crz,czz,rho,mythid )
   case default
-    write(unit=msgbuf,fmt='(2A)') 'Profile option: ',ssp%type
+    write(unit=msgbuf,fmt='(2A)') 'Profile option: ',grid%type
     if (ihop_dumpfreq >= 0) then
       call print_message( msgbuf,prtfile,squeeze_right,mythid )
     endif
-    write(unit=msgbuf,fmt='(A)') 'SSPMOD evalSSP: Invalid SSP profile option'
+    write(unit=msgbuf,fmt='(A)') 'SSP_MOD::evalSSP: Invalid SSP profile option'
     call print_error( msgbuf,mythid )
     stop 'ABNORMAL END: S/R evalSSP'
     c = 0.
@@ -1775,7 +1780,7 @@ contains
 !----------------------------------------------
 ! TANGENT LINEAR AND FUNCTION STATEMENTS
 !----------------------------------------------
-  select case ( ssp%type )
+  select case ( grid%type )
   case ('N')
     call n2linear_tl( x,x_tl,c,c_tl,cimag,cimag_tl,gradc,gradc_tl,crr,crz,crz_tl,czz,czz_tl,rho,rho_tl,mythid )
   case ('C')
@@ -1787,11 +1792,11 @@ contains
   case ('Q')
     call quad_tl( x,x_tl,c,c_tl,cimag,cimag_tl,gradc,gradc_tl,crr,crz,crz_tl,czz,czz_tl,rho,rho_tl,mythid )
   case default
-    write(unit=msgbuf,fmt='(2A)') 'Profile option: ',ssp%type
+    write(unit=msgbuf,fmt='(2A)') 'Profile option: ',grid%type
     if (ihop_dumpfreq >= 0) then
       call print_message( msgbuf,prtfile,squeeze_right,mythid )
     endif
-    write(unit=msgbuf,fmt='(A)') 'SSPMOD evalSSP: Invalid SSP profile option'
+    write(unit=msgbuf,fmt='(A)') 'SSP_MOD::evalSSP: Invalid SSP profile option'
     call print_error( msgbuf,mythid )
     stop 'ABNORMAL END: S/R evalSSP'
     c_tl = 0._ikind7
@@ -1869,18 +1874,18 @@ contains
   njj = 0
   dcdz = 0.0d0
   tolerance = 5d-5
-  nznr_size = ssp%nz*ssp%nr
+  nznr_size = grid%nz*grid%nr
   if (allocated(tilessp)) then
     deallocate( tilessp )
   endif
   if (allocated(globssp)) then
     deallocate( globssp )
   endif
-  allocate( tilessp(ssp%nz,ssp%nr,nsx,nsy),stat=iallocstat )
+  allocate( tilessp(grid%nz,grid%nr,nsx,nsy),stat=iallocstat )
   allocate( tmpssp(nsx,nsy,nznr_size),stat=iallocstat )
   allocate( globssp(nznr_size),stat=iallocstat )
   if (iallocstat /= 0) then
-    write(unit=msgbuf,fmt='(2A)') 'SSPMOD gcmSSP: ','Insufficient memory to store tileSSP and/or globSSP'
+    write(unit=msgbuf,fmt='(2A)') 'SSP_MOD::gcmSSP: ','Insufficient memory to store tileSSP and/or globSSP'
     call print_error( msgbuf,mythid )
     stop 'ABNORMAL END: S/R gcmSSP'
   endif
@@ -1899,9 +1904,9 @@ contains
               if (abs(xc(i,j,bi,bj)-ihop_xc(ii,jj)) <= tolerance .and. abs(yc(i,j,bi,bj)-ihop_yc(ii,jj)) <= tolerance .and. ( .not. interp_finished))&
 & then
 njj(ii) = njj(ii)+1
-do iz = 1, ssp%nz-1
+do iz = 1, grid%nz-1
   hkey = jj+(ii-1)*ihop_npts_idw+(ijkey-1)*sny*snx*nsy*nsx
-  lockey = iz+(hkey-1)*(ssp%nz-1)*ihop_npts_idw*ihop_npts_range*snx*sny*nsx*nsy
+  lockey = iz+(hkey-1)*(grid%nz-1)*ihop_npts_idw*ihop_npts_range*snx*sny*nsx*nsy
   if (iz == 1) then
     tilessp(1,ii,bi,bj) = tilessp(1,ii,bi,bj)+chen_millero(i,j,0,bi,bj,mythid)*ihop_idw_weights(ii,jj)/ihop_sumweights(ii,iz)
   else
@@ -1917,14 +1922,14 @@ do iz = 1, ssp%nz-1
         tilessp(iz,ii,bi,bj) = tilessp(iz,ii,bi,bj)
       endif
     endif
-    if (iz == ssp%nz-1 .or. ihop_sumweights(ii,iz-1) == 0.0) then
+    if (iz == grid%nz-1 .or. ihop_sumweights(ii,iz-1) == 0.0) then
       k = iz
       if (njj(ii) >= ihop_npts_idw) then
-        if (iz == ssp%nz-1 .and. ihop_sumweights(ii,iz-1) /= 0.) then
+        if (iz == grid%nz-1 .and. ihop_sumweights(ii,iz-1) /= 0.) then
           k = k+1
         endif
-        dcdz = (tilessp(k-1,ii,bi,bj)-tilessp(k-2,ii,bi,bj))/(ssp%z(k-1)-ssp%z(k-2))
-        tilessp(k:ssp%nz,ii,bi,bj) = tilessp(k-1,ii,bi,bj)+dcdz*ssp%z(k:ssp%nz)
+        dcdz = (tilessp(k-1,ii,bi,bj)-tilessp(k-2,ii,bi,bj))/(grid%z(k-1)-grid%z(k-2))
+        tilessp(k:grid%nz,ii,bi,bj) = tilessp(k-1,ii,bi,bj)+dcdz*grid%z(k:grid%nz)
         interp_finished =  .true. 
       else
         interp_finished =  .false. 
@@ -1942,8 +1947,8 @@ end do
   do bj = mybylo(mythid), mybyhi(mythid)
     do bi = mybxlo(mythid), mybxhi(mythid)
       k = 1
-      do jj = 1, ssp%nr
-        do ii = 1, ssp%nz
+      do jj = 1, grid%nr
+        do ii = 1, grid%nz
           tmpssp(bi,bj,k) = tilessp(ii,jj,bi,bj)
           k = k+1
         end do
@@ -1952,8 +1957,8 @@ end do
   end do
   call global_sum_vector_rl( nznr_size,tmpssp,globssp,mythid )
   k = 1
-  do jj = 1, ssp%nr
-    do ii = 1, ssp%nz
+  do jj = 1, grid%nr
+    do ii = 1, grid%nz
       ssp%cmat(ii,jj) = globssp(k)
       k = k+1
     end do
@@ -1968,19 +1973,19 @@ end do
     deallocate( globssp )
   endif
   if ( .not. usesspfile) then
-    do iz = 1, ssp%nz
+    do iz = 1, grid%nz
       alphar = ssp%cmat(iz,1)
-      ssp%c(iz) = crci(ssp%z(iz),alphar,alphai,ssp%attenunit,bpower,ft,mythid)
-      ssp%rho(iz) = rhor
+      ssp%c(iz) = crci(grid%z(iz),alphar,alphai,grid%attenunit,bpower,ft,mythid)
+      grid%rho(iz) = rhor
       if (iz > 1) then
-        if (ssp%z(iz) <= ssp%z(iz-1)) then
-          write(unit=msgbuf,fmt='(2A)') 'SSPMOD gcmSSP: ','The depths in the SSP must be monotone increasing'
+        if (grid%z(iz) <= grid%z(iz-1)) then
+          write(unit=msgbuf,fmt='(2A)') 'SSP_MOD::gcmSSP: ','The depths in the SSP must be monotone increasing'
           call print_error( msgbuf,mythid )
           stop 'ABNORMAL END: S/R gcmSSP'
         endif
       endif
       if (iz > 1) then
-        ssp%cz(iz-1) = (ssp%c(iz)-ssp%c(iz-1))/(ssp%z(iz)-ssp%z(iz-1))
+        ssp%cz(iz-1) = (ssp%c(iz)-ssp%c(iz-1))/(grid%z(iz)-grid%z(iz-1))
       endif
     end do
   endif
@@ -2062,7 +2067,7 @@ end do
   dcdz_tl = 0._ikind5
   dcdz = 0.0d0
   tolerance = 5d-5
-  nznr_size = ssp%nz*ssp%nr
+  nznr_size = grid%nz*grid%nr
   if (allocated(tilessp_tl)) then
     deallocate( tilessp_tl )
   endif
@@ -2075,14 +2080,14 @@ end do
   if (allocated(globssp)) then
     deallocate( globssp )
   endif
-  allocate( tilessp_tl(ssp%nz,ssp%nr,nsx,nsy) )
-  allocate( tilessp(ssp%nz,ssp%nr,nsx,nsy),stat=iallocstat )
+  allocate( tilessp_tl(grid%nz,grid%nr,nsx,nsy) )
+  allocate( tilessp(grid%nz,grid%nr,nsx,nsy),stat=iallocstat )
   allocate( tmpssp_tl(nsx,nsy,nznr_size) )
   allocate( tmpssp(nsx,nsy,nznr_size),stat=iallocstat )
   allocate( globssp_tl(nznr_size) )
   allocate( globssp(nznr_size),stat=iallocstat )
   if (iallocstat /= 0) then
-    write(unit=msgbuf,fmt='(2A)') 'SSPMOD gcmSSP: ','Insufficient memory to store tileSSP and/or globSSP'
+    write(unit=msgbuf,fmt='(2A)') 'SSP_MOD::gcmSSP: ','Insufficient memory to store tileSSP and/or globSSP'
     call print_error( msgbuf,mythid )
     stop 'ABNORMAL END: S/R gcmSSP'
   endif
@@ -2104,9 +2109,9 @@ end do
               if (abs(xc(i,j,bi,bj)-ihop_xc(ii,jj)) <= tolerance .and. abs(yc(i,j,bi,bj)-ihop_yc(ii,jj)) <= tolerance .and. ( .not. interp_finished))&
 & then
 njj(ii) = njj(ii)+1
-do iz = 1, ssp%nz-1
+do iz = 1, grid%nz-1
   hkey = jj+(ii-1)*ihop_npts_idw+(ijkey-1)*sny*snx*nsy*nsx
-  lockey = iz+(hkey-1)*(ssp%nz-1)*ihop_npts_idw*ihop_npts_range*snx*sny*nsx*nsy
+  lockey = iz+(hkey-1)*(grid%nz-1)*ihop_npts_idw*ihop_npts_range*snx*sny*nsx*nsy
   if (iz == 1) then
     call chen_millero_tl( tilessph,tilessph_tl,i,j,0,bi,bj,mythid )
     tilessp_tl(1,ii,bi,bj) = tilessp_tl(1,ii,bi,bj)+tilessph_tl*(ihop_idw_weights(ii,jj)/ihop_sumweights(ii,iz))
@@ -2124,16 +2129,16 @@ do iz = 1, ssp%nz-1
         tilessp(iz,ii,bi,bj) = tilessp(iz,ii,bi,bj)+ihop_ssp(i,j,iz-1,bi,bj)*ihop_idw_weights(ii,jj)/ihop_sumweights(ii,iz-1)
       endif
     endif
-    if (iz == ssp%nz-1 .or. ihop_sumweights(ii,iz-1) == 0.0) then
+    if (iz == grid%nz-1 .or. ihop_sumweights(ii,iz-1) == 0.0) then
       k = iz
       if (njj(ii) >= ihop_npts_idw) then
-        if (iz == ssp%nz-1 .and. ihop_sumweights(ii,iz-1) /= 0.) then
+        if (iz == grid%nz-1 .and. ihop_sumweights(ii,iz-1) /= 0.) then
           k = k+1
         endif
-        dcdz_tl = (-(tilessp_tl(k-2,ii,bi,bj)/(ssp%z(k-1)-ssp%z(k-2))))+tilessp_tl(k-1,ii,bi,bj)/(ssp%z(k-1)-ssp%z(k-2))
-        dcdz = (tilessp(k-1,ii,bi,bj)-tilessp(k-2,ii,bi,bj))/(ssp%z(k-1)-ssp%z(k-2))
-        tilessp_tl(k:ssp%nz,ii,bi,bj) = dcdz_tl*ssp%z(k:ssp%nz)+tilessp_tl(k-1,ii,bi,bj)
-        tilessp(k:ssp%nz,ii,bi,bj) = tilessp(k-1,ii,bi,bj)+dcdz*ssp%z(k:ssp%nz)
+        dcdz_tl = (-(tilessp_tl(k-2,ii,bi,bj)/(grid%z(k-1)-grid%z(k-2))))+tilessp_tl(k-1,ii,bi,bj)/(grid%z(k-1)-grid%z(k-2))
+        dcdz = (tilessp(k-1,ii,bi,bj)-tilessp(k-2,ii,bi,bj))/(grid%z(k-1)-grid%z(k-2))
+        tilessp_tl(k:grid%nz,ii,bi,bj) = dcdz_tl*grid%z(k:grid%nz)+tilessp_tl(k-1,ii,bi,bj)
+        tilessp(k:grid%nz,ii,bi,bj) = tilessp(k-1,ii,bi,bj)+dcdz*grid%z(k:grid%nz)
         interp_finished =  .true. 
       else
         interp_finished =  .false. 
@@ -2151,8 +2156,8 @@ end do
   do bj = mybylo(mythid), mybyhi(mythid)
     do bi = mybxlo(mythid), mybxhi(mythid)
       k = 1
-      do jj = 1, ssp%nr
-        do ii = 1, ssp%nz
+      do jj = 1, grid%nr
+        do ii = 1, grid%nz
           tmpssp_tl(bi,bj,k) = tilessp_tl(ii,jj,bi,bj)
           tmpssp(bi,bj,k) = tilessp(ii,jj,bi,bj)
           k = k+1
@@ -2163,8 +2168,8 @@ end do
   call global_sum_vector_rl( nznr_size,tmpssp_tl,globssp_tl,mythid )
   call global_sum_vector_rl( nznr_size,tmpssp,globssp,mythid )
   k = 1
-  do jj = 1, ssp%nr
-    do ii = 1, ssp%nz
+  do jj = 1, grid%nr
+    do ii = 1, grid%nz
       ssp_tl%cmat_tl(ii,jj) = globssp_tl(k)
       ssp%cmat(ii,jj) = globssp(k)
       k = k+1
@@ -2189,27 +2194,27 @@ end do
     deallocate( globssp )
   endif
   if ( .not. usesspfile) then
-    do iz = 1, ssp%nz
+    do iz = 1, grid%nz
       alphar_tl = ssp_tl%cmat_tl(iz,1)
       alphar = ssp%cmat(iz,1)
-      call crci_tl( ssp%c(iz),ssp_tl%c_tl(iz),ssp%z(iz),alphar,alphar_tl,alphai,ssp%attenunit,bpower,ft,mythid )
-      ssp%rho(iz) = rhor
+      call crci_tl( ssp%c(iz),ssp_tl%c_tl(iz),grid%z(iz),alphar,alphar_tl,alphai,grid%attenunit,bpower,ft,mythid )
+      grid%rho(iz) = rhor
       if (iz > 1) then
-        if (ssp%z(iz) <= ssp%z(iz-1)) then
-          write(unit=msgbuf,fmt='(2A)') 'SSPMOD gcmSSP: ','The depths in the SSP must be monotone increasing'
+        if (grid%z(iz) <= grid%z(iz-1)) then
+          write(unit=msgbuf,fmt='(2A)') 'SSP_MOD::gcmSSP: ','The depths in the SSP must be monotone increasing'
           call print_error( msgbuf,mythid )
           stop 'ABNORMAL END: S/R gcmSSP'
         endif
       endif
       if (iz > 1) then
-        ssp_tl%cz_tl(iz-1) = (-(ssp_tl%c_tl(iz-1)/(ssp%z(iz)-ssp%z(iz-1))))+ssp_tl%c_tl(iz)/(ssp%z(iz)-ssp%z(iz-1))
-        ssp%cz(iz-1) = (ssp%c(iz)-ssp%c(iz-1))/(ssp%z(iz)-ssp%z(iz-1))
+        ssp_tl%cz_tl(iz-1) = (-(ssp_tl%c_tl(iz-1)/(grid%z(iz)-grid%z(iz-1))))+ssp_tl%c_tl(iz)/(grid%z(iz)-grid%z(iz-1))
+        ssp%cz(iz-1) = (ssp%c(iz)-ssp%c(iz-1))/(grid%z(iz)-grid%z(iz-1))
       endif
     end do
   endif
 
   end subroutine gcmssp_tl
-  subroutine init_fixed_ssp( mythid )
+  subroutine init_fixed_grid( mythid )
 !******************************************************************
 !******************************************************************
 !** This routine was generated by Automatic differentiation.     **
@@ -2249,48 +2254,31 @@ end do
   nii(:) = 0
   njj(:) = 0
   tolerance = 5d-5
-  ssp%npts = -1
-  ssp%z = -999.
-  ssp%rho = -999.
-  ssp%c = (-999.,0.)
-  ssp%cz = (-999.,0.)
-  ssp%nz = nr+2
-  ssp%nr = ihop_npts_range
-  ssp%npts = ssp%nz
-  ssp%z(1) = 0.0d0
-  ssp%z(2:ssp%nz-1) = rksign*rc(1:nr)
-  ssp%z(ssp%nz) = bdry%bot%hs%depth
-  allocate( ssp%seg%r(ssp%nr),stat=iallocstat )
+  grid%npts = -1
+  grid%z = -999.
+  grid%rho = -999.
+  grid%nz = nr+2
+  grid%nr = ihop_npts_range
+  grid%npts = grid%nz
+  grid%z(1) = 0.0d0
+  grid%z(2:grid%nz-1) = rksign*rc(1:nr)
+  grid%z(grid%nz) = bdry%bot%hs%depth
+  allocate( grid%seg%r(grid%nr),stat=iallocstat )
   if (iallocstat /= 0) then
-    write(unit=msgbuf,fmt='(2A)') 'SSPMOD init_fixed_SSP: ','Insufficient memory to store SSP%Seg%R'
+    write(unit=msgbuf,fmt='(2A)') 'SSP_MOD::init_fixed_Grid: ','Insufficient memory to store Grid%Seg%R'
     call print_error( msgbuf,mythid )
-    stop 'ABNORMAL END: S/R init_fixed_SSP'
+    stop 'ABNORMAL END: S/R init_fixed_Grid'
   endif
-  ssp%seg%r(1:ssp%nr) = ihop_ranges(1:ssp%nr)
-  ssp%seg%r = 1000.0*ssp%seg%r
-  allocate( ssp%cmat(ssp%nz,ssp%nr),stat=iallocstat )
-  allocate( ssp%czmat(ssp%nz-1,ssp%nr),stat=iallocstat )
-  if (iallocstat /= 0) then
-    write(unit=msgbuf,fmt='(2A)') 'SSPMOD init_fixed_SSP: ','Insufficient memory to store SSP%cmat, SSP%czmat'
-    call print_error( msgbuf,mythid )
-    stop 'ABNORMAL END: S/R init_fixed_SSP'
-  endif
-  ssp%cmat = -99.d0
-  ssp%czmat = -99.d0
-
-  allocate( ssp_tl%cmat_tl(ssp%nz,ssp%nr),stat=iallocstat )
-  allocate( ssp_tl%czmat_tl(ssp%nz-1,ssp%nr),stat=iallocstat )
-  ssp_tl%cmat_tl = -99.d0
-  ssp_tl%czmat_tl = -99.d0
-
-  do ii = 1, ssp%nr
+  grid%seg%r(1:grid%nr) = ihop_ranges(1:grid%nr)
+  grid%seg%r = 1000.0*grid%seg%r
+  do ii = 1, grid%nr
     ihop_sumweights(ii,:) = sum(ihop_idw_weights(ii,:))
   end do
   do bj = mybylo(mythid), mybyhi(mythid)
     do bi = mybxlo(mythid), mybxhi(mythid)
       do j = 1, sny
         do i = 1, snx
-          do ii = 1, ssp%nr
+          do ii = 1, grid%nr
             skip_range =  .false. 
             do jj = 1, ihop_npts_idw
               if (abs(xc(i,j,bi,bj)-ihop_xc(ii,jj)) <= tolerance .and. abs(yc(i,j,bi,bj)-ihop_yc(ii,jj)) <= tolerance) then
@@ -2319,8 +2307,8 @@ end do
       end do
     end do
   end do
-  end subroutine init_fixed_ssp
-  subroutine initssp( mythid )
+  end subroutine init_fixed_grid
+  subroutine init_fixed_ssp( mythid )
 !******************************************************************
 !******************************************************************
 !** This routine was generated by Automatic differentiation.     **
@@ -2337,9 +2325,55 @@ end do
   if (usesspfile) then
     call readssp( mythid )
   else
-    call init_fixed_ssp( mythid )
+    call init_fixed_grid( mythid )
   endif
-  end subroutine initssp
+  end subroutine init_fixed_ssp
+  subroutine init_varia_ssp( mythid )
+!******************************************************************
+!******************************************************************
+!** This routine was generated by Automatic differentiation.     **
+!** FastOpt: Transformation of Algorithm in Fortran, TAF 6.8.11  **
+!******************************************************************
+!******************************************************************
+  implicit none
+
+!==============================================
+! declare arguments
+!==============================================
+  integer, intent(in) :: mythid
+
+!==============================================
+! declare local variables
+!==============================================
+  integer :: iallocstat
+  character(len=max_len_mbuf) :: msgbuf
+
+  if (allocated(ssp%cmat)) then
+    deallocate( ssp%cmat )
+  endif
+  if (allocated(ssp%czmat)) then
+    deallocate( ssp%czmat )
+  endif
+  allocate( ssp%cmat(grid%nz,grid%nr),stat=iallocstat )
+  allocate( ssp%czmat(grid%nz-1,grid%nr),stat=iallocstat )
+  if (iallocstat /= 0) then
+    write(unit=msgbuf,fmt='(2A)') 'SSP_MOD::init_varia_SSP: ','Insufficient memory to store SSP%cMat, SSP%czMat'
+    call print_error( msgbuf,mythid )
+    stop 'ABNORMAL END: S/R init_varia_SSP'
+  endif
+  ssp%cmat = -99.d0
+  ssp%czmat = -99.d0
+  ssp%c = -99.d0
+  ssp%cz = -99.d0
+
+  allocate( ssp_tl%cmat_tl(grid%nz,grid%nr),stat=iallocstat )
+  allocate( ssp_tl%czmat_tl(grid%nz-1,grid%nr),stat=iallocstat )
+  ssp_tl%cmat_tl = -99.d0
+  ssp_tl%czmat_tl = -99.d0
+  ssp_tl%c_tl = -99.d0
+  ssp_tl%cz_tl = -99.d0
+
+  end subroutine init_varia_ssp
   subroutine n2linear( x, c, cimag, gradc, crr, crz, czz, rho, mythid )
 !******************************************************************
 !******************************************************************
@@ -2363,23 +2397,23 @@ end do
   real(kind=8), intent(in) :: x(2)
 
   isegz = 1
-  if (x(2) < ssp%z(isegz) .or. x(2) > ssp%z(isegz+1)) then
+  if (x(2) < grid%z(isegz) .or. x(2) > grid%z(isegz+1)) then
     foundz =  .false. 
-    do iz = 2, ssp%npts
-      if (x(2) < ssp%z(iz) .and. ( .not. foundz)) then
+    do iz = 2, grid%npts
+      if (x(2) < grid%z(iz) .and. ( .not. foundz)) then
         isegz = iz-1
         foundz =  .true. 
       endif
     end do
   endif
-  w = (x(2)-ssp%z(isegz))/(ssp%z(isegz+1)-ssp%z(isegz))
+  w = (x(2)-grid%z(isegz))/(grid%z(isegz+1)-grid%z(isegz))
   c = real(1.0d0/sqrt((1.0d0-w)*n2(isegz)+w*n2(isegz+1)))
   cimag = aimag(1.0d0/sqrt((1.0d0-w)*n2(isegz)+w*n2(isegz+1)))
   gradc = [ 0.0d0,-(0.5d0*c*c*c*real(n2z(isegz))) ]
   crr = 0.0d0
   crz = 0.0d0
   czz = 3.0d0*gradc(2)*gradc(2)/c
-  rho = (1.0d0-w)*ssp%rho(isegz)+w*ssp%rho(isegz+1)
+  rho = (1.0d0-w)*grid%rho(isegz)+w*grid%rho(isegz+1)
   end subroutine n2linear
   subroutine n2linear_tl( x, x_tl, c, c_tl, cimag, cimag_tl, gradc, gradc_tl, crr, crz, crz_tl, czz, czz_tl, rho, rho_tl, mythid )
 !******************************************************************
@@ -2426,17 +2460,17 @@ end do
 ! TANGENT LINEAR AND FUNCTION STATEMENTS
 !----------------------------------------------
   isegz = 1
-  if (x(2) < ssp%z(isegz) .or. x(2) > ssp%z(isegz+1)) then
+  if (x(2) < grid%z(isegz) .or. x(2) > grid%z(isegz+1)) then
     foundz =  .false. 
-    do iz = 2, ssp%npts
-      if (x(2) < ssp%z(iz) .and. ( .not. foundz)) then
+    do iz = 2, grid%npts
+      if (x(2) < grid%z(iz) .and. ( .not. foundz)) then
         isegz = iz-1
         foundz =  .true. 
       endif
     end do
   endif
-  w_tl = x_tl(2)/(ssp%z(isegz+1)-ssp%z(isegz))
-  w = (x(2)-ssp%z(isegz))/(ssp%z(isegz+1)-ssp%z(isegz))
+  w_tl = x_tl(2)/(grid%z(isegz+1)-grid%z(isegz))
+  w = (x(2)-grid%z(isegz))/(grid%z(isegz+1)-grid%z(isegz))
   ch = (1.0d0-w)*n2(isegz)+w*n2(isegz+1)
   c_tl = real(-((n2_tl(isegz+1)*w+n2_tl(isegz)*(1.0d0-w)+w_tl*((-n2(isegz))+n2(isegz+1)))*(1.0d0*(1._8/(2._8*sqrt(ch)))/sqrt(ch)/sqrt(ch))))
   c = real(1.0d0/sqrt(ch))
@@ -2452,8 +2486,8 @@ end do
   crz = 0.0d0
   czz_tl = (-(c_tl*(3.0d0*gradc(2)*gradc(2)/c/c)))+gradc_tl(2)*(6*gradc(2)/c)
   czz = 3.0d0*gradc(2)*gradc(2)/c
-  rho_tl = w_tl*((-ssp%rho(isegz))+ssp%rho(isegz+1))
-  rho = (1.0d0-w)*ssp%rho(isegz)+w*ssp%rho(isegz+1)
+  rho_tl = w_tl*((-grid%rho(isegz))+grid%rho(isegz+1))
+  rho = (1.0d0-w)*grid%rho(isegz)+w*grid%rho(isegz+1)
 
   end subroutine n2linear_tl
   subroutine quad( x, c, cimag, gradc, crr, crz, czz, rho, mythid )
@@ -2497,42 +2531,42 @@ end do
   c1 = 0.
   c2 = 0.
   isegz = 1
-  if (x(2) < ssp%z(isegz) .or. x(2) > ssp%z(isegz+1)) then
+  if (x(2) < grid%z(isegz) .or. x(2) > grid%z(isegz+1)) then
     foundz =  .false. 
-    do iz = 2, ssp%nz
-      if (x(2) < ssp%z(iz) .and. ( .not. foundz)) then
+    do iz = 2, grid%nz
+      if (x(2) < grid%z(iz) .and. ( .not. foundz)) then
         isegz = iz-1
         foundz =  .true. 
       endif
     end do
   endif
-  if (x(1) < ssp%seg%r(1) .or. x(1) > ssp%seg%r(ssp%nr)) then
+  if (x(1) < grid%seg%r(1) .or. x(1) > grid%seg%r(grid%nr)) then
     if (ihop_dumpfreq >= 0) then
       write(unit=msgbuf,fmt='(2A)') 'ray is outside the box where ocean ','soundspeed is defined'
       call print_message( msgbuf,prtfile,squeeze_right,mythid )
       write(unit=msgbuf,fmt='(A,2F13.4)') ' x = ( r, z ) = ',x
       call print_message( msgbuf,prtfile,squeeze_right,mythid )
-      write(unit=msgbuf,fmt='(2A)') 'SSPMOD Quad: ','ray is outside the box where the soundspeed is defined'
+      write(unit=msgbuf,fmt='(2A)') 'SSP_MOD::Quad: ','ray is outside the box where the soundspeed is defined'
       call print_error( msgbuf,mythid )
     endif
     stop 'ABNORMAL END: S/R Quad'
   endif
   isegr = 1
-  if (x(1) < ssp%seg%r(isegr) .or. x(1) >= ssp%seg%r(isegr+1)) then
+  if (x(1) < grid%seg%r(isegr) .or. x(1) >= grid%seg%r(isegr+1)) then
     foundr =  .false. 
-    do irt = 2, ssp%nr
-      if (x(1) < ssp%seg%r(irt) .and. ( .not. foundr)) then
+    do irt = 2, grid%nr
+      if (x(1) < grid%seg%r(irt) .and. ( .not. foundr)) then
         isegr = irt-1
         foundr =  .true. 
       endif
     end do
   endif
-  s2 = x(2)-ssp%z(isegz)
-  delta_z = ssp%z(isegz+1)-ssp%z(isegz)
+  s2 = x(2)-grid%z(isegz)
+  delta_z = grid%z(isegz+1)-grid%z(isegz)
   if (delta_z <= 0 .or. s2 > delta_z) then
-    write(unit=msgbuf,fmt=*) delta_z,s2,isegz,ssp%z(isegz)
+    write(unit=msgbuf,fmt=*) delta_z,s2,isegz,grid%z(isegz)
     call print_error( msgbuf,mythid )
-    write(unit=msgbuf,fmt='(2A)') 'SSPMOD Quad: ','depth is not monotonically increasing in SSP%Z'
+    write(unit=msgbuf,fmt='(2A)') 'SSP_MOD::Quad: ','depth is not monotonically increasing in Grid%Z'
     call print_error( msgbuf,mythid )
     stop 'ABNORMAL END: S/R Quad'
   endif
@@ -2543,8 +2577,8 @@ end do
   if (c1 == 0 .or. c2 == 0) then
     stop 'ABNORMAL END: S/R QUAD'
   endif
-  delta_r = ssp%seg%r(isegr+1)-ssp%seg%r(isegr)
-  s1 = (x(1)-ssp%seg%r(isegr))/delta_r
+  delta_r = grid%seg%r(isegr+1)-grid%seg%r(isegr)
+  s1 = (x(1)-grid%seg%r(isegr))/delta_r
   s1 = min(s1,1.0d0)
   s1 = max(s1,0.0d0)
   c = (1.0d0-s1)*c1+s1*c2
@@ -2556,8 +2590,8 @@ end do
   gradc = [ cr,cz ]
   crr = 0.0
   czz = 0.0
-  w = (x(2)-ssp%z(isegz))/(ssp%z(isegz+1)-ssp%z(isegz))
-  rho = (1.0d0-w)*ssp%rho(isegz)+w*ssp%rho(isegz+1)
+  w = (x(2)-grid%z(isegz))/(grid%z(isegz+1)-grid%z(isegz))
+  rho = (1.0d0-w)*grid%rho(isegz)+w*grid%rho(isegz+1)
   end subroutine quad
   subroutine quad_tl( x, x_tl, c, c_tl, cimag, cimag_tl, gradc, gradc_tl, crr, crz, crz_tl, czz, czz_tl, rho, rho_tl, mythid )
 !******************************************************************
@@ -2627,43 +2661,43 @@ end do
   c2_tl = 0._ikind7
   c2 = 0.
   isegz = 1
-  if (x(2) < ssp%z(isegz) .or. x(2) > ssp%z(isegz+1)) then
+  if (x(2) < grid%z(isegz) .or. x(2) > grid%z(isegz+1)) then
     foundz =  .false. 
-    do iz = 2, ssp%nz
-      if (x(2) < ssp%z(iz) .and. ( .not. foundz)) then
+    do iz = 2, grid%nz
+      if (x(2) < grid%z(iz) .and. ( .not. foundz)) then
         isegz = iz-1
         foundz =  .true. 
       endif
     end do
   endif
-  if (x(1) < ssp%seg%r(1) .or. x(1) > ssp%seg%r(ssp%nr)) then
+  if (x(1) < grid%seg%r(1) .or. x(1) > grid%seg%r(grid%nr)) then
     if (ihop_dumpfreq >= 0) then
       write(unit=msgbuf,fmt='(2A)') 'ray is outside the box where ocean ','soundspeed is defined'
       call print_message( msgbuf,prtfile,squeeze_right,mythid )
       write(unit=msgbuf,fmt='(A,2F13.4)') ' x = ( r, z ) = ',x
       call print_message( msgbuf,prtfile,squeeze_right,mythid )
-      write(unit=msgbuf,fmt='(2A)') 'SSPMOD Quad: ','ray is outside the box where the soundspeed is defined'
+      write(unit=msgbuf,fmt='(2A)') 'SSP_MOD::Quad: ','ray is outside the box where the soundspeed is defined'
       call print_error( msgbuf,mythid )
     endif
     stop 'ABNORMAL END: S/R Quad'
   endif
   isegr = 1
-  if (x(1) < ssp%seg%r(isegr) .or. x(1) >= ssp%seg%r(isegr+1)) then
+  if (x(1) < grid%seg%r(isegr) .or. x(1) >= grid%seg%r(isegr+1)) then
     foundr =  .false. 
-    do irt = 2, ssp%nr
-      if (x(1) < ssp%seg%r(irt) .and. ( .not. foundr)) then
+    do irt = 2, grid%nr
+      if (x(1) < grid%seg%r(irt) .and. ( .not. foundr)) then
         isegr = irt-1
         foundr =  .true. 
       endif
     end do
   endif
   s2_tl = x_tl(2)
-  s2 = x(2)-ssp%z(isegz)
-  delta_z = ssp%z(isegz+1)-ssp%z(isegz)
+  s2 = x(2)-grid%z(isegz)
+  delta_z = grid%z(isegz+1)-grid%z(isegz)
   if (delta_z <= 0 .or. s2 > delta_z) then
-    write(unit=msgbuf,fmt=*) delta_z,s2,isegz,ssp%z(isegz)
+    write(unit=msgbuf,fmt=*) delta_z,s2,isegz,grid%z(isegz)
     call print_error( msgbuf,mythid )
-    write(unit=msgbuf,fmt='(2A)') 'SSPMOD Quad: ','depth is not monotonically increasing in SSP%Z'
+    write(unit=msgbuf,fmt='(2A)') 'SSP_MOD::Quad: ','depth is not monotonically increasing in Grid%Z'
     call print_error( msgbuf,mythid )
     stop 'ABNORMAL END: S/R Quad'
   endif
@@ -2678,9 +2712,9 @@ end do
   if (c1 == 0 .or. c2 == 0) then
     stop 'ABNORMAL END: S/R QUAD'
   endif
-  delta_r = ssp%seg%r(isegr+1)-ssp%seg%r(isegr)
+  delta_r = grid%seg%r(isegr+1)-grid%seg%r(isegr)
   s1_tl = x_tl(1)/delta_r
-  s1 = (x(1)-ssp%seg%r(isegr))/delta_r
+  s1 = (x(1)-grid%seg%r(isegr))/delta_r
   s1_tl = s1_tl*(0.5+sign(0.5d0,1.0d0-s1))
   s1 = min(s1,1.0d0)
   s1_tl = s1_tl*(0.5+sign(0.5d0,s1-0.0d0))
@@ -2702,10 +2736,10 @@ end do
   crr = 0.0
   czz_tl = 0._ikind2
   czz = 0.0
-  w_tl = x_tl(2)/(ssp%z(isegz+1)-ssp%z(isegz))
-  w = (x(2)-ssp%z(isegz))/(ssp%z(isegz+1)-ssp%z(isegz))
-  rho_tl = w_tl*((-ssp%rho(isegz))+ssp%rho(isegz+1))
-  rho = (1.0d0-w)*ssp%rho(isegz)+w*ssp%rho(isegz+1)
+  w_tl = x_tl(2)/(grid%z(isegz+1)-grid%z(isegz))
+  w = (x(2)-grid%z(isegz))/(grid%z(isegz+1)-grid%z(isegz))
+  rho_tl = w_tl*((-grid%rho(isegz))+grid%rho(isegz+1))
+  rho = (1.0d0-w)*grid%rho(isegz)+w*grid%rho(isegz+1)
 
   end subroutine quad_tl
   subroutine readssp( mythid )
@@ -2743,54 +2777,54 @@ end do
   if (mythid == 1) then
     open(file=trim(ihop_fileroot)//'.ssp',unit=sspfile,form='FORMATTED',status='OLD',iostat=iostat)
     if (iostat /= 0) then
-      write(unit=msgbuf,fmt='(A)') 'SSPMOD ReadSSP: Unable to open the SSP file'
+      write(unit=msgbuf,fmt='(A)') 'SSP_MOD::ReadSSP: Unable to open the SSP file'
       call print_error( msgbuf,mythid )
       stop 'ABNORMAL END: S/R ReadSSP'
     endif
-    read(unit=sspfile,fmt=*) ssp%nr,ssp%nz
-    allocate( ssp%cmat(ssp%nz,ssp%nr),stat=iallocstat )
-    allocate( ssp%czmat(ssp%nz-1,ssp%nr),stat=iallocstat )
-    allocate( ssp%seg%r(ssp%nr),stat=iallocstat )
+    read(unit=sspfile,fmt=*) grid%nr,grid%nz
+    allocate( ssp%cmat(grid%nz,grid%nr),stat=iallocstat )
+    allocate( ssp%czmat(grid%nz-1,grid%nr),stat=iallocstat )
+    allocate( grid%seg%r(grid%nr),stat=iallocstat )
     if (iallocstat /= 0) then
-      write(unit=msgbuf,fmt='(2A)') 'SSPMOD ReadSSP: ','Insufficient memory to store SSP'
+      write(unit=msgbuf,fmt='(2A)') 'SSP_MOD::ReadSSP: ','Insufficient memory to store SSP'
       call print_error( msgbuf,mythid )
       stop 'ABNORMAL END: S/R ReadSSP'
     endif
     ssp%cmat = -99.d0
     ssp%czmat = -99.d0
-    read(unit=sspfile,fmt=*) ssp%seg%r(1:ssp%nr)
-    ssp%seg%r = 1000.0*ssp%seg%r
-    read(unit=sspfile,fmt=*) ssp%z(1:ssp%nz)
-    do iz = 1, ssp%nz
+    read(unit=sspfile,fmt=*) grid%seg%r(1:grid%nr)
+    grid%seg%r = 1000.0*grid%seg%r
+    read(unit=sspfile,fmt=*) grid%z(1:grid%nz)
+    do iz = 1, grid%nz
       read(unit=sspfile,fmt=*) ssp%cmat(iz,:)
     end do
     close(unit=sspfile)
-    ssp%npts = 1
+    grid%npts = 1
     do iz = 1, maxssp
       alphar = ssp%cmat(iz,1)
-      ssp%c(iz) = crci(ssp%z(iz),alphar,alphai,ssp%attenunit,bpower,ft,mythid)
-      ssp%rho(iz) = rhor
+      ssp%c(iz) = crci(grid%z(iz),alphar,alphai,grid%attenunit,bpower,ft,mythid)
+      grid%rho(iz) = rhor
       if (iz > 1) then
-        if (ssp%z(iz) <= ssp%z(iz-1)) then
-          write(unit=msgbuf,fmt='(2A,F10.2)') 'SSPMOD ReadSSP: ','The depths in the SSP must be monotone increasing',ssp%z(iz)
+        if (grid%z(iz) <= grid%z(iz-1)) then
+          write(unit=msgbuf,fmt='(2A,F10.2)') 'SSP_MOD::ReadSSP: ','The depths in the SSP must be monotone increasing',grid%z(iz)
           call print_error( msgbuf,mythid )
           stop 'ABNORMAL END: S/R ReadSSP'
         endif
       endif
       if (iz > 1) then
-        ssp%cz(iz-1) = (ssp%c(iz)-ssp%c(iz-1))/(ssp%z(iz)-ssp%z(iz-1))
+        ssp%cz(iz-1) = (ssp%c(iz)-ssp%c(iz-1))/(grid%z(iz)-grid%z(iz-1))
       endif
-      if (abs(ssp%z(iz)-depth) < 100.*epsilon(1.0e0)) then
-        if (ssp%npts == 1) then
-          write(unit=msgbuf,fmt='(2A)') 'SSPMOD ReadSSP: ','The SSP must have at least 2 points'
+      if (abs(grid%z(iz)-depth) < 100.*epsilon(1.0e0)) then
+        if (grid%npts == 1) then
+          write(unit=msgbuf,fmt='(2A)') 'SSP_MOD::ReadSSP: ','The SSP must have at least 2 points'
           call print_error( msgbuf,mythid )
           stop 'ABNORMAL END: S/R ReadSSP'
         endif
         goto 99999
       endif
-      ssp%npts = ssp%npts+1
+      grid%npts = grid%npts+1
     end do
-    write(unit=msgbuf,fmt='(2A)') 'SSPMOD ReadSSP: ','Number of SSP points exceeds limit'
+    write(unit=msgbuf,fmt='(2A)') 'SSP_MOD::ReadSSP: ','Number of SSP points exceeds limit'
     call print_error( msgbuf,mythid )
     stop 'ABNORMAL END: S/R ReadSSP'
   endif
@@ -2841,26 +2875,26 @@ end do
       call writessp( mythid )
     endif
   endif
-  select case ( ssp%type )
+  select case ( grid%type )
   case ('N')
-    n2(1:ssp%npts) = 1.0/ssp%c(1:ssp%npts)**2
-    do iz = 2, ssp%npts
-      n2z(iz-1) = (n2(iz)-n2(iz-1))/(ssp%z(iz)-ssp%z(iz-1))
+    n2(1:grid%npts) = 1.0/ssp%c(1:grid%npts)**2
+    do iz = 2, grid%npts
+      n2z(iz-1) = (n2(iz)-n2(iz-1))/(grid%z(iz)-grid%z(iz-1))
     end do
   case ('C')
   case ('P')
-    call pchip( ssp%z,ssp%c,ssp%npts,ccoef,cspln )
+    call pchip( grid%z,ssp%c,grid%npts,ccoef,cspln )
   case ('S')
-    cspln(1,1:ssp%npts) = ssp%c(1:ssp%npts)
-    call cspline( ssp%z,cspln(1,1),ssp%npts,0,0,ssp%npts )
+    cspln(1,1:grid%npts) = ssp%c(1:grid%npts)
+    call cspline( grid%z,cspln(1,1),grid%npts,0,0,grid%npts )
   case ('Q')
-    do ir = 1, ssp%nr
-      do iz = 2, ssp%nz
-        ssp%czmat(iz-1,ir) = (ssp%cmat(iz,ir)-ssp%cmat(iz-1,ir))/(ssp%z(iz)-ssp%z(iz-1))
+    do ir = 1, grid%nr
+      do iz = 2, grid%nz
+        ssp%czmat(iz-1,ir) = (ssp%cmat(iz,ir)-ssp%cmat(iz-1,ir))/(grid%z(iz)-grid%z(iz-1))
       end do
     end do
   case default
-    write(unit=msgbuf,fmt='(A)') 'SSPMOD setSSP: Invalid SSP profile option'
+    write(unit=msgbuf,fmt='(A)') 'SSP_MOD::setSSP: Invalid SSP profile option'
     call print_error( msgbuf,mythid )
     stop 'ABNORMAL END: S/R setSSP'
   end select
@@ -2897,11 +2931,11 @@ end do
 !==============================================
 ! declare local variables
 !==============================================
+  real(kind=8) :: gridh_tl(maxssp)
   integer :: ir
   integer :: iz
   integer :: mpirc
   character(len=max_len_mbuf) :: msgbuf
-  real(kind=8) :: ssph_tl(maxssp)
 
 !----------------------------------------------
 ! TANGENT LINEAR AND FUNCTION STATEMENTS
@@ -2927,31 +2961,31 @@ end do
       call writessp( mythid )
     endif
   endif
-  select case ( ssp%type )
+  select case ( grid%type )
   case ('N')
-    n2_tl(1:ssp%npts) = -(ssp_tl%c_tl(1:ssp%npts)*(2*ssp%c(1:ssp%npts)/ssp%c(1:ssp%npts)**2/ssp%c(1:ssp%npts)**2))
-    n2(1:ssp%npts) = 1.0/ssp%c(1:ssp%npts)**2
-    do iz = 2, ssp%npts
-      n2z_tl(iz-1) = (-(n2_tl(iz-1)/(ssp%z(iz)-ssp%z(iz-1))))+n2_tl(iz)/(ssp%z(iz)-ssp%z(iz-1))
-      n2z(iz-1) = (n2(iz)-n2(iz-1))/(ssp%z(iz)-ssp%z(iz-1))
+    n2_tl(1:grid%npts) = -(ssp_tl%c_tl(1:grid%npts)*(2*ssp%c(1:grid%npts)/ssp%c(1:grid%npts)**2/ssp%c(1:grid%npts)**2))
+    n2(1:grid%npts) = 1.0/ssp%c(1:grid%npts)**2
+    do iz = 2, grid%npts
+      n2z_tl(iz-1) = (-(n2_tl(iz-1)/(grid%z(iz)-grid%z(iz-1))))+n2_tl(iz)/(grid%z(iz)-grid%z(iz-1))
+      n2z(iz-1) = (n2(iz)-n2(iz-1))/(grid%z(iz)-grid%z(iz-1))
     end do
   case ('C')
   case ('P')
-    ssph_tl = 0._ikind2
-    call pchip_tl( ssp%z,ssph_tl,ssp%c,ssp_tl%c_tl,ssp%npts,ccoef,ccoef_tl,cspln,cspln_tl )
+    gridh_tl = 0._ikind2
+    call pchip_tl( grid%z,gridh_tl,ssp%c,ssp_tl%c_tl,grid%npts,ccoef,ccoef_tl,cspln,cspln_tl )
   case ('S')
-    cspln_tl(1,1:ssp%npts) = ssp_tl%c_tl(1:ssp%npts)
-    cspln(1,1:ssp%npts) = ssp%c(1:ssp%npts)
-    call cspline_tl( ssp%z,cspln(1,1),cspln_tl(1,1),ssp%npts,0,0,ssp%npts )
+    cspln_tl(1,1:grid%npts) = ssp_tl%c_tl(1:grid%npts)
+    cspln(1,1:grid%npts) = ssp%c(1:grid%npts)
+    call cspline_tl( grid%z,cspln(1,1),cspln_tl(1,1),grid%npts,0,0,grid%npts )
   case ('Q')
-    do ir = 1, ssp%nr
-      do iz = 2, ssp%nz
-        ssp_tl%czmat_tl(iz-1,ir) = (-(ssp_tl%cmat_tl(iz-1,ir)/(ssp%z(iz)-ssp%z(iz-1))))+ssp_tl%cmat_tl(iz,ir)/(ssp%z(iz)-ssp%z(iz-1))
-        ssp%czmat(iz-1,ir) = (ssp%cmat(iz,ir)-ssp%cmat(iz-1,ir))/(ssp%z(iz)-ssp%z(iz-1))
+    do ir = 1, grid%nr
+      do iz = 2, grid%nz
+        ssp_tl%czmat_tl(iz-1,ir) = (-(ssp_tl%cmat_tl(iz-1,ir)/(grid%z(iz)-grid%z(iz-1))))+ssp_tl%cmat_tl(iz,ir)/(grid%z(iz)-grid%z(iz-1))
+        ssp%czmat(iz-1,ir) = (ssp%cmat(iz,ir)-ssp%cmat(iz-1,ir))/(grid%z(iz)-grid%z(iz-1))
       end do
     end do
   case default
-    write(unit=msgbuf,fmt='(A)') 'SSPMOD setSSP: Invalid SSP profile option'
+    write(unit=msgbuf,fmt='(A)') 'SSP_MOD::setSSP: Invalid SSP profile option'
     call print_error( msgbuf,mythid )
     stop 'ABNORMAL END: S/R setSSP'
   end select
@@ -2982,7 +3016,7 @@ end do
   character(len=80) :: fmtstr
   integer :: iz
   character(len=max_len_mbuf) :: msgbuf
-  real(kind=8) :: ssptmp(ssp%nr)
+  real(kind=8) :: ssptmp(grid%nr)
 
   if (ihop_dumpfreq < 0) then
     goto 99999
@@ -2997,28 +3031,28 @@ end do
     call print_message( msgbuf,prtfile,squeeze_right,mythid )
     write(unit=msgbuf,fmt='(A)')
     call print_message( msgbuf,prtfile,squeeze_right,mythid )
-    write(unit=msgbuf,fmt='(2A)') 'Profile option: ',ssp%type
+    write(unit=msgbuf,fmt='(2A)') 'Profile option: ',grid%type
     call print_message( msgbuf,prtfile,squeeze_right,mythid )
     write(unit=msgbuf,fmt='(A)')
     call print_message( msgbuf,prtfile,squeeze_right,mythid )
-    if (ssp%nr > 1) then
+    if (grid%nr > 1) then
       write(unit=msgbuf,fmt='(A)') 'Using range-dependent sound speed'
       call print_message( msgbuf,prtfile,squeeze_right,mythid )
     endif
-    if (ssp%nr == 1) then
+    if (grid%nr == 1) then
       write(unit=msgbuf,fmt='(A)') 'Using range-independent sound speed'
       call print_message( msgbuf,prtfile,squeeze_right,mythid )
     endif
-    write(unit=msgbuf,fmt='(A,I10)') 'Number of SSP ranges = ',ssp%nr
+    write(unit=msgbuf,fmt='(A,I10)') 'Number of SSP ranges = ',grid%nr
     call print_message( msgbuf,prtfile,squeeze_right,mythid )
-    write(unit=msgbuf,fmt='(A,I10)') 'Number of SSP depths = ',ssp%nz
+    write(unit=msgbuf,fmt='(A,I10)') 'Number of SSP depths = ',grid%nz
     call print_message( msgbuf,prtfile,squeeze_right,mythid )
     write(unit=msgbuf,fmt='(A)')
     call print_message( msgbuf,prtfile,squeeze_right,mythid )
     write(unit=msgbuf,fmt='(A)') 'Profile ranges [km]:'
     call print_message( msgbuf,prtfile,squeeze_right,mythid )
-    write(unit=fmtstr,fmt='(A,I10,A)') '(T11,',ssp%nr,'F10.2)'
-    ssptmp = ssp%seg%r(1:ssp%nr)/1000.0
+    write(unit=fmtstr,fmt='(A,I10,A)') '(T11,',grid%nr,'F10.2)'
+    ssptmp = grid%seg%r(1:grid%nr)/1000.0
     write(unit=msgbuf,fmt=fmtstr) ssptmp
     call print_message( msgbuf,prtfile,squeeze_right,mythid )
     write(unit=msgbuf,fmt='(A)')
@@ -3028,10 +3062,10 @@ end do
     write(unit=msgbuf,fmt='(A)') ' Depth [m ]     Soundspeed [m/s]'
     call print_message( msgbuf,prtfile,squeeze_right,mythid )
     ssptmp = 0.0
-    write(unit=fmtstr,fmt='(A,I10,A)') '(',ssp%nr+1,'F10.2)'
-    do iz = 1, ssp%nz
+    write(unit=fmtstr,fmt='(A,I10,A)') '(',grid%nr+1,'F10.2)'
+    do iz = 1, grid%nz
       ssptmp = ssp%cmat(iz,:)
-      write(unit=msgbuf,fmt=fmtstr) ssp%z(iz),ssptmp
+      write(unit=msgbuf,fmt=fmtstr) grid%z(iz),ssptmp
       call print_message( msgbuf,prtfile,squeeze_right,mythid )
     end do
     if (usesspfile) then
@@ -3047,8 +3081,8 @@ end do
       call print_message( msgbuf,prtfile,squeeze_right,mythid )
       write(unit=msgbuf,fmt='(A)')
       call print_message( msgbuf,prtfile,squeeze_right,mythid )
-      do iz = 1, ssp%npts
-        write(unit=msgbuf,fmt='( F10.2, 3X, 2F10.2, 3X, F6.2, 3X, 2F10.4)') ssp%z(iz),ssp%cmat(iz,1),betar,rhor,alphai,betai
+      do iz = 1, grid%npts
+        write(unit=msgbuf,fmt='( F10.2, 3X, 2F10.2, 3X, F6.2, 3X, 2F10.4)') grid%z(iz),ssp%cmat(iz,1),betar,rhor,alphai,betai
         call print_message( msgbuf,prtfile,squeeze_right,mythid )
       end do
     endif
