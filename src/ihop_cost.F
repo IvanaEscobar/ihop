@@ -18,9 +18,9 @@ C    Computes iHOP data misfit for cost function
 
 C    !USES:
 #if (defined ALLOW_IHOP) && (defined TEST_IHOP_COST)
-CC     For ssp%cmat
-C      USE ssp_mod, only: SSP
-C
+C     For ssp%cmat
+      USE ssp_mod, only: SSP
+
 #endif
       IMPLICIT NONE
 C == Global variables ===
