@@ -591,6 +591,10 @@ USE splinec_mod,  only: splineall
   REAL (KIND=_RL90)   :: c1, c2, cz1, cz2, cr, cz, s1, s2, delta_r, delta_z
 !EOP
 
+  ! INIT variables
+  c1 = 0.
+  c2 = 0.
+
   ! *** Section to return SSP info ***
 
   ! IESCO22: iSegz is the depth segment index containing x depth
@@ -640,10 +644,6 @@ USE splinec_mod,  only: splineall
 
   ENDIF ! IF ( x(1).LT.SSP%Seg%R( iSegr ) .OR. x(1).GE.SSP%Seg%R( iSegr+1 ) )
 
-  ! for depth, x(2), get the sound speed at both ends of range segment
-  cz1 = SSP%czMat( iSegz, iSegr   )
-  cz2 = SSP%czMat( iSegz, iSegr+1 )
-
   !IESCO22: s2 is distance btwn field point, x(2), and ssp depth @ iSegz
   s2      = x(2)             - SSP%Z( iSegz )
   delta_z = SSP%Z( iSegz+1 ) - SSP%Z( iSegz )
@@ -658,8 +658,14 @@ USE splinec_mod,  only: splineall
     STOP 'ABNORMAL END: S/R Quad'
   ENDIF ! IF ( delta_z.LE.0 .OR. s2.GT.delta_z )
 
+  ! for depth, x(2), get the sound speed at both ends of range segment
+  cz1 = SSP%czMat( iSegz, iSegr   )
+  cz2 = SSP%czMat( iSegz, iSegr+1 )
+
   c1 = SSP%cMat( iSegz, iSegr   ) + s2*cz1
   c2 = SSP%cMat( iSegz, iSegr+1 ) + s2*cz2
+
+  IF ((c1.EQ.0) .OR. (c2.EQ.0)) STOP "ABNORMAL END: S/R QUAD"
 
   ! s1 = proportional distance of x(1) in range
   delta_r = SSP%Seg%R( iSegr+1 ) - SSP%Seg%R( iSegr )
@@ -670,7 +676,7 @@ USE splinec_mod,  only: splineall
 
   c = ( 1.0D0-s1 )*c1 + s1*c2 ! c @ x
 
-  ! interpolate the attenuation !!!! SSP in ENVFile needs to match first column of SSPFile
+  ! interpolate attenuation !!!! SSP in ENVFile needs to match first column of SSPFile
   s2    = s2 / delta_z   ! normalize depth layer
   ! volume attenuation is taken from the single c(z) profile
   cimag = AIMAG( ( 1.0D0-s2 )*SSP%c( iSegz ) + s2*SSP%c( iSegz+1 ) )

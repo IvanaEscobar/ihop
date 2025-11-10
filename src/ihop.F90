@@ -472,13 +472,24 @@ CONTAINS
 
   ! Initial conditions (IC)
   iSmallStepCtr = 0
+  c = 0.
+  cimag = 0.
+  gradc = 0.
+  crr = 0.
+  crz = 0.
+  czz = 0.
+  rho = 0.
+
   CALL evalSSP( xs, c, cimag, gradc, crr, crz, czz, rho, myThid )
-  ray2D( 1 )%c         = c              ! sound speed at source [m/s]
-  ray2D( 1 )%x         = xs             ! range and depth of source
-  ray2D( 1 )%t         = [ COS( alpha ), SIN( alpha ) ] / c ! unit tangent / c
-  ray2D( 1 )%p         = [ 1.0, 0.0 ]   ! IESCO22: slowness vector
+  IF ( c.EQ.0 ) STOP "ABNORMAL END: S/R TRACERAY2D"
+
+  ray2D( 1 )%c = c              ! sound speed at source [m/s]
+  ray2D( 1 )%x = xs             ! range and depth of source
+  ray2D( 1 )%t = [ COS( alpha ), SIN( alpha ) ] / c ! unit tangent / c
+  ray2D( 1 )%p = [ 1.0, 0.0 ]   ! IESCO22: slowness vector
   ! second component of qv is not supported in geometric beam tracing
   ! set I.C. to 0 in hopes of saving run time
+
 !$TAF store beam%runtype = TraceRay2D
   IF ( Beam%RunType( 2:2 ).EQ.'G' .OR. Beam%RunType( 2:2 ).EQ.'B')  THEN
     ray2D( 1 )%q = [ 0.0, 0.0 ]   ! IESCO22: geometric beam in Cartesian
@@ -531,7 +542,7 @@ CONTAINS
     ! Trace the beam (Reflect2D increments the step index, iH)
     iH = 0
     continue_steps = .true.
-    reflect=.false.
+    reflect = .false.
 
     Stepping: DO istep = 1, maxN-1
 !$TAF store iH,bdry,beam,continue_steps,distbegbot,distbegtop = TraceRay2D

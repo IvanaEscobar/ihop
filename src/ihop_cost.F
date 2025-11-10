@@ -17,6 +17,11 @@ C    !DESCRIPTION:
 C    Computes iHOP data misfit for cost function
 
 C    !USES:
+#if (defined ALLOW_IHOP) && (defined TEST_IHOP_COST)
+C     For ssp%cmat
+      USE ssp_mod, only: SSP
+
+#endif
       IMPLICIT NONE
 C == Global variables ===
 #include "SIZE.h"
@@ -80,12 +85,12 @@ C     bi,bj :: Tile indices
       _RL  ihopObs_modval_glob(NOBSMAX_IHOP)
 # endif
 # ifdef TEST_IHOP_COST
+      INTEGER ig, jg
+      INTEGER itlo,ithi
+      INTEGER jtlo,jthi
       INTEGER i,j,k
       _RL objf_ihop_tloc(nSx,nSy)
       _RL objf_ihop_gloc
-      integer ig, jg
-      integer itlo,ithi
-      integer jtlo,jthi
 # endif
 
 # ifndef ALLOW_CTRL
@@ -113,15 +118,18 @@ CADJ INIT tapelev_ihop_cost = COMMON, NFILESMAX_IHOP
 
       DO num_file=1,NFILESMAX_IHOP
 C-- Reset local variables
-       do bj = jtlo,jthi
-       do bi = itlo,ithi
-        objf_ihop_tloc(bi,bj) = 0.
-       ENDDO
-       ENDDO
+       DO bj = jtlo,jthi
+       DO bi = itlo,ithi
+         objf_ihop_tloc(bi,bj) = 0.
+
+       ENDDO !DO bi
+       ENDDO !DO bj
+
        objf_ihop_gloc = 0.
 
        DO bj = jtlo,jthi
        DO bi = itlo,ithi
+C-- OPTION 1: tile-wise summation: F77 Sound Speed
         DO k=1,5
         DO j=1,sNy
         jg = myYGlobalLo-1+(bj-1)*sNy+j
@@ -130,6 +138,8 @@ C-- Reset local variables
 
          IF (jg.GE.35 .AND. jg.LE.40 .AND. 
      &       ig.GE.20 .AND. ig.LE.25 ) THEN
+C         IF (jg.GE.25 .AND. jg.LE.45 .AND. 
+C     &       ig.GE.10 .AND. ig.LE.30 ) THEN
            objf_ihop_tloc(bi,bj) = objf_ihop_tloc(bi,bj)
      &      + ihop_ssp(i,j,k,bi,bj)*ihop_ssp(i,j,k,bi,bj)
          ENDIF
@@ -137,6 +147,7 @@ C-- Reset local variables
         ENDDO !DO i
         ENDDO !DO j
         ENDDO !DO k
+C-- tile-wise summation: F77 Sound Speed END
 
         WRITE(msgBuf,'(A,E22.17)') 'QoI sum(C2) tiled: ', 
      &                      objf_ihop_tloc(bi,bj)
@@ -146,7 +157,21 @@ C-- Reset local variables
        ENDDO !DO bi
        ENDDO !DO bj
 
-c--   Do global summation.
+CC-- OPTION 2: global summation: F90 Sound Speed
+C       DO j = 1,SSP%nR
+C       DO k = 1,SSP%nZ
+CC        print *, "ESCOBAR: SSP", SSP%cMat(k,j)
+C         objf_ihop_gloc = objf_ihop_gloc 
+C     &    + SSP%cMat(k,j)
+C
+C       ENDDO !DO j
+C       ENDDO !DO k
+CC-- global summation: F90 Sound Speed END
+C
+Cc--   Do global summation, if using tile-wise summation
+C       IF ( objf_ihop_tloc(1,1).NE.0 ) THEN
+C         CALL GLOBAL_SUM_TILE_RL( objf_ihop_tloc,objf_ihop_gloc,myThid )
+C       ENDIF
        CALL GLOBAL_SUM_TILE_RL( objf_ihop_tloc,objf_ihop_gloc,myThid )
 
        _BEGIN_MASTER( myThid )
@@ -158,7 +183,7 @@ c--   Do global summation.
        CALL PRINT_MESSAGE( msgBuf,
      &      standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
-       ENDDO !DO num_file
+      ENDDO !DO num_file
 
 #  else /* TEST_IHOP_COST */
       _BEGIN_MASTER( myThid )
