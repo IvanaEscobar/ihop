@@ -18,8 +18,8 @@ C    Computes iHOP data misfit for cost function
 
 C    !USES:
 #if (defined ALLOW_IHOP) && (defined TEST_IHOP_COST)
-CC     For Grid%nR,nZ, SSP%cMat
-C      USE ssp_mod, only: Grid, SSP
+C     For Grid%nR,nZ, SSP%cMat
+      USE ssp_mod, only: Grid, SSP
 
 #endif
       IMPLICIT NONE
