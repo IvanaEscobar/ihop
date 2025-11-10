@@ -11,7 +11,7 @@ C     o initialization for netcdf ihop acoustic domain; pass to f90 code
 C     started: Ivana Escobar July-2023
 
 C     !USES:
-      USE ihop_init_mod, only: init_fixed_env
+      USE ihop_init_mod, only: INIT_FIXED_ENV
       IMPLICIT NONE
 C == Global Variables ==
 #include "EEPARAMS.h"
@@ -145,15 +145,14 @@ C Only do I/O if in the main thread
       _END_MASTER( myThid )
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
-
       DO k = 1,IHOP_MAX_NC_SIZE !Nr
         DO i=1,IHOP_MAX_RANGE !IHOP_npts_range
           ihop_sumweights(i,k) = -1.0
         END DO
       END DO
 
-C Pass info to f90 ihop domain grid
-      CALL init_fixed_env( myThid )
+C Pass fixed info to f90 ihop domain grid
+      CALL INIT_FIXED_ENV( myThid )
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 
 #ifdef ALLOW_MNC

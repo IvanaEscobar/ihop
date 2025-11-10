@@ -11,6 +11,7 @@ C     !DESCRIPTION:
 C     Initialize IHOP variables
 
 C     !USES:
+      USE ssp_mod, only: INIT_VARIA_SSP
       IMPLICIT NONE
 ! == Global variables ==
 #include "SIZE.h"
@@ -72,6 +73,9 @@ C-    restart from a pickup:
 
 C-    end start-from-iter-zero if/else block
       ENDIF
+
+C- Pass info to f90 ihop SSP
+      CALL init_varia_ssp( myThid )
 
 #endif /* ALLOW_IHOP */
 

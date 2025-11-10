@@ -216,7 +216,7 @@ CONTAINS
     CLOSE( ATIFile )
     Top(:)%x(1) = 1000.0 * Top(:)%x(1)   ! Convert ranges in km to m
 
-  CASE DEFAULT   ! no altimetry given, use SSP depth for flat top
+  CASE DEFAULT   ! no altimetry given, use Grid depth for flat top
     NAtiPts = 2
     ALLOCATE( Top( NAtiPts ), Stat = IAllocStat )
     IF ( IAllocStat.NE.0 ) THEN
@@ -474,7 +474,7 @@ CONTAINS
     CLOSE( BTYFile )
     Bot(:)%x(1) = 1000.0 * Bot(:)%x(1)   ! Convert ranges in km to m
 
-  CASE DEFAULT   ! no bathymetry given, use SSP depth for flat bottom
+  CASE DEFAULT   ! no bathymetry given, use Grid depth for flat bottom
     NBtyPts = 2
     ALLOCATE( Bot( NBtyPts ), Stat = IAllocStat )
     IF ( IAllocStat.NE.0 ) THEN

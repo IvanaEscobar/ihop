@@ -18,8 +18,8 @@ C    Computes iHOP data misfit for cost function
 
 C    !USES:
 #if (defined ALLOW_IHOP) && (defined TEST_IHOP_COST)
-C     For ssp%cmat
-      USE ssp_mod, only: SSP
+C     For Grid%nR,nZ, SSP%cMat
+      USE ssp_mod, only: Grid, SSP
 
 #endif
       IMPLICIT NONE
@@ -158,16 +158,16 @@ C-- tile-wise summation: F77 Sound Speed END
        ENDDO !DO bj
 
 CC-- OPTION 2: global summation: F90 Sound Speed
-C       DO j = 1,SSP%nR
-C       DO k = 1,SSP%nZ
+C       DO j = 1,Grid%nR
+C       DO k = 1,Grid%nZ
 CC        print *, "ESCOBAR: SSP", SSP%cMat(k,j)
 C         objf_ihop_gloc = objf_ihop_gloc 
-C     &    + SSP%cMat(k,j)
+C     &    + SSP%cMat(k,j)*SSP%cMat(k,j)
 C
 C       ENDDO !DO j
 C       ENDDO !DO k
 CC-- global summation: F90 Sound Speed END
-C
+
 Cc--   Do global summation, if using tile-wise summation
 C       IF ( objf_ihop_tloc(1,1).NE.0 ) THEN
 C         CALL GLOBAL_SUM_TILE_RL( objf_ihop_tloc,objf_ihop_gloc,myThid )

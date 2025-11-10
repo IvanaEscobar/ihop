@@ -351,7 +351,7 @@ CONTAINS
 
 ! !USES:
   USE ihop_mod,  only: PRTFile
-  USE ssp_mod,   only: SSP
+  USE ssp_mod,   only: Grid
   USE atten_mod, only: T, Salinity, pH, z_bar, iBio, NBioLayers, bio
 
 ! !INPUT PARAMETERS:
@@ -377,8 +377,8 @@ CONTAINS
   WRITE(msgBuf,'(A)') 'Interior options: '
   CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 
-  ! SSP approximation options
-  SELECT CASE ( SSP%Type )
+  ! SSP_mod approximation options
+  SELECT CASE ( Grid%Type )
   CASE ( 'N' )
     WRITE(msgBuf,'(A)') '    N2-linear approximation to SSP'
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
@@ -401,7 +401,7 @@ CONTAINS
   END SELECT
 
   ! Attenuation options
-  SELECT CASE ( SSP%AttenUnit( 1:1 ) )
+  SELECT CASE ( Grid%AttenUnit( 1:1 ) )
   CASE ( 'N' )
     WRITE(msgBuf,'(A)') '    Attenuation units: nepers/m'
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
@@ -424,7 +424,7 @@ CONTAINS
   END SELECT
 
   ! optional addition of volume attenuation using standard formulas
-  SELECT CASE ( SSP%AttenUnit( 2:2 ) )
+  SELECT CASE ( Grid%AttenUnit( 2:2 ) )
   CASE ( 'T' )
     WRITE(msgBuf,'(A)') '    THORP volume attenuation added'
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
@@ -1152,11 +1152,11 @@ CONTAINS
   IF (useSSPFile) THEN
     ! don't reset values, they've been read in from a file -_-
   ELSE
-    SSP%cmat   = 1.0
-    SSP%czmat  = 1.0
+    SSP%cmat   = -99.0
+    SSP%czmat  = -99.0
 #ifdef IHOP_THREED
-    SSP%cmat3  = 1.0
-    SSP%czmat3 = 1.0
+    SSP%cmat3  = -99.0
+    SSP%czmat3 = -99.0
 #endif /* IHOP_THREED */
   ENDIF ! IF (useSSPFile)
 
