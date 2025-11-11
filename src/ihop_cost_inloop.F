@@ -20,6 +20,9 @@ C     !USES:
 #ifdef ALLOW_USE_MPI
       USE arr_mod, only: free_ihop_arrival
 #endif
+#ifdef TEST_IHOP_COST_INLOOP
+      USE ssp_mod, only SSP, Grid
+#endif
       IMPLICIT NONE
 C == Global variables ===
 #include "SIZE.h"
@@ -95,12 +98,25 @@ CEOP
 !$TAF STORE ihop_modVal  = comlev1_bibj, key=itdkey, byte=isbyte
 #  endif
                   ihop_modVal = 0
+#  ifdef TEST_IHOP_COST_INLOOP
+C-- global summation: F90 Sound Speed
+       DO j = 1,Grid%nR
+       DO k = 1,Grid%nZ
+C        print *, "ESCOBAR: SSP", SSP%cMat(k,j)
+         ihop_modVal = ihop_modVal
+     &    + SSP%cMat(k,j)*SSP%cMat(k,j)
 
+       ENDDO !DO j
+       ENDDO !DO k
+C-- global summation: F90 Sound Speed END
+
+#  else /* TEST_IHOP_COST_INLOOP
                   ! ESCO25: 1,1 means we only consider a single receiver
                   ! range and depth. We also do NO time avg, and can
                   ! ignore reading previously recorded values
                   CALL IHOP_COST_MODVAL( ihop_modVal, num_file,
      &                 1, 1, myTime, myThid )
+#  endif /* TEST_IHOP_COST_INLOOP */
 
                   CALL ACTIVE_WRITE_IHOP_TILE( 
      &                 num_file, ihop_modVal,
@@ -113,7 +129,6 @@ CEOP
           ENDDO !DO num_file
         ENDDO !DO bi
       ENDDO !DO bj
-
 
 #  ifdef ALLOW_USE_MPI
       IF (myTime.EQ.endTime) THEN
