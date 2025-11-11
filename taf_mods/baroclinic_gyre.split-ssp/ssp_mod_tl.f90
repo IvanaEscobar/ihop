@@ -418,7 +418,7 @@ type, private :: sspvariable
   real(kind=8), allocatable :: czmat(:,:)
 end type
 
-type, public :: sspvariable_tl
+type, private :: sspvariable_tl
   complex(kind=8) :: c_tl(maxssp)
   complex(kind=8) :: cz_tl(maxssp)
   real(kind=8), allocatable :: cmat_tl(:,:)
@@ -2855,8 +2855,10 @@ end do
 !==============================================
   integer :: ir
   integer :: iz
+  integer :: mpirc
   character(len=max_len_mbuf) :: msgbuf
 
+  mpirc = 0
   n2 = (-1.,-1.)
   n2z = (-1.,-1.)
   cspln = (-1.,-1.)
@@ -2864,8 +2866,14 @@ end do
   if ( .not. usesspfile) then
     call gcmssp( mythid )
   endif
-  if (myprocid == 0) then
+  if ( .not. usingmpi) then
     call writessp( mythid )
+  else
+    call mpi_comm_rank( mpi_comm_model,mpimyid,mpirc )
+    myprocid = mpimyid
+    if (myprocid == 0) then
+      call writessp( mythid )
+    endif
   endif
   select case ( grid%type )
   case ('N')
@@ -2926,11 +2934,13 @@ end do
   real(kind=8) :: gridh_tl(maxssp)
   integer :: ir
   integer :: iz
+  integer :: mpirc
   character(len=max_len_mbuf) :: msgbuf
 
 !----------------------------------------------
 ! TANGENT LINEAR AND FUNCTION STATEMENTS
 !----------------------------------------------
+  mpirc = 0
   n2_tl = (0._ikind6,0._ikind6)
   n2 = (-1.,-1.)
   n2z_tl = (0._ikind5,0._ikind5)
@@ -2942,8 +2952,14 @@ end do
   if ( .not. usesspfile) then
     call gcmssp_tl( mythid )
   endif
-  if (myprocid == 0) then
+  if ( .not. usingmpi) then
     call writessp( mythid )
+  else
+    call mpi_comm_rank( mpi_comm_model,mpimyid,mpirc )
+    myprocid = mpimyid
+    if (myprocid == 0) then
+      call writessp( mythid )
+    endif
   endif
   select case ( grid%type )
   case ('N')
