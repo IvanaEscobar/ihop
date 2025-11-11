@@ -43,6 +43,11 @@ MODULE arr_mod
   INTEGER, ALLOCATABLE  :: nArr3D( :, :, : )
 #endif /* IHOP_THREED */
 
+#ifdef ALLOW_USE_MPI
+  INTEGER :: MPI_IHOP_ARRIVAL = MPI_DATATYPE_NULL
+  LOGICAL :: ARRIVAL_TYPE_COMMITTED = .false.
+#endif /* ALLOW_USE_MPI */
+
 ! == Derived types ==
   TYPE Arrival
     INTEGER :: NTopBnc, NBotBnc
@@ -57,10 +62,6 @@ MODULE arr_mod
 #ifdef IHOP_THREED
   TYPE(Arrival), ALLOCATABLE :: Arr3D( :, :, :, : )
 #endif /* IHOP_THREED */
-#ifdef ALLOW_USE_MPI
-  INTEGER :: MPI_IHOP_ARRIVAL = MPI_DATATYPE_NULL
-  LOGICAL :: ARRIVAL_TYPE_COMMITTED = .false.
-#endif /* ALLOW_USE_MPI */
 !EOP
 
 CONTAINS
