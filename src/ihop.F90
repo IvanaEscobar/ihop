@@ -112,9 +112,7 @@ CONTAINS
   CALL resetMemory()
 
   ! Only do IO and computation on a single process!
-  IF ( .NOT.usingMPI .AND. IHOP_dumpfreq.GE.0 ) THEN
-    locProcID=0
-
+  IF ( myProcID.EQ.0 .AND. IHOP_dumpfreq.GE.0 ) THEN
     ! open PRTFile
     CALL initPRTFile( myTime, myIter, myThid )
 
@@ -130,41 +128,18 @@ CONTAINS
     ! Open output files
     CALL OpenOutputFiles( IHOP_fileroot, myTime, myIter, myThid )
 
-#ifdef ALLOW_USE_MPI
-  ELSE ! using MPI
-    locProcID = myProcID
-
-    ! Hard coded write on single proc
-    IF ( locProcID.EQ.0 .AND. IHOP_dumpfreq.GE.0 ) THEN
-      ! open PRTFile
-      CALL initPRTFile( myTime, myIter, myThid )
-
-      ! write Top/Bot to PRTFile: REQUIRED
-      CALL writeBdry( myThid )
-
-      ! write refCoef: OPTIONAL
-      CALL writeRefCoef( myThid ) 
-
-      ! Source Beam Pattern: OPTIONAL, default is omni source pattern
-      CALL writePat( myThid )
-
-      ! Open output files:
-      CALL OpenOutputFiles( IHOP_fileroot, myTime, myIter, myThid )
-
-    ENDIF ! IF ( locProcID.EQ.0 ) 
-
-#endif /* ALLOW_USE_MPI */
   ENDIF ! IF ( .NOT.usingMPI )
 
-  ! set SSP%cmat from gcm SSP: REQUIRED
+  ! set SSP%cMat from gcm SSP: REQUIRED
   CALL setSSP( myThid )
 
   ! Run IHOP solver on a single processor
-  IF ( locProcID.EQ.0 ) THEN
+  IF ( myProcID.EQ.0 ) THEN
     CALL CPU_TIME( Tstart )
     CALL IHOPCore( myThid )
     CALL CPU_TIME( Tstop  )
-  ENDIF ! IF ( locProcID.EQ.0 )
+  ENDIF ! IF ( myProcID.EQ.0 )
+
 #ifdef ALLOW_USE_MPI
   IF ( usingMPI ) THEN
     CALL MPI_BARRIER( MPI_COMM_WORLD, mpiRC )
