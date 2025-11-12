@@ -21,7 +21,7 @@ C     !USES:
       USE arr_mod, only: free_ihop_arrival
 #endif
 #ifdef TEST_IHOP_COST_INLOOP
-      USE ssp_mod, only SSP, Grid
+      USE ssp_mod, only: SSP, Grid
 #endif
       IMPLICIT NONE
 C == Global variables ===
@@ -63,6 +63,9 @@ C    !LOCAL VARIABLES:
       INTEGER maxindex(nRR, nRD)
       _RL     ihop_modVal
 # ifndef ALLOW_CTRL
+#ifdef TEST_IHOP_COST_INLOOP
+      INTEGER r,k
+#endif
       INTEGER optimcycle
 # endif
 # ifndef ALLOW_ECCO
@@ -100,17 +103,17 @@ CEOP
                   ihop_modVal = 0
 #  ifdef TEST_IHOP_COST_INLOOP
 C-- global summation: F90 Sound Speed
-       DO j = 1,Grid%nR
+       DO r = 1,Grid%nR
        DO k = 1,Grid%nZ
 C        print *, "ESCOBAR: SSP", SSP%cMat(k,j)
          ihop_modVal = ihop_modVal
-     &    + SSP%cMat(k,j)*SSP%cMat(k,j)
+     &    + SSP%cMat(k,r)*SSP%cMat(k,r)
 
        ENDDO !DO j
        ENDDO !DO k
 C-- global summation: F90 Sound Speed END
 
-#  else /* TEST_IHOP_COST_INLOOP
+#  else /* TEST_IHOP_COST_INLOOP */
                   ! ESCO25: 1,1 means we only consider a single receiver
                   ! range and depth. We also do NO time avg, and can
                   ! ignore reading previously recorded values
