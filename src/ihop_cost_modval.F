@@ -24,6 +24,9 @@ C     !USES:
       USE srPos_mod,only: Pos
       USE ihop_mod, only: rad2deg
 #endif
+#ifdef TEST_IHOP_COST_INLOOP
+      USE ssp_mod, only: SSP, Grid
+#endif
       IMPLICIT NONE
 C == Global variables ===
 #include "SIZE.h"
@@ -59,6 +62,9 @@ C     !OUTPUT PARAMETERS:
       _RL     modVal
 
 C     !LOCAL VARIABLES:
+# ifdef TEST_IHOP_COST_INLOOP
+      INTEGER r,k
+# endif
 #ifdef ALLOW_IHOP
       CHARACTER*(MAX_LEN_MBUF) msgBuf
       INTEGER ii
@@ -78,6 +84,21 @@ CEOP
 
 ! Added uses of modules above, have access to Arr and Pos
 ! ===================================================================
+# ifdef TEST_IHOP_COST_INLOOP
+C-- global summation: F90 Sound Speed if cMat is NOT default -99
+       IF ( SSP%cMat(1,3).NE.-99. _d 0 ) THEN
+       DO r = 1,Grid%nR
+       DO k = 1,Grid%nZ
+C- square of the sums
+         modVal = modVal
+     &    + SSP%cMat(k,r)/100.
+
+       ENDDO !DO j
+       ENDDO !DO k
+       ENDIF
+C-- global summation: F90 Sound Speed END
+
+# else /* TEST_IHOP_COST_INLOOP */
 
 ! Are ri and rj contained in nRR AND nRD
       IF ( (ri.GT.nRR).AND.(rj.gt.nRD) ) THEN
@@ -114,6 +135,8 @@ CEOP
       modVal = REAL( Arr( maxID,ri,rj )%delay )
 
 ! ray storage of top arrival...
+# endif /* TEST_IHOP_COST_INLOOP */
+
 #endif /* ALLOW_IHOP */
 
       RETURN

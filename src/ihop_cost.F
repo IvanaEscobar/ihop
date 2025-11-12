@@ -160,7 +160,7 @@ CC-- tile-wise summation: F77 Sound Speed END
 C-- OPTION 2: global summation: F90 Sound Speed
        DO j = 1,Grid%nR
        DO k = 1,Grid%nZ
-C        print *, "ESCOBAR: SSP", SSP%cMat(k,j)
+C- sum of the squares
          objf_ihop_gloc = objf_ihop_gloc 
      &    + SSP%cMat(k,j)*SSP%cMat(k,j)
 
