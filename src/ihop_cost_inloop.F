@@ -62,10 +62,10 @@ C    !LOCAL VARIABLES:
       INTEGER num_file, nObs
       INTEGER maxindex(nRR, nRD)
       _RL     ihop_modVal
-# ifndef ALLOW_CTRL
-#ifdef TEST_IHOP_COST_INLOOP
+# ifdef TEST_IHOP_COST_INLOOP
       INTEGER r,k
-#endif
+# endif
+# ifndef ALLOW_CTRL
       INTEGER optimcycle
 # endif
 # ifndef ALLOW_ECCO
@@ -105,7 +105,7 @@ CEOP
 C-- global summation: F90 Sound Speed
        DO r = 1,Grid%nR
        DO k = 1,Grid%nZ
-C        print *, "ESCOBAR: SSP", SSP%cMat(k,j)
+C        print *, "ESCOBAR: SSP", SSP%cMat(k,r)
          ihop_modVal = ihop_modVal
      &    + SSP%cMat(k,r)*SSP%cMat(k,r)
 
