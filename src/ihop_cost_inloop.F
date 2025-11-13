@@ -59,9 +59,6 @@ C    !LOCAL VARIABLES:
       INTEGER num_file, nObs
       INTEGER maxindex(nRR, nRD)
       _RL     ihop_modVal
-C# ifdef TEST_IHOP_COST_INLOOP
-C      INTEGER r,k
-C# endif
 # ifndef ALLOW_CTRL
       INTEGER optimcycle
 # endif
