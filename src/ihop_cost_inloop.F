@@ -92,7 +92,7 @@ CEOP
      &               (ihopObs_time(num_file,nObs,bi,bj).LT.
      &                (myTime+deltaTclock)) ) THEN
 #  ifdef ALLOW_AUTODIFF_TAMC
-!$TAF STORE ihop_modVal  = comlev1_bibj, key=itdkey, byte=isbyte
+!!$TAF STORE ihop_modVal  = comlev1_bibj, key=itdkey, byte=isbyte
 #  endif
                   ihop_modVal = 0
 
@@ -113,7 +113,6 @@ CEOP
           ENDDO !DO num_file
         ENDDO !DO bi
       ENDDO !DO bj
-
 
 #  ifdef ALLOW_USE_MPI
       IF (myTime.EQ.endTime) THEN

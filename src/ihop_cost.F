@@ -160,7 +160,7 @@ CC-- tile-wise summation: F77 Sound Speed END
 C-- OPTION 2: global summation: F90 Sound Speed
        DO j = 1,Grid%nR
        DO k = 1,Grid%nZ
-C        print *, "ESCOBAR: SSP", SSP%cMat(k,j)
+C- sum of the squares
          objf_ihop_gloc = objf_ihop_gloc 
      &    + SSP%cMat(k,j)*SSP%cMat(k,j)
 
@@ -293,6 +293,11 @@ C Read model equivalent from global file
      I             iObs,.false., optimcycle, myThid,
      I             ihop_globaldummy(num_file) )
 
+#ifdef TEST_IHOP_COST_INLOOP
+C Set uncertainty to one
+              ihop_uncert = 1. _d 0
+
+#else /* TEST_IHOP_COST_INLOOP */
 C Read observation and uncertainty
               CALL IHOP_COST_READ_OBS( 
      I             num_file,  1, ihopObs_ind_glob(num_file,iObs),
@@ -303,6 +308,7 @@ C Read observation and uncertainty
      I             num_file, -1, ihopObs_ind_glob(num_file,iObs),
      O             ihop_uncert,
      I             myThid )
+#endif /* TEST_IHOP_COST_INLOOP */
 
               IF (ihop_data.EQ.-9999) ihop_uncert = zeroRL
 

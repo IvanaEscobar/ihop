@@ -99,7 +99,6 @@ CONTAINS
 ! mpiRC :: MPI return code
   CHARACTER*(MAX_LEN_MBUF):: msgBuf
   REAL :: Tstart, Tstop
-  INTEGER :: locProcID
 #ifdef ALLOW_USE_MPI
   INTEGER :: mpiRC
   mpiRC  = 0
@@ -141,6 +140,7 @@ CONTAINS
   ENDIF ! IF ( myProcID.EQ.0 )
 
 #ifdef ALLOW_USE_MPI
+! broadcast Arr to all processes
   IF ( usingMPI ) THEN
     CALL MPI_BARRIER( MPI_COMM_WORLD, mpiRC )
     CALL BcastArr( 0, MPI_COMM_WORLD )
@@ -148,7 +148,7 @@ CONTAINS
 #endif
 
 #ifdef IHOP_WRITE_OUT
-  IF ( locProcID.EQ.0 .AND. IHOP_dumpfreq.GE.0 ) THEN
+  IF ( myProcID.EQ.0 .AND. IHOP_dumpfreq.GE.0 ) THEN
     WRITE(msgBuf, '(A)' )
     CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
     WRITE(msgBuf, '(A,G15.3,A)' ) 'CPU Time = ', Tstop-Tstart, 's'
