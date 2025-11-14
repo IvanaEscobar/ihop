@@ -11,7 +11,7 @@ MODULE influence
 !   the pressure field.
 
 ! !USES:
-  USE ihop_mod,  only: rad2deg, oneCMPLX, PRTFile, maxN, Beam, ray2D, &
+  USE ihop_mod,  only: rad2deg, oneCMPLX, PRTFile, nMax, Beam, ray2D, &
                        SrcDeclAngle, nRz_per_range
   USE srPos_mod, only: Pos
   IMPLICIT NONE
@@ -77,29 +77,29 @@ CONTAINS
 ! skip_step :: logical to skip steps with no influence
   CHARACTER*(MAX_LEN_MBUF) :: msgBuf
   INTEGER              :: irA, irB, II
-  REAL (KIND=_RL90)    :: nA, nB, zr, L, dq( Beam%Nsteps - 1 )
-  REAL (KIND=_RL90)    :: znV( Beam%Nsteps ), rnV( Beam%Nsteps ), &
-                           RcvrDeclAngleV ( Beam%Nsteps )
-  COMPLEX (KIND=_RL90) :: dtau( Beam%Nsteps-1 )
+  REAL (KIND=_RL90)    :: nA, nB, zr, L, dq( Beam%nSteps - 1 )
+  REAL (KIND=_RL90)    :: znV( Beam%nSteps ), rnV( Beam%nSteps ), &
+                           RcvrDeclAngleV ( Beam%nSteps )
+  COMPLEX (KIND=_RL90) :: dtau( Beam%nSteps-1 )
   LOGICAL :: skip_step
 !EOP
 
 !$TAF init iRayCen0  = 'influence_iraycen'
-!$TAF init iRayCen1  = static, (Beam%Nsteps-1)*nRz_per_range
-!$TAF init iRayCen2  = static, (Beam%Nsteps-1)*ihop_nRR*nRz_per_range
+!$TAF init iRayCen1  = static, (Beam%nSteps-1)*nRz_per_range
+!$TAF init iRayCen2  = static, (Beam%nSteps-1)*ihop_nRR*nRz_per_range
 !$TAF store ray2d = iRayCen0
 
   q0   = ray2D( 1 )%c / Angles%Dalpha   ! Reference for J = q0 / q
 
-  dq   = ray2D( 2:Beam%Nsteps )%q( 1 ) - ray2D( 1:Beam%Nsteps-1 )%q( 1 )
-  dtau = ray2D( 2:Beam%Nsteps )%tau    - ray2D( 1:Beam%Nsteps-1 )%tau
+  dq   = ray2D( 2:Beam%nSteps )%q( 1 ) - ray2D( 1:Beam%nSteps-1 )%q( 1 )
+  dtau = ray2D( 2:Beam%nSteps )%tau    - ray2D( 1:Beam%nSteps-1 )%tau
 
   ! Set the ray-centered coordinates (znV, rnV)
   ! pre-calculate ray normal based on tangent with c(s) scaling
-  znV = -ray2D( 1:Beam%Nsteps )%t( 1 ) * ray2D( 1:Beam%Nsteps )%c
-  rnV =  ray2D( 1:Beam%Nsteps )%t( 2 ) * ray2D( 1:Beam%Nsteps )%c
+  znV = -ray2D( 1:Beam%nSteps )%t( 1 ) * ray2D( 1:Beam%nSteps )%c
+  rnV =  ray2D( 1:Beam%nSteps )%t( 2 ) * ray2D( 1:Beam%nSteps )%c
 
-  DO ii=1,Beam%Nsteps
+  DO ii=1,Beam%nSteps
     IF ( ALL(ray2D(ii)%t==0.0) ) THEN
       RcvrDeclAngleV(ii) = 0.0
     ELSE
@@ -115,8 +115,8 @@ CONTAINS
   IF ( Beam%RunType( 4:4 ).EQ.'R' ) &
     Ratio1 = SQRT( ABS( COS( SrcDeclAngle / rad2deg ) ) )
 
-  ray2D( 1:Beam%Nsteps )%Amp = Ratio1 * SQRT( ray2D( 1:Beam%Nsteps )%c ) &
-                  * ray2D( 1:Beam%Nsteps )%Amp   ! pre-apply some scaling
+  ray2D( 1:Beam%nSteps )%Amp = Ratio1 * SQRT( ray2D( 1:Beam%nSteps )%c ) &
+                  * ray2D( 1:Beam%nSteps )%Amp   ! pre-apply some scaling
 
   RcvrDepths: DO iz = 1, nRz_per_range
     zR = Pos%RZ( iz )
@@ -138,7 +138,7 @@ CONTAINS
                1 )
     ENDIF
 
-    Stepping: DO iH = 2, Beam%Nsteps
+    Stepping: DO iH = 2, Beam%nSteps
 !$TAF store ira,irb,na,nb,phase,qold,ra = iRayCen1
       skip_step = .FALSE.
 
@@ -261,9 +261,9 @@ CONTAINS
   COMPLEX (KIND=_RL90) :: dtauds
   LOGICAL              :: inRcvrRanges
 
-!$TAF init iiitape1 = static, (Beam%Nsteps-1)
-!$TAF init iiitape2 = static, (Beam%Nsteps-1)*ihop_nRR
-!$TAF init iiitape3 = static, (Beam%Nsteps-1)*ihop_nRR*nRz_per_range
+!$TAF init iiitape1 = static, (Beam%nSteps-1)
+!$TAF init iiitape2 = static, (Beam%nSteps-1)*ihop_nRR
+!$TAF init iiitape3 = static, (Beam%nSteps-1)*ihop_nRR*nRz_per_range
 
   q0           = ray2D( 1 )%c / Angles%Dalpha   ! Reference for J = q0 / q
   phase        = 0.0
@@ -281,7 +281,7 @@ CONTAINS
   IF ( Beam%RunType( 4:4 ).EQ.'R' ) &
     Ratio1 = SQRT( ABS( COS( SrcDeclAngle / rad2deg ) ) )
 
-  Stepping: DO iH = 2, Beam%Nsteps
+  Stepping: DO iH = 2, Beam%nSteps
 !$TAF store phase,qold,ra = iiitape1
     rB     = ray2D( iH   )%x( 1 )
     x_ray  = ray2D( iH-1 )%x
@@ -454,9 +454,9 @@ CONTAINS
   LOGICAL              :: inRcvrRanges
 !EOP
 
-!$TAF init iGauCart1 = static, (Beam%Nsteps-1)
-!$TAF init iGauCart2 = static, (Beam%Nsteps-1)*ihop_nRR
-!$TAF init iGauCart3 = static, (Beam%Nsteps-1)*ihop_nRR*nRz_per_range
+!$TAF init iGauCart1 = static, (Beam%nSteps-1)
+!$TAF init iGauCart2 = static, (Beam%nSteps-1)*ihop_nRR
+!$TAF init iGauCart3 = static, (Beam%nSteps-1)*ihop_nRR*nRz_per_range
   q0     = ray2D( 1 )%c / Angles%Dalpha   ! Reference for J = q0 / q
   phase  = 0
   qOld   = ray2D( 1 )%q( 1 )       ! used to track KMAH index
@@ -479,7 +479,7 @@ CONTAINS
     Ratio1 = 1 / SQRT( 2.*PI )
   ENDIF
 
-  Stepping: DO iH = 2, Beam%Nsteps
+  Stepping: DO iH = 2, Beam%nSteps
 !$TAF store phase,qold,ra = iGauCart1
     rB    = ray2D( iH   )%x( 1 )
     x_ray = ray2D( iH-1 )%x
@@ -630,7 +630,7 @@ CONTAINS
 ! !USES:
   USE writeray, only: WriteRayOutput
   USE arr_mod,  only: AddArr
-  USE ihop_mod, only: afreq, RAYFile, DELFile, maxN
+  USE ihop_mod, only: afreq, RAYFile, DELFile, nMax
 
 ! !INPUT PARAMETERS:
 ! U :: complex pressure field
@@ -640,7 +640,7 @@ CONTAINS
 ! !LOCAL VARIABLES:
 ! tmpDelay :: temporary array for delay values
   INTEGER :: i
-  REAL(KIND=_RL90) :: tmpX(maxN), tmpY(maxN), tmpDelay(maxN)
+  REAL(KIND=_RL90) :: tmpX(nMax), tmpY(nMax), tmpDelay(nMax)
 !EOP
 
 ! initiate temporary arrays
@@ -660,28 +660,28 @@ CONTAINS
 !    tmpDelay = 0.
     CALL WriteRayOutput( RAYFile, iH,         &
       tmpX(1:iH), tmpY(1:iH),                 &
-      ray2D(iH)%NumTopBnc, ray2D(iH)%NumBotBnc )
+      ray2D(iH)%nTopBnc, ray2D(iH)%nBotBnc )
 
   CASE ( 'e' )                ! eigenrays AND arrivals
     U=U
 !    tmpDelay = 0.
     CALL WriteRayOutput( RAYFile, iH,         &
       tmpX(1:iH), tmpY(1:iH),                 &
-      ray2D(iH)%NumTopBnc, ray2D(iH)%NumBotBnc )
+      ray2D(iH)%nTopBnc, ray2D(iH)%nBotBnc )
     IF (writeDelay) THEN
       CALL WriteRayOutput( DELFile, iH,       &
         tmpDelay(1:iH), tmpY(1:iH),           &
-        ray2D(iH)%NumTopBnc, ray2D(iH)%NumBotBnc )
+        ray2D(iH)%nTopBnc, ray2D(iH)%nBotBnc )
     ENDIF
 
     CALL AddArr( afreq, iz, ir, Amp, phaseInt, delay,  &
-      RcvrDeclAngle, ray2D( iH )%NumTopBnc, ray2D( iH )%NumBotBnc )
+      RcvrDeclAngle, ray2D(iH)%nTopBnc, ray2D(iH)%nBotBnc )
 
   CASE ( 'A', 'a' )           ! arrivals
     U=U
 !    tmpDelay = 0.
     CALL AddArr( afreq, iz, ir, Amp, phaseInt, delay,  &
-      RcvrDeclAngle, ray2D( iH )%NumTopBnc, ray2D( iH )%NumBotBnc )
+      RcvrDeclAngle, ray2D(iH)%nTopBnc, ray2D(iH)%nBotBnc )
 
   CASE ( 'C' )                ! coherent TL
 !    tmpDelay = 0.

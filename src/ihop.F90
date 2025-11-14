@@ -198,7 +198,7 @@ CONTAINS
                        InfluenceGeoHatCart, ScalePressure
   USE beampat,   only: NSBPPts, SrcBmPat
   USE ihop_mod,  only: Beam, ray2D, rad2deg, SrcDeclAngle, afreq, &
-                       nRz_per_range, RAYFile, DELFile, maxN
+                       nRz_per_range, RAYFile, DELFile, nMax
 ! IESCO25: FOR TAF -RG
 !  USE influence,  only: ratio1, rB
 !  USE bdry_mod, only: bdry
@@ -237,7 +237,7 @@ CONTAINS
              nAlphaOpt, nSteps
   REAL(KIND=_RL90) :: Amp0, DalphaOpt, xs(2), RadMax, s, &
                       c, cimag, gradc(2), crr, crz, czz, rho
-  REAL(KIND=_RL90) :: tmpDelay(maxN)
+  REAL(KIND=_RL90) :: tmpDelay(nMax)
 !EOP
 
 !$TAF init IHOPCore2 = static, Pos%nSZ*Angles%nAlpha
@@ -332,13 +332,13 @@ CONTAINS
           IF ( Beam%RunType(1:1).EQ.'R') THEN
             nSteps = Beam%nSteps
             CALL WriteRayOutput( RAYFile, nSteps, &
-              ray2D(1:nSteps)%x(1),    ray2D(1:nSteps)%x(2), &
-              ray2D(nSteps)%NumTopBnc, ray2D(nSteps)%NumBotBnc )
+              ray2D(1:nSteps)%x(1),  ray2D(1:nSteps)%x(2), &
+              ray2D(nSteps)%nTopBnc, ray2D(nSteps)%nBotBnc )
             IF (writeDelay) THEN
               tmpDelay = REAL(ray2D(1:nSteps)%tau)
               CALL WriteRayOutput( DELFile, nSteps, &
-                tmpDelay,                ray2D(1:nSteps)%x(2), &
-                ray2D(nSteps)%NumTopBnc, ray2D(nSteps)%NumBotBnc )
+                tmpDelay,              ray2D(1:nSteps)%x(2), &
+                ray2D(nSteps)%nTopBnc, ray2D(nSteps)%nBotBnc )
             ENDIF
 
           ELSE ! Compute the contribution to the field
@@ -397,7 +397,7 @@ CONTAINS
 !   angle alpha [rad]. Stores ray path parameters in ray2D
 
 ! !USES:
-  USE ihop_mod, only: maxN, istep
+  USE ihop_mod, only: nMax, istep
   USE bdry_mod, only: GetTopSeg, GetBotSeg, atiType, btyType, Bdry, &
                       IsegTop, IsegBot, rTopSeg, rBotSeg, Top, Bot
   USE refCoef,  only: RTop, RBot, NBotPts, NTopPts
@@ -446,7 +446,7 @@ CONTAINS
   LOGICAL           :: continue_steps, reflect
 !EOP
 
-!$TAF init TraceRay2D = static, maxN-1
+!$TAF init TraceRay2D = static, nMax-1
 
   ! Initial conditions (IC)
   iSmallStepCtr = 0
@@ -475,12 +475,12 @@ CONTAINS
     ray2D( 1 )%q = [ 0.0, 1.0 ]   ! IESCO22: ray centered coords
   ENDIF
 
-  ray2D( 1 )%tau       = 0.0
-  ray2D( 1 )%Amp       = Amp0
-  ray2D( 1 )%Phase     = 0.0
-  ray2D( 1 )%NumTopBnc = 0
-  ray2D( 1 )%NumBotBnc = 0
-  ray2D( 1 )%NumTurnPt = 0
+  ray2D( 1 )%tau     = 0.0
+  ray2D( 1 )%Amp     = Amp0
+  ray2D( 1 )%Phase   = 0.0
+  ray2D( 1 )%nTopBnc = 0
+  ray2D( 1 )%nBotBnc = 0
+  ray2D( 1 )%nTurnPt = 0
 
   ! IESCO22: update IsegTop, rTopSeg and IsegBot, rBotSeg in bdrymod.f90
   CALL GetTopSeg( xs(1), myThid )   ! find alimetry   segment above the source
@@ -508,7 +508,7 @@ CONTAINS
 
 ! Source MUST be within the domain
   IF ( DistBegTop.LE.0 .OR. DistBegBot.LE.0 ) THEN
-    Beam%Nsteps = 1
+    Beam%nSteps = 1
 #ifdef IHOP_WRITE_OUT
     WRITE(msgBuf,'(A)') &
       'WARNING: TraceRay2D: The source is outside the domain boundaries'
@@ -522,7 +522,7 @@ CONTAINS
     continue_steps = .true.
     reflect = .false.
 
-    Stepping: DO istep = 1, maxN-1
+    Stepping: DO istep = 1, nMax-1
 !$TAF store iH,bdry,beam,continue_steps,distbegbot,distbegtop = TraceRay2D
 
       IF ( continue_steps ) THEN
@@ -555,7 +555,7 @@ CONTAINS
 
           RayTurn = ( declAlpha.LE.0.0d0 .AND. declAlphaOld.GT.0.0d0 .OR. &
                       declAlpha.GE.0.0d0 .AND. declAlphaOld.LT.0.0d0 )
-          IF (RayTurn) ray2D( iH1 )%NumTurnPt = ray2D( iH )%NumTurnPt + 1
+          IF (RayTurn) ray2D( iH1 )%nTurnPt = ray2D( iH )%nTurnPt + 1
 
         ENDIF ! IF ( iH.GT.1 )
 
@@ -679,7 +679,7 @@ CONTAINS
         ELSEIF ( DistBegBot.LT.0.0 .AND. DistEndBot.LT.0.0 ) THEN
           WRITE(msgBuf,'(A)') 'TraceRay2D: ray escaped bot bound'
           endRay=.TRUE.
-        ELSEIF ( iH.GE.maxN-3 ) THEN
+        ELSEIF ( iH.GE.nMax-3 ) THEN
           WRITE(msgBuf,'(2A)') 'WARNING: TraceRay2D: Check storage ',&
                                 'for ray trajectory'
           endRay=.TRUE.
@@ -696,10 +696,10 @@ CONTAINS
 #endif /* IHOP_WRITE_OUT */
 
         IF (INDEX(msgBuf, 'TraceRay2D').EQ.1) THEN
-          Beam%Nsteps = iH+1
+          Beam%nSteps = iH+1
           continue_steps = .false.
         ELSEIF (INDEX(msgBuf, 'WARNING: TraceRay2D').EQ.1) THEN
-          Beam%Nsteps = iH
+          Beam%nSteps = iH
           continue_steps = .false.
         ELSE
           continue_steps = .true.
@@ -840,10 +840,10 @@ CONTAINS
   Tg = DOT_PRODUCT( ray2D( iH )%t, tBdry )  ! ray tan projected along boundary
   Th = DOT_PRODUCT( ray2D( iH )%t, nBdry )  ! ray tan projected normal boundary
 
-  ray2D( iH1 )%NumTopBnc = ray2D( iH )%NumTopBnc
-  ray2D( iH1 )%NumBotBnc = ray2D( iH )%NumBotBnc
-  ray2D( iH1 )%x         = ray2D( iH )%x
-  ray2D( iH1 )%t         = ray2D( iH )%t - 2.0 * Th * nBdry ! change ray direction
+  ray2D( iH1 )%nTopBnc = ray2D( iH )%nTopBnc
+  ray2D( iH1 )%nBotBnc = ray2D( iH )%nBotBnc
+  ray2D( iH1 )%x       = ray2D( iH )%x
+  ray2D( iH1 )%t       = ray2D( iH )%t - 2.0 * Th * nBdry ! change ray direction
 
   ! Calculate change in curvature, kappa
   ! Based on formulas given by Muller, Geoph. J. R.A.S., 79 (1984).
@@ -1016,9 +1016,9 @@ CONTAINS
 
   ! Update top/bottom bounce counter
   IF (BotTop.EQ.'TOP') THEN
-    ray2D( iH+1 )%NumTopBnc = ray2D( iH )%NumTopBnc + 1
+    ray2D( iH+1 )%nTopBnc = ray2D( iH )%nTopBnc + 1
   ELSEIF ( BotTop.EQ.'BOT' ) THEN
-    ray2D( iH+1 )%NumBotBnc = ray2D( iH )%NumBotBnc + 1
+    ray2D( iH+1 )%nBotBnc = ray2D( iH )%nBotBnc + 1
   ELSE
 #ifdef IHOP_WRITE_OUT
     WRITE(msgBuf,'(2A)') 'IHOP Reflect2D: ', &

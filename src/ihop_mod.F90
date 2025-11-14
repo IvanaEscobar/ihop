@@ -22,7 +22,7 @@ MODULE ihop_mod
   PUBLIC  rad2deg, oneCMPLX, &
           PRTFile, RAYFile, DELFile, SHDFile, ARRFile, SSPFile, &
           ATIFile, BTYFile, BRCFile, TRCFile, IRCFile, SBPFile, &
-          MaxN, nRz_per_range, iStep, afreq, SrcDeclAngle,      &
+          nMax, nRz_per_range, iStep, afreq, SrcDeclAngle,      &
           Title, Beam, ray2D, ray2DPt, iSmallStepCtr, rxyz
 !=======================================================================
 
@@ -41,7 +41,7 @@ MODULE ihop_mod
                         BTYFile = 42, &    ! optional 2D/3D bathymetry
                         BRCFile = 38, TRCFile = 39, IRCFile = 16, &
                         SBPFile = 50, &
-                        MaxN = 50000
+                        nMax = 50000
 
   ! *** varying parameters for ihop ***
   INTEGER            :: iSmallStepCtr = 0
@@ -61,7 +61,7 @@ MODULE ihop_mod
   END TYPE rxyz
 
   TYPE BeamStructure
-    INTEGER           :: nBeams, nImage, nSteps, iBeamWindow
+    INTEGER           :: nSteps, iBeamWindow
     REAL (KIND=_RL90) :: deltas, epsMultiplier = 1, rLoop
     CHARACTER*(1)     :: Component ! Pressure or displacement
     CHARACTER*(4)     :: Type = 'G S '
@@ -79,7 +79,7 @@ MODULE ihop_mod
     COMPLEX (KIND=_RL90) :: tau
   END TYPE ray2DPt
 
-  TYPE( ray2DPt )        :: ray2D( MaxN )
+  TYPE( ray2DPt )        :: ray2D( nMax )
 !EOP
 
 CONTAINS

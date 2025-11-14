@@ -150,10 +150,10 @@ CONTAINS
   ray2%tau = ray0%tau + hw0 / CMPLX( c0, cimag0, KIND=_RL90 ) &
              + hw1 / CMPLX( c1, cimag1, KIND=_RL90 )
 
-  ray2%Amp       = ray0%Amp
-  ray2%Phase     = ray0%Phase
-  ray2%NumTopBnc = ray0%NumTopBnc
-  ray2%NumBotBnc = ray0%NumBotBnc
+  ray2%Amp     = ray0%Amp
+  ray2%Phase   = ray0%Phase
+  ray2%nTopBnc = ray0%nTopBnc
+  ray2%nBotBnc = ray0%nBotBnc
 
   ! If we crossed an interface, apply linear jump condition
   CALL evalSSP( ray2%x, c2, cimag2, gradc2, crr2, crz2, czz2, rho, myThid )
