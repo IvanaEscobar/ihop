@@ -20,13 +20,13 @@ C     Computes ihop predicted datum
 
 C     !USES:
 #ifdef ALLOW_IHOP
-      USE arr_mod,   only: Arr, nArrival, maxNArr
+      USE arr_mod,   only: Arr, nArrival, nMaxArr
       USE srPos_mod, only: Pos
       USE ihop_mod,  only: rad2deg
 #endif
 #ifdef TEST_IHOP_COST_INLOOP
       USE ssp_mod,  only: SSP, Grid
-      USE ihop_mod, only: ray2D, MaxN, Beam
+      USE ihop_mod, only: ray2D, nMax, Beam
 #endif
       IMPLICIT NONE
 C == Global variables ===
@@ -70,8 +70,8 @@ C     !LOCAL VARIABLES:
       CHARACTER*(MAX_LEN_MBUF) msgBuf
       INTEGER ii
       INTEGER maxID
-      _RL     maxarrVal, arrVal(maxNArr)
-      COMPLEX*8 arrAmplitude(maxNArr)
+      _RL     maxarrVal, arrVal(nMaxArr)
+      COMPLEX*8 arrAmplitude(nMaxArr)
 CEOP
 
 ! ===================================================================
@@ -99,7 +99,7 @@ C       ENDDO !DO k
 C       ENDIF
 CC-- global summation: F90 Sound Speed END
 C-- global ray2D%tau: F90 travel times if tau is NOT default 0
-      r = Beam%NSteps
+      r = Beam%nSteps
       print *, "ESCOBAR r", r
       modval = modval + real(ray2d(r)%tau)
       print *, "ESCOBAR modval", modval

@@ -1135,7 +1135,7 @@ CONTAINS
 ! !USES:
   USE ssp_mod,    only: SSP
   USE arr_mod,    only: nArrival, Arr, U
-  USE ihop_mod,   only: ray2D, MaxN, iStep
+  USE ihop_mod,   only: ray2D, nMax, iStep
 
   ! From arr_mod.f90
   U                         = 0.
@@ -1161,7 +1161,7 @@ CONTAINS
   ENDIF ! IF (useSSPFile)
 
   ! From ihop_mod.f90
-  DO iStep = 1,MaxN
+  DO iStep = 1,nMax
     ray2D(iStep)%x = [zeroRL, zeroRL]
     ray2D(iStep)%t = [zeroRL, zeroRL]
     ray2D(iStep)%p = [zeroRL, zeroRL]

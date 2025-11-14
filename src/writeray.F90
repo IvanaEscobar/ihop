@@ -12,7 +12,7 @@ MODULE writeRay
 ! Write to RAYFile.
 
 ! During an eigenray calculation, subsets of the full ray may be passed
-! These have lengths Nsteps1 vs. Nsteps for the entire ray
+! These have lengths nSteps1 vs. nSteps for the entire ray
 
 ! !USES: 
   IMPLICIT NONE
