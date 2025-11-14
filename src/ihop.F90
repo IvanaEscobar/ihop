@@ -81,6 +81,7 @@ CONTAINS
   USE beampat,        only: writePat
   USE ihop_mod,       only: Beam
 #ifdef ALLOW_USE_MPI
+  USE ihop_mod,       only: BcastRay
   USE arr_mod,        only: BcastArr
 #endif
 
@@ -140,9 +141,10 @@ CONTAINS
   ENDIF ! IF ( myProcID.EQ.0 )
 
 #ifdef ALLOW_USE_MPI
-! broadcast Arr to all processes
+! broadcast ray2D, Beam, Arr to all processes
   IF ( usingMPI ) THEN
     CALL MPI_BARRIER( MPI_COMM_WORLD, mpiRC )
+    CALL BcastRay( 0, MPI_COMM_WORLD )
     CALL BcastArr( 0, MPI_COMM_WORLD )
   ENDIF
 #endif
@@ -391,7 +393,8 @@ CONTAINS
 ! !INTERFACE:
   SUBROUTINE TraceRay2D( xs, alpha, Amp0, myThid )
 ! !DESCRIPTION:
-!   Traces a ray in 2D geometry, starting at source xs with take-off angle alpha [rad]
+!   Traces a ray in 2D geometry, starting at source xs with take-off 
+!   angle alpha [rad]. Stores ray path parameters in ray2D
 
 ! !USES:
   USE ihop_mod, only: maxN, istep

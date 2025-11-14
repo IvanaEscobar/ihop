@@ -70,6 +70,7 @@ CONTAINS
 ! S/R AddArr
 ! S/R WriteArrivalsASCII
 ! S/R WriteArrivalsBinary
+! S/R BcastArr
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 !BOP
 ! !ROUTINE: initArr
