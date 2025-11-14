@@ -18,7 +18,8 @@ C     Extract ihop model counterparts for cost function data misfit
 
 C     !USES:
 #ifdef ALLOW_USE_MPI
-      USE arr_mod, only: free_ihop_arrival
+      USE ihop_mod, only: free_ihop_ray
+      USE arr_mod,  only: free_ihop_arrival
 #endif
       IMPLICIT NONE
 C == Global variables ===
@@ -116,6 +117,7 @@ CEOP
 
 #  ifdef ALLOW_USE_MPI
       IF (myTime.EQ.endTime) THEN
+          CALL free_ihop_ray( myThid )
           CALL free_ihop_arrival( myThid )
       ENDIF
 #  endif 

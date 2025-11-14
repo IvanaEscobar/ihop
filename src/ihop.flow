@@ -163,5 +163,6 @@
 !     *==========================================================*
 !$TAF SUBROUTINE arr_mod::free_ihop_arrival INPUT   = 1
 !$TAF SUBROUTINE arr_mod::bcastarr          INPUT   = 1,2
+!$TAF SUBROUTINE arr_mod::free_ihop_ray     INPUT   = 1
+!$TAF SUBROUTINE arr_mod::bcastray          INPUT   = 1,2
 !!$TAF SUBROUTINE MPI_barrier INPUT = 1,2
-!!$TAF SUBROUTINE MPI_comm_rank INPUT = 1,2,3

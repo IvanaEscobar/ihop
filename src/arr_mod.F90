@@ -508,28 +508,28 @@ CONTAINS
   CALL MPI_Get_address(singleArrival, base, ierr)
 
   n=1
-  CALL MPI_Get_address(singleArrival%NTopBnc, addr(n), ierr)
+  CALL MPI_Get_address(singleArrival%nTopBnc, addr(n), ierr)
   ty(n)=MPI_INTEGER
 
-  n=n+1
-  CALL MPI_Get_address(singleArrival%NBotBnc, addr(n), ierr)
-  ty(n)=MPI_INTEGER
-
-  n=n+1
-  CALL MPI_Get_address(singleArrival%SrcDeclAngle, addr(n), ierr)
-  ty(n)=MPI_RL
-
-  n=n+1
-  CALL MPI_Get_address(singleArrival%RcvrDeclAngle, addr(n), ierr)
-  ty(n)=MPI_RL
-
-  n=n+1
-  CALL MPI_Get_address(singleArrival%A, addr(n), ierr)
-  ty(n)=MPI_RL
-
-  n=n+1
-  CALL MPI_Get_address(singleArrival%Phase, addr(n), ierr)
-  ty(n)=MPI_RL
+!  n=n+1
+!  CALL MPI_Get_address(singleArrival%nBotBnc, addr(n), ierr)
+!  ty(n)=MPI_INTEGER
+!
+!  n=n+1
+!  CALL MPI_Get_address(singleArrival%SrcDeclAngle, addr(n), ierr)
+!  ty(n)=MPI_RL
+!
+!  n=n+1
+!  CALL MPI_Get_address(singleArrival%RcvrDeclAngle, addr(n), ierr)
+!  ty(n)=MPI_RL
+!
+!  n=n+1
+!  CALL MPI_Get_address(singleArrival%A, addr(n), ierr)
+!  ty(n)=MPI_RL
+!
+!  n=n+1
+!  CALL MPI_Get_address(singleArrival%Phase, addr(n), ierr)
+!  ty(n)=MPI_RL
 
   n=n+1
   CALL MPI_Get_address(singleArrival%delay, addr(n), ierr)

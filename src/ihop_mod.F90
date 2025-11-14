@@ -15,6 +15,9 @@ MODULE ihop_mod
 #include "SIZE.h"
 #include "EEPARAMS.h"
 #include "PARAMS.h"
+#ifdef ALLOW_USE_MPI
+# include "EESUPPORT.h"
+#endif
 
 ! !SCOPE: 
   PRIVATE
@@ -24,6 +27,9 @@ MODULE ihop_mod
           ATIFile, BTYFile, BRCFile, TRCFile, IRCFile, SBPFile, &
           nMax, nRz_per_range, iStep, afreq, SrcDeclAngle,      &
           Title, Beam, ray2D, ray2DPt, iSmallStepCtr, rxyz
+#ifdef ALLOW_USE_MPI
+    PUBLIC free_ihop_ray, BcastRay
+#endif /* ALLOW_USE_MPI */
 !=======================================================================
 
 ! == Module variables ==
@@ -41,7 +47,7 @@ MODULE ihop_mod
                         BTYFile = 42, &    ! optional 2D/3D bathymetry
                         BRCFile = 38, TRCFile = 39, IRCFile = 16, &
                         SBPFile = 50, &
-                        nMax = 50000
+                        nMax = 40000
 
   ! *** varying parameters for ihop ***
   INTEGER            :: iSmallStepCtr = 0
@@ -110,17 +116,15 @@ CONTAINS
 !EOP  
 
 #ifdef ALLOW_USE_MPI
-  IF ( MPI_IHOP_ARRIVAL.EQ.MPI_DATATYPE_NULL ) THEN
-    CALL RayTypeInit( ray2D(nMax) )
+  IF ( MPI_IHOP_RAY.EQ.MPI_DATATYPE_NULL ) THEN
+    CALL RayTypeInit( ray2D(1) )
   ENDIF
 
-  ! We are on MPI rank 0
-  arrSize = SIZE(nArrival)
-  CALL MPI_Bcast( nArrival, arrSize, MPI_INTEGER, root, comm, ierr )
+  ! Broadcast MPI ray2D to all ranks, and free storage
+  CALL MPI_Bcast( ray2D, nMax, MPI_IHOP_RAY, root, comm, ierr )
 
-  ! Broadcast MPI Arrival to all ranks, and free storage
-  arrSize = SIZE(Arr)
-  CALL MPI_Bcast( Arr, arrSize, MPI_IHOP_ARRIVAL, root, comm, ierr )
+  ! We are on MPI rank 0
+  CALL MPI_Bcast( Beam%nSteps, 1, MPI_INTEGER, root, comm, ierr )
 #endif /* ALLOW_USE_MPI */
 
   RETURN
@@ -137,10 +141,10 @@ CONTAINS
     INTEGER, INTENT( IN ) :: myThid
     INTEGER :: ierr
 
-    IF (ARRIVAL_TYPE_COMMITTED) THEN
+    IF (RAY_TYPE_COMMITTED) THEN
       CALL MPI_Type_free(MPI_IHOP_RAY, ierr)
       MPI_IHOP_RAY = MPI_DATATYPE_NULL
-      ARRIVAL_TYPE_COMMITTED = .false.
+      RAY_TYPE_COMMITTED = .false.
     ENDIF
 
   RETURN
@@ -150,76 +154,96 @@ CONTAINS
 !BOP
 ! !ROUTINE: RayTypeInti
 ! !INTERFACE:
-  SUBROUTINE RayTypeInit( singleRay )
+  SUBROUTINE RayTypeInit( singleRayPt )
 ! !DESCRIPTION:
 ! Initializes the ray MPI Datatype
 
 ! !USES: None
 
 ! !INPUT PARAMETERS:
-  TYPE( ray2Dpt ), INTENT( IN ) :: singleRay
+  TYPE( ray2DPt ), INTENT( IN ) :: singleRayPt
 ! !OUTPUT PARAMETERS: None
 
 ! !LOCAL VARIABLES:
-! disp       :: address for new MPI datatype Arrival parameter
-! base, addr :: base and address for current Arrival datatype and parameters
-! ty         :: datatype of each Arrival parameter
+! disp       :: address for new MPI datatype ray2dpt parameter
+! base, addr :: base and address for current ray2dpt datatype and parameters
+! ty         :: datatype of each ray2dpt parameter
 ! MPI_RL, MPI_CL :: MPI type depending on _RL90
-  INTEGER(KIND=MPI_ADDRESS_KIND) :: disp(7), base, addr(7)
-  INTEGER :: ierr, n, bl(7), ty(7)
+  INTEGER(KIND=MPI_ADDRESS_KIND) :: disp(11), base, addr(11)
+  INTEGER :: ierr, n, bl(11), ty(11)
   INTEGER :: MPI_RL, MPI_CL
 !EOP
 
   IF (RAY_TYPE_COMMITTED) RETURN
 
-  ! Build Arrival MPI type
-  IF (STORAGE_SIZE( singleArrival%Phase ).EQ.64) THEN
+  ! Build Ray2Dpt MPI type
+  IF (STORAGE_SIZE( real(singleRayPt%tau) ).EQ.64) THEN
     MPI_RL = MPI_DOUBLE_PRECISION
     MPI_CL = MPI_DOUBLE_COMPLEX
-  ELSEIF (STORAGE_SIZE( singleArrival%Phase ).EQ.32) THEN
+  ELSEIF (STORAGE_SIZE( real(singleRayPt%tau) ).EQ.32) THEN
     MPI_RL = MPI_REAL
     MPI_CL = MPI_COMPLEX
   ELSE
     STOP "ABNORMAL END MPI_DATATYPE: Unsupported _RL90 size for MPI"
   ENDIF
 
-  ! Initiate all bl to 1 since all Arr parameters are scalars
+  ! Initiate all bl to 1 since all ray2D parameters are scalars
   bl=1
-  CALL MPI_Get_address(singleArrival, base, ierr)
+  CALL MPI_Get_address(singleRayPt, base, ierr)
 
   n=1
-  CALL MPI_Get_address(singleArrival%NTopBnc, addr(n), ierr)
+  CALL MPI_Get_address(singleRayPt%nTopBnc, addr(n), ierr)
   ty(n)=MPI_INTEGER
 
-  n=n+1
-  CALL MPI_Get_address(singleArrival%NBotBnc, addr(n), ierr)
-  ty(n)=MPI_INTEGER
+!  n=n+1
+!  CALL MPI_Get_address(singleRayPt%nBotBnc, addr(n), ierr)
+!  ty(n)=MPI_INTEGER
+!
+!  n=n+1
+!  CALL MPI_Get_address(singleRayPt%nTurnPt, addr(n), ierr)
+!  ty(n)=MPI_INTEGER
+!
+!  n=n+1
+!  CALL MPI_Get_address(singleRayPt%x(1), addr(n), ierr)
+!  ty(n)=MPI_RL
+!  bl(n)=2
+!
+!  n=n+1
+!  CALL MPI_Get_address(singleRayPt%t(1), addr(n), ierr)
+!  ty(n)=MPI_RL
+!  bl(n)=2
+!
+!  n=n+1
+!  CALL MPI_Get_address(singleRayPt%p(1), addr(n), ierr)
+!  ty(n)=MPI_RL
+!  bl(n)=2
+!
+!  n=n+1
+!  CALL MPI_Get_address(singleRayPt%q(1), addr(n), ierr)
+!  ty(n)=MPI_RL
+!  bl(n)=2
+!
+!  n=n+1
+!  CALL MPI_Get_address(singleRayPt%c, addr(n), ierr)
+!  ty(n)=MPI_RL
+!
+!  n=n+1
+!  CALL MPI_Get_address(singleRayPt%Amp, addr(n), ierr)
+!  ty(n)=MPI_RL
+!
+!  n=n+1
+!  CALL MPI_Get_address(singleRayPt%Phase, addr(n), ierr)
+!  ty(n)=MPI_RL
 
   n=n+1
-  CALL MPI_Get_address(singleArrival%SrcDeclAngle, addr(n), ierr)
-  ty(n)=MPI_RL
-
-  n=n+1
-  CALL MPI_Get_address(singleArrival%RcvrDeclAngle, addr(n), ierr)
-  ty(n)=MPI_RL
-
-  n=n+1
-  CALL MPI_Get_address(singleArrival%A, addr(n), ierr)
-  ty(n)=MPI_RL
-
-  n=n+1
-  CALL MPI_Get_address(singleArrival%Phase, addr(n), ierr)
-  ty(n)=MPI_RL
-
-  n=n+1
-  CALL MPI_Get_address(singleArrival%delay, addr(n), ierr)
+  CALL MPI_Get_address(singleRayPt%tau, addr(n), ierr)
   ty(n)=MPI_CL
 
   disp(1:n)=addr(1:n)-base
 
-  CALL MPI_Type_create_struct(n, bl, disp, ty, MPI_IHOP_ARRIVAL, ierr)
-  CALL MPI_Type_commit(MPI_IHOP_ARRIVAL, ierr)
-  ARRIVAL_TYPE_COMMITTED = .true.
+  CALL MPI_Type_create_struct(n, bl, disp, ty, MPI_IHOP_RAY, ierr)
+  CALL MPI_Type_commit(MPI_IHOP_RAY, ierr)
+  RAY_TYPE_COMMITTED = .true.
 
 RETURN
 END
