@@ -28,7 +28,7 @@ MODULE ihop_mod
           nMax, nRz_per_range, iStep, afreq, SrcDeclAngle,      &
           Title, Beam, ray2D, ray2DPt, iSmallStepCtr, rxyz
 #ifdef ALLOW_USE_MPI
-    PUBLIC free_ihop_ray, BcastRay
+    PUBLIC BcastRay
 #endif /* ALLOW_USE_MPI */
 !=======================================================================
 
@@ -111,17 +111,31 @@ CONTAINS
 ! !LOCAL VARIABLES:
 ! arrSize    :: indices for range and depth
 ! ierr       :: MPI return code
-  INTEGER :: arrSize
-  INTEGER :: ierr
+  COMPLEX (KIND=_RL90) :: tauBuf(nMax)
+  INTEGER :: i
+  INTEGER :: ierr, MPI_CL
 !EOP  
 
 #ifdef ALLOW_USE_MPI
-  IF ( MPI_IHOP_RAY.EQ.MPI_DATATYPE_NULL ) THEN
-    CALL RayTypeInit( ray2D(1) )
+  ! Build Ray2Dpt MPI type
+  IF (STORAGE_SIZE( REAL(ray2d(1)%tau) ).EQ.64) THEN
+    MPI_CL = MPI_DOUBLE_COMPLEX
+  ELSE
+    MPI_CL = MPI_COMPLEX
   ENDIF
 
-  ! Broadcast MPI ray2D to all ranks, and free storage
-  CALL MPI_Bcast( ray2D, nMax, MPI_IHOP_RAY, root, comm, ierr )
+  IF (myProcID.eq.root) THEN
+    DO i=1,nMax
+      tauBuf(i) = ray2D(i)%tau
+    ENDDO
+  ENDIF
+  CALL MPI_Bcast( tauBuf, nMax, MPI_CL, root, comm, ierr )
+
+  IF (myProcID.ne.root) THEN
+    DO i=1,nMax
+      ray2D(i)%tau = tauBuf(i)
+    ENDDO
+  ENDIF
 
   ! We are on MPI rank 0
   CALL MPI_Bcast( Beam%nSteps, 1, MPI_INTEGER, root, comm, ierr )
@@ -129,124 +143,5 @@ CONTAINS
 
   RETURN
   END !SUBROUTINE BcastRay
-
-#ifdef ALLOW_USE_MPI
-!---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
-!BOP
-! !ROUTINE: free_ihop_ray
-! !INTERFACE:
-  SUBROUTINE free_ihop_ray(myThid)
-! !DESCRIPTION:
-! Free arrival datatype
-    INTEGER, INTENT( IN ) :: myThid
-    INTEGER :: ierr
-
-    IF (RAY_TYPE_COMMITTED) THEN
-      CALL MPI_Type_free(MPI_IHOP_RAY, ierr)
-      MPI_IHOP_RAY = MPI_DATATYPE_NULL
-      RAY_TYPE_COMMITTED = .false.
-    ENDIF
-
-  RETURN
-  END !SUBROUTINE free_ihop_ray
-
-!---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
-!BOP
-! !ROUTINE: RayTypeInti
-! !INTERFACE:
-  SUBROUTINE RayTypeInit( singleRayPt )
-! !DESCRIPTION:
-! Initializes the ray MPI Datatype
-
-! !USES: None
-
-! !INPUT PARAMETERS:
-  TYPE( ray2DPt ), INTENT( IN ) :: singleRayPt
-! !OUTPUT PARAMETERS: None
-
-! !LOCAL VARIABLES:
-! disp       :: address for new MPI datatype ray2dpt parameter
-! base, addr :: base and address for current ray2dpt datatype and parameters
-! ty         :: datatype of each ray2dpt parameter
-! MPI_RL, MPI_CL :: MPI type depending on _RL90
-  INTEGER(KIND=MPI_ADDRESS_KIND) :: disp(11), base, addr(11)
-  INTEGER :: ierr, n, bl(11), ty(11)
-  INTEGER :: MPI_RL, MPI_CL
-!EOP
-
-  IF (RAY_TYPE_COMMITTED) RETURN
-
-  ! Build Ray2Dpt MPI type
-  IF (STORAGE_SIZE( real(singleRayPt%tau) ).EQ.64) THEN
-    MPI_RL = MPI_DOUBLE_PRECISION
-    MPI_CL = MPI_DOUBLE_COMPLEX
-  ELSEIF (STORAGE_SIZE( real(singleRayPt%tau) ).EQ.32) THEN
-    MPI_RL = MPI_REAL
-    MPI_CL = MPI_COMPLEX
-  ELSE
-    STOP "ABNORMAL END MPI_DATATYPE: Unsupported _RL90 size for MPI"
-  ENDIF
-
-  ! Initiate all bl to 1 since all ray2D parameters are scalars
-  bl=1
-  CALL MPI_Get_address(singleRayPt, base, ierr)
-
-  n=1
-  CALL MPI_Get_address(singleRayPt%nTopBnc, addr(n), ierr)
-  ty(n)=MPI_INTEGER
-
-!  n=n+1
-!  CALL MPI_Get_address(singleRayPt%nBotBnc, addr(n), ierr)
-!  ty(n)=MPI_INTEGER
-!
-!  n=n+1
-!  CALL MPI_Get_address(singleRayPt%nTurnPt, addr(n), ierr)
-!  ty(n)=MPI_INTEGER
-!
-!  n=n+1
-!  CALL MPI_Get_address(singleRayPt%x(1), addr(n), ierr)
-!  ty(n)=MPI_RL
-!  bl(n)=2
-!
-!  n=n+1
-!  CALL MPI_Get_address(singleRayPt%t(1), addr(n), ierr)
-!  ty(n)=MPI_RL
-!  bl(n)=2
-!
-!  n=n+1
-!  CALL MPI_Get_address(singleRayPt%p(1), addr(n), ierr)
-!  ty(n)=MPI_RL
-!  bl(n)=2
-!
-!  n=n+1
-!  CALL MPI_Get_address(singleRayPt%q(1), addr(n), ierr)
-!  ty(n)=MPI_RL
-!  bl(n)=2
-!
-!  n=n+1
-!  CALL MPI_Get_address(singleRayPt%c, addr(n), ierr)
-!  ty(n)=MPI_RL
-!
-!  n=n+1
-!  CALL MPI_Get_address(singleRayPt%Amp, addr(n), ierr)
-!  ty(n)=MPI_RL
-!
-!  n=n+1
-!  CALL MPI_Get_address(singleRayPt%Phase, addr(n), ierr)
-!  ty(n)=MPI_RL
-
-  n=n+1
-  CALL MPI_Get_address(singleRayPt%tau, addr(n), ierr)
-  ty(n)=MPI_CL
-
-  disp(1:n)=addr(1:n)-base
-
-  CALL MPI_Type_create_struct(n, bl, disp, ty, MPI_IHOP_RAY, ierr)
-  CALL MPI_Type_commit(MPI_IHOP_RAY, ierr)
-  RAY_TYPE_COMMITTED = .true.
-
-RETURN
-END
-#endif /* ALLOW_USE_MPI */
 
 END !MODULE ihop_mod

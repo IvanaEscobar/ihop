@@ -100,6 +100,8 @@ C       ENDIF
 CC-- global summation: F90 Sound Speed END
 C-- global ray2D%tau: F90 travel times if tau is NOT default 0
       r = Beam%nSteps
+      print *, "ESCOBAR: r", r
+      print *, "ESCOBAR: ray2d%tau",ray2D(r)%tau
       modval = modval + real(ray2d(r)%tau)
 
 # else /* TEST_IHOP_COST_INLOOP */
