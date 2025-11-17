@@ -26,7 +26,7 @@ C     !USES:
 #endif
 #ifdef TEST_IHOP_COST_INLOOP
       USE ssp_mod,  only: SSP, Grid
-      USE ihop_mod, only: ray2D, nMax, Beam
+!      USE ihop_mod, only: ray2D, nMax, Beam
 #endif
       IMPLICIT NONE
 C == Global variables ===
@@ -86,21 +86,21 @@ CEOP
 ! Added uses of modules above, have access to Arr and Pos
 ! ===================================================================
 # ifdef TEST_IHOP_COST_INLOOP
-CC-- global summation: F90 Sound Speed if cMat is NOT default -99
-C       IF ( SSP%cMat(1,3).NE.-99. _d 0 ) THEN
-C       DO r = 1,Grid%nR
-C       DO k = 1,Grid%nZ
-CC- square of the sums
-C         modVal = modVal
-C     &    + SSP%cMat(k,r)/100.
-C
-C       ENDDO !DO j
-C       ENDDO !DO k
-C       ENDIF
-CC-- global summation: F90 Sound Speed END
-C-- global ray2D%tau: F90 travel times if tau is NOT default 0
-      r = Beam%nSteps
-      modval = modval + real(ray2d(r)%tau)
+C-- global summation: F90 Sound Speed if cMat is NOT default -99
+       IF ( SSP%cMat(1,3).NE.-99. _d 0 ) THEN
+       DO r = 1,Grid%nR
+       DO k = 1,Grid%nZ
+C- square of the sums
+         modVal = modVal
+     &    + SSP%cMat(k,r)/100.
+
+       ENDDO !DO j
+       ENDDO !DO k
+       ENDIF
+C-- global summation: F90 Sound Speed END
+CC-- global ray2D%tau: F90 travel times if tau is NOT default 0
+C      r = Beam%nSteps
+C      modval = modval + real(ray2d(r)%tau)
 
 # else /* TEST_IHOP_COST_INLOOP */
 

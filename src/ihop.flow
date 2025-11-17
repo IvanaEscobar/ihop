@@ -26,7 +26,7 @@
 !     *==========================================================*
 !$TAF SUBROUTINE ssp_mod::readssp INPUT   = 1, 2
 !$TAF SUBROUTINE ssp_mod::readssp OUTPUT  =
-!$TAF SUBROUTINE ssp_mod::readssp MODULE atten_mod INPUT = CRCI
+!!$TAF SUBROUTINE ssp_mod::readssp MODULE atten_mod INPUT = CRCI
 
 !$TAF SUBROUTINE ssp_mod::writessp INPUT   = 1
 !$TAF SUBROUTINE ssp_mod::writessp OUTPUT  =
