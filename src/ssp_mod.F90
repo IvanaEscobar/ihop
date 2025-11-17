@@ -1043,7 +1043,7 @@ USE splinec_mod,  only: splineall
   INTEGER :: nZnR_size
   REAL (KIND=_RL90)             :: dcdz, tolerance
   REAL (KIND=_RL90), ALLOCATABLE:: sspTile(:,:,:,:), sspGlob(:)
-  REAL (KIND=_RL90), ALLOCATABLE:: ssp1buffer
+  REAL (KIND=_RL90) :: ssp1buffer
   REAL (KIND=_RL90), ALLOCATABLE:: ssp4buffer(:,:,:,:), ssp3buffer(:,:,:)
 ! IESCO24
 ! fT = 1000 ONLY for acousto-elastic halfspaces, I will have to pass this
@@ -1106,28 +1106,28 @@ USE splinec_mod,  only: splineall
 
 ! IESCO24: don't worry about gcm overlaps right now
       DO j=1,sNy
-        DO i=1,sNx
+      DO i=1,sNx
 #ifdef ALLOW_AUTODIFF_TAMC
-          ijkey = i + (j-1)*sNx + (tkey-1)*sNx*sNy
+        ijkey = i + (j-1)*sNx + (tkey-1)*sNx*sNy
 !$TAF store njj(ii) = comlev1_bibj_ij_ihop, key=ijkey, kind=isbyte
 #endif
-          DO ii=1,IHOP_npts_range
-            interp_finished = .FALSE.
-            DO jj=1,IHOP_npts_idw
+        DO ii=1,IHOP_npts_range
+          interp_finished = .FALSE.
+          DO jj=1,IHOP_npts_idw
 #ifdef ALLOW_AUTODIFF_TAMC
 !$TAF STORE interp_finished = comlev1_bibj_ij_ihop, key=ijkey, kind=isbyte
 #endif
-              ! Interpolate from GCM grid cell centers
-              IF ( ABS(xC(i, j, bi, bj) - ihop_xc(ii, jj)).LE.tolerance .AND. &
-                   ABS(yC(i, j, bi, bj) - ihop_yc(ii, jj)).LE.tolerance .AND. &
-                  .NOT.interp_finished ) THEN
-                njj(ii) = njj(ii) + 1
+            ! Interpolate from GCM grid cell centers
+            IF ( ABS(xC(i, j, bi, bj) - ihop_xc(ii, jj)).LE.tolerance .AND. &
+                 ABS(yC(i, j, bi, bj) - ihop_yc(ii, jj)).LE.tolerance .AND. &
+                .NOT.interp_finished ) THEN
+              njj(ii) = njj(ii) + 1
 
-                DO iz = 1, Grid%nZ-1
+              DO iz = 1, Grid%nZ-1
 #ifdef ALLOW_AUTODIFF_TAMC
-                  hkey = jj + (ii-1)*IHOP_npts_idw + (ijkey-1)*sNy*sNx*nSy*nSx
-                  lockey = iz + (hkey-1)*(Grid%nZ-1)*IHOP_npts_idw*IHOP_npts_range*sNx*sNy*nSx*nSy
-!                  + ((jj-1) + ((ii-1) + (ijkey-1)*IHOP_npts_range)*IHOP_npts_idw)*(Grid%nZ-1)
+                hkey = jj + (ii-1)*IHOP_npts_idw + (ijkey-1)*sNy*sNx*nSy*nSx
+                lockey = iz + (hkey-1)*(Grid%nZ-1)*IHOP_npts_idw*IHOP_npts_range*sNx*sNy*nSx*nSy
+!                + ((jj-1) + ((ii-1) + (ijkey-1)*IHOP_npts_range)*IHOP_npts_idw)*(Grid%nZ-1)
 !$TAF store njj(ii) = loctape_ihop_gcmssp_bibj_ij_iijj_k, key=lockey, kind=isbyte
 #endif
     IF ( iz.GE.2 ) THEN
@@ -1142,15 +1142,13 @@ USE splinec_mod,  only: splineall
       ssp1buffer = CHEN_MILLERO(i, j, 0, bi,bj,myThid) * &
         ihop_idw_weights(ii, jj) / ihop_sumweights(ii, iz)
 
-      sspTile(iz, ii, bi,bj) = sspTile(iz, ii, bi,bj) + ssp1buffer
-
     ELSE ! 2,Grid%nZ-1: use MITgcm vlayers
       ssp1buffer = ihop_ssp(i, j, iz-1, bi,bj)
 
       ! Middle depth layers, only when not already underground
-      IF ( ihop_sumweights(ii, iz-1).GT.0. ) THEN
+      IF ( ihop_sumweights(ii, iz-1).GT.0. _d 0 ) THEN
         ! Exactly on a cell center, ignore interpolation
-        IF ( ihop_idw_weights(ii, jj).EQ.0. ) THEN
+        IF ( ihop_idw_weights(ii, jj).EQ.0. _d 0 ) THEN
           ssp1buffer = ssp1buffer - sspTile(iz, ii, bi,bj) 
 
         ! Apply IDW interpolation
@@ -1165,47 +1163,46 @@ USE splinec_mod,  only: splineall
         ENDIF ! IF ( ihop_idw_weights(ii, jj).EQ.0. )
       ENDIF ! IF ( ihop_sumweights(ii, iz-1).GT.0. )
 
-      sspTile(iz, ii, bi,bj) = sspTile(iz, ii, bi,bj) + ssp1buffer
-
-      ! Bottom ihop vlayer or dry point: Extrapolate through bathymetry
-      IF ( iz.EQ.Grid%nZ-1 .OR. ihop_sumweights(ii, iz-1).EQ.0.0 ) THEN
-        k = iz
-
-        IF ( njj(ii).GE.IHOP_npts_idw ) THEN
-          ! Determine if you are at the last vlevel
-          IF ( iz.EQ.Grid%nZ-1 .AND. ihop_sumweights(ii, iz-1).NE.0. ) &
-            k = k + 1
-
-          ! Calc depth gradient
-          dcdz = (sspTile(k-1, ii, bi, bj) - sspTile(k-2, ii, bi, bj)) / &
-                 (Grid%Z(k-1) - Grid%Z(k-2))
-          ! Extrapolate
-          sspTile(k:Grid%nZ, ii, bi, bj) = &
-            sspTile(k-1, ii, bi, bj) + dcdz * Grid%Z(k:Grid%nZ)
-          ! Move to next range point, ii
-          interp_finished = .TRUE.
-
-        ELSE
-          interp_finished = .FALSE.
-
-        ENDIF ! IF ( njj(ii).GE.IHOP_npts_idw )
-
-      ENDIF ! IF ( iz.EQ.Grid%nZ-1 .OR. ihop_sumweights(ii, iz-1).EQ.0.0 )
-
     ENDIF ! IF ( iz.EQ.1 )
-      if (iz.eq.1)&
-      print *, "ESCOBAR adding them up: ", sspTile(iz,ii,bi,bj)
+
+    sspTile(iz, ii, bi,bj) = sspTile(iz, ii, bi,bj) + ssp1buffer
+
+    ! Bottom ihop vlayer or dry point: Extrapolate through bathymetry
+    IF ( (iz.GE.2) .AND. &
+         (iz.EQ.Grid%nZ-1 .OR. ihop_sumweights(ii, iz-1).EQ.0.0) ) THEN
+      k = iz
+
+      IF ( njj(ii).GE.IHOP_npts_idw ) THEN
+        ! Determine if you are at the last vlevel
+        IF ( iz.EQ.Grid%nZ-1 .AND. ihop_sumweights(ii, iz-1).NE.0. ) &
+          k = k + 1
+
+        ! Calc depth gradient
+        dcdz = (sspTile(k-1, ii, bi, bj) - sspTile(k-2, ii, bi, bj)) / &
+               (Grid%Z(k-1) - Grid%Z(k-2))
+        ! Extrapolate
+        sspTile(k:Grid%nZ, ii, bi, bj) = &
+          sspTile(k-1, ii, bi, bj) + dcdz * Grid%Z(k:Grid%nZ)
+        ! Move to next range point, ii
+        interp_finished = .TRUE.
+
+      ELSE
+        interp_finished = .FALSE.
+
+      ENDIF ! IF ( njj(ii).GE.IHOP_npts_idw )
+
+    ENDIF ! IF ( iz.EQ.Grid%nZ-1 .OR. ihop_sumweights(ii, iz-1).EQ.0.0 )
 
 
-                ENDDO !iz
-              ENDIF ! IF ( ABS(xC(i, j, bi, bj) - ihop_xc(ii, jj)).LE.tolerance .AND. &
-                   ! ABS(yC(i, j, bi, bj) - ihop_yc(ii, jj)).LE.tolerance .AND. &
-                   ! .NOT.interp_finished )
-            ENDDO !jj
-          ENDDO !ii
-        ENDDO !i
-      ENDDO !j
-    ENDDO !bi
+              ENDDO !iz
+            ENDIF ! IF ( ABS(xC(i, j, bi, bj) - ihop_xc(ii, jj)).LE.tolerance .AND. &
+                 ! ABS(yC(i, j, bi, bj) - ihop_yc(ii, jj)).LE.tolerance .AND. &
+                 ! .NOT.interp_finished )
+          ENDDO !jj
+        ENDDO !ii
+      ENDDO !i
+    ENDDO !j
+  ENDDO !bi
   ENDDO !bj
 
 ! IESCO24: MITgcm checkpoint69a uses a new global sum subroutine...
