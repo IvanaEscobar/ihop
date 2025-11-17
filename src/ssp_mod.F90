@@ -1131,53 +1131,41 @@ USE splinec_mod,  only: splineall
 !$TAF store njj(ii) = loctape_ihop_gcmssp_bibj_ij_iijj_k, key=lockey, kind=isbyte
 #endif
     IF ( iz.GE.2 ) THEN
-      ! Are you in an MITgcm cell center? skip interpolate
+      ! On vlayer iz, at an MITgcm cell center? skip interpolate
       IF ( (ihop_sumweights(ii, iz-1).GT.0) .AND. &
          ( (ihop_idw_weights(ii, jj).EQ.0) ) njj(ii) = IHOP_npts_idw+1
 
     ENDIF ! IF ( iz.GE.2 )
 
     IF ( iz.EQ.1 ) THEN
-      ! Top vlayer zero depth
+      ! Top ihop vlayer: set to z=0
       ssp1buffer = CHEN_MILLERO(i, j, 0, bi,bj,myThid) * &
         ihop_idw_weights(ii, jj) / ihop_sumweights(ii, iz)
-!      sspTile(iz, ii, bi, bj) = sspTile(iz, ii, bi,bj) + &
-!        ssp1buffer * &
-!        ihop_idw_weights(ii, jj) / ihop_sumweights(ii, iz)
 
-    ELSE ! 2:(Grid%nZ-1) in MITgcm vlayers
+    ELSE ! 2,Grid%nZ-1: use MITgcm vlayers
       ssp1buffer = ihop_ssp(i, j, iz-1, bi,bj)
 
       ! Middle depth layers, only when not already underground
       IF ( ihop_sumweights(ii, iz-1).GT.0. ) THEN
-!        ! isolate njj increments for TAF 
-!        IF ( ihop_idw_weights(ii, jj).EQ.0. ) njj(ii) = IHOP_npts_idw + 1
-
         ! Exactly on a cell center, ignore interpolation
         IF ( ihop_idw_weights(ii, jj).EQ.0. ) THEN
           ssp1buffer = ssp1buffer - sspTile(iz, ii, bi,bj) 
-!          sspTile(iz, ii, bi, bj) = ssp1buffer 
 
         ! Apply IDW interpolation
         ELSEIF ( njj(ii).LE.IHOP_npts_idw ) THEN
           ssp1buffer = ssp1buffer * &
             ihop_idw_weights(ii, jj) / ihop_sumweights(ii, iz-1)
-!          sspTile(iz, ii, bi, bj) = sspTile(iz, ii, bi, bj) + &
-!            ssp1buffer * & 
-!            ihop_idw_weights(ii, jj) / ihop_sumweights(ii, iz-1)
 
         ELSE
           ! do nothing TAF NEEDS THIS LINE
           ssp1buffer = 0. _d 0
-!          sspTile(iz, ii, bi, bj) = sspTile(iz, ii, bi, bj)
 
         ENDIF ! IF ( ihop_idw_weights(ii, jj).EQ.0. )
-
       ENDIF ! IF ( ihop_sumweights(ii, iz-1).GT.0. )
 
       sspTile(iz, ii, bi,bj) = sspTile(iz, ii, bi,bj) + ssp1buffer
 
-      ! Extrapolate through bathymetry; do not interpolate
+      ! Bottom ihop vlayer or dry point: Extrapolate through bathymetry
       IF ( iz.EQ.Grid%nZ-1 .OR. ihop_sumweights(ii, iz-1).EQ.0.0 ) THEN
         k = iz
 
