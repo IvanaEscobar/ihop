@@ -948,7 +948,7 @@ USE splinec_mod,  only: splineall
   ENDIF ! IF ( x(1).LT.Grid%Seg%R( iSegr ) .OR. x(1).GE.Grid%Seg%R( iSegr+1 ) )
 
   !IESCO22: s2 is distance btwn field point, x(2), and ssp depth @ iSegz
-  s2      = x(2)             - Grid%Z( iSegz )
+  s2      = x(2)              - Grid%Z( iSegz )
   delta_z = Grid%Z( iSegz+1 ) - Grid%Z( iSegz )
   IF ( delta_z.LE.0 .OR. s2.GT.delta_z ) THEN
 #ifdef IHOP_WRITE_OUT
@@ -1133,7 +1133,7 @@ USE splinec_mod,  only: splineall
     IF ( iz.GE.2 ) THEN
       ! On vlayer iz, at an MITgcm cell center? skip interpolate
       IF ( (ihop_sumweights(ii, iz-1).GT.0) .AND. &
-         ( (ihop_idw_weights(ii, jj).EQ.0) ) njj(ii) = IHOP_npts_idw+1
+           (ihop_idw_weights(ii, jj).EQ.0) ) njj(ii) = IHOP_npts_idw+1
 
     ENDIF ! IF ( iz.GE.2 )
 
@@ -1141,6 +1141,8 @@ USE splinec_mod,  only: splineall
       ! Top ihop vlayer: set to z=0
       ssp1buffer = CHEN_MILLERO(i, j, 0, bi,bj,myThid) * &
         ihop_idw_weights(ii, jj) / ihop_sumweights(ii, iz)
+
+      sspTile(iz, ii, bi,bj) = sspTile(iz, ii, bi,bj) + ssp1buffer
 
     ELSE ! 2,Grid%nZ-1: use MITgcm vlayers
       ssp1buffer = ihop_ssp(i, j, iz-1, bi,bj)
@@ -1191,6 +1193,10 @@ USE splinec_mod,  only: splineall
       ENDIF ! IF ( iz.EQ.Grid%nZ-1 .OR. ihop_sumweights(ii, iz-1).EQ.0.0 )
 
     ENDIF ! IF ( iz.EQ.1 )
+      if (iz.eq.1)&
+      print *, "ESCOBAR adding them up: ", sspTile(iz,ii,bi,bj)
+
+
                 ENDDO !iz
               ENDIF ! IF ( ABS(xC(i, j, bi, bj) - ihop_xc(ii, jj)).LE.tolerance .AND. &
                    ! ABS(yC(i, j, bi, bj) - ihop_yc(ii, jj)).LE.tolerance .AND. &
