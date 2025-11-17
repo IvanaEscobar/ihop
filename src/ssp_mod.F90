@@ -1030,7 +1030,8 @@ USE splinec_mod,  only: splineall
 ! bi, bj, i, j, k, ii, jj :: GCM domain loop indices
 ! njj :: number interpolation points per depth level
 ! dcdz, tolerance :: Tolerance for IDW interpolation
-! tileSSP, tmpSSP, globSSP :: Arrays for storing interpolated SSP
+! sspTile, sspGlob :: Arrays for storing interpolated SSP
+! ssp4buffer, ssp3buffer :: Arrays for local buffer SSP
 ! bPower, fT :: Parameters for attenuation calculation
 ! tkey, ijkey, hkey, lockey :: Keys for storing TAF tapes
   CHARACTER*(MAX_LEN_MBUF):: msgBuf
@@ -1041,7 +1042,9 @@ USE splinec_mod,  only: splineall
   INTEGER :: njj(IHOP_NPTS_RANGE)
   INTEGER :: nZnR_size
   REAL (KIND=_RL90)             :: dcdz, tolerance
-  REAL (KIND=_RL90), ALLOCATABLE:: tileSSP(:,:,:,:), tmpSSP(:,:,:), globSSP(:)
+  REAL (KIND=_RL90), ALLOCATABLE:: sspTile(:,:,:,:), sspGlob(:)
+  REAL (KIND=_RL90), ALLOCATABLE:: ssp1buffer
+  REAL (KIND=_RL90), ALLOCATABLE:: ssp4buffer(:,:,:,:), ssp3buffer(:,:,:)
 ! IESCO24
 ! fT = 1000 ONLY for acousto-elastic halfspaces, I will have to pass this
 ! parameter in a different way after ssp_mod is split btwn fixed and varia
@@ -1062,24 +1065,37 @@ USE splinec_mod,  only: splineall
   tolerance = 5 _d -5
   nZnR_size = Grid%nZ*Grid%nR
 
-  IF(ALLOCATED(tileSSP)) DEALLOCATE(tileSSP)
-  IF(ALLOCATED(globSSP)) DEALLOCATE(globSSP)
-  ALLOCATE( tileSSP(Grid%nZ,Grid%nR,nSx,nSy), &
-            tmpSSP(nSx,nSy,nZnR_size), &
-            globSSP(nZnR_size), STAT=iallocstat )
+  ! allocate local ssp arrays
+  IF(ALLOCATED(sspTile)) DEALLOCATE(sspTile)
+  IF(ALLOCATED(sspGlob)) DEALLOCATE(sspGlob)
+  ALLOCATE( sspTile(Grid%nZ,Grid%nR,nSx,nSy), &
+            sspGlob(nZnR_size), STAT=iallocstat )
   IF ( iallocstat.NE.0 ) THEN
 # ifdef IHOP_WRITE_OUT
     WRITE(msgBuf,'(2A)') 'SSP_MOD::gcmSSP: ', &
-      'Insufficient memory to store tileSSP and/or globSSP'
+      'Insufficient memory to store sspTile and/or sspGlob'
+    CALL PRINT_ERROR( msgBuf,myThid )
+# endif /* IHOP_WRITE_OUT */
+      STOP 'ABNORMAL END: S/R gcmSSP'
+  ENDIF
+
+  IF(ALLOCATED(ssp3buffer)) DEALLOCATE(ssp3buffer)
+  ALLOCATE( ssp4buffer(Grid%nZ,Grid%nR,nSx,nSy), &
+            ssp3buffer(nSx,nSy,nZnR_size), STAT=iallocstat )
+  IF ( iallocstat.NE.0 ) THEN
+# ifdef IHOP_WRITE_OUT
+    WRITE(msgBuf,'(2A)') 'SSP_MOD::gcmSSP: ', &
+      'Insufficient memory to store ssp3buffer'
     CALL PRINT_ERROR( msgBuf,myThid )
 # endif /* IHOP_WRITE_OUT */
       STOP 'ABNORMAL END: S/R gcmSSP'
   ENDIF
 
   ! Initiate to ceros
-  tileSSP    = 0.0 _d 0
-  tmpSSP     = 0.0 _d 0
-  globSSP    = 0.0 _d 0
+  sspTile    = 0.0 _d 0
+  sspGlob    = 0.0 _d 0
+  ssp1buffer = 0.0 _d 0
+  ssp3buffer = 0.0 _d 0
 
   ! interpolate SSP with adaptive IDW from gcm grid to ihop grid
   DO bj=myByLo(myThid),myByHi(myThid)
@@ -1107,45 +1123,61 @@ USE splinec_mod,  only: splineall
                   .NOT.interp_finished ) THEN
                 njj(ii) = njj(ii) + 1
 
-                DO iz = 1, Grid%nZ - 1
+                DO iz = 1, Grid%nZ-1
 #ifdef ALLOW_AUTODIFF_TAMC
                   hkey = jj + (ii-1)*IHOP_npts_idw + (ijkey-1)*sNy*sNx*nSy*nSx
                   lockey = iz + (hkey-1)*(Grid%nZ-1)*IHOP_npts_idw*IHOP_npts_range*sNx*sNy*nSx*nSy
 !                  + ((jj-1) + ((ii-1) + (ijkey-1)*IHOP_npts_range)*IHOP_npts_idw)*(Grid%nZ-1)
 !$TAF store njj(ii) = loctape_ihop_gcmssp_bibj_ij_iijj_k, key=lockey, kind=isbyte
 #endif
+    IF ( iz.GE.2 ) THEN
+      ! Are you in an MITgcm cell center? skip interpolate
+      IF ( (ihop_sumweights(ii, iz-1).GT.0) .AND. &
+         ( (ihop_idw_weights(ii, jj).EQ.0) ) njj(ii) = IHOP_npts_idw+1
+
+    ENDIF ! IF ( iz.GE.2 )
 
     IF ( iz.EQ.1 ) THEN
-      ! Top vlevel zero depth
-      tileSSP(1, ii, bi, bj) = tileSSP(1, ii, bi, bj) + &
-        CHEN_MILLERO(i, j, 0, bi, bj, myThid) * &
+      ! Top vlayer zero depth
+      ssp1buffer = CHEN_MILLERO(i, j, 0, bi,bj,myThid) * &
         ihop_idw_weights(ii, jj) / ihop_sumweights(ii, iz)
+!      sspTile(iz, ii, bi, bj) = sspTile(iz, ii, bi,bj) + &
+!        ssp1buffer * &
+!        ihop_idw_weights(ii, jj) / ihop_sumweights(ii, iz)
 
-    ELSE ! 2:(Grid%nZ-1)
+    ELSE ! 2:(Grid%nZ-1) in MITgcm vlayers
+      ssp1buffer = ihop_ssp(i, j, iz-1, bi,bj)
+
       ! Middle depth layers, only when not already underground
       IF ( ihop_sumweights(ii, iz-1).GT.0. ) THEN
-        ! isolate njj increments for TAF 
-        IF ( ihop_idw_weights(ii, jj).EQ.0. ) njj(ii) = IHOP_npts_idw + 1
+!        ! isolate njj increments for TAF 
+!        IF ( ihop_idw_weights(ii, jj).EQ.0. ) njj(ii) = IHOP_npts_idw + 1
 
         ! Exactly on a cell center, ignore interpolation
         IF ( ihop_idw_weights(ii, jj).EQ.0. ) THEN
-          tileSSP(iz, ii, bi, bj) = ihop_ssp(i, j, iz-1, bi, bj)
+          ssp1buffer = ssp1buffer - sspTile(iz, ii, bi,bj) 
+!          sspTile(iz, ii, bi, bj) = ssp1buffer 
 
         ! Apply IDW interpolation
         ELSEIF ( njj(ii).LE.IHOP_npts_idw ) THEN
-          tileSSP(iz, ii, bi, bj) = tileSSP(iz, ii, bi, bj) + &
-            ihop_ssp(i, j, iz-1, bi, bj) * &
+          ssp1buffer = ssp1buffer * &
             ihop_idw_weights(ii, jj) / ihop_sumweights(ii, iz-1)
+!          sspTile(iz, ii, bi, bj) = sspTile(iz, ii, bi, bj) + &
+!            ssp1buffer * & 
+!            ihop_idw_weights(ii, jj) / ihop_sumweights(ii, iz-1)
 
         ELSE
           ! do nothing TAF NEEDS THIS LINE
-          tileSSP(iz, ii, bi, bj) = tileSSP(iz, ii, bi, bj)
+          ssp1buffer = 0. _d 0
+!          sspTile(iz, ii, bi, bj) = sspTile(iz, ii, bi, bj)
 
         ENDIF ! IF ( ihop_idw_weights(ii, jj).EQ.0. )
 
       ENDIF ! IF ( ihop_sumweights(ii, iz-1).GT.0. )
 
-      ! Extrapolate through bathymetry; don't interpolate
+      sspTile(iz, ii, bi,bj) = sspTile(iz, ii, bi,bj) + ssp1buffer
+
+      ! Extrapolate through bathymetry; do not interpolate
       IF ( iz.EQ.Grid%nZ-1 .OR. ihop_sumweights(ii, iz-1).EQ.0.0 ) THEN
         k = iz
 
@@ -1155,11 +1187,11 @@ USE splinec_mod,  only: splineall
             k = k + 1
 
           ! Calc depth gradient
-          dcdz = (tileSSP(k-1, ii, bi, bj) - tileSSP(k-2, ii, bi, bj)) / &
+          dcdz = (sspTile(k-1, ii, bi, bj) - sspTile(k-2, ii, bi, bj)) / &
                  (Grid%Z(k-1) - Grid%Z(k-2))
           ! Extrapolate
-          tileSSP(k:Grid%nZ, ii, bi, bj) = &
-            tileSSP(k-1, ii, bi, bj) + dcdz * Grid%Z(k:Grid%nZ)
+          sspTile(k:Grid%nZ, ii, bi, bj) = &
+            sspTile(k-1, ii, bi, bj) + dcdz * Grid%Z(k:Grid%nZ)
           ! Move to next range point, ii
           interp_finished = .TRUE.
 
@@ -1188,27 +1220,28 @@ USE splinec_mod,  only: splineall
       k = 1
       DO jj = 1,Grid%nR
         DO ii = 1,Grid%nZ
-          tmpSSP(bi,bj,k) = tileSSP(ii,jj,bi,bj)
+          ssp3buffer(bi,bj,k) = sspTile(ii,jj,bi,bj)
           k = k + 1
         ENDDO
       ENDDO
     ENDDO
   ENDDO
 
-  CALL GLOBAL_SUM_VECTOR_RL(nZnR_size,tmpSSP,globSSP,myThid)
+  CALL GLOBAL_SUM_VECTOR_RL(nZnR_size,ssp3buffer,sspGlob,myThid)
 
   ! reshape ssp to matrix
   k = 1
   DO jj = 1,Grid%nR
     DO ii = 1,Grid%nZ
-      SSP%cMat(ii,jj) = globSSP(k)
+      SSP%cMat(ii,jj) = sspGlob(k)
       k = k + 1
     ENDDO
   ENDDO
 
-  IF(ALLOCATED(tileSSP)) DEALLOCATE(tileSSP)
-  IF(ALLOCATED(tmpSSP))  DEALLOCATE(tmpSSP)
-  IF(ALLOCATED(globSSP)) DEALLOCATE(globSSP)
+  IF(ALLOCATED(sspTile)) DEALLOCATE(sspTile)
+  IF(ALLOCATED(sspGlob)) DEALLOCATE(sspGlob)
+  IF(ALLOCATED(ssp4buffer))  DEALLOCATE(ssp4buffer)
+  IF(ALLOCATED(ssp3buffer))  DEALLOCATE(ssp3buffer)
 
   !==================================================
   ! END IDW Interpolate
