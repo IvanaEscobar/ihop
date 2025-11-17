@@ -1031,7 +1031,7 @@ USE splinec_mod,  only: splineall
 ! njj :: number interpolation points per depth level
 ! dcdz, tolerance :: Tolerance for IDW interpolation
 ! sspTile, sspGlob :: Arrays for storing interpolated SSP
-! ssp4buffer, ssp3buffer :: Arrays for local buffer SSP
+! ssp1buffer, ssp3buffer :: Arrays for local buffer SSP
 ! bPower, fT :: Parameters for attenuation calculation
 ! tkey, ijkey, hkey, lockey :: Keys for storing TAF tapes
   CHARACTER*(MAX_LEN_MBUF):: msgBuf
@@ -1044,7 +1044,7 @@ USE splinec_mod,  only: splineall
   REAL (KIND=_RL90)             :: dcdz, tolerance
   REAL (KIND=_RL90), ALLOCATABLE:: sspTile(:,:,:,:), sspGlob(:)
   REAL (KIND=_RL90) :: ssp1buffer
-  REAL (KIND=_RL90), ALLOCATABLE:: ssp4buffer(:,:,:,:), ssp3buffer(:,:,:)
+  REAL (KIND=_RL90), ALLOCATABLE:: ssp3buffer(:,:,:)
 ! IESCO24
 ! fT = 1000 ONLY for acousto-elastic halfspaces, I will have to pass this
 ! parameter in a different way after ssp_mod is split btwn fixed and varia
@@ -1068,24 +1068,14 @@ USE splinec_mod,  only: splineall
   ! allocate local ssp arrays
   IF(ALLOCATED(sspTile)) DEALLOCATE(sspTile)
   IF(ALLOCATED(sspGlob)) DEALLOCATE(sspGlob)
-  ALLOCATE( sspTile(Grid%nZ,Grid%nR,nSx,nSy), &
-            sspGlob(nZnR_size), STAT=iallocstat )
-  IF ( iallocstat.NE.0 ) THEN
-# ifdef IHOP_WRITE_OUT
-    WRITE(msgBuf,'(2A)') 'SSP_MOD::gcmSSP: ', &
-      'Insufficient memory to store sspTile and/or sspGlob'
-    CALL PRINT_ERROR( msgBuf,myThid )
-# endif /* IHOP_WRITE_OUT */
-      STOP 'ABNORMAL END: S/R gcmSSP'
-  ENDIF
-
   IF(ALLOCATED(ssp3buffer)) DEALLOCATE(ssp3buffer)
-  ALLOCATE( ssp4buffer(Grid%nZ,Grid%nR,nSx,nSy), &
+  ALLOCATE( sspTile(Grid%nZ,Grid%nR,nSx,nSy), &
+            sspGlob(nZnR_size), & 
             ssp3buffer(nSx,nSy,nZnR_size), STAT=iallocstat )
   IF ( iallocstat.NE.0 ) THEN
 # ifdef IHOP_WRITE_OUT
     WRITE(msgBuf,'(2A)') 'SSP_MOD::gcmSSP: ', &
-      'Insufficient memory to store ssp3buffer'
+      'Insufficient memory to store sspTile and/or sspGlob'
     CALL PRINT_ERROR( msgBuf,myThid )
 # endif /* IHOP_WRITE_OUT */
       STOP 'ABNORMAL END: S/R gcmSSP'
@@ -1118,8 +1108,8 @@ USE splinec_mod,  only: splineall
 !$TAF STORE interp_finished = comlev1_bibj_ij_ihop, key=ijkey, kind=isbyte
 #endif
             ! Interpolate from GCM grid cell centers
-            IF ( ABS(xC(i, j, bi, bj) - ihop_xc(ii, jj)).LE.tolerance .AND. &
-                 ABS(yC(i, j, bi, bj) - ihop_yc(ii, jj)).LE.tolerance .AND. &
+            IF ( ABS(xC(i, j, bi,bj) - ihop_xc(ii, jj)).LE.tolerance .AND. &
+                 ABS(yC(i, j, bi,bj) - ihop_yc(ii, jj)).LE.tolerance .AND. &
                 .NOT.interp_finished ) THEN
               njj(ii) = njj(ii) + 1
 
@@ -1168,8 +1158,8 @@ USE splinec_mod,  only: splineall
     sspTile(iz, ii, bi,bj) = sspTile(iz, ii, bi,bj) + ssp1buffer
 
     ! Bottom ihop vlayer or dry point: Extrapolate through bathymetry
-    IF ( (iz.GE.2) .AND. &
-         (iz.EQ.Grid%nZ-1 .OR. ihop_sumweights(ii, iz-1).EQ.0.0) ) THEN
+    IF ( iz.GE.2 ) THEN
+    IF (iz.EQ.Grid%nZ-1 .OR. ihop_sumweights(ii, iz-1).EQ.0.0) THEN
       k = iz
 
       IF ( njj(ii).GE.IHOP_npts_idw ) THEN
@@ -1192,6 +1182,7 @@ USE splinec_mod,  only: splineall
       ENDIF ! IF ( njj(ii).GE.IHOP_npts_idw )
 
     ENDIF ! IF ( iz.EQ.Grid%nZ-1 .OR. ihop_sumweights(ii, iz-1).EQ.0.0 )
+    ENDIF ! IF (iz.GE.2)
 
 
               ENDDO !iz
@@ -1231,7 +1222,6 @@ USE splinec_mod,  only: splineall
 
   IF(ALLOCATED(sspTile)) DEALLOCATE(sspTile)
   IF(ALLOCATED(sspGlob)) DEALLOCATE(sspGlob)
-  IF(ALLOCATED(ssp4buffer))  DEALLOCATE(ssp4buffer)
   IF(ALLOCATED(ssp3buffer))  DEALLOCATE(ssp3buffer)
 
   !==================================================
