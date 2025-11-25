@@ -19,7 +19,7 @@
 
 !$TAF SUBROUTINE ihop_init_diag::initprtfile INPUT   = 1, 2, 3
 !$TAF SUBROUTINE ihop_init_diag::initprtfile OUTPUT  =
-!$TAF SUBROUTINE ihop_init_diag::openPRTfileINPUT   = 1, 2, 3
+!$TAF SUBROUTINE ihop_init_diag::openPRTfile INPUT   = 1, 2, 3
 !$TAF SUBROUTINE ihop_init_diag::openPRTfile OUTPUT  =
 !$TAF SUBROUTINE ihop_init_diag::openOutputFiles INPUT   = 1, 2, 3, 4
 !$TAF SUBROUTINE ihop_init_diag::openOutputFiles OUTPUT  =
