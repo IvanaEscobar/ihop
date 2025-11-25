@@ -17,6 +17,10 @@
 !$TAF SUBROUTINE arr_mod::writearrivalsbinary INPUT   = 1, 2, 3, 4
 !$TAF SUBROUTINE arr_mod::writearrivalsbinary OUTPUT  =
 
+!$TAF SUBROUTINE ihop_init_diag::initprtfile INPUT   = 1, 2, 3
+!$TAF SUBROUTINE ihop_init_diag::initprtfile OUTPUT  =
+!$TAF SUBROUTINE ihop_init_diag::openPRTfileINPUT   = 1, 2, 3
+!$TAF SUBROUTINE ihop_init_diag::openPRTfile OUTPUT  =
 !$TAF SUBROUTINE ihop_init_diag::openOutputFiles INPUT   = 1, 2, 3, 4
 !$TAF SUBROUTINE ihop_init_diag::openOutputFiles OUTPUT  =
 
