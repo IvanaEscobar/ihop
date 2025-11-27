@@ -80,7 +80,7 @@ MODULE ihop_mod
   ! *** ray structure ***
   TYPE ray2DPt
     INTEGER              :: nTopBnc, nBotBnc, nTurnPt
-    REAL    (KIND=_RL90) :: x( 2 ), t( 2 ), p( 2 ), q( 2 )
+    REAL    (KIND=_RL90) :: x(2), t(2), p(2), q(2), h(2)
     REAL    (KIND=_RL90) :: c, Amp, Phase
     COMPLEX (KIND=_RL90) :: tau
   END TYPE ray2DPt

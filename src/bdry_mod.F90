@@ -24,14 +24,14 @@ MODULE bdry_mod
   PRIVATE
 !=======================================================================
   PUBLIC  initATI, initBTY, GetTopSeg, GetBotSeg, Bot, Top, &
-          IsegTop, IsegBot, rTopSeg, rBotSeg, &
+          iSegTop, iSegBot, rTopSeg, rBotSeg, &
           atiType, btyType, HSInfo, Bdry, writeBdry
 !=======================================================================
 
 ! == Module variables ==
   INTEGER, PARAMETER :: Number_to_Echo = 21
   INTEGER, PROTECTED :: NBtyPts = 2, NAtiPts = 2
-  INTEGER            :: IsegTop, IsegBot ! indices to current active segment
+  INTEGER            :: iSegTop, iSegBot ! indices to current active segment
 
   ! range intervals defining the current active segment
   REAL (KIND=_RL90) :: rTopSeg( 2 ), rBotSeg( 2 )
@@ -716,18 +716,18 @@ CONTAINS
 
 ! !LOCAL VARIABLES:
 ! msgBuf     :: Informational/error message buffer
-! IsegTopT   :: Temporary variable for finding the segment index
+! iSegTopT   :: Temporary variable for finding the segment index
   CHARACTER*(MAX_LEN_MBUF):: msgBuf
-  INTEGER :: IsegTopT( 1 )
+  INTEGER :: iSegTopT( 1 )
 !EOP
 
-  IsegTopT = MAXLOC( Top( : )%x( 1 ), Top( : )%x( 1 ) < r )
+  iSegTopT = MAXLOC( Top( : )%x( 1 ), Top( : )%x( 1 ) < r )
 
-  ! IsegTop MUST LIE IN [ 1, NAtiPts-1 ]
-  IF ( IsegTopT( 1 ).GT.0 .AND. IsegTopT( 1 ).LT.NAtiPts ) THEN
-    IsegTop = IsegTopT( 1 )
+  ! iSegTop MUST LIE IN [ 1, NAtiPts-1 ]
+  IF ( iSegTopT( 1 ).GT.0 .AND. iSegTopT( 1 ).LT.NAtiPts ) THEN
+    iSegTop = iSegTopT( 1 )
     ! segment limits in range
-    rTopSeg = [ Top( IsegTop )%x( 1 ), Top( IsegTop+1 )%x( 1 ) ]
+    rTopSeg = [ Top( iSegTop )%x( 1 ), Top( iSegTop+1 )%x( 1 ) ]
   ELSE
 #ifdef IHOP_WRITE_OUT
     ! In adjoint mode we do not write output besides on the first run
@@ -744,7 +744,7 @@ CONTAINS
     ENDIF
 #endif /* IHOP_WRITE_OUT */
     STOP 'ABNORMAL END: S/R GetTopSeg'
-  ENDIF ! IF ( IsegTopT( 1 ).GT.0 .AND. IsegTopT( 1 ).LT.NAtiPts )
+  ENDIF ! IF ( iSegTopT( 1 ).GT.0 .AND. iSegTopT( 1 ).LT.NAtiPts )
 
   RETURN
   END !SUBROUTINE GetTopSeg
@@ -769,16 +769,16 @@ CONTAINS
 
 ! !LOCAL VARIABLES:
 ! msgBuf     :: Informational/error message buffer
-! IsegBotT   :: Temporary variable for finding the segment index
+! iSegBotT   :: Temporary variable for finding the segment index
   CHARACTER*(MAX_LEN_MBUF):: msgBuf
-  INTEGER :: IsegBotT( 1 )
+  INTEGER :: iSegBotT( 1 )
 
-  IsegBotT = MAXLOC( Bot( : )%x( 1 ), Bot( : )%x( 1 ) < r )
-  ! IsegBot MUST LIE IN [ 1, NBtyPts-1 ]
-  IF ( IsegBotT( 1 ).GT.0 .AND. IsegBotT( 1 ).LT.NBtyPts ) THEN
-    IsegBot = IsegBotT( 1 )
+  iSegBotT = MAXLOC( Bot( : )%x( 1 ), Bot( : )%x( 1 ) < r )
+  ! iSegBot MUST LIE IN [ 1, NBtyPts-1 ]
+  IF ( iSegBotT( 1 ).GT.0 .AND. iSegBotT( 1 ).LT.NBtyPts ) THEN
+    iSegBot = iSegBotT( 1 )
     ! segment limits in range
-    rBotSeg = [ Bot( IsegBot )%x( 1 ), Bot( IsegBot + 1 )%x( 1 ) ]
+    rBotSeg = [ Bot( iSegBot )%x( 1 ), Bot( iSegBot + 1 )%x( 1 ) ]
   ELSE
 #ifdef IHOP_WRITE_OUT
     ! In adjoint mode we do not write output besides on the first run
@@ -795,7 +795,7 @@ CONTAINS
     ENDIF
 #endif /* IHOP_WRITE_OUT */
     STOP 'ABNORMAL END: S/R GetBotSeg'
-  ENDIF ! IF ( IsegBotT( 1 ).GT.0 .AND. IsegBotT( 1 ).LT.NBtyPts )
+  ENDIF ! IF ( iSegBotT( 1 ).GT.0 .AND. iSegBotT( 1 ).LT.NBtyPts )
 
   RETURN
   END !SUBROUTINE GetBotSeg
