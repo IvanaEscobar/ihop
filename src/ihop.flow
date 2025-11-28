@@ -167,6 +167,17 @@
 !     *==========================================================*
 !$TAF SUBROUTINE arr_mod::free_ihop_arrival INPUT   = 1
 !$TAF SUBROUTINE arr_mod::bcastarr          INPUT   = 1,2
+!$TAF FUNCTION MPI_bcast                    FTLNAME = MPI_bcast
+!$TAF FUNCTION MPI_bcast                    ADNAME  = MPI_bcast
+!$TAF FUNCTION MPI_bcast                    INPUT   = 1,2,3,4,5,6
+!$TAF FUNCTION MPI_bcast                    OUTPUT  = 1
+!$TAF FUNCTION MPI_bcast                    ACTIVE  = 1
+!$TAF FUNCTION MPI_bcast                    DEPEND  =   2,3,4,5,6
+!$TAF FUNCTION MPI_barrier                  FTLNAME = MPI_barrier
+!$TAF FUNCTION MPI_barrier                  ADNAME  = MPI_barrier
+!$TAF FUNCTION MPI_barrier                  INPUT   = 1,2
+!$TAF FUNCTION MPI_barrier                  OUTPUT  =
+!$TAF FUNCTION MPI_barrier                  ACTIVE  =
+!$TAF FUNCTION MPI_barrier                  DEPEND  = 1,2
 !!$TAF SUBROUTINE arr_mod::free_ihop_ray     INPUT   = 1
-!$TAF SUBROUTINE arr_mod::bcastray          INPUT   = 1,2
-!!$TAF SUBROUTINE MPI_barrier INPUT = 1,2
+!!$TAF SUBROUTINE arr_mod::bcastray          INPUT   = 1,2
