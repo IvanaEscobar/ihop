@@ -97,10 +97,11 @@ C
 C       ENDDO !DO j
 C       ENDDO !DO k
 C       ENDIF
-C-- global summation: F90 Sound Speed END
+CC-- global summation: F90 Sound Speed END
 C-- global ray2D%tau: F90 travel times if tau is NOT default 0
       r = Beam%nSteps
       modval = modval + real(ray2d(r)%tau)
+C-- global ray2D%tau: F90 travel times END 
 
 # else /* TEST_IHOP_COST_INLOOP */
 
