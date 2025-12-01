@@ -81,6 +81,7 @@ CONTAINS
   USE beampat,        only: writePat
   USE ihop_mod,       only: Beam
 #ifdef ALLOW_USE_MPI
+  USE ihop_mod,       only: BcastRay
   USE arr_mod,        only: BcastArr
 #endif
 
@@ -140,9 +141,10 @@ CONTAINS
   ENDIF ! IF ( myProcID.EQ.0 )
 
 #ifdef ALLOW_USE_MPI
-! broadcast Arr to all processes
+! broadcast ray2D, Beam, Arr to all processes
   IF ( usingMPI ) THEN
     CALL MPI_BARRIER( MPI_COMM_WORLD, mpiRC )
+    CALL BcastRay( 0, MPI_COMM_WORLD )
     CALL BcastArr( 0, MPI_COMM_WORLD )
   ENDIF
 #endif
@@ -196,7 +198,7 @@ CONTAINS
                        InfluenceGeoHatCart, ScalePressure
   USE beampat,   only: NSBPPts, SrcBmPat
   USE ihop_mod,  only: Beam, ray2D, rad2deg, SrcDeclAngle, afreq, &
-                       nRz_per_range, RAYFile, DELFile, maxN
+                       nRz_per_range, RAYFile, DELFile, nMax
 ! IESCO25: FOR TAF -RG
 !  USE influence,  only: ratio1, rB
 !  USE bdry_mod, only: bdry
@@ -235,7 +237,7 @@ CONTAINS
              nAlphaOpt, nSteps
   REAL(KIND=_RL90) :: Amp0, DalphaOpt, xs(2), RadMax, s, &
                       c, cimag, gradc(2), crr, crz, czz, rho
-  REAL(KIND=_RL90) :: tmpDelay(maxN)
+  REAL(KIND=_RL90) :: tmpDelay(nMax)
 !EOP
 
 !$TAF init IHOPCore2 = static, Pos%nSZ*Angles%nAlpha
@@ -330,13 +332,13 @@ CONTAINS
           IF ( Beam%RunType(1:1).EQ.'R') THEN
             nSteps = Beam%nSteps
             CALL WriteRayOutput( RAYFile, nSteps, &
-              ray2D(1:nSteps)%x(1),    ray2D(1:nSteps)%x(2), &
-              ray2D(nSteps)%NumTopBnc, ray2D(nSteps)%NumBotBnc )
+              ray2D(1:nSteps)%x(1),  ray2D(1:nSteps)%x(2), &
+              ray2D(nSteps)%nTopBnc, ray2D(nSteps)%nBotBnc )
             IF (writeDelay) THEN
               tmpDelay = REAL(ray2D(1:nSteps)%tau)
               CALL WriteRayOutput( DELFile, nSteps, &
-                tmpDelay,                ray2D(1:nSteps)%x(2), &
-                ray2D(nSteps)%NumTopBnc, ray2D(nSteps)%NumBotBnc )
+                tmpDelay,              ray2D(1:nSteps)%x(2), &
+                ray2D(nSteps)%nTopBnc, ray2D(nSteps)%nBotBnc )
             ENDIF
 
           ELSE ! Compute the contribution to the field
@@ -391,12 +393,13 @@ CONTAINS
 ! !INTERFACE:
   SUBROUTINE TraceRay2D( xs, alpha, Amp0, myThid )
 ! !DESCRIPTION:
-!   Traces a ray in 2D geometry, starting at source xs with take-off angle alpha [rad]
+!   Traces a ray in 2D geometry, starting at source xs with take-off 
+!   angle alpha [rad]. Stores ray path parameters in ray2D
 
 ! !USES:
-  USE ihop_mod, only: maxN, istep
+  USE ihop_mod, only: nMax, istep
   USE bdry_mod, only: GetTopSeg, GetBotSeg, atiType, btyType, Bdry, &
-                      IsegTop, IsegBot, rTopSeg, rBotSeg, Top, Bot
+                      iSegTop, iSegBot, rTopSeg, rBotSeg, Top, Bot
   USE refCoef,  only: RTop, RBot, NBotPts, NTopPts
   USE step,     only: Step2D
   USE ihop_mod, only: Beam, ray2D, iSmallStepCtr
@@ -439,11 +442,11 @@ CONTAINS
                        ToptInt(2), BottInt(2), rayt(2), raytOld(2)
   REAL (KIND=_RL90) :: DistBegTop, DistEndTop, DistBegBot, DistEndBot
   REAL (KIND=_RL90) :: sss, declAlpha, declAlphaOld
-  LOGICAL           :: RayTurn=.FALSE., endRay=.FALSE.
+  LOGICAL           :: rayTurn=.FALSE., endRay=.FALSE.
   LOGICAL           :: continue_steps, reflect
 !EOP
 
-!$TAF init TraceRay2D = static, maxN-1
+!$TAF init TraceRay2D = static, nMax-1
 
   ! Initial conditions (IC)
   iSmallStepCtr = 0
@@ -472,14 +475,14 @@ CONTAINS
     ray2D( 1 )%q = [ 0.0, 1.0 ]   ! IESCO22: ray centered coords
   ENDIF
 
-  ray2D( 1 )%tau       = 0.0
-  ray2D( 1 )%Amp       = Amp0
-  ray2D( 1 )%Phase     = 0.0
-  ray2D( 1 )%NumTopBnc = 0
-  ray2D( 1 )%NumBotBnc = 0
-  ray2D( 1 )%NumTurnPt = 0
+  ray2D( 1 )%tau     = 0.0
+  ray2D( 1 )%Amp     = Amp0
+  ray2D( 1 )%Phase   = 0.0
+  ray2D( 1 )%nTopBnc = 0
+  ray2D( 1 )%nBotBnc = 0
+  ray2D( 1 )%nTurnPt = 0
 
-  ! IESCO22: update IsegTop, rTopSeg and IsegBot, rBotSeg in bdrymod.f90
+  ! IESCO22: update iSegTop, rTopSeg and iSegBot, rBotSeg in bdrymod.f90
   CALL GetTopSeg( xs(1), myThid )   ! find alimetry   segment above the source
   CALL GetBotSeg( xs(1), myThid )   ! find bathymetry segment below the source
 
@@ -487,25 +490,25 @@ CONTAINS
   ! calculate cp, cs, and rho instead of reading them in
   IF ( atiType( 2:2 ).EQ.'L' ) THEN
     ! grab the geoacoustic info for the new segment
-    Bdry%Top%HS%cp  = Top( IsegTop )%HS%cp
-    Bdry%Top%HS%cs  = Top( IsegTop )%HS%cs
-    Bdry%Top%HS%rho = Top( IsegTop )%HS%rho
+    Bdry%Top%HS%cp  = Top( iSegTop )%HS%cp
+    Bdry%Top%HS%cs  = Top( iSegTop )%HS%cs
+    Bdry%Top%HS%rho = Top( iSegTop )%HS%rho
   ENDIF
 
   IF ( btyType( 2:2 ).EQ.'L' ) THEN
     ! grab the geoacoustic info for the new segment
-    Bdry%Bot%HS%cp  = Bot( IsegBot )%HS%cp
-    Bdry%Bot%HS%cs  = Bot( IsegBot )%HS%cs
-    Bdry%Bot%HS%rho = Bot( IsegBot )%HS%rho
+    Bdry%Bot%HS%cp  = Bot( iSegBot )%HS%cp
+    Bdry%Bot%HS%cs  = Bot( iSegBot )%HS%cs
+    Bdry%Bot%HS%rho = Bot( iSegBot )%HS%rho
   ENDIF
 
   CALL Distances2D( ray2D( 1 )%x, &
-    Top( IsegTop )%x, Bot( IsegBot )%x, dEndTop,    dEndBot, &
-    Top( IsegTop )%n, Bot( IsegBot )%n, DistBegTop, DistBegBot )
+    Top( iSegTop )%x, Bot( iSegBot )%x, dEndTop,    dEndBot, &
+    Top( iSegTop )%n, Bot( iSegBot )%n, DistBegTop, DistBegBot )
 
 ! Source MUST be within the domain
   IF ( DistBegTop.LE.0 .OR. DistBegBot.LE.0 ) THEN
-    Beam%Nsteps = 1
+    Beam%nSteps = 1
 #ifdef IHOP_WRITE_OUT
     WRITE(msgBuf,'(A)') &
       'WARNING: TraceRay2D: The source is outside the domain boundaries'
@@ -519,19 +522,19 @@ CONTAINS
     continue_steps = .true.
     reflect = .false.
 
-    Stepping: DO istep = 1, maxN-1
+    Stepping: DO iStep = 1, nMax-1
 !$TAF store iH,bdry,beam,continue_steps,distbegbot,distbegtop = TraceRay2D
 
       IF ( continue_steps ) THEN
         iH  = iH + 1 ! old step
         iH1 = iH + 1 ! new step forward
 
-!$TAF store iH,isegbot,isegtop,rbotseg,rtopseg = TraceRay2D
+!$TAF store iH,iSegbot,iSegtop,rbotseg,rtopseg = TraceRay2D
 !$TAF store ray2d = TraceRay2D
 
         CALL Step2D( ray2D( iH ), ray2D( iH1 ), &
-          Top( IsegTop )%x, Top( IsegTop )%n,   &
-          Bot( IsegBot )%x, Bot( IsegBot )%n, myThid )
+          Top( iSegTop )%x, Top( iSegTop )%n,   &
+          Bot( iSegBot )%x, Bot( iSegBot )%n, myThid )
 
         ! IESCO22: turning point check
         IF ( iH.GT.1 ) THEN
@@ -552,7 +555,7 @@ CONTAINS
 
           RayTurn = ( declAlpha.LE.0.0d0 .AND. declAlphaOld.GT.0.0d0 .OR. &
                       declAlpha.GE.0.0d0 .AND. declAlphaOld.LT.0.0d0 )
-          IF (RayTurn) ray2D( iH1 )%NumTurnPt = ray2D( iH )%NumTurnPt + 1
+          IF (RayTurn) ray2D( iH1 )%nTurnPt = ray2D( iH )%nTurnPt + 1
 
         ENDIF ! IF ( iH.GT.1 )
 
@@ -563,9 +566,9 @@ CONTAINS
 
           IF ( atiType( 2:2 ).EQ.'L' ) THEN
             ! ATIFile geoacoustic info from new segment, cp
-            Bdry%Top%HS%cp  = Top( IsegTop )%HS%cp
-            Bdry%Top%HS%cs  = Top( IsegTop )%HS%cs
-            Bdry%Top%HS%rho = Top( IsegTop )%HS%rho
+            Bdry%Top%HS%cp  = Top( iSegTop )%HS%cp
+            Bdry%Top%HS%cs  = Top( iSegTop )%HS%cs
+            Bdry%Top%HS%rho = Top( iSegTop )%HS%rho
           ENDIF
 
         ENDIF
@@ -577,9 +580,9 @@ CONTAINS
 
           IF ( btyType( 2:2 ).EQ.'L' ) THEN
             ! BTYFile geoacoustic info from new segment, cp
-            Bdry%Bot%HS%cp  = Bot( IsegBot )%HS%cp
-            Bdry%Bot%HS%cs  = Bot( IsegBot )%HS%cs
-            Bdry%Bot%HS%rho = Bot( IsegBot )%HS%rho
+            Bdry%Bot%HS%cp  = Bot( iSegBot )%HS%cp
+            Bdry%Bot%HS%cs  = Bot( iSegBot )%HS%cs
+            Bdry%Bot%HS%rho = Bot( iSegBot )%HS%rho
           ENDIF
 
         ENDIF
@@ -590,63 +593,62 @@ CONTAINS
         ! DistEnd is the distance at step iH+1, which needs to be calculated
 
         CALL Distances2D( ray2D( iH1 )%x,  &
-          Top( IsegTop )%x, Bot( IsegBot )%x, dEndTop,    dEndBot, &
-          Top( IsegTop )%n, Bot( IsegBot )%n, DistEndTop, DistEndBot )
+          Top( iSegTop )%x, Bot( iSegBot )%x, dEndTop,    dEndBot, &
+          Top( iSegTop )%n, Bot( iSegBot )%n, DistEndTop, DistEndBot )
 
         ! IESCO22: Did new ray point cross top boundary? Then reflect
         IF ( DistBegTop.GT.0.0d0 .AND. DistEndTop.LE.0.0d0 ) THEN
+!$TAF store iSegtop = TraceRay2D
           reflect=.true.
-
-!$TAF store isegtop = TraceRay2D
 
           IF ( atiType.EQ.'C' ) THEN ! curvilinear interpolation
             ! proportional distance along segment
-            sss     = DOT_PRODUCT( dEndTop, Top( IsegTop )%t ) &
-                      / Top( IsegTop )%Len
-            ToptInt = ( 1-sss ) * Top( IsegTop   )%Nodet &
-                      + sss     * Top( 1+IsegTop )%Nodet
-            TopnInt = ( 1-sss ) * Top( IsegTop   )%Noden &
-                      + sss     * Top( 1+IsegTop )%Noden
+            sss     = DOT_PRODUCT( dEndTop, Top( iSegTop )%t ) &
+                      / Top( iSegTop )%Len
+            ToptInt = ( 1-sss ) * Top( iSegTop   )%Nodet &
+                      + sss     * Top( 1+iSegTop )%Nodet
+            TopnInt = ( 1-sss ) * Top( iSegTop   )%Noden &
+                      + sss     * Top( 1+iSegTop )%Noden
           ELSE
-            TopnInt = Top( IsegTop )%n   ! constant normal in a segment
-            ToptInt = Top( IsegTop )%t
+            TopnInt = Top( iSegTop )%n   ! constant normal in a segment
+            ToptInt = Top( iSegTop )%t
           ENDIF
 
-!$TAF store iH,isegtop = TraceRay2D
+!$TAF store iH,iSegtop = TraceRay2D
           CALL Reflect2D( iH, Bdry%Top%HS, 'TOP', ToptInt, TopnInt, &
-            Top( IsegTop )%kappa, RTop, NTopPTS, myThid )
+            Top( iSegTop )%kappa, RTop, NTopPTS, myThid )
 
 !$TAF store iH,iSegbot = TraceRay2D
           CALL Distances2D( ray2D( iH+1 )%x, &
-            Top( IsegTop )%x, Bot( IsegBot )%x, dEndTop,    dEndBot, &
-            Top( IsegTop )%n, Bot( IsegBot )%n, DistEndTop, DistEndBot )
+            Top( iSegTop )%x, Bot( iSegBot )%x, dEndTop,    dEndBot, &
+            Top( iSegTop )%n, Bot( iSegBot )%n, DistEndTop, DistEndBot )
 
         ! IESCO22: Did ray cross bottom boundary? Then reflect
         ELSEIF ( DistBegBot.GT.0.0d0 .AND. DistEndBot.LE.0.0d0 ) THEN
+!$TAF store iSegbot = TraceRay2D
           reflect=.true.
 
-!$TAF store isegbot = TraceRay2D
           IF ( btyType.EQ.'C' ) THEN ! curvilinear interpolation
             ! proportional distance along segment
-            sss     = DOT_PRODUCT( dEndBot, Bot( IsegBot )%t ) &
-                      / Bot( IsegBot )%Len
-            BotnInt = ( 1-sss ) * Bot( IsegBot   )%Noden &
-                      + sss     * Bot( 1+IsegBot )%Noden
-            BottInt = ( 1-sss ) * Bot( IsegBot   )%Nodet &
-                      + sss     * Bot( 1+IsegBot )%Nodet
+            sss     = DOT_PRODUCT( dEndBot, Bot( iSegBot )%t ) &
+                      / Bot( iSegBot )%Len
+            BotnInt = ( 1-sss ) * Bot( iSegBot   )%Noden &
+                      + sss     * Bot( 1+iSegBot )%Noden
+            BottInt = ( 1-sss ) * Bot( iSegBot   )%Nodet &
+                      + sss     * Bot( 1+iSegBot )%Nodet
           ELSE ! btyType not 'C'
-            BotnInt = Bot( IsegBot )%n   ! normal is constant in a segment
-            BottInt = Bot( IsegBot )%t
+            BotnInt = Bot( iSegBot )%n   ! normal is constant in a segment
+            BottInt = Bot( iSegBot )%t
           ENDIF
 
-!$TAF store iH,isegbot = TraceRay2D
+!$TAF store iH,iSegbot = TraceRay2D
           CALL Reflect2D( iH, Bdry%Bot%HS, 'BOT', BottInt, BotnInt, &
-            Bot( IsegBot )%kappa, RBot, NBotPTS, myThid )
+            Bot( iSegBot )%kappa, RBot, NBotPTS, myThid )
 
-!$TAF store iH,isegbot = TraceRay2D
+!$TAF store iH,iSegbot = TraceRay2D
           CALL Distances2D( ray2D( iH+1 )%x, &
-            Top( IsegTop )%x, Bot( IsegBot )%x, dEndTop,    dEndBot, &
-            Top( IsegTop )%n, Bot( IsegBot )%n, DistEndTop, DistEndBot )
+            Top( iSegTop )%x, Bot( iSegBot )%x, dEndTop,    dEndBot, &
+            Top( iSegTop )%n, Bot( iSegBot )%n, DistEndTop, DistEndBot )
 
         ELSE
           ! Do not reflect
@@ -676,7 +678,7 @@ CONTAINS
         ELSEIF ( DistBegBot.LT.0.0 .AND. DistEndBot.LT.0.0 ) THEN
           WRITE(msgBuf,'(A)') 'TraceRay2D: ray escaped bot bound'
           endRay=.TRUE.
-        ELSEIF ( iH.GE.maxN-3 ) THEN
+        ELSEIF ( iH.GE.nMax-3 ) THEN
           WRITE(msgBuf,'(2A)') 'WARNING: TraceRay2D: Check storage ',&
                                 'for ray trajectory'
           endRay=.TRUE.
@@ -693,10 +695,10 @@ CONTAINS
 #endif /* IHOP_WRITE_OUT */
 
         IF (INDEX(msgBuf, 'TraceRay2D').EQ.1) THEN
-          Beam%Nsteps = iH+1
+          Beam%nSteps = iH+1
           continue_steps = .false.
         ELSEIF (INDEX(msgBuf, 'WARNING: TraceRay2D').EQ.1) THEN
-          Beam%Nsteps = iH
+          Beam%nSteps = iH
           continue_steps = .false.
         ELSE
           continue_steps = .true.
@@ -837,10 +839,10 @@ CONTAINS
   Tg = DOT_PRODUCT( ray2D( iH )%t, tBdry )  ! ray tan projected along boundary
   Th = DOT_PRODUCT( ray2D( iH )%t, nBdry )  ! ray tan projected normal boundary
 
-  ray2D( iH1 )%NumTopBnc = ray2D( iH )%NumTopBnc
-  ray2D( iH1 )%NumBotBnc = ray2D( iH )%NumBotBnc
-  ray2D( iH1 )%x         = ray2D( iH )%x
-  ray2D( iH1 )%t         = ray2D( iH )%t - 2.0 * Th * nBdry ! change ray direction
+  ray2D( iH1 )%nTopBnc = ray2D( iH )%nTopBnc
+  ray2D( iH1 )%nBotBnc = ray2D( iH )%nBotBnc
+  ray2D( iH1 )%x       = ray2D( iH )%x
+  ray2D( iH1 )%t       = ray2D( iH )%t - 2.0 * Th * nBdry ! change ray direction
 
   ! Calculate change in curvature, kappa
   ! Based on formulas given by Muller, Geoph. J. R.A.S., 79 (1984).
@@ -1013,9 +1015,9 @@ CONTAINS
 
   ! Update top/bottom bounce counter
   IF (BotTop.EQ.'TOP') THEN
-    ray2D( iH+1 )%NumTopBnc = ray2D( iH )%NumTopBnc + 1
+    ray2D( iH+1 )%nTopBnc = ray2D( iH )%nTopBnc + 1
   ELSEIF ( BotTop.EQ.'BOT' ) THEN
-    ray2D( iH+1 )%NumBotBnc = ray2D( iH )%NumBotBnc + 1
+    ray2D( iH+1 )%nBotBnc = ray2D( iH )%nBotBnc + 1
   ELSE
 #ifdef IHOP_WRITE_OUT
     WRITE(msgBuf,'(2A)') 'IHOP Reflect2D: ', &

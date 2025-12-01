@@ -15,6 +15,9 @@ MODULE ihop_mod
 #include "SIZE.h"
 #include "EEPARAMS.h"
 #include "PARAMS.h"
+#ifdef ALLOW_USE_MPI
+# include "EESUPPORT.h"
+#endif
 
 ! !SCOPE: 
   PRIVATE
@@ -22,8 +25,11 @@ MODULE ihop_mod
   PUBLIC  rad2deg, oneCMPLX, &
           PRTFile, RAYFile, DELFile, SHDFile, ARRFile, SSPFile, &
           ATIFile, BTYFile, BRCFile, TRCFile, IRCFile, SBPFile, &
-          MaxN, nRz_per_range, iStep, afreq, SrcDeclAngle,      &
+          nMax, nRz_per_range, iStep, afreq, SrcDeclAngle,      &
           Title, Beam, ray2D, ray2DPt, iSmallStepCtr, rxyz
+#ifdef ALLOW_USE_MPI
+    PUBLIC BcastRay
+#endif /* ALLOW_USE_MPI */
 !=======================================================================
 
 ! == Module variables ==
@@ -41,13 +47,18 @@ MODULE ihop_mod
                         BTYFile = 42, &    ! optional 2D/3D bathymetry
                         BRCFile = 38, TRCFile = 39, IRCFile = 16, &
                         SBPFile = 50, &
-                        MaxN = 50000
+                        nMax = 40000
 
   ! *** varying parameters for ihop ***
   INTEGER            :: iSmallStepCtr = 0
   INTEGER            :: nRz_per_range, iStep
   REAL (KIND=_RL90)  :: afreq, SrcDeclAngle, SrcAzimAngle
   CHARACTER*(80)     :: Title
+
+#ifdef ALLOW_USE_MPI
+  INTEGER :: MPI_IHOP_RAY = MPI_DATATYPE_NULL
+  LOGICAL :: RAY_TYPE_COMMITTED = .false.
+#endif /* ALLOW_USE_MPI */
 
 ! == Derived types ==
   ! *** Beam structure ***
@@ -56,7 +67,7 @@ MODULE ihop_mod
   END TYPE rxyz
 
   TYPE BeamStructure
-    INTEGER           :: NBeams, Nimage, Nsteps, iBeamWindow
+    INTEGER           :: nSteps, iBeamWindow
     REAL (KIND=_RL90) :: deltas, epsMultiplier = 1, rLoop
     CHARACTER*(1)     :: Component ! Pressure or displacement
     CHARACTER*(4)     :: Type = 'G S '
@@ -68,12 +79,69 @@ MODULE ihop_mod
 
   ! *** ray structure ***
   TYPE ray2DPt
-    INTEGER                :: NumTopBnc, NumBotBnc, NumTurnPt
-    REAL    (KIND=_RL90)   :: x( 2 ), t( 2 ), p( 2 ), q( 2 ), c, Amp, Phase
-    COMPLEX (KIND=_RL90)   :: tau
+    INTEGER              :: nTopBnc, nBotBnc, nTurnPt
+    REAL    (KIND=_RL90) :: x(2), t(2), p(2), q(2), h(2)
+    REAL    (KIND=_RL90) :: c, Amp, Phase
+    COMPLEX (KIND=_RL90) :: tau
   END TYPE ray2DPt
 
-  TYPE( ray2DPt )      :: ray2D( MaxN )
+  TYPE( ray2DPt )        :: ray2D( nMax )
 !EOP
+
+CONTAINS
+!---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
+! S/R BcastRay
+!---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
+!BOP
+! !ROUTINE: BcastRay
+! !INTERFACE:
+  SUBROUTINE BcastRay( root, comm )
+! !DESCRIPTION:
+! Broadcasts the ray2D and Beam data, eg. tau, nSteps
+
+! !USES: None
+
+! !INPUT PARAMETERS:
+! root :: MPI root
+! comm :: MPI_COMM_WORLD; pre mpi_f08 is an INTEGER
+  INTEGER, INTENT( IN ) :: root
+  INTEGER, INTENT( IN ) :: comm
+! !OUTPUT PARAMETERS: None
+
+! !LOCAL VARIABLES:
+! arrSize    :: indices for range and depth
+! ierr       :: MPI return code
+  COMPLEX (KIND=_RL90) :: tauBuf(nMax)
+  INTEGER :: i
+  INTEGER :: ierr, MPI_CL
+!EOP  
+
+#ifdef ALLOW_USE_MPI
+  ! Build Ray2Dpt MPI type
+  IF (STORAGE_SIZE( REAL(ray2d(1)%tau) ).EQ.64) THEN
+    MPI_CL = MPI_DOUBLE_COMPLEX
+  ELSE
+    MPI_CL = MPI_COMPLEX
+  ENDIF
+
+  IF (myProcID.eq.root) THEN
+    DO i=1,nMax
+      tauBuf(i) = ray2D(i)%tau
+    ENDDO
+  ENDIF
+  CALL MPI_Bcast( tauBuf, nMax, MPI_CL, root, comm, ierr )
+
+  IF (myProcID.ne.root) THEN
+    DO i=1,nMax
+      ray2D(i)%tau = tauBuf(i)
+    ENDDO
+  ENDIF
+
+  ! We are on MPI rank 0
+  CALL MPI_Bcast( Beam%nSteps, 1, MPI_INTEGER, root, comm, ierr )
+#endif /* ALLOW_USE_MPI */
+
+  RETURN
+  END !SUBROUTINE BcastRay
 
 END !MODULE ihop_mod

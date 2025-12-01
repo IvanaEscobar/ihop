@@ -18,7 +18,7 @@ C     Extract ihop model counterparts for cost function data misfit
 
 C     !USES:
 #ifdef ALLOW_USE_MPI
-      USE arr_mod, only: free_ihop_arrival
+      USE arr_mod,  only: free_ihop_arrival
 #endif
       IMPLICIT NONE
 C == Global variables ===

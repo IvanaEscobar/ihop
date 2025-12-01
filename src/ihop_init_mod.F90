@@ -82,7 +82,7 @@ CONTAINS
   !   - Bdry%Top, Bdry%Bot,
   !     Grid%AttenUnit,Type,nR,nZ,z,Grid%Seg%R,
   !     Pos%SX,SY,nSZ,nRZ,SZ,Rz,Ws,ISZ,Wr,Irz,nRR,Rr,Delta_r,
-  !     Beam%RunType,Deltas,Nimage,iBeamWindow,Component,Multiplier,rloop,
+  !     Beam%RunType,Deltas,iBeamWindow,Component,Multiplier,rLoop,
   !     Beam%Box%R,Box%Z,Type,
   !     Angles%nAlpha,alpha,
   ! - From bdry_mod.F90:initATI
@@ -120,8 +120,6 @@ CONTAINS
   Grid%Type = ''
   Grid%AttenUnit = ''
 
-  Beam%nBeams = -1
-  Beam%nImage = -1
   Beam%nSteps = -1
   Beam%iBeamWindow = -1
   Beam%deltas = -1.

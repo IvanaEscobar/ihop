@@ -20,12 +20,13 @@ C     Computes ihop predicted datum
 
 C     !USES:
 #ifdef ALLOW_IHOP
-      USE arr_mod,  only: Arr, nArrival, maxNArr
-      USE srPos_mod,only: Pos
-      USE ihop_mod, only: rad2deg
+      USE arr_mod,   only: Arr, nArrival, nMaxArr
+      USE srPos_mod, only: Pos
+      USE ihop_mod,  only: rad2deg
 #endif
 #ifdef TEST_IHOP_COST_INLOOP
-      USE ssp_mod, only: SSP, Grid
+      USE ssp_mod,  only: SSP, Grid
+      USE ihop_mod, only: ray2D, nMax, Beam
 #endif
       IMPLICIT NONE
 C == Global variables ===
@@ -69,8 +70,8 @@ C     !LOCAL VARIABLES:
       CHARACTER*(MAX_LEN_MBUF) msgBuf
       INTEGER ii
       INTEGER maxID
-      _RL     maxarrVal, arrVal(maxNArr)
-      COMPLEX*8 arrAmplitude(maxNArr)
+      _RL     maxarrVal, arrVal(nMaxArr)
+      COMPLEX*8 arrAmplitude(nMaxArr)
 CEOP
 
 ! ===================================================================
@@ -85,18 +86,22 @@ CEOP
 ! Added uses of modules above, have access to Arr and Pos
 ! ===================================================================
 # ifdef TEST_IHOP_COST_INLOOP
-C-- global summation: F90 Sound Speed if cMat is NOT default -99
-       IF ( SSP%cMat(1,3).NE.-99. _d 0 ) THEN
-       DO r = 1,Grid%nR
-       DO k = 1,Grid%nZ
-C- square of the sums
-         modVal = modVal
-     &    + SSP%cMat(k,r)/100.
-
-       ENDDO !DO j
-       ENDDO !DO k
-       ENDIF
-C-- global summation: F90 Sound Speed END
+CC-- global summation: F90 Sound Speed if cMat is NOT default -99
+C       IF ( SSP%cMat(1,3).NE.-99. _d 0 ) THEN
+C       DO r = 1,Grid%nR
+C       DO k = 1,Grid%nZ
+CC- square of the sums
+C         modVal = modVal
+C     &    + SSP%cMat(k,r)/100.
+C
+C       ENDDO !DO j
+C       ENDDO !DO k
+C       ENDIF
+CC-- global summation: F90 Sound Speed END
+C-- global ray2D%tau: F90 travel times if tau is NOT default 0
+      r = Beam%nSteps
+      modval = modval + real(ray2d(r)%tau)
+C-- global ray2D%tau: F90 travel times END 
 
 # else /* TEST_IHOP_COST_INLOOP */
 

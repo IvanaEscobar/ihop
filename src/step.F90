@@ -52,11 +52,12 @@ CONTAINS
 ! Topx, Topn :: the top boundary coordinate and normal
 ! Botx, Botn :: the bottom boundary coordinate and normal
 ! myThid :: my thread ID
-  TYPE( ray2DPt ),     INTENT( INOUT ) :: ray0, ray2
+  TYPE( ray2DPt ),     INTENT( IN )    :: ray0
   REAL ( KIND=_RL90 ), INTENT( IN )    :: Topx( 2 ), Topn( 2 ), &
                                           Botx( 2 ), Botn( 2 )
   INTEGER, INTENT(IN) :: myThid
 ! !OUTPUT PARAMETERS: ray2
+  TYPE( ray2DPt ),     INTENT( INOUT ) :: ray2
 
 ! !LOCAL VARIABLES:
 ! ray1 :: the ray at the end of the first phase of the step
@@ -64,7 +65,7 @@ CONTAINS
 ! gradc0, gradc1, gradc2 :: the gradient of the sound speed at the ray points
 ! c0, cimag0, crr0, crz0, czz0, csq0, cnn0_csq0 :: sound speed and its derivatives at ray0
 ! c1, cimag1, crr1, crz1, czz1, csq1, cnn1_csq1 :: sound speed and its derivatives at ray1
-! c2, cimag2, crr2, crz2, czz2 :: sound speed and its derivatives at ray2
+! c2 :: sound speed at ray2
 ! urayt0, urayt1 :: unit tangent vectors at ray0 and ray1
 ! h, halfh, hw0, hw1 :: step size and its components
 ! ray2n :: outward unit normal at ray2
@@ -72,16 +73,16 @@ CONTAINS
 ! gradcjump :: the jump in the gradient of the sound speed across an interface
 ! cnjump, csjump :: the jumps in the normal and tangential components of the sound speed gradient
 ! w0, w1 :: blending weights for the two phases of the step
-! rho :: density at the ray points
+! unused :: density at the ray points
   TYPE( ray2DPt ) :: ray1
   INTEGER         :: iSegz0, iSegr0
   REAL ( KIND=_RL90 ) :: gradc0( 2 ), gradc1( 2 ), gradc2( 2 ), &
                         c0, cimag0, crr0, crz0, czz0, csq0, cnn0_csq0, &
                         c1, cimag1, crr1, crz1, czz1, csq1, cnn1_csq1, &
-                        c2, cimag2, crr2, crz2, czz2, &
+                        c2, & 
                         urayt0( 2 ), urayt1( 2 ), &
                         h, halfh, hw0, hw1, ray2n( 2 ), RM, RN, &
-                        gradcjump( 2 ), cnjump, csjump, w0, w1, rho
+                        gradcjump( 2 ), cnjump, csjump, w0, w1, unused
 !EOP
 
   ! IESCO25: notes
@@ -97,7 +98,7 @@ CONTAINS
   ! preserving second-order accuracy.
 
   ! *** Phase 1 (an Euler step)
-  CALL evalSSP( ray0%x, c0, cimag0, gradc0, crr0, crz0, czz0, rho, myThid )
+  CALL evalSSP( ray0%x, c0, cimag0, gradc0, crr0, crz0, czz0, unused, myThid )
 
   csq0      = c0 * c0
   cnn0_csq0 = crr0*ray0%t( 2 )**2 - 2.0*crz0*ray0%t( 1 )*ray0%t( 2 ) &
@@ -120,7 +121,7 @@ CONTAINS
   ray1%q = ray0%q + halfh * c0        * ray0%p !IESCO22: q /= 0 for 'G' beam
 
   ! *** Phase 2 (update step size, and Polygon march forward)
-  CALL evalSSP( ray1%x, c1, cimag1, gradc1, crr1, crz1, czz1, rho, myThid )
+  CALL evalSSP( ray1%x, c1, cimag1, gradc1, crr1, crz1, czz1, unused, myThid )
   csq1      = c1 * c1
   cnn1_csq1 = crr1*ray1%t( 2 )**2 - 2.0*crz1*ray1%t( 1 )*ray1%t( 2 ) &
               + czz1*ray1%t( 1 )**2
@@ -150,13 +151,14 @@ CONTAINS
   ray2%tau = ray0%tau + hw0 / CMPLX( c0, cimag0, KIND=_RL90 ) &
              + hw1 / CMPLX( c1, cimag1, KIND=_RL90 )
 
-  ray2%Amp       = ray0%Amp
-  ray2%Phase     = ray0%Phase
-  ray2%NumTopBnc = ray0%NumTopBnc
-  ray2%NumBotBnc = ray0%NumBotBnc
+  ray2%Amp     = ray0%Amp
+  ray2%Phase   = ray0%Phase
+  ray2%nTopBnc = ray0%nTopBnc
+  ray2%nBotBnc = ray0%nBotBnc
 
   ! If we crossed an interface, apply linear jump condition
-  CALL evalSSP( ray2%x, c2, cimag2, gradc2, crr2, crz2, czz2, rho, myThid )
+  CALL evalSSP( ray2%x, c2, unused, gradc2, &
+    unused, unused, unused, unused, myThid )
   ray2%c = c2
 
   IF ( iSegz.NE.iSegz0 .OR. iSegr.NE.iSegr0 ) THEN
@@ -178,6 +180,10 @@ CONTAINS
     ray2%p = ray2%p - ray2%q*RN
 
   ENDIF ! IF ( iSegz.NE.iSegz0 .OR. iSegr.NE.iSegr0 )
+
+  ! IESCO25: store step sizes
+  ray2%h(1) = hw0
+  ray2%h(2) = hw1
 
   RETURN
   END !SUBROUTINE Step2D

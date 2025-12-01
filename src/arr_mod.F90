@@ -26,7 +26,7 @@ MODULE arr_mod
   PRIVATE
 !=======================================================================
     PUBLIC WriteArrivalsASCII, WriteArrivalsBinary, &
-           initArr, maxnArr, nArrival, Arr, AddArr, U
+           initArr, nMaxArr, nArrival, Arr, AddArr, U
 #ifdef IHOP_THREED
     PUBLIC nArr3D, Arr3D
 #endif /* IHOP_THREED */
@@ -36,7 +36,7 @@ MODULE arr_mod
 !=======================================================================
 
 ! == Module variables ==
-  INTEGER               :: maxnArr
+  INTEGER               :: nMaxArr
   INTEGER, ALLOCATABLE  :: nArrival( :, : )
   COMPLEX, ALLOCATABLE  :: U( :, : )
 #ifdef IHOP_THREED
@@ -50,7 +50,7 @@ MODULE arr_mod
 
 ! == Derived types ==
   TYPE Arrival
-    INTEGER :: NTopBnc, NBotBnc
+    INTEGER              :: nTopBnc, nBotBnc
     REAL (KIND=_RL90)    :: SrcDeclAngle, RcvrDeclAngle, A, Phase
 #ifdef IHOP_THREED
     REAL (KIND=_RL90)    :: SrcAzimAngle, RcvrAzimAngle
@@ -70,6 +70,7 @@ CONTAINS
 ! S/R AddArr
 ! S/R WriteArrivalsASCII
 ! S/R WriteArrivalsBinary
+! S/R BcastArr
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 !BOP
 ! !ROUTINE: initArr
@@ -133,14 +134,14 @@ CONTAINS
   SELECT CASE ( Beam%RunType( 1:1 ) )
   CASE ( 'A', 'a', 'e' )
     ! allow space for at least minnArr arrivals
-    maxnArr = MAX( arrStorage / ( nRz_per_range * Pos%nRR ), &
+    nMaxArr = MAX( arrStorage / ( nRz_per_range * Pos%nRR ), &
                   minnArr )
   CASE DEFAULT
-    maxnArr = 1
+    nMaxArr = 1
   END SELECT ! Beam%RunType( 1:1 )
 
   ! init Arr, nArrival
-  ALLOCATE( Arr( maxnArr, Pos%nRR, nRz_per_range ), &
+  ALLOCATE( Arr( nMaxArr, Pos%nRR, nRz_per_range ), &
             nArrival(Pos%nRR, nRz_per_range), STAT=iAllocStat )
   IF ( iAllocStat.NE.0 ) THEN
 #ifdef IHOP_WRITE_OUT
@@ -174,7 +175,7 @@ CONTAINS
 ! !ROUTINE: AddArr
 ! !INTERFACE:
   SUBROUTINE AddArr( afreq, iz, ir, Amp, Phase, delay, &
-                     RcvrDeclAngle, NumTopBnc, NumBotBnc )
+                     RcvrDeclAngle, nTopBnc, nBotBnc )
 ! !DESCRIPTION:
 ! Adds the amplitude and delay for an arrival into Arr.
 
@@ -183,16 +184,16 @@ CONTAINS
 
 
 ! !INPUT PARAMETERS:
-! afreq              :: frequency of the arrival
-! iz                 :: receiver depth index
-! ir                 :: range index
-! Amp                :: amplitude of the arrival
-! Phase              :: phase of the arrival
-! delay              :: delay time of the arrival
-! RcvrDeclAngle      :: receiver declination angle
-! NumTopBnc          :: number of top bounces
-! NumBotBnc          :: number of bottom bounces
-  INTEGER,              INTENT( IN ) :: iz, ir, NumTopBnc, NumBotBnc
+! afreq         :: frequency of the arrival
+! iz            :: receiver depth index
+! ir            :: range index
+! Amp           :: amplitude of the arrival
+! Phase         :: phase of the arrival
+! delay         :: delay time of the arrival
+! RcvrDeclAngle :: receiver declination angle
+! nTopBnc       :: number of top bounces
+! nBotBnc       :: number of bottom bounces
+  INTEGER,              INTENT( IN ) :: iz, ir, nTopBnc, nBotBnc
   REAL    (KIND=_RL90), INTENT( IN ) :: afreq, Amp, Phase, &
                                         RcvrDeclAngle
   COMPLEX (KIND=_RL90), INTENT( IN ) :: delay
@@ -221,7 +222,7 @@ CONTAINS
   ENDIF
 
   IF ( NewRay ) THEN
-    IF ( Nt.GE.maxnArr ) THEN       ! space available to add an arrival?
+    IF ( Nt.GE.nMaxArr ) THEN       ! space available to add an arrival?
       iArr = MINLOC( Arr( :, ir, iz )%A )   ! no: replace weakest arrival
       IF ( Amp.GT.Arr( iArr(1), ir, iz )%A ) THEN
         Arr( iArr(1), ir, iz)%A             = SNGL( Amp )       ! amplitude
@@ -229,8 +230,8 @@ CONTAINS
         Arr( iArr(1), ir, iz)%delay         = CMPLX( delay )    ! delay time
         Arr( iArr(1), ir, iz)%SrcDeclAngle  = SNGL( SrcDeclAngle) ! angle
         Arr( iArr(1), ir, iz)%RcvrDeclAngle = SNGL(RcvrDeclAngle) ! angle
-        Arr( iArr(1), ir, iz)%NTopBnc       = NumTopBnc         ! top bounces
-        Arr( iArr(1), ir, iz)%NBotBnc       = NumBotBnc         ! bottom bounces
+        Arr( iArr(1), ir, iz)%nTopBnc       = nTopBnc         ! top bounces
+        Arr( iArr(1), ir, iz)%nBotBnc       = nBotBnc         ! bottom bounces
       ENDIF
     ELSE
       Nt                             = Nt+1                ! # arrivals
@@ -239,9 +240,9 @@ CONTAINS
       Arr( Nt, ir, iz)%delay         = CMPLX( delay )      ! delay time
       Arr( Nt, ir, iz)%SrcDeclAngle  = SNGL( SrcDeclAngle )  ! angle
       Arr( Nt, ir, iz)%RcvrDeclAngle = SNGL( RcvrDeclAngle ) ! angle
-      Arr( Nt, ir, iz)%NTopBnc       = NumTopBnc           ! top bounces
-      Arr( Nt, ir, iz)%NBotBnc       = NumBotBnc           ! bottom bounces
-    ENDIF !IF ( Nt.GE.maxnArr )
+      Arr( Nt, ir, iz)%nTopBnc       = nTopBnc           ! top bounces
+      Arr( Nt, ir, iz)%nBotBnc       = nBotBnc           ! bottom bounces
+    ENDIF !IF ( Nt.GE.nMaxArr )
 
   ELSE ! not a new ray
     ! calculate weights of old ray information vs. new
@@ -507,11 +508,11 @@ CONTAINS
   CALL MPI_Get_address(singleArrival, base, ierr)
 
   n=1
-  CALL MPI_Get_address(singleArrival%NTopBnc, addr(n), ierr)
+  CALL MPI_Get_address(singleArrival%nTopBnc, addr(n), ierr)
   ty(n)=MPI_INTEGER
 
   n=n+1
-  CALL MPI_Get_address(singleArrival%NBotBnc, addr(n), ierr)
+  CALL MPI_Get_address(singleArrival%nBotBnc, addr(n), ierr)
   ty(n)=MPI_INTEGER
 
   n=n+1
