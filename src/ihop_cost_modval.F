@@ -25,7 +25,7 @@ C     !USES:
       USE ihop_mod,  only: rad2deg
 #endif
 #ifdef TEST_IHOP_COST_INLOOP
-      USE ssp_mod,  only: SSP, Grid
+C      USE ssp_mod,  only: SSP, Grid
       USE ihop_mod, only: ray2D, nMax, Beam
 #endif
       IMPLICIT NONE
@@ -86,6 +86,7 @@ CEOP
 ! Added uses of modules above, have access to Arr and Pos
 ! ===================================================================
 # ifdef TEST_IHOP_COST_INLOOP
+CC-- OPTION 1)
 CC-- global summation: F90 Sound Speed if cMat is NOT default -99
 C       IF ( SSP%cMat(1,3).NE.-99. _d 0 ) THEN
 C       DO r = 1,Grid%nR
@@ -98,10 +99,18 @@ C       ENDDO !DO j
 C       ENDDO !DO k
 C       ENDIF
 CC-- global summation: F90 Sound Speed END
-C-- global ray2D%tau: F90 travel times if tau is NOT default 0
-      r = Beam%nSteps
-      modval = modval + real(ray2d(r)%tau)
-C-- global ray2D%tau: F90 travel times END 
+
+CC-- OPTION 2)
+CC-- global ray2D%tau: F90 travel times if tau is NOT default 0
+C      r = Beam%nSteps
+C      modval = modval + real(ray2d(r)%tau)
+CC-- global ray2D%tau: F90 travel times END 
+
+C-- OPTION 3)
+C-- global Arr%delay: F90 eigenray travel times
+      modval = modval + REAL( Arr(2,ri,rj)%delay )
+      PRINT *, "ESCOBAR ", modval
+C-- global Arr%delay: F90 eigenray travel times END
 
 # else /* TEST_IHOP_COST_INLOOP */
 
