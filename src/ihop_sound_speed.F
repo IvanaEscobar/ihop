@@ -55,25 +55,25 @@ C     !FUNCTIONS:
 C     !LOCAL VARIABLES:
       INTEGER bi,bj
       INTEGER i,j,k
-      LOGICAL calc_soundSpeed
+c     LOGICAL calc_soundSpeed
 CEOP
 
 C      calc_soundSpeed = .FALSE.
 
 C--   switch on this flag if Sound-Speed needed in any cost fxn
 c#ifdef ALLOW_CSOUND_COST
-      calc_soundSpeed = .TRUE.
+c     calc_soundSpeed = .TRUE.
 c#endif
 
 #ifdef ALLOW_DIAGNOSTICS
-      IF ( useDiagnostics ) THEN
-        calc_soundSpeed = calc_soundSpeed
-     &               .OR. DIAGNOSTICS_IS_ON( 'SVEL    ', myThid )
-     &               .OR. DIAGNOSTICS_IS_ON( 'SLD     ', myThid )
-      ENDIF
+c     IF ( useDiagnostics ) THEN
+c       calc_soundSpeed = calc_soundSpeed
+c    &               .OR. DIAGNOSTICS_IS_ON( 'SVEL    ', myThid )
+c    &               .OR. DIAGNOSTICS_IS_ON( 'SLD     ', myThid )
+c     ENDIF
 #endif /* ALLOW_DIAGNOSTICS */
 
-      IF ( calc_soundSpeed ) THEN
+c     IF ( calc_soundSpeed ) THEN
        DO bj=myByLo(myThid),myByHi(myThid)
         DO bi=myBxLo(myThid),myBxHi(myThid)
          DO k=1,Nr
@@ -96,7 +96,7 @@ c#endif
        ENDDO
 
 C-    end-if calc_soundSpeed
-      ENDIF
+c     ENDIF
 
 #ifdef ALLOW_DIAGNOSTICS
       IF ( useDiagnostics
