@@ -194,8 +194,7 @@ CONTAINS
   USE srPos_mod, only: Pos
   USE arr_mod,   only: WriteArrivalsASCII, WriteArrivalsBinary, U
   USE writeRay,  only: WriteRayOutput
-  USE influence, only: InfluenceGeoHatRayCen, InfluenceGeoGaussianCart, &
-                       InfluenceGeoHatCart, ScalePressure
+  USE influence, only: calculateInfluence, ScalePressure
   USE beampat,   only: NSBPPts, SrcBmPat
   USE ihop_mod,  only: Beam, ray2D, rad2deg, SrcDeclAngle, afreq, &
                        nRz_per_range, RAYFile, DELFile, nMax
@@ -341,17 +340,8 @@ CONTAINS
                 ray2D(nSteps)%nTopBnc, ray2D(nSteps)%nBotBnc )
             ENDIF
 
-          ELSE ! Compute the contribution to the field
-            SELECT CASE ( Beam%Type( 1:1 ) )
-            CASE ( 'g' )
-              CALL InfluenceGeoHatRayCen( U, myThid )
-            CASE ( 'B' )
-              CALL InfluenceGeoGaussianCart( U, myThid )
-            CASE ( 'G','^' )
-              CALL InfluenceGeoHatCart( U, myThid )
-            CASE DEFAULT !IEsco22: thesis is in default behavior
-              CALL InfluenceGeoHatCart( U, myThid )
-            END SELECT
+          ELSE ! Compute the contribution to the pressure field, U
+            CALL calculateInfluence( myThid )
 
           ENDIF ! IF ( Beam%RunType(1:1).EQ.'R')
 

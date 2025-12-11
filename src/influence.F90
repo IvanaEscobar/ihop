@@ -25,26 +25,50 @@ MODULE influence
 ! !SCOPE: 
   PRIVATE
 !=======================================================================
-  PUBLIC InfluenceGeoHatRayCen, InfluenceGeoGaussianCart, &
-           InfluenceGeoHatCart, ScalePressure
+  PUBLIC calculateInfluence, ScalePressure
 !=======================================================================
 
-! == Module variables ==
-  INTEGER,              PRIVATE :: iz, ir, iH
-  REAL    (KIND=_RL90), PRIVATE :: Ratio1 = 1.0D0 ! scale factor for a line source
-  REAL    (KIND=_RL90), PRIVATE :: W, s, n, Amp, phase, phaseInt, &
-                                   q0, q, qold, RcvrDeclAngle, rA, rB
-  COMPLEX (KIND=_RL90), PRIVATE :: delay
+!! == Module variables ==
+!  INTEGER,              PRIVATE :: iz, ir
+!  REAL    (KIND=_RL90), PRIVATE :: Ratio1 = 1.0D0 ! scale factor for a line source
+!  REAL    (KIND=_RL90), PRIVATE :: W, s, n, Amp, phase, phaseInt, &
+!                                   q0, q, qOld, RcvrDeclAngle, rA, rB
+!  COMPLEX (KIND=_RL90), PRIVATE :: delay
 !EOP
 
 CONTAINS
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
+! S/R calculateInfluence
 ! S/R InfluenceGeoHatRayCen
 ! S/R InfluenceGeoHatCart
 ! S/R InfluenceGeoGaussianCart
 ! S/R ApplyContribution
 ! S/R ScalePressure
 ! FXN Hermite
+!---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
+!BOP
+! !ROUTINE: calculateInfluence
+! !INTERFACE:
+  SUBROUTINE calculateInfluence( myThid )
+! !DESCRIPTION:
+!   determine eigenrays and apply pressure field, U
+  USE arr_mod, only: U
+  INTEGER, INTENT ( IN ) :: myThid
+
+  SELECT CASE ( Beam%Type( 1:1 ) )
+  CASE ( 'g' )
+    CALL InfluenceGeoHatRayCen( U, myThid )
+  CASE ( 'B' )
+    CALL InfluenceGeoGaussianCart( U, myThid )
+  CASE ( 'G','^' )
+    CALL InfluenceGeoHatCart( U, myThid )
+  CASE DEFAULT !IEsco22: thesis is in default behavior
+    CALL InfluenceGeoHatCart( U, myThid )
+  END SELECT
+
+  RETURN
+  END !SUBROUTINE calculateInfluence
+
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 !BOP
 ! !ROUTINE: InfluenceGeoHatRayCen
@@ -76,8 +100,14 @@ CONTAINS
 ! dtau :: delay along ray
 ! skip_step :: logical to skip steps with no influence
   CHARACTER*(MAX_LEN_MBUF) :: msgBuf
+  INTEGER :: iH, iZ, iR
+  REAL    (KIND=_RL90) :: Ratio1 ! scale factor for a line source
+  REAL    (KIND=_RL90) :: W, s, n, phase, rA, rB, &
+                          q0, q, qOld
+  REAL    (KIND=_RL90) :: Amp, phaseInt, RcvrDeclAngle
+  COMPLEX (KIND=_RL90) :: delay
   INTEGER              :: irA, irB, II
-  REAL (KIND=_RL90)    :: nA, nB, zr, L, dq( Beam%nSteps - 1 )
+  REAL (KIND=_RL90)    :: nA, nB, zr, L, dq( Beam%nSteps-1 )
   REAL (KIND=_RL90)    :: znV( Beam%nSteps ), rnV( Beam%nSteps ), &
                            RcvrDeclAngleV ( Beam%nSteps )
   COMPLEX (KIND=_RL90) :: dtau( Beam%nSteps-1 )
@@ -206,7 +236,8 @@ CONTAINS
                 (q.GE.0.0D0 .AND. qOld.LT.0.0D0)) &
               phaseInt = phase + PI / 2.0D0  ! phase shifts at caustics
 
-            CALL ApplyContribution(U(iz, ir))
+            CALL ApplyContribution( iH, iR, iZ, delay, U( iz,ir ), &
+                                    amp, phaseint, rcvrdeclangle )
 
           ENDIF ! IF ( n.LT.L ) THEN
 
@@ -254,27 +285,36 @@ CONTAINS
 ! dtauds :: delay along ray
 ! inRcvrRanges :: logical to skip steps with no influence
   CHARACTER*(MAX_LEN_MBUF):: msgBuf
-  INTEGER              :: irT(1), irTT ! irT needs size of 1, see MINLOC
+  INTEGER :: iH, iZ, iR
+  REAL    (KIND=_RL90) :: Ratio1 ! scale factor for a line source
+  REAL    (KIND=_RL90) :: W, s, n, phase, rA, rB, &
+                          q0, q, qOld
+  REAL    (KIND=_RL90) :: Amp, phaseInt, RcvrDeclAngle
+  COMPLEX (KIND=_RL90) :: delay
+
+!  INTEGER              :: irT(1), ! irT needs size of 1, see MINLOC
+  INTEGER              :: irTT
   REAL (KIND=_RL90)    :: x_ray( 2 ), rayt( 2 ), rayn( 2 ), &
-                        x_rcvr( 2, nRz_per_range ), rLen, RadiusMax, &
-                        zMin, zMax, dqds
+                          x_rcvr( 2, nRz_per_range ), rLen, RadiusMax, &
+                          zMin, zMax, dqds
   COMPLEX (KIND=_RL90) :: dtauds
   LOGICAL              :: inRcvrRanges
 
-!$TAF init iiitape1 = static, (Beam%nSteps-1)
-!$TAF init iiitape2 = static, (Beam%nSteps-1)*ihop_nRR
-!$TAF init iiitape3 = static, (Beam%nSteps-1)*ihop_nRR*nRz_per_range
+!!$TAF init iiitape1 = static, (Beam%nSteps-1)
+!!$TAF init iiitape2 = static, (Beam%nSteps-1)*ihop_nRR
+!!$TAF init iiitape3 = static, (Beam%nSteps-1)*ihop_nRR*nRz_per_range
 
+  ! init module variables
   q0           = ray2D( 1 )%c / Angles%Dalpha   ! Reference for J = q0 / q
   phase        = 0.0
   qOld         = ray2D( 1 )%q( 1 )       ! old KMAH index
   rA           = ray2D( 1 )%x( 1 )       ! range at start of ray, typically 0
 
-  ! find index of first receiver to the right of rA
-  irT = MINLOC( Pos%RR( 1 : Pos%nRR ), MASK = Pos%RR( 1 : Pos%nRR ).GT.rA )
-  ir  = irT( 1 )
-  ! if ray is left-traveling, get the first receiver to the left of rA
-  IF ( ray2D( 1 )%t( 1 ).LT.0.0d0 .AND. ir.GT.1 ) ir = ir - 1
+!  ! find index of first receiver to the right of rA
+!  irT = MINLOC( Pos%RR( 1:Pos%nRR ), MASK = Pos%RR( 1:Pos%nRR ).GT.rA )
+!  ir  = irT( 1 )
+!  ! if ray is left-traveling, get the first receiver to the left of rA
+!  IF ( ray2D( 1 )%t( 1 ).LT.0.0d0 .AND. ir.GT.1 ) ir = ir - 1
 
   ! point source: the default option
   Ratio1 = 1.0d0          !RG
@@ -282,7 +322,7 @@ CONTAINS
     Ratio1 = SQRT( ABS( COS( SrcDeclAngle / rad2deg ) ) )
 
   Stepping: DO iH = 2, Beam%nSteps
-!$TAF store phase,qold,ra = iiitape1
+!!$TAF store phase,qold,ra = iiitape1
     rB     = ray2D( iH   )%x( 1 )
     x_ray  = ray2D( iH-1 )%x
 
@@ -296,7 +336,7 @@ CONTAINS
 
     ! if duplicate point in ray, skip to next step along the ray
     IF ( rlen.GE.1.0D3*SPACING( ray2D( iH )%x( 1 ) ) ) THEN
-!$TAF store rlen,rayt= iiitape1
+!!$TAF store rlen,rayt= iiitape1
       rayt = rayt / rlen                    ! unit tangent of ray @ A
       rayn = [ -rayt( 2 ), rayt( 1 ) ]      ! unit normal  of ray @ A
       IF ( ALL(rayt.EQ.0.0) ) THEN
@@ -330,7 +370,7 @@ CONTAINS
       ! compute beam influence for this segment of the ray
       inRcvrRanges=.TRUE.
       RcvrRanges: DO ir = 1, ihop_nRR
-!$TAF store inrcvrranges = iiitape2
+!!$TAF store inrcvrranges = iiitape2
         ! is Rr( ir ) contained in [ rA, rB )? Then compute beam influence
         IF ( Pos%RR( ir ).GE.MIN( rA, rB ) &
             .AND. Pos%RR( ir ).LT.MAX( rA, rB ) &
@@ -349,9 +389,9 @@ CONTAINS
             IF (      x_rcvr( 2, iz ).GE.zmin &
                 .AND. x_rcvr( 2, iz ).LE.zmax ) THEN
               ! normalized proportional distance along ray
-              s = DOT_PRODUCT( x_rcvr( :, iz ) - x_ray, rayt ) / rlen
+              s = DOT_PRODUCT( x_rcvr( :,iz ) - x_ray, rayt ) / rlen
               ! normal distance to ray
-              n = ABS( DOT_PRODUCT( x_rcvr( :, iz ) - x_ray, rayn ) )
+              n = ABS( DOT_PRODUCT( x_rcvr( :,iz ) - x_ray, rayn ) )
               ! interpolated amplitude in [meters]
               q = q + s*dqds
               ! beam radius; IESCO22 smaller then previous RadiusMax
@@ -381,7 +421,8 @@ CONTAINS
                   phaseInt = ray2D( iH-1 )%Phase + phase
                 ENDIF
 
-                CALL ApplyContribution( U( iz, ir ) )
+                CALL ApplyContribution( iH, iR, iZ, delay, U( iz,ir ), &
+                                        amp, phaseint, rcvrdeclangle )
 
               ENDIF ! IF ( n.LT.RadiusMax )
 
@@ -446,6 +487,12 @@ CONTAINS
 ! dtauds :: delay along ray
 ! inRcvrRanges :: logical to skip steps with no influence
   CHARACTER*(MAX_LEN_MBUF) :: msgBuf
+  INTEGER :: iH, iZ, iR
+  REAL    (KIND=_RL90) :: Ratio1 ! scale factor for a line source
+  REAL    (KIND=_RL90) :: W, s, n, phase, rA, rB, &
+                          q0, q, qOld
+  REAL    (KIND=_RL90) :: Amp, phaseInt, RcvrDeclAngle
+  COMPLEX (KIND=_RL90) :: delay
   INTEGER, PARAMETER   :: BeamWindow = 4
   INTEGER              :: irT( 1 ), irTT
   REAL (KIND=_RL90)    :: x_ray( 2 ), rayt( 2 ), rayn( 2 ), x_rcvr( 2 ), &
@@ -589,7 +636,8 @@ CONTAINS
                    q.GE.0.0d0 .AND. qOld.LT.0.0d0 ) &
                 phaseInt = phase + PI / 2.  ! phase shifts at caustics
 
-              CALL ApplyContribution( U( iz, ir ) )
+              CALL ApplyContribution( iH, iR, iZ, delay, U( iz,ir ), &
+                                      amp, phaseint, rcvrdeclangle )
 
             ENDIF ! IF ( n.LT.BeamWindow*sigma )
 
@@ -623,7 +671,7 @@ CONTAINS
 !BOP
 ! !ROUTINE: ApplyContribution
 ! !INTERFACE:
-  SUBROUTINE ApplyContribution( U )
+  SUBROUTINE ApplyContribution( iH, iR, iZ, tau, uPoint, Amp, phaseInt, arrAngle )
 ! !DESCRIPTION:
 !   Apply the contribution of the current ray to the pressure field U.
 
@@ -633,9 +681,12 @@ CONTAINS
   USE ihop_mod, only: afreq, RAYFile, DELFile, nMax
 
 ! !INPUT PARAMETERS:
-! U :: complex pressure field
-  COMPLEX, INTENT( INOUT ) :: U
-! !OUTPUT PARAMETERS: U
+! uPoint :: complex pressure field
+  COMPLEX, INTENT( INOUT ) :: uPoint
+  COMPLEX (KIND=_RL90), INTENT( IN ) :: tau
+  REAL (KIND=_RL90), INTENT( IN ) :: Amp, phaseInt, arrAngle
+  INTEGER, INTENT( IN ) :: iH, iR, iZ
+! !OUTPUT PARAMETERS: uPoint
 
 ! !LOCAL VARIABLES:
 ! tmpDelay :: temporary array for delay values
@@ -656,15 +707,13 @@ CONTAINS
 ! write rays and delays
   SELECT CASE( Beam%RunType( 1:1 ) )
   CASE ( 'E' )                ! eigenrays
-    U=U
-!    tmpDelay = 0.
+    uPoint=uPoint
     CALL WriteRayOutput( RAYFile, iH,         &
       tmpX(1:iH), tmpY(1:iH),                 &
       ray2D(iH)%nTopBnc, ray2D(iH)%nBotBnc )
 
   CASE ( 'e' )                ! eigenrays AND arrivals
-    U=U
-!    tmpDelay = 0.
+    uPoint=uPoint
     CALL WriteRayOutput( RAYFile, iH,         &
       tmpX(1:iH), tmpY(1:iH),                 &
       ray2D(iH)%nTopBnc, ray2D(iH)%nBotBnc )
@@ -674,37 +723,33 @@ CONTAINS
         ray2D(iH)%nTopBnc, ray2D(iH)%nBotBnc )
     ENDIF
 
-    CALL AddArr( afreq, iz, ir, Amp, phaseInt, delay,  &
-      RcvrDeclAngle, ray2D(iH)%nTopBnc, ray2D(iH)%nBotBnc )
+    CALL AddArr( afreq, iZ, iR, Amp, phaseInt, tau,  &
+      arrAngle, ray2D(iH)%nTopBnc, ray2D(iH)%nBotBnc )
 
   CASE ( 'A', 'a' )           ! arrivals
-    U=U
-!    tmpDelay = 0.
-    CALL AddArr( afreq, iz, ir, Amp, phaseInt, delay,  &
-      RcvrDeclAngle, ray2D(iH)%nTopBnc, ray2D(iH)%nBotBnc )
+    uPoint=uPoint
+    CALL AddArr( afreq, iZ, iR, Amp, phaseInt, tau,  &
+      arrAngle, ray2D(iH)%nTopBnc, ray2D(iH)%nBotBnc )
 
   CASE ( 'C' )                ! coherent TL
-!    tmpDelay = 0.
-    U = U + CMPLX( Amp * EXP( -oneCMPLX * ( afreq * delay - phaseInt ) ) )
+    uPoint = uPoint + CMPLX( Amp * EXP( -oneCMPLX * ( afreq * tau - phaseInt ) ) )
 
   CASE ( 'S', 'I' )                ! incoherent/semicoherent TL
-!    tmpDelay = 0.
     IF ( Beam%Type( 1:1 ).EQ.'B' ) THEN   ! Gaussian beam
-      U = U + SNGL( SQRT( 2. * PI ) &
-            * ( Amp * EXP( AIMAG( afreq * delay ) ) )**2 )
+      uPoint = uPoint + SNGL( SQRT( 2. * PI ) &
+            * ( Amp * EXP( AIMAG( afreq * tau ) ) )**2 )
     ELSE
-      U = U + SNGL( &
-               ( Amp * EXP( AIMAG( afreq * delay ) ) )**2 )
+      uPoint = uPoint + SNGL( &
+               ( Amp * EXP( AIMAG( afreq * tau ) ) )**2 )
     ENDIF
 
   CASE DEFAULT                ! incoherent/semicoherent TL
-!    tmpDelay = 0.
     IF ( Beam%Type( 1:1 ).EQ.'B' ) THEN   ! Gaussian beam
-      U = U + SNGL( SQRT( 2. * PI ) &
-            * ( Amp * EXP( AIMAG( afreq * delay ) ) )**2 )
+      uPoint = uPoint + SNGL( SQRT( 2. * PI ) &
+            * ( Amp * EXP( AIMAG( afreq * tau ) ) )**2 )
     ELSE
-      U = U + SNGL( &
-               ( Amp * EXP( AIMAG( afreq * delay ) ) )**2 )
+      uPoint = uPoint + SNGL( &
+               ( Amp * EXP( AIMAG( afreq * tau ) ) )**2 )
     ENDIF
 
   END SELECT ! SELECT CASE( Beam%RunType( 1:1 ) )
@@ -742,6 +787,7 @@ CONTAINS
 ! const :: scale factor for field
 ! factor :: scale factor for cylindrical spreading
   REAL (KIND=_RL90) :: const, factor
+  INTEGER :: iR
 !EOP
 
   ! Compute scale factor for field
