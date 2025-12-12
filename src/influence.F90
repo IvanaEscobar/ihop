@@ -52,18 +52,17 @@ CONTAINS
   SUBROUTINE calculateInfluence( myThid )
 ! !DESCRIPTION:
 !   determine eigenrays and apply pressure field, U
-  USE arr_mod, only: U
   INTEGER, INTENT ( IN ) :: myThid
 
   SELECT CASE ( Beam%Type( 1:1 ) )
   CASE ( 'g' )
-    CALL InfluenceGeoHatRayCen( U, myThid )
+    CALL InfluenceGeoHatRayCen( myThid )
   CASE ( 'B' )
-    CALL InfluenceGeoGaussianCart( U, myThid )
+    CALL InfluenceGeoGaussianCart( myThid )
   CASE ( 'G','^' )
-    CALL InfluenceGeoHatCart( U, myThid )
+    CALL InfluenceGeoHatCart( myThid )
   CASE DEFAULT !IEsco22: thesis is in default behavior
-    CALL InfluenceGeoHatCart( U, myThid )
+    CALL InfluenceGeoHatCart( myThid )
   END SELECT
 
   RETURN
@@ -73,7 +72,7 @@ CONTAINS
 !BOP
 ! !ROUTINE: InfluenceGeoHatRayCen
 ! !INTERFACE:
-  SUBROUTINE InfluenceGeoHatRayCen( U, myThid )
+  SUBROUTINE InfluenceGeoHatRayCen( myThid )
 ! !DESCRIPTION:
 !   Geometrically-spreading beams with a hat-shaped beam in ray-centered
 !   coordinates
@@ -83,11 +82,9 @@ CONTAINS
   USE angle_mod, only: Angles
 
 ! !INPUT PARAMETERS:
-! U :: complex pressure field
 ! myThid :: my thread ID
-  COMPLEX, INTENT( INOUT ) :: U( nRz_per_range, Pos%nRR )
   INTEGER, INTENT( IN )    :: myThid
-! !OUTPUT PARAMETERS: U
+! !OUTPUT PARAMETERS: 
 
 ! !LOCAL VARIABLES:
 ! msgBuf :: Informational/error message buffer
@@ -118,6 +115,16 @@ CONTAINS
 !$TAF init iRayCen1  = static, (Beam%nSteps-1)*nRz_per_range
 !$TAF init iRayCen2  = static, (Beam%nSteps-1)*ihop_nRR*nRz_per_range
 !$TAF store ray2d = iRayCen0
+! init local variables
+  W = 0
+  s = 0
+  n = 0
+  rB = rA
+  q = 0
+  Amp = 0
+  phaseint = 0
+  rcvrdeclangle = 180
+  delay = 0
 
   q0   = ray2D( 1 )%c / Angles%Dalpha   ! Reference for J = q0 / q
 
@@ -236,7 +243,7 @@ CONTAINS
                 (q.GE.0.0D0 .AND. qOld.LT.0.0D0)) &
               phaseInt = phase + PI / 2.0D0  ! phase shifts at caustics
 
-            CALL ApplyContribution( iH, iR, iZ, delay, U( iz,ir ), &
+            CALL ApplyContribution( iH, iR, iZ, delay, &
                                     amp, phaseint, rcvrdeclangle )
 
           ENDIF ! IF ( n.LT.L ) THEN
@@ -260,7 +267,7 @@ CONTAINS
 !BOP
 ! !ROUTINE: InfluenceGeoHatCart
 ! !INTERFACE:
-  SUBROUTINE InfluenceGeoHatCart( U, myThid )
+  SUBROUTINE InfluenceGeoHatCart( myThid )
 ! !DESCRIPTION:
 !   Geometrically-spreading beams with a hat-shaped beam in Cartesian
 !   coordinates. When Beam%Type(1:1)='G' or '^'
@@ -270,9 +277,7 @@ CONTAINS
   USE angle_mod, only: Angles
 
 ! !INPUT PARAMETERS:
-! U :: complex pressure field
 ! myThid :: my thread ID
-  COMPLEX, INTENT( INOUT ) :: U( nRz_per_range, Pos%nRR )
   INTEGER, INTENT( IN )    :: myThid
 ! !OUTPUT PARAMETERS: U
 
@@ -304,11 +309,20 @@ CONTAINS
 !!$TAF init iiitape2 = static, (Beam%nSteps-1)*ihop_nRR
 !!$TAF init iiitape3 = static, (Beam%nSteps-1)*ihop_nRR*nRz_per_range
 
-  ! init module variables
+  ! init local variables
   q0           = ray2D( 1 )%c / Angles%Dalpha   ! Reference for J = q0 / q
   phase        = 0.0
   qOld         = ray2D( 1 )%q( 1 )       ! old KMAH index
   rA           = ray2D( 1 )%x( 1 )       ! range at start of ray, typically 0
+  W = 0
+  s = 0
+  n = 0
+  rB = rA
+  q = 0
+  Amp = 0
+  phaseint = 0
+  rcvrdeclangle = 180
+  delay = 0
 
 !  ! find index of first receiver to the right of rA
 !  irT = MINLOC( Pos%RR( 1:Pos%nRR ), MASK = Pos%RR( 1:Pos%nRR ).GT.rA )
@@ -317,7 +331,7 @@ CONTAINS
 !  IF ( ray2D( 1 )%t( 1 ).LT.0.0d0 .AND. ir.GT.1 ) ir = ir - 1
 
   ! point source: the default option
-  Ratio1 = 1.0d0          !RG
+  Ratio1 = 1.0 _d 0          !RG
   IF ( Beam%RunType( 4:4 ).EQ.'R' ) &
     Ratio1 = SQRT( ABS( COS( SrcDeclAngle / rad2deg ) ) )
 
@@ -421,7 +435,7 @@ CONTAINS
                   phaseInt = ray2D( iH-1 )%Phase + phase
                 ENDIF
 
-                CALL ApplyContribution( iH, iR, iZ, delay, U( iz,ir ), &
+                CALL ApplyContribution( iH, iR, iZ, delay, &
                                         amp, phaseint, rcvrdeclangle )
 
               ENDIF ! IF ( n.LT.RadiusMax )
@@ -460,7 +474,7 @@ CONTAINS
 !BOP
 ! !ROUTINE: InfluenceGeoGaussianCart
 ! !INTERFACE:
-  SUBROUTINE InfluenceGeoGaussianCart( U, myThid )
+  SUBROUTINE InfluenceGeoGaussianCart( myThid )
 ! !DESCRIPTION:
 !   Geometrically-spreading beams with a Gaussian beam in Cartesian
 !   coordinates. When Beam%Type(1:1)='B'
@@ -471,11 +485,9 @@ CONTAINS
   USE angle_mod, only: Angles
 
 ! !INPUT PARAMETERS:
-! U :: complex pressure field
 ! myThid :: my thread ID
-  COMPLEX, INTENT( INOUT ) :: U( nRz_per_range, Pos%nRR )
   INTEGER, INTENT( IN )    :: myThid
-! !OUTPUT PARAMETERS: U
+! !OUTPUT PARAMETERS:
 
 ! !LOCAL VARIABLES:
 ! msgBuf :: Informational/error message buffer
@@ -508,6 +520,16 @@ CONTAINS
   phase  = 0
   qOld   = ray2D( 1 )%q( 1 )       ! used to track KMAH index
   rA     = ray2D( 1 )%x( 1 )       ! range at start of ray
+! init local variables
+  W = 0
+  s = 0
+  n = 0
+  rB = rA
+  q = 0
+  Amp = 0
+  phaseint = 0
+  rcvrdeclangle = 180
+  delay = 0
 
   ! what if never satistified?
   ! what if there is a single receiver (ir = 0 possible)
@@ -636,7 +658,7 @@ CONTAINS
                    q.GE.0.0d0 .AND. qOld.LT.0.0d0 ) &
                 phaseInt = phase + PI / 2.  ! phase shifts at caustics
 
-              CALL ApplyContribution( iH, iR, iZ, delay, U( iz,ir ), &
+              CALL ApplyContribution( iH, iR, iZ, delay, &
                                       amp, phaseint, rcvrdeclangle )
 
             ENDIF ! IF ( n.LT.BeamWindow*sigma )
@@ -671,25 +693,25 @@ CONTAINS
 !BOP
 ! !ROUTINE: ApplyContribution
 ! !INTERFACE:
-  SUBROUTINE ApplyContribution( iH, iR, iZ, tau, uPoint, Amp, phaseInt, arrAngle )
+  SUBROUTINE ApplyContribution( iH, iR, iZ, tau, Amp, phaseInt, arrAngle )
 ! !DESCRIPTION:
 !   Apply the contribution of the current ray to the pressure field U.
 
 ! !USES:
   USE writeray, only: WriteRayOutput
-  USE arr_mod,  only: AddArr
+  USE arr_mod,  only: AddArr, U
   USE ihop_mod, only: afreq, RAYFile, DELFile, nMax
 
 ! !INPUT PARAMETERS:
-! uPoint :: complex pressure field
-  COMPLEX, INTENT( INOUT ) :: uPoint
   COMPLEX (KIND=_RL90), INTENT( IN ) :: tau
   REAL (KIND=_RL90), INTENT( IN ) :: Amp, phaseInt, arrAngle
   INTEGER, INTENT( IN ) :: iH, iR, iZ
-! !OUTPUT PARAMETERS: uPoint
+! !OUTPUT PARAMETERS:
 
 ! !LOCAL VARIABLES:
 ! tmpDelay :: temporary array for delay values
+! uPoint :: complex pressure field
+  COMPLEX  :: uPoint
   INTEGER :: i
   REAL(KIND=_RL90) :: tmpX(nMax), tmpY(nMax), tmpDelay(nMax)
 !EOP
@@ -753,6 +775,9 @@ CONTAINS
     ENDIF
 
   END SELECT ! SELECT CASE( Beam%RunType( 1:1 ) )
+
+  ! upload pressure field
+  U(iZ, iR) = uPoint
 
   RETURN
   END !SUBROUTINE ApplyContribution

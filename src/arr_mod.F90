@@ -94,11 +94,11 @@ CONTAINS
 ! iAllocStat          :: Allocation status
 ! x, y                :: Dimensions of the U matrix
 ! arrStorage          :: Storage for arrivals
-! minnArr             :: Minimum number of arrivals to allocate
+! nMinArr             :: Minimum number of arrivals to allocate
   CHARACTER*(MAX_LEN_MBUF):: msgBuf
   INTEGER             :: iAllocStat
   INTEGER             :: x, y
-  INTEGER, PARAMETER  :: arrStorage = 100, minnArr = 10
+  INTEGER, PARAMETER  :: arrStorage = 1000, nMinArr = 10
 !EOP
 
   ! reset memory
@@ -131,11 +131,12 @@ CONTAINS
   ENDIF
 
   ! for an arrivals run, allocate space for arrivals matrices
+  nMaxArr = -1
   SELECT CASE ( Beam%RunType( 1:1 ) )
   CASE ( 'A', 'a', 'e' )
-    ! allow space for at least minnArr arrivals
+    ! allow space for at least nMinArr arrivals
     nMaxArr = MAX( arrStorage / ( nRz_per_range * Pos%nRR ), &
-                  minnArr )
+                  nMinArr )
   CASE DEFAULT
     nMaxArr = 1
   END SELECT ! Beam%RunType( 1:1 )

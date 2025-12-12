@@ -237,6 +237,7 @@ CONTAINS
   REAL(KIND=_RL90) :: Amp0, DalphaOpt, xs(2), RadMax, s, &
                       c, cimag, gradc(2), crr, crz, czz, rho
   REAL(KIND=_RL90) :: tmpDelay(nMax)
+  REAL(KIND=_RL90) :: tmpRaytauR(Angles%nAlpha)
 !EOP
 
 !$TAF init IHOPCore2 = static, Pos%nSZ*Angles%nAlpha
@@ -347,7 +348,11 @@ CONTAINS
 
       ENDIF ! IF ( Angles%iSingle_alpha.EQ.0 .OR. iAlpha.EQ.Angles%iSingle_alpha )
 
+      tmpRaytauR(iAlpha) = real( ray2d(beam%nsteps)%tau )
+
     ENDDO DeclinationAngle
+
+    PRINT *, "ESCOBAR ALL TAUS: ", tmpraytaur
 
     ! Write results to disk
     SELECT CASE ( Beam%RunType( 1:1 ) )
