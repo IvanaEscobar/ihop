@@ -1,4 +1,14 @@
 !     *==========================================================*
+!     | SUBROUTINE LOCABS  is manually active                    |
+!     *==========================================================*
+!$TAF SUBROUTINE influence::locABS FTLNAME = locABS
+!$TAF SUBROUTINE influence::locABS ADNAME  = locABS
+!$TAF SUBROUTINE influence::locABS INPUT   = 1,2
+!$TAF SUBROUTINE influence::locABS OUTPUT  =   2
+!$TAF SUBROUTINE influence::locABS ACTIVE  = 1,2
+!$TAF SUBROUTINE influence::locABS DEPEND  = 
+
+!     *==========================================================*
 !     | SUBROUTINE WRITERAYOUTPUT  is passive                    |
 !     *==========================================================*
 !$TAF SUBROUTINE writeray::writerayoutput INPUT   = 1, 2, 3, 4, 5, 6
