@@ -1128,6 +1128,8 @@ USE splinec_mod,  only: splineall
     ENDIF ! IF ( iz.GE.2 )
 
     IF ( iz.EQ.1 ) THEN
+      ! IESCO25: dummy line for dummy TAF
+      ssp1buffer = ihop_ssp(i, j, iz, bi,bj)
       ! Top ihop vlayer: set to z=0
       ssp1buffer = CHEN_MILLERO(i, j, 0, bi,bj,myThid) * &
         ihop_idw_weights(ii, jj) / ihop_sumweights(ii, iz)

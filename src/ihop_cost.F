@@ -224,8 +224,11 @@ C Open tiled files and read to buffer
 C Save tiled model equi from buffer, see PROFILES_READVECTOR
 C Combine all threads to global
                 irec = ihopObs_ind_glob_tiled(num_file,iObs,bi,bj)
+C IESCO25: dummy +/- of ihop_ssp to get TAF TLM to work
                 ihopObs_buff(irec)=ihopObs_buff(irec)+ihop_modvaltmp
-
+     &                             + ihop_ssp(1,1,1,bi,bj)
+                ihopObs_buff(irec)=ihopObs_buff(irec)
+     &                             - ihop_ssp(1,1,1,bi,bj)
               ENDIF !IF (iObs.LE.ObsNo_tiled(num_file,bi,bj))
             ENDDO !DO iObs
 

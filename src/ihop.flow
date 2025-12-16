@@ -56,6 +56,7 @@
 
 !     *==========================================================*
 !     | SUBROUTINE READREFLECTIONCOEFFICIENT  is passive         |
+!     | SUBROUTINE WRITEREFCOEF               is passive         |
 !     *==========================================================*
 !$TAF SUBROUTINE refcoef::readreflectioncoefficient INPUT   = 1, 2, 3
 !$TAF SUBROUTINE refcoef::readreflectioncoefficient OUTPUT  =
@@ -63,6 +64,9 @@
 !$TAF SUBROUTINE refcoef::readreflectioncoefficient MODULE refCoef OUTPUT = NkTab
 !$TAF SUBROUTINE refcoef::readreflectioncoefficient MODULE refCoef OUTPUT = iTab,xTab,fTab,gTab
 !$TAF SUBROUTINE refcoef::readreflectioncoefficient MODULE refCoef OUTPUT = RBot,RTop
+!$TAF SUBROUTINE refcoef::writerefcoef INPUT   = 1
+!$TAF SUBROUTINE refcoef::writerefcoef OUTPUT  =
+!$TAF SUBROUTINE refcoef::writerefcoef MODULE bdry_mod INPUT = Bdry
 
 !     *==========================================================*
 !     | SUBROUTINE INITATI  is passive                           |
