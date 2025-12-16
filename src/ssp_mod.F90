@@ -627,6 +627,8 @@ CONTAINS
 ! !OUTPUT PARAMETERS: c, cimag, gradc, crr, crz, czz, rho
 
 ! !LOCAL VARIABLES: None
+  COMPLEX (KIND=_RL90) :: n2tmp
+  REAL (KIND=_RL90) :: n2tmpR, n2tmpI
 !EOP
 
   iSegz = 1 !RG
@@ -645,11 +647,12 @@ CONTAINS
   ENDIF ! IF ( x( 2 ).LT.Grid%Z( iSegz ) .OR. x( 2 ).GT.Grid%Z( iSegz+1 ) )
 
   W = ( x( 2 ) - Grid%Z( iSegz ) ) / ( Grid%Z( iSegz+1 ) - Grid%Z( iSegz ) )
+  n2tmp = ( 1-W )*n2( iSegz ) + W*n2( iSegz+1 ) 
 
-  c     = REAL(  1.0D0 / SQRT( ( 1.0D0-W ) * n2( iSegz ) &
-          + W * n2( iSegz+1 ) ) )
-  cimag = AIMAG( 1.0D0 / SQRT( ( 1.0D0-W ) * n2( iSegz ) &
-          + W * n2( iSegz+1 ) ) )
+  ! IESCO25: TO-DO Seperate complex sqrt for TAF...
+
+  c     = REAL(  1.0D0 / SQRT( n2tmp ) )
+  cimag = AIMAG( 1.0D0 / SQRT( n2tmp ) )
 
   gradc = [ 0.0D0, -0.5D0 * c * c * c * REAL( n2z( iSegz ) ) ]
   crr   = 0.0d0

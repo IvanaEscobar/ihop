@@ -153,8 +153,9 @@ CONTAINS
   IF ( Beam%RunType( 4:4 ).EQ.'R' ) &
     Ratio1 = SQRT( ABS( COS( SrcDeclAngle / rad2deg ) ) )
 
+  ! Scale amplitude
   ray2D( 1:Beam%nSteps )%Amp = Ratio1 * SQRT( ray2D( 1:Beam%nSteps )%c ) &
-                  * ray2D( 1:Beam%nSteps )%Amp   ! pre-apply some scaling
+                  * ray2D( 1:Beam%nSteps )%Amp
 
   RcvrDepths: DO iz = 1, nRz_per_range
     zR = Pos%RZ( iz )
@@ -441,8 +442,12 @@ CONTAINS
                 delay    = ray2D( iH-1 )%tau + s*dtauds
 
                 CALL locABS(q,qtmp)
-                Amp      = SQRT( ray2D( iH )%c / qtmp )
-                Amp      = Ratio1 * Amp * ray2D( iH )%Amp
+                IF ( ray2D( iH )%c.GT.zeroRL ) THEN
+                  Amp = SQRT( ray2D( iH )%c / qtmp )
+                ELSE
+                  Amp = 0.0
+                ENDIF
+                Amp = Ratio1 * Amp * ray2D( iH )%Amp
                 ! hat function: 1 on center, 0 on edge
                 IF ( RadiusMax.NE.0 ) THEN
                   W = ( RadiusMax - n ) / RadiusMax
@@ -684,7 +689,11 @@ CONTAINS
                 delay    = ray2D( iH-1 )%tau + s*dtauds
 
                 CALL locABS(q,qtmp)
-                Amp      = SQRT( ray2D( iH )%c / qtmp )
+                IF ( ray2D( iH )%c.GT.zeroRL ) THEN
+                  Amp = SQRT( ray2D( iH )%c / qtmp )
+                ELSE
+                  Amp = 0.0
+                ENDIF
                 Amp      = Ratio1 * Amp * ray2D( iH )%Amp
                 ! W : Gaussian decay
                 IF ( sigma.NE.0 ) THEN
