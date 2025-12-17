@@ -43,6 +43,7 @@ private
 public :: calculateinfluence
 public :: calculateinfluence_tl
 public :: scalepressure
+public :: scalepressure_tl
 
 !==============================================
 ! declare parameters
@@ -217,6 +218,9 @@ common /ihop_state_2d/ ihop_sld
 
 double precision, private :: ihop_ssp(1-olx:snx+olx,1-oly:sny+oly,nr,nsx,nsy)
 common /ihop_state_3d/ ihop_ssp
+
+double precision, private :: ihop_ssp_tl(1-olx:snx+olx,1-oly:sny+oly,nr,nsx,nsy)
+common /ihop_state_3d_tl/ ihop_ssp_tl
 
 double precision, private :: heatcapacity_cp
 common /parm_a/ heatcapacity_cp
@@ -1055,7 +1059,7 @@ contains
       sigmatmp = min(0.2*ihop_freq*real(ray2d(ih)%tau),pi*lambda)
       radiusmax = max(radiusmax,sigmatmp)
       radiusmax = beamwindow*radiusmax
-      if (abs(rayt(1)) > 0.5) then
+      if (rayt(1) > 0.5 .or. rayt(1) < (-0.5)) then
         zmin = min(xa(2),xb(2))-radiusmax
         zmax = max(xa(2),xb(2))+radiusmax
       else
@@ -1087,7 +1091,11 @@ if (ihop_dumpfreq >= 0) then
 endif
 delay = ray2d(ih-1)%tau+s*dtauds
 call locabs( q,qtmp )
-amp = sqrt(ray2d(ih)%c/qtmp)
+if (ray2d(ih)%c > zerorl) then
+  amp = sqrt(ray2d(ih)%c/qtmp)
+else
+  amp = 0.0
+endif
 amp = ratio1*amp*ray2d(ih)%amp
 if (sigma /= 0) then
   w = exp(-(0.5*(n/sigma)**2))/sigma**2
@@ -1141,15 +1149,16 @@ call applycontribution( ih,ir,iz,delay,amp,phaseint,rcvrdeclangle )
   integer, parameter :: ikind2 = 8
   integer, parameter :: ikind3 = 8
   integer, parameter :: ikind4 = 8
-  integer, parameter :: ikind9 = 8
+  integer, parameter :: ikind5 = 8
   integer, parameter :: ikinea = 8
   integer, parameter :: ikineb = 8
   integer, parameter :: ikinec = 8
   integer, parameter :: ikined = 8
-  integer, parameter :: ikinef = 8
+  integer, parameter :: ikinee = 8
   integer, parameter :: ikineg = 8
   integer, parameter :: ikineh = 8
   integer, parameter :: ikinei = 8
+  integer, parameter :: ikinej = 8
 
 !==============================================
 ! declare arguments
@@ -1237,22 +1246,22 @@ call applycontribution( ih,ir,iz,delay,amp,phaseint,rcvrdeclangle )
   qold = ray2d(1)%q(1)
   ra_tl = ray2d_tl(1)%x_tl(1)
   ra = ray2d(1)%x(1)
-  w_tl = 0._ikinei
+  w_tl = 0._ikinej
   w = 0
-  s_tl = 0._ikineh
+  s_tl = 0._ikinei
   s = 0
-  n_tl = 0._ikineg
+  n_tl = 0._ikineh
   n = 0
-  xb_tl = [ ra_tl,0._ikinef ]
+  xb_tl = [ ra_tl,0._ikineg ]
   xb = [ ra,zerorl ]
-  q_tl = 0._ikined
+  q_tl = 0._ikinee
   q = 0
-  amp_tl = 0._ikinec
+  amp_tl = 0._ikined
   amp = 0
-  phaseint_tl = 0._ikineb
+  phaseint_tl = 0._ikinec
   phaseint = 0
   rcvrdeclangle = 180
-  delay_tl = (0._ikinea,0._ikinea)
+  delay_tl = (0._ikineb,0._ikineb)
   delay = 0
   ratio1 = 1.0d0
   if (beam%runtype(4:4) == 'R') then
@@ -1268,7 +1277,7 @@ call applycontribution( ih,ir,iz,delay,amp,phaseint,rcvrdeclangle )
     rayt_tl = (-xa_tl)+xb_tl
     rayt = xb-xa
     if (all(rayt == 0.)) then
-      rlen_tl = 0._ikind9
+      rlen_tl = 0._ikinea
       rlen = 0.0
     else
       rlen_tl = sum(rayt_tl*rayt)/norm2(rayt)
@@ -1320,15 +1329,15 @@ call applycontribution( ih,ir,iz,delay,amp,phaseint,rcvrdeclangle )
       radiusmax = max(radiusmax,sigmatmp)
       radiusmax_tl = radiusmax_tl*beamwindow
       radiusmax = beamwindow*radiusmax
-      if (abs(rayt(1)) > 0.5) then
+      if (rayt(1) > 0.5 .or. rayt(1) < (-0.5)) then
         zmin_tl = (-radiusmax_tl)+xa_tl(2)*(0.5+sign(0.5_8,xb(2)-xa(2)))+xb_tl(2)*(0.5-sign(0.5_8,xb(2)-xa(2)))
         zmin = min(xa(2),xb(2))-radiusmax
         zmax_tl = radiusmax_tl+xa_tl(2)*(0.5+sign(0.5_8,xa(2)-xb(2)))+xb_tl(2)*(0.5-sign(0.5_8,xa(2)-xb(2)))
         zmax = radiusmax+max(xa(2),xb(2))
       else
-        zmin_tl = 0._ikind4
+        zmin_tl = 0._ikind5
         zmin = -huge(zmin)
-        zmax_tl = 0._ikind3
+        zmax_tl = 0._ikind4
         zmax = huge(zmax)
       endif
       inrcvrranges =  .true. 
@@ -1367,8 +1376,13 @@ delay_tl = dtauds_tl*s+ray2d_tl(ih-1)%tau_tl+s_tl*dtauds
 delay = ray2d(ih-1)%tau+s*dtauds
 call locabs( q_tl,qtmp_tl )
 call locabs( q,qtmp )
-amp_tl = (-(qtmp_tl/(2._8*sqrt(ray2d(ih)%c/qtmp))*(ray2d(ih)%c/qtmp/qtmp)))+ray2d_tl(ih)%c_tl*(1._8/(2._8*sqrt(ray2d(ih)%c/qtmp))/qtmp)
-amp = sqrt(ray2d(ih)%c/qtmp)
+if (ray2d(ih)%c > zerorl) then
+  amp_tl = (-(qtmp_tl/(2._8*sqrt(ray2d(ih)%c/qtmp))*(ray2d(ih)%c/qtmp/qtmp)))+ray2d_tl(ih)%c_tl*(1._8/(2._8*sqrt(ray2d(ih)%c/qtmp))/qtmp)
+  amp = sqrt(ray2d(ih)%c/qtmp)
+else
+  amp_tl = 0._ikind3
+  amp = 0.0
+endif
 amp_tl = amp_tl*ratio1*ray2d(ih)%amp+ray2d_tl(ih)%amp_tl*ratio1*amp
 amp = ratio1*amp*ray2d(ih)%amp
 if (sigma /= 0) then
@@ -1517,7 +1531,7 @@ call applycontribution_tl( ih,ir,iz,delay,delay_tl,amp,amp_tl,phaseint,phaseint_
         radiusmax = qbtmp
       endif
       radiusmax = radiusmax/q0/rayntmp
-      if (abs(rayt(1)) > 0.5) then
+      if (rayt(1) > 0.5 .or. rayt(1) < (-0.5)) then
         zmin = min(xa(2),xb(2))-radiusmax
         zmax = max(xa(2),xb(2))+radiusmax
       else
@@ -1548,7 +1562,11 @@ if (ihop_dumpfreq >= 0) then
 endif
 delay = ray2d(ih-1)%tau+s*dtauds
 call locabs( q,qtmp )
-amp = sqrt(ray2d(ih)%c/qtmp)
+if (ray2d(ih)%c > zerorl) then
+  amp = sqrt(ray2d(ih)%c/qtmp)
+else
+  amp = 0.0
+endif
 amp = ratio1*amp*ray2d(ih)%amp
 if (radiusmax /= 0) then
   w = (radiusmax-n)/radiusmax
@@ -1601,15 +1619,16 @@ call applycontribution( ih,ir,iz,delay,amp,phaseint,rcvrdeclangle )
   integer, parameter :: ikind2 = 8
   integer, parameter :: ikind3 = 8
   integer, parameter :: ikind4 = 8
-  integer, parameter :: ikind9 = 8
+  integer, parameter :: ikind5 = 8
   integer, parameter :: ikinea = 8
   integer, parameter :: ikineb = 8
   integer, parameter :: ikinec = 8
   integer, parameter :: ikined = 8
-  integer, parameter :: ikinef = 8
+  integer, parameter :: ikinee = 8
   integer, parameter :: ikineg = 8
   integer, parameter :: ikineh = 8
   integer, parameter :: ikinei = 8
+  integer, parameter :: ikinej = 8
 
 !==============================================
 ! declare arguments
@@ -1689,22 +1708,22 @@ call applycontribution( ih,ir,iz,delay,amp,phaseint,rcvrdeclangle )
   qold = ray2d(1)%q(1)
   ra_tl = ray2d_tl(1)%x_tl(1)
   ra = ray2d(1)%x(1)
-  w_tl = 0._ikinei
+  w_tl = 0._ikinej
   w = 0
-  s_tl = 0._ikineh
+  s_tl = 0._ikinei
   s = 0
-  n_tl = 0._ikineg
+  n_tl = 0._ikineh
   n = 0
-  xb_tl = [ ra_tl,0._ikinef ]
+  xb_tl = [ ra_tl,0._ikineg ]
   xb = [ ra,zerorl ]
-  q_tl = 0._ikined
+  q_tl = 0._ikinee
   q = 0
-  amp_tl = 0._ikinec
+  amp_tl = 0._ikined
   amp = 0
-  phaseint_tl = 0._ikineb
+  phaseint_tl = 0._ikinec
   phaseint = 0
   rcvrdeclangle = 180
-  delay_tl = (0._ikinea,0._ikinea)
+  delay_tl = (0._ikineb,0._ikineb)
   delay = 0
   ratio1 = 1.0d0
   if (beam%runtype(4:4) == 'R') then
@@ -1718,7 +1737,7 @@ call applycontribution( ih,ir,iz,delay,amp,phaseint,rcvrdeclangle )
     rayt_tl = (-xa_tl)+xb_tl
     rayt = xb-xa
     if (all(rayt == 0.0)) then
-      rlen_tl = 0._ikind9
+      rlen_tl = 0._ikinea
       rlen = 0.0
     else
       rlen_tl = sum(rayt_tl*rayt)/norm2(rayt)
@@ -1760,15 +1779,15 @@ call applycontribution( ih,ir,iz,delay,amp,phaseint,rcvrdeclangle )
       endif
       radiusmax_tl = (-(q0_tl*(radiusmax/q0/q0/rayntmp)))+radiusmax_tl*(1/q0/rayntmp)-rayntmp_tl*(radiusmax/q0/rayntmp/rayntmp)
       radiusmax = radiusmax/q0/rayntmp
-      if (abs(rayt(1)) > 0.5) then
+      if (rayt(1) > 0.5 .or. rayt(1) < (-0.5)) then
         zmin_tl = (-radiusmax_tl)+xa_tl(2)*(0.5+sign(0.5_8,xb(2)-xa(2)))+xb_tl(2)*(0.5-sign(0.5_8,xb(2)-xa(2)))
         zmin = min(xa(2),xb(2))-radiusmax
         zmax_tl = radiusmax_tl+xa_tl(2)*(0.5+sign(0.5_8,xa(2)-xb(2)))+xb_tl(2)*(0.5-sign(0.5_8,xa(2)-xb(2)))
         zmax = radiusmax+max(xa(2),xb(2))
       else
-        zmin_tl = 0._ikind4
+        zmin_tl = 0._ikind5
         zmin = -huge(zmin)
-        zmax_tl = 0._ikind3
+        zmax_tl = 0._ikind4
         zmax = huge(zmax)
       endif
       inrcvrranges =  .true. 
@@ -1804,8 +1823,13 @@ delay_tl = dtauds_tl*s+ray2d_tl(ih-1)%tau_tl+s_tl*dtauds
 delay = ray2d(ih-1)%tau+s*dtauds
 call locabs( q_tl,qtmp_tl )
 call locabs( q,qtmp )
-amp_tl = (-(qtmp_tl/(2._8*sqrt(ray2d(ih)%c/qtmp))*(ray2d(ih)%c/qtmp/qtmp)))+ray2d_tl(ih)%c_tl*(1._8/(2._8*sqrt(ray2d(ih)%c/qtmp))/qtmp)
-amp = sqrt(ray2d(ih)%c/qtmp)
+if (ray2d(ih)%c > zerorl) then
+  amp_tl = (-(qtmp_tl/(2._8*sqrt(ray2d(ih)%c/qtmp))*(ray2d(ih)%c/qtmp/qtmp)))+ray2d_tl(ih)%c_tl*(1._8/(2._8*sqrt(ray2d(ih)%c/qtmp))/qtmp)
+  amp = sqrt(ray2d(ih)%c/qtmp)
+else
+  amp_tl = 0._ikind3
+  amp = 0.0
+endif
 amp_tl = amp_tl*ratio1*ray2d(ih)%amp+ray2d_tl(ih)%amp_tl*ratio1*amp
 amp = ratio1*amp*ray2d(ih)%amp
 if (radiusmax /= 0) then
@@ -2236,7 +2260,7 @@ call applycontribution_tl( ih,ir,iz,delay,delay_tl,amp,amp_tl,phaseint,phaseint_
   endif
   return
   end subroutine locabs
-  subroutine scalepressure( c, r, u, nrz, nr, runtype, freq )
+  subroutine scalepressure( c, r, u, nrz, nrcvr )
 !******************************************************************
 !******************************************************************
 !** This routine was generated by Automatic differentiation.     **
@@ -2246,6 +2270,7 @@ call applycontribution_tl( ih,ir,iz,delay,delay_tl,amp,amp_tl,phaseint,phaseint_
 !==============================================
 ! referencing used modules
 !==============================================
+  use ihop_mod, only : beam
   use angle_mod, only : angles
 
   implicit none
@@ -2254,12 +2279,10 @@ call applycontribution_tl( ih,ir,iz,delay,delay_tl,amp,amp_tl,phaseint,phaseint_
 ! declare arguments
 !==============================================
   real(kind=8), intent(in) :: c
-  real(kind=8), intent(in) :: freq
-  integer, intent(in) :: nr
+  integer, intent(in) :: nrcvr
   integer, intent(in) :: nrz
-  real(kind=8), intent(in) :: r(nr)
-  character(len=5), intent(in) :: runtype
-  complex, intent(inout) :: u(nrz,nr)
+  real(kind=8), intent(in) :: r(nrcvr)
+  complex, intent(inout) :: u(nrz,nrcvr)
 
 !==============================================
 ! declare local variables
@@ -2268,28 +2291,95 @@ call applycontribution_tl( ih,ir,iz,delay,delay_tl,amp,amp_tl,phaseint,phaseint_
   real(kind=8) :: factor
   integer :: ir
 
-  select case ( runtype(2:2) )
+  select case ( beam%runtype(2:2) )
   case ('C')
-    const = -(angles%dalpha*sqrt(freq)/c)
+    const = -(angles%dalpha*sqrt(ihop_freq)/c)
   case ('R')
-    const = -(angles%dalpha*sqrt(freq)/c)
+    const = -(angles%dalpha*sqrt(ihop_freq)/c)
   case default
     const = -1.
   end select
-  if (runtype(1:1) /= 'C') then
+  if (beam%runtype(1:1) /= 'C') then
     u = sqrt(real(u))
   endif
-  ranges: do ir = 1, nr
-    if (runtype(4:4) == 'X') then
+  ranges: do ir = 1, nrcvr
+    if (beam%runtype(4:4) == 'X') then
       factor = -(4.0*sqrt(pi)*const)
     else
       if (r(ir) == 0) then
         factor = 0.0d0
       else
-        factor = const/sqrt(abs(r(ir)))
+        if (r(ir) > 0) then
+          factor = const/sqrt(r(ir))
+        else
+          factor = zerorl
+        endif
       endif
     endif
     u(:,ir) = sngl(factor)*u(:,ir)
   end do ranges
   end subroutine scalepressure
+  subroutine scalepressure_tl( c, r, u, nrz, nrcvr )
+!******************************************************************
+!******************************************************************
+!** This routine was generated by Automatic differentiation.     **
+!** FastOpt: Transformation of Algorithm in Fortran, TAF 6.8.11  **
+!******************************************************************
+!******************************************************************
+!==============================================
+! referencing used modules
+!==============================================
+  use ihop_mod, only : beam
+  use angle_mod, only : angles
+
+  implicit none
+
+!==============================================
+! declare arguments
+!==============================================
+  real(kind=8), intent(in) :: c
+  integer, intent(in) :: nrcvr
+  integer, intent(in) :: nrz
+  real(kind=8), intent(in) :: r(nrcvr)
+  complex, intent(inout) :: u(nrz,nrcvr)
+
+!==============================================
+! declare local variables
+!==============================================
+  real(kind=8) :: const
+  real(kind=8) :: factor
+  integer :: ir
+
+!----------------------------------------------
+! TANGENT LINEAR AND FUNCTION STATEMENTS
+!----------------------------------------------
+  select case ( beam%runtype(2:2) )
+  case ('C')
+    const = -(angles%dalpha*sqrt(ihop_freq)/c)
+  case ('R')
+    const = -(angles%dalpha*sqrt(ihop_freq)/c)
+  case default
+    const = -1.
+  end select
+  if (beam%runtype(1:1) /= 'C') then
+    u = sqrt(real(u))
+  endif
+  ranges1: do ir = 1, nrcvr
+    if (beam%runtype(4:4) == 'X') then
+      factor = -(4.0*sqrt(pi)*const)
+    else
+      if (r(ir) == 0) then
+        factor = 0.0d0
+      else
+        if (r(ir) > 0) then
+          factor = const/sqrt(r(ir))
+        else
+          factor = zerorl
+        endif
+      endif
+    endif
+    u(:,ir) = sngl(factor)*u(:,ir)
+  end do ranges1
+
+  end subroutine scalepressure_tl
 end module     influence

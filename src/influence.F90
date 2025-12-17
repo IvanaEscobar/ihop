@@ -841,11 +841,12 @@ CONTAINS
 !BOP
 ! !ROUTINE: ScalePressure
 ! !INTERFACE:
-  SUBROUTINE ScalePressure( c, r, U, nRz, nRcvr, RunType, freq )
+  SUBROUTINE ScalePressure( c, r, U, nRz, nRcvr )
 ! !DESCRIPTION:
 !   Scale the pressure field U according to the run type and range.
 
 ! !USES:
+  USE ihop_mod,  only: Beam
   USE angle_mod, only: Angles
 
 ! !INPUT PARAMETERS:
@@ -859,8 +860,6 @@ CONTAINS
   INTEGER,           INTENT( IN    ) :: nRz, nRcvr
   REAL (KIND=_RL90), INTENT( IN    ) :: c, r( nRcvr )
   COMPLEX,           INTENT( INOUT ) :: U( nRz, nRcvr )
-  CHARACTER*(5),     INTENT( IN    ) :: RunType
-  REAL (KIND=_RL90), INTENT( IN    ) :: freq
 ! !OUTPUT PARAMETERS: U
 
 ! !LOCAL VARIABLES:
@@ -871,21 +870,21 @@ CONTAINS
 !EOP
 
   ! Compute scale factor for field
-  SELECT CASE ( RunType( 2:2 ) )
+  SELECT CASE ( Beam%RunType( 2:2 ) )
   CASE ( 'C' )   ! Cerveny Gaussian beams in Cartesian coordinates
-    const = -Angles%Dalpha * SQRT( freq ) / c
+    const = -Angles%Dalpha * SQRT( IHOP_freq ) / c
   CASE ( 'R' )   ! Cerveny Gaussian beams in Ray-centered coordinates
-    const = -Angles%Dalpha * SQRT( freq ) / c
+    const = -Angles%Dalpha * SQRT( IHOP_freq ) / c
   CASE DEFAULT
     const = -1.0
   END SELECT
 
   ! If incoherent run, convert intensity to pressure
-  IF ( RunType( 1:1 ).NE.'C' ) U = SQRT( REAL( U ) )
+  IF ( Beam%RunType( 1:1 ).NE.'C' ) U = SQRT( REAL( U ) )
 
   ! scale and/or incorporate cylindrical spreading
   Ranges: DO iR = 1, nRcvr
-    IF ( RunType( 4:4 ).EQ.'X' ) THEN   ! line source
+    IF ( Beam%RunType( 4:4 ).EQ.'X' ) THEN   ! line source
       factor = -4.0 * SQRT( PI ) * const
     ELSE                                  ! point source
       IF ( r( iR ).EQ.0 ) THEN

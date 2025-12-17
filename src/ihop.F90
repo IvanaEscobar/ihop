@@ -297,12 +297,12 @@ CONTAINS
         Amp0 = ( 1 - s ) * SrcBmPat( IBP, 2 ) + s * SrcBmPat( IBP+1, 2 )
         ! IEsco22: When a beam pattern isn't specified, Amp0 = 0
 
-!$TAF store amp0,beam%runtype,beam%nsteps = IHOPCore2
-! IESCO24: Store derived type by data type: Bdry from bdry_mod
-! Scalar components:
+!!$TAF store amp0,beam%runtype,beam%nsteps = IHOPCore2
+!! IESCO24: Store derived type by data type: Bdry from bdry_mod
+!! Scalar components:
 !!$TAF store bdry%top%hs%cp,bdry%top%hs%cs,bdry%top%hs%rho = IHOPCore2
-! Fixed arrays:
-! Allocatable arrays:
+!! Fixed arrays:
+!! Allocatable arrays:
 
         ! Lloyd mirror pattern for semi-coherent option
         IF ( Beam%RunType( 1:1 ).EQ.'S' ) &
@@ -358,9 +358,9 @@ CONTAINS
     SELECT CASE ( Beam%RunType( 1:1 ) )
     CASE ( 'C', 'S', 'I' )   ! TL calculation
       CALL ScalePressure( ray2D( 1 )%c, Pos%RR, U, &
-                          nRz_per_range, Pos%nRR, Beam%RunType, &
-                          IHOP_freq )
+                          nRz_per_range, Pos%nRR )
       iRec = 10 + nRz_per_range * ( iH-1 )
+
       RcvrDepth: DO Irz1 = 1, nRz_per_range
         iRec = iRec + 1
         WRITE( SHDFile, REC=iRec ) U( Irz1, 1:Pos%nRR )
