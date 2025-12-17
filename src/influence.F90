@@ -347,7 +347,7 @@ CONTAINS
 !    rB  = ray2D( iH   )%x( 1 )
 
     ! compute normalized tangent (we need to measure the step length)
-    rayt = xB - xA
+    rayt = xB - xA !IESCO25: dxds
     IF ( ALL(rayt.EQ.0.0) ) THEN
       rlen = 0.0
     ELSE
@@ -389,7 +389,7 @@ CONTAINS
       RadiusMax = RadiusMax / q0 / rayntmp
 
       ! depth limits of beam; IESCO22: a large range of about 1/2 box depth
-      IF ( ABS( rayt( 1 ) ).GT.0.5 ) THEN   ! shallow angle ray
+      IF ( rayt(1).GT.0.5 .OR. rayt(1).LT.-0.5 ) THEN   ! shallow angle ray
         zmin = MIN( xA( 2 ), xB( 2 ) ) - RadiusMax
         zmax = MAX( xA( 2 ), xB( 2 ) ) + RadiusMax
       ELSE                                  ! steep angle ray
@@ -585,7 +585,7 @@ CONTAINS
 
     ! compute normalized tangent (compute it because we need to measure the
     ! step length)
-    rayt = xB - xA
+    rayt = xB - xA ! dxds
     IF ( ALL(rayt.EQ.0.) ) THEN
       rlen = 0.0
     ELSE
@@ -637,7 +637,7 @@ CONTAINS
       RadiusMax = BeamWindow*RadiusMax
 
       ! depth limits of beam; IESCO22: a large range of about 1/2 box depth
-      IF ( ABS( rayt( 1 ) ).GT.0.5 ) THEN   ! shallow angle ray
+      IF ( rayt(1).GT.0.5 .OR. rayt(1).LT.-0.5 ) THEN   ! shallow angle ray
         zmin   = MIN( xA(2), xB(2) ) - RadiusMax
         zmax   = MAX( xA(2), xB(2) ) + RadiusMax
       ELSE                                 ! steep angle ray
@@ -841,7 +841,7 @@ CONTAINS
 !BOP
 ! !ROUTINE: ScalePressure
 ! !INTERFACE:
-  SUBROUTINE ScalePressure( c, r, U, nRz, nR, RunType, freq )
+  SUBROUTINE ScalePressure( c, r, U, nRz, nRcvr, RunType, freq )
 ! !DESCRIPTION:
 !   Scale the pressure field U according to the run type and range.
 
@@ -853,12 +853,12 @@ CONTAINS
 ! r :: Rr ranges, m
 ! U :: complex pressure field
 ! nRz :: number of depths in the pressure field
-! nR :: number of ranges in the pressure field
+! nRcvr :: number of ranges in the pressure field
 ! RunType :: run type, e.g. 'C' for Cerveny Gaussian beams in Cartesian coordinates
 ! freq :: source frequency, Hz
-  REAL (KIND=_RL90), INTENT( IN    ) :: c, r( nR )
-  COMPLEX,           INTENT( INOUT ) :: U( nRz, nR )
-  INTEGER,           INTENT( IN    ) :: nRz, nR
+  INTEGER,           INTENT( IN    ) :: nRz, nRcvr
+  REAL (KIND=_RL90), INTENT( IN    ) :: c, r( nRcvr )
+  COMPLEX,           INTENT( INOUT ) :: U( nRz, nRcvr )
   CHARACTER*(5),     INTENT( IN    ) :: RunType
   REAL (KIND=_RL90), INTENT( IN    ) :: freq
 ! !OUTPUT PARAMETERS: U
@@ -884,17 +884,21 @@ CONTAINS
   IF ( RunType( 1:1 ).NE.'C' ) U = SQRT( REAL( U ) )
 
   ! scale and/or incorporate cylindrical spreading
-  Ranges: DO ir = 1, nR
+  Ranges: DO iR = 1, nRcvr
     IF ( RunType( 4:4 ).EQ.'X' ) THEN   ! line source
       factor = -4.0 * SQRT( PI ) * const
     ELSE                                  ! point source
-      IF ( r( ir ).EQ.0 ) THEN
+      IF ( r( iR ).EQ.0 ) THEN
         factor = 0.0D0 ! avoid /0 at origin, return pressure = 0
       ELSE
-        factor = const / SQRT( ABS( r( ir ) ) )
+        IF ( r(iR).GT.0 ) THEN 
+          factor = const / SQRT( r( iR ) )
+        ELSE
+          factor = zeroRL
+        ENDIF
       ENDIF
     ENDIF
-    U( :, ir ) = SNGL( factor ) * U( :, ir )
+    U( :, iR ) = SNGL( factor ) * U( :, iR )
 
   ENDDO Ranges
 
@@ -931,7 +935,7 @@ CONTAINS
 !EOP
 
 
-  Ax  = ABS( x  )
+  Ax  = ABS( x )
 
   IF ( Ax.LE.x1 ) THEN
     Hermite = 1.0d0
