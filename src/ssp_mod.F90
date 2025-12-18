@@ -28,7 +28,7 @@ MODULE ssp_mod
 ! !SCOPE: 
   PRIVATE
 !=======================================================================
-  PUBLIC init_fixed_SSP, init_varia_SSP, setSSP, evalSSP, &
+  PUBLIC init_fixed_SSP, setSSP, evalSSP, &
          Grid, SSP, &
          alphaR, betaR, alphaI, betaI, rhoR, iSegz, iSegr
 !=======================================================================
@@ -88,7 +88,6 @@ CONTAINS
 ! S/R init_fixed_SSP
 ! S/R ReadSSP
 ! S/R init_fixed_Grid
-! S/R init_varia_SSP
 
 ! S/R setSSP
 ! S/R evalSSP
@@ -388,56 +387,6 @@ CONTAINS
 
   RETURN
   END !SUBROUTINE init_fixed_Grid
-
-!---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
-!BOP
-! !ROUTINE: init_varia_SSP
-! !INTERFACE:
-  SUBROUTINE init_varia_SSP( myThid )
-! !DESCRIPTION:
-!   Initialize the fixed SSP parameters that do not change within a time series.
-! Sets SSP%c,cz,cMat,czMat
-
-! !USES: None
-
-! !INPUT PARAMETERS:
-! myThid :: my thread ID
-  INTEGER, INTENT( IN ) :: myThid
-! !OUTPUT PARAMETERS: None
-
-! !LOCAL VARIABLES:
-! msgBuf :: Informational/error message buffer
-! iallocstat :: Allocation status
-#ifdef IHOP_WRITE_OUT
-  CHARACTER*(MAX_LEN_MBUF):: msgBuf
-#endif /* IHOP_WRITE_OUT */
-  INTEGER :: iallocstat
-
-  ! ONLY ALLOCATE cmat and czmat, to be filled per ihop run
-  IF (ALLOCATED( SSP%cMat )) DEALLOCATE( SSP%cMat )
-  IF (ALLOCATED( SSP%czMat )) DEALLOCATE( SSP%czMat )
-  ALLOCATE( SSP%cMat( Grid%nZ, Grid%nR ), &
-            SSP%czMat( Grid%nZ-1, Grid%nR ), &
-            STAT=iallocstat )
-  IF ( iallocstat.NE.0 ) THEN
-#ifdef IHOP_WRITE_OUT
-    WRITE(msgBuf,'(2A)') 'SSP_MOD::init_varia_SSP: ', &
-      'Insufficient memory to store SSP%cMat, SSP%czMat'
-    CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
-      STOP 'ABNORMAL END: S/R init_varia_SSP'
-  ENDIF
-
-  ! Initiate to nonsense
-  SSP%cMat  = -99.0 _d 0
-  SSP%czMat = -99.0 _d 0
-
-  ! init default SSP values (only fixed memory vars)
-  SSP%c    = -99.0 _d 0
-  SSP%cz   = -99.0 _d 0
-
-  RETURN
-  END !SUBROUTINE init_varia_SSP
 
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 !BOP

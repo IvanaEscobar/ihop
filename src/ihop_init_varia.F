@@ -11,7 +11,7 @@ C     !DESCRIPTION:
 C     Initialize IHOP variables
 
 C     !USES:
-      USE ssp_mod, only: INIT_VARIA_SSP
+      USE ssp_mod, only: SSP, Grid
       IMPLICIT NONE
 ! == Global variables ==
 #include "SIZE.h"
@@ -44,6 +44,7 @@ C     3-dim.
               ENDDO
             ENDDO
           ENDDO
+
 #endif /* IHOP_3D_STATE */
 
 C     2-dim.
@@ -74,9 +75,29 @@ C-    restart from a pickup:
 C-    end start-from-iter-zero if/else block
       ENDIF
 
-C- Pass info to f90 ihop SSP
-      CALL init_varia_ssp( myThid )
 
+C- GLOBAL reset SSP allocatable arrays (F90 feature)
+      IF (ALLOCATED( SSP%cMat )) DEALLOCATE( SSP%cMat )
+      IF (ALLOCATED( SSP%czMat )) DEALLOCATE( SSP%czMat )
+      ALLOCATE( SSP%cMat( Grid%nZ, Grid%nR ), 
+     &          SSP%czMat( Grid%nZ-1, Grid%nR ), 
+     &          STAT=i )
+      IF ( i.NE.0 ) THEN
+C#ifdef IHOP_WRITE_OUT
+C        WRITE(msgBuf,'(2A)') 'SSP_MOD::init_varia_SSP: ', &
+C          'Insufficient memory to store SSP%cMat, SSP%czMat'
+C        CALL PRINT_ERROR( msgBuf,myThid )
+C#endif /* IHOP_WRITE_OUT */
+        STOP 'ABNORMAL END: S/R init_varia_SSP'
+      ENDIF
+
+      ! Init REAL arrays
+      ssp%cmat = -99.d0
+      ssp%czmat = -99.d0
+      ! Init COMPLEX arrays
+      ssp%c = -99.d0
+      ssp%cz = -99.d0
+C- END GLOBAL reset SSP allocatable arrays (F90 feature)
 #endif /* ALLOW_IHOP */
 
       RETURN
