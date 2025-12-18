@@ -112,8 +112,9 @@ CONTAINS
 ! arrSize    :: indices for range and depth
 ! ierr       :: MPI return code
   COMPLEX (KIND=_RL90) :: tauBuf(nMax)
+  REAL (KIND=_RL90) :: qBuf(nMax), xBuf(2, nMax)
   INTEGER :: i
-  INTEGER :: ierr, MPI_CL
+  INTEGER :: ierr, MPI_CL, MPI_RL
 !EOP  
 
 #ifdef ALLOW_USE_MPI
@@ -123,17 +124,30 @@ CONTAINS
   ELSE
     MPI_CL = MPI_COMPLEX
   ENDIF
+  IF (STORAGE_SIZE( REAL(ray2d(1)%q(1)) ).EQ.64) THEN
+    MPI_RL = MPI_DOUBLE_PRECISION
+  ELSE
+    MPI_RL = MPI_REAL
+  ENDIF
 
   IF (myProcID.eq.root) THEN
     DO i=1,nMax
       tauBuf(i) = ray2D(i)%tau
+      qBuf(i) = ray2D(i)%q(1)
+      xBuf(1,i) = ray2D(i)%x(1)
+      xBuf(2,i) = ray2D(i)%x(2)
     ENDDO
   ENDIF
   CALL MPI_Bcast( tauBuf, nMax, MPI_CL, root, comm, ierr )
+  CALL MPI_Bcast( qBuf, nMax, MPI_RL, root, comm, ierr )
+  CALL MPI_Bcast( xBuf, 2*nMax, MPI_RL, root, comm, ierr )
 
   IF (myProcID.ne.root) THEN
     DO i=1,nMax
-      ray2D(i)%tau = tauBuf(i)
+      ray2D(i)%tau  = tauBuf(i)
+      ray2D(i)%q(1) = qBuf(i)
+      ray2D(i)%x(1) = xBuf(1,i)
+      ray2D(i)%x(2) = xBuf(2,i)
     ENDDO
   ENDIF
 
