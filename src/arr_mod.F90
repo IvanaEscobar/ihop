@@ -56,6 +56,7 @@ MODULE arr_mod
     REAL (KIND=_RL90)    :: SrcAzimAngle, RcvrAzimAngle
 #endif /* IHOP_THREED */
     COMPLEX (KIND=_RL90) :: delay
+    REAL (KIND=_RL90)    :: delayR
   END TYPE
 
   TYPE(Arrival), ALLOCATABLE :: Arr( :, :, : )
@@ -168,6 +169,7 @@ CONTAINS
   Arr(:,:,:)%A              = -999.
   Arr(:,:,:)%Phase          = -999.
   Arr(:,:,:)%delay          = -999.
+  Arr(:,:,:)%delayR         = -999.
 
   END !SUBROUTINE initArr( myThid )
 
@@ -226,38 +228,41 @@ CONTAINS
     IF ( Nt.GE.nMaxArr ) THEN       ! space available to add an arrival?
       iArr = MINLOC( Arr( :, ir, iz )%A )   ! no: replace weakest arrival
       IF ( Amp.GT.Arr( iArr(1), ir, iz )%A ) THEN
-        Arr( iArr(1), ir, iz)%A             = SNGL( Amp )       ! amplitude
-        Arr( iArr(1), ir, iz)%Phase         = SNGL( Phase )     ! phase
-        Arr( iArr(1), ir, iz)%delay         = CMPLX( delay )    ! delay time
-        Arr( iArr(1), ir, iz)%SrcDeclAngle  = SNGL( SrcDeclAngle) ! angle
-        Arr( iArr(1), ir, iz)%RcvrDeclAngle = SNGL(RcvrDeclAngle) ! angle
-        Arr( iArr(1), ir, iz)%nTopBnc       = nTopBnc         ! top bounces
-        Arr( iArr(1), ir, iz)%nBotBnc       = nBotBnc         ! bottom bounces
+        Arr( iArr(1), ir, iz)%A             = Amp       ! amplitude
+        Arr( iArr(1), ir, iz)%Phase         = Phase     ! phase
+        Arr( iArr(1), ir, iz)%delay         = delay     ! delay time
+        Arr( iArr(1), ir, iz)%delayR        = REAL(delay)
+        Arr( iArr(1), ir, iz)%SrcDeclAngle  = SrcDeclAngle  ! angle
+        Arr( iArr(1), ir, iz)%RcvrDeclAngle = RcvrDeclAngle ! angle
+        Arr( iArr(1), ir, iz)%nTopBnc       = nTopBnc   ! top bounces
+        Arr( iArr(1), ir, iz)%nBotBnc       = nBotBnc   ! bottom bounces
       ENDIF
     ELSE
       Nt                             = Nt+1                ! # arrivals
-      Arr( Nt, ir, iz)%A             = SNGL( Amp )         ! amplitude
-      Arr( Nt, ir, iz)%Phase         = SNGL( Phase )       ! phase
-      Arr( Nt, ir, iz)%delay         = CMPLX( delay )      ! delay time
-      Arr( Nt, ir, iz)%SrcDeclAngle  = SNGL( SrcDeclAngle )  ! angle
-      Arr( Nt, ir, iz)%RcvrDeclAngle = SNGL( RcvrDeclAngle ) ! angle
-      Arr( Nt, ir, iz)%nTopBnc       = nTopBnc           ! top bounces
-      Arr( Nt, ir, iz)%nBotBnc       = nBotBnc           ! bottom bounces
+      Arr( Nt, ir, iz)%A             = Amp           ! amplitude
+      Arr( Nt, ir, iz)%Phase         = Phase         ! phase
+      Arr( Nt, ir, iz)%delay         = delay         ! delay time
+      Arr( Nt, ir, iz)%delayR        = REAL(delay)
+      Arr( Nt, ir, iz)%SrcDeclAngle  = SrcDeclAngle  ! angle
+      Arr( Nt, ir, iz)%RcvrDeclAngle = RcvrDeclAngle ! angle
+      Arr( Nt, ir, iz)%nTopBnc       = nTopBnc       ! top bounces
+      Arr( Nt, ir, iz)%nBotBnc       = nBotBnc       ! bottom bounces
     ENDIF !IF ( Nt.GE.nMaxArr )
 
   ELSE ! not a new ray
     ! calculate weights of old ray information vs. new
-    AmpTot = Arr( Nt, ir, iz )%A + SNGL( Amp )
+    AmpTot = Arr( Nt, ir, iz )%A + Amp
     w1     = Arr( Nt, ir, iz )%A / AmpTot
-    w2     = REAL( Amp ) / AmpTot
+    w2     = Amp / AmpTot
 
     Arr( Nt, ir, iz)%delay         =  w1 * Arr( Nt, ir, iz )%delay &
-                                    + w2 * CMPLX( delay ) ! weighted sum
+                                    + w2 * delay ! weighted sum
+    Arr( Nt, iR, iZ)%delayR        = REAL( Arr(Nt,ir,iz)%delay )
     Arr( Nt, ir, iz)%A             =  AmpTot
     Arr( Nt, ir, iz)%SrcDeclAngle  =  w1 * Arr( Nt, ir, iz )%SrcDeclAngle &
-                                    + w2 * SNGL( SrcDeclAngle  )
+                                    + w2 * SrcDeclAngle
     Arr( Nt, ir, iz)%RcvrDeclAngle =  w1 * Arr( Nt, ir, iz )%RcvrDeclAngle &
-                                    + w2 * SNGL( RcvrDeclAngle )
+                                    + w2 * RcvrDeclAngle
   ENDIF ! IF ( NewRay )
 
   ! Pass Nt to global Narrival
@@ -320,14 +325,14 @@ CONTAINS
 #ifdef IHOP_WRITE_OUT
       WRITE( ARRFile, '(I0)' ) nArrival( ir, iz )
       DO iArr = 1, nArrival( ir, iz )
-        WRITE( ARRFile, arrFMT ) &
-          SNGL( factor )  *Arr( iArr, ir, iz )%A,     &
-          SNGL( rad2deg ) *Arr( iArr, ir, iz )%Phase, &
-          REAL( Arr( iArr, ir, iz )%delay ),          &
-          AIMAG( Arr( iArr, ir, iz )%delay ),         &
-          Arr( iArr, ir, iz )%SrcDeclAngle,           &
-          Arr( iArr, ir, iz )%RcvrDeclAngle,          &
-          Arr( iArr, ir, iz )%NTopBnc,                &
+        WRITE( ARRFile, arrFMT )              &
+          factor  *Arr( iArr, ir, iz )%A,     &
+          rad2deg *Arr( iArr, ir, iz )%Phase, &
+          Arr( iArr, ir, iz )%delayR,         &
+          AIMAG( Arr( iArr, ir, iz )%delay ), &
+          Arr( iArr, ir, iz )%SrcDeclAngle,   &
+          Arr( iArr, ir, iz )%RcvrDeclAngle,  &
+          Arr( iArr, ir, iz )%NTopBnc,        &
           Arr( iArr, ir, iz )%NBotBnc
 
       ENDDO  ! next arrival
@@ -389,13 +394,13 @@ CONTAINS
       WRITE( ARRFile, '(I0)' ) nArrival( ir, iz )
       DO iArr = 1, nArrival( ir, iz )
         ! integers written out as reals below for fast reading in Matlab
-        WRITE( ARRFile ) &
-          SNGL( factor * Arr( iArr, ir, iz )%A ),      &
-          SNGL( rad2deg * Arr( iArr, ir, iz )%Phase ), &
-          Arr( iArr, ir, iz )%delay,                   &
-          Arr( iArr, ir, iz )%SrcDeclAngle,            &
-          Arr( iArr, ir, iz )%RcvrDeclAngle,           &
-          REAL( Arr( iArr, ir, iz )%NTopBnc ),         &
+        WRITE( ARRFile )                       &
+          factor * Arr( iArr, ir, iz )%A,      &
+          rad2deg * Arr( iArr, ir, iz )%Phase, &
+          Arr( iArr, ir, iz )%delay,           &
+          Arr( iArr, ir, iz )%SrcDeclAngle,    &
+          Arr( iArr, ir, iz )%RcvrDeclAngle,   &
+          REAL( Arr( iArr, ir, iz )%NTopBnc ), &
           REAL( Arr( iArr, ir, iz )%NBotBnc )
 
       ENDDO   ! next arrival
