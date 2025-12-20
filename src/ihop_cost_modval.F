@@ -108,7 +108,9 @@ CC-- global ray2D%tau: F90 travel times END
 
 C-- OPTION 3)
 C-- global Arr%delay: F90 eigenray travel times
-      modval = modval + REAL( Arr(2,ri,rj)%delay )
+      DO ii = 1, nArrival(ri,rj)
+        modval = modval + REAL( Arr(ii,ri,rj)%delay )
+      ENDDO
       PRINT *, "ESCOBAR ", modval
 C-- global Arr%delay: F90 eigenray travel times END
 
