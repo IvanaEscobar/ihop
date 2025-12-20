@@ -79,7 +79,7 @@ CONTAINS
   USE ssp_mod,        only: setSSP
   USE refCoef,        only: writeRefCoef 
   USE beampat,        only: writePat
-  USE ihop_mod,       only: Beam
+  USE ihop_mod,       only: Beam, ray2d
 #ifdef ALLOW_USE_MPI
   USE ihop_mod,       only: BcastRay
   USE arr_mod,        only: BcastArr
@@ -148,6 +148,7 @@ CONTAINS
     CALL BcastArr( 0, MPI_COMM_WORLD )
   ENDIF
 #endif
+  PRINT *, "ESCOBAR myproc, q(1) ", myprocid, Beam%nsteps, ray2d(Beam%nsteps)%q(1)
 
 #ifdef IHOP_WRITE_OUT
   IF ( myProcID.EQ.0 .AND. IHOP_dumpfreq.GE.0 ) THEN
@@ -348,11 +349,11 @@ CONTAINS
 
       ENDIF ! IF ( Angles%iSingle_alpha.EQ.0 .OR. iAlpha.EQ.Angles%iSingle_alpha )
 
-      tmpRaytauR(iAlpha) = real( ray2d(beam%nsteps)%tau )
+      tmpRaytauR(iAlpha) = ray2d(beam%nsteps)%q(1)
 
     ENDDO DeclinationAngle
 
-    PRINT *, "ESCOBAR ALL TAUS: ", tmpraytaur
+    PRINT *, "ESCOBAR ALL QS: ", tmpraytaur
 
     ! Write results to disk
     SELECT CASE ( Beam%RunType( 1:1 ) )

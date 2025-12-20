@@ -218,10 +218,6 @@
 !!!$TAF FUNCTION MPI_Type_create_struct       ACTIVE  =         5
 !!!$TAF FUNCTION MPI_Type_create_struct       DEPEND  = 1,2,3,4,  6
 
-!!$TAF SUBROUTINE arr_mod::free_ihop_ray     INPUT   = 1
-!!$TAF SUBROUTINE arr_mod::free_ihop_arrival INPUT   = 1
-!!$TAF SUBROUTINE arr_mod::bcastarr          INPUT   = 1,2
-
 !!$TAF SUBROUTINE ihop_mod::ray2dpttypeinit    FTLNAME = ray2dptytypeinit
 !!$TAF SUBROUTINE ihop_mod::ray2dpttypeinit    ADNAME  = ray2dptytypeinit
 !!$TAF SUBROUTINE ihop_mod::ray2dpttypeinit    INPUT   = 1,2,3,4
