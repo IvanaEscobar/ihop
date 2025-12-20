@@ -205,12 +205,12 @@
 !!$TAF FUNCTION MPI_Type_commit              ACTIVE  =
 !!!$TAF FUNCTION MPI_Type_commit              DEPEND  =   2
 
-!$TAF FUNCTION MPI_get_address              FTLNAME = MPI_get_address
-!$TAF FUNCTION MPI_get_address              ADNAME  = MPI_get_address
-!$TAF FUNCTION MPI_get_address              INPUT   = 1,2,3
-!$TAF FUNCTION MPI_get_address              OUTPUT  =   2
-!$TAF FUNCTION MPI_get_address              ACTIVE  = 1
-!$TAF FUNCTION MPI_get_address              DEPEND  =   2,3
+!!$TAF FUNCTION MPI_get_address              FTLNAME = MPI_get_address
+!!$TAF FUNCTION MPI_get_address              ADNAME  = MPI_get_address
+!!$TAF FUNCTION MPI_get_address              INPUT   = 1,2,3
+!!$TAF FUNCTION MPI_get_address              OUTPUT  =   2
+!!$TAF FUNCTION MPI_get_address              ACTIVE  = 1
+!!$TAF FUNCTION MPI_get_address              DEPEND  =   2,3
 !!!$TAF FUNCTION MPI_Type_create_struct       FTLNAME = MPI_Type_create_struct
 !!!$TAF FUNCTION MPI_Type_create_struct       ADNAME  = MPI_Type_create_struct
 !!$TAF FUNCTION MPI_Type_create_struct       INPUT   = 1,2,3,4,5,6
@@ -222,12 +222,9 @@
 !!$TAF SUBROUTINE arr_mod::free_ihop_arrival INPUT   = 1
 !!$TAF SUBROUTINE arr_mod::bcastarr          INPUT   = 1,2
 
-!!$TAF SUBROUTINE ihop_mod::bcastray           INPUT   = 1,2
-!!$TAF SUBROUTINE ihop_mod::bcastray           OUTPUT  =
-!$TAF SUBROUTINE ihop_mod::ray2dpttypeinit    FTLNAME = ray2dptytypeinit
-!$TAF SUBROUTINE ihop_mod::ray2dpttypeinit    ADNAME  = ray2dptytypeinit
-!$TAF SUBROUTINE ihop_mod::ray2dpttypeinit    INPUT   = 1,2,3,4
-!$TAF SUBROUTINE ihop_mod::ray2dpttypeinit    OUTPUT  =     3,4
-!$TAF SUBROUTINE ihop_mod::ray2dpttypeinit    ACTIVE  = 1,2,3,4
+!!$TAF SUBROUTINE ihop_mod::ray2dpttypeinit    FTLNAME = ray2dptytypeinit
+!!$TAF SUBROUTINE ihop_mod::ray2dpttypeinit    ADNAME  = ray2dptytypeinit
+!!$TAF SUBROUTINE ihop_mod::ray2dpttypeinit    INPUT   = 1,2,3,4
+!!$TAF SUBROUTINE ihop_mod::ray2dpttypeinit    OUTPUT  =     3,4
+!!$TAF SUBROUTINE ihop_mod::ray2dpttypeinit    ACTIVE  = 1,2,3,4
 !!$TAF SUBROUTINE ihop_mod::ray2dpttypeinit    DEPEND  = 1,2
-!!$TAF SUBROUTINE ihop_mod::bcastray MODULE ihop_mod ACTIVE = ray2d
