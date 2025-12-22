@@ -55,6 +55,11 @@ MODULE ihop_mod
   REAL (KIND=_RL90)  :: afreq, SrcDeclAngle, SrcAzimAngle
   CHARACTER*(80)     :: Title
 
+#ifdef ALLOW_USE_MPI
+  INTEGER :: MPI_IHOP_RAY2D = MPI_DATATYPE_NULL
+  LOGICAL :: RAY2D_TYPE_COMMITTED = .false.
+#endif /* ALLOW_USE_MPI */
+
 ! == Derived types ==
   ! *** Beam structure ***
   TYPE rxyz
@@ -109,18 +114,13 @@ CONTAINS
 #ifdef ALLOW_USE_MPI
   INTEGER :: ierr
 #endif /* ALLOW_USE_MPI */
-#ifdef ALLOW_USE_MPI
-  INTEGER :: MPI_IHOP_RAY2D = MPI_DATATYPE_NULL
-  LOGICAL :: RAY2D_TYPE_COMMITTED = .false.
-#endif /* ALLOW_USE_MPI */
 
 !EOP  
 
 #ifdef ALLOW_USE_MPI
 ! build custom MPI datatype for ray2d
   IF ( MPI_IHOP_RAY2D.EQ.MPI_DATATYPE_NULL ) THEN
-    CALL ray2dPtTypeInit( ray2D(1), ray2D(2), &
-      MPI_IHOP_RAY2D, RAY2D_TYPE_COMMITTED ) 
+    CALL ray2dPtTypeInit( ray2D(1), ray2D(2) )
   ENDIF
 
   ! We are on MPI rank 0
@@ -157,22 +157,19 @@ CONTAINS
 !BOP
 ! !ROUTINE: Ray2DPtTypeInti
 ! !INTERFACE:
-  SUBROUTINE Ray2DPtTypeInit( singleRay2D, nextRay2D, myType, TYPE_COMMITTED )
+  SUBROUTINE Ray2DPtTypeInit( singleRay2D, nextRay2D )
 
 ! !INPUT PARAMETERS:
   TYPE( ray2dpt ), INTENT( IN ) :: singleRay2D
   TYPE( ray2dpt ), INTENT( IN ) :: nextRay2D
-  INTEGER, INTENT( INOUT ) :: MYTYPE
-  LOGICAL, INTENT( INOUT ) :: TYPE_COMMITTED
 
   ! LOCAL VARIABLES:
   INTEGER, PARAMETER :: typeSize = 3
   INTEGER(KIND=MPI_ADDRESS_KIND) :: disp(typeSize), addr(typeSize)
-  INTEGER(KIND=MPI_ADDRESS_KIND) :: base, extent, a1, a2
+  INTEGER(KIND=MPI_ADDRESS_KIND) :: base, extent, a2
   INTEGER :: n, bl(typeSize), ty(typeSize)
   INTEGER :: ierr, MPI_CL, MPI_RL, tmpType
 
-  IF (TYPE_COMMITTED) RETURN
 
   ! Build partial ray2D MPI type
   IF (STORAGE_SIZE( REAL(singleRay2D%tau) ).EQ.64) THEN
@@ -183,37 +180,38 @@ CONTAINS
     MPI_RL = MPI_REAL
   ENDIF
 
-  bl=1
-  CALL MPI_Get_address(singleRay2D, base, ierr)
+  IF ( .not.RAY2D_TYPE_COMMITTED) THEN
+    bl=1
+    CALL MPI_Get_address(singleRay2D, base, ierr)
 
-  n=1
-  CALL MPI_Get_address(singleRay2D%x(1), addr(n), ierr)
-  bl(n)=2
-  disp(n) = addr(n) - base
-  ty(n)=MPI_RL
+    n=1
+    CALL MPI_Get_address(singleRay2D%x(1), addr(n), ierr)
+    bl(n)=2
+    disp(n) = addr(n) - base
+    ty(n)=MPI_RL
 
-  n=n+1
-  CALL MPI_Get_address(singleRay2D%q(1), addr(n), ierr)
-  bl(n)=2
-  disp(n) = addr(n) - base
-  ty(n)=MPI_RL
+    n=n+1
+    CALL MPI_Get_address(singleRay2D%q(1), addr(n), ierr)
+    bl(n)=2
+    disp(n) = addr(n) - base
+    ty(n)=MPI_RL
 
-  n=n+1
-  CALL MPI_Get_address(singleRay2D%tau, addr(n), ierr)
-  disp(n) = addr(n) - base
-  ty(n)=MPI_CL
+    n=n+1
+    CALL MPI_Get_address(singleRay2D%tau, addr(n), ierr)
+    disp(n) = addr(n) - base
+    ty(n)=MPI_CL
 
-  CALL MPI_Type_create_struct(n, bl, disp, ty, tmpType, ierr)
+    CALL MPI_Type_create_struct(n, bl, disp, ty, tmpType, ierr)
 
-  CALL MPI_get_address(singleRay2D, a1, ierr)
-  CALL MPI_get_address(nextRay2D, a2, ierr)
-  extent = a2-a1
+    CALL MPI_get_address(nextRay2D, a2, ierr)
+    extent = a2-base
 
-  CALL MPI_Type_create_resized( tmpType, 0_MPI_ADDRESS_KIND, extent, &
-                               myType, ierr )
-  CALL MPI_Type_commit( myType, ierr )
-  CALL MPI_Type_free( tmpType, ierr )
-  TYPE_COMMITTED = .true.
+    CALL MPI_Type_create_resized( tmpType, 0_MPI_ADDRESS_KIND, extent, &
+                                 MPI_IHOP_RAY2D, ierr )
+    CALL MPI_Type_commit( MPI_IHOP_RAY2D, ierr )
+    CALL MPI_Type_free( tmpType, ierr )
+    RAY2D_TYPE_COMMITTED = .true.
+  ENDIF
 
   RETURN
   END

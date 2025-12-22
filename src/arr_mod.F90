@@ -155,8 +155,8 @@ CONTAINS
   ENDIF
 
 #ifdef ALLOW_USE_MPI
-! create MPI DerivedType
-  CALL ArrivalTypeInit( Arr(1,1,1) )
+! create MPI DerivedType, IF nMaxArr.gt.1
+  CALL ArrivalTypeInit( Arr(1,1,1),Arr(2,1,1) )
 
 #endif /* ALLOW_USE_MPI */
   ! init default values
@@ -437,7 +437,7 @@ CONTAINS
 
 #ifdef ALLOW_USE_MPI
   IF ( MPI_IHOP_ARRIVAL.EQ.MPI_DATATYPE_NULL ) THEN
-    CALL ArrivalTypeInit( Arr(1,1,1) )
+    CALL ArrivalTypeInit( Arr(1,1,1), Arr(2,1,1) )
   ENDIF
 
   ! We are on MPI rank 0
@@ -476,7 +476,7 @@ CONTAINS
 !BOP
 ! !ROUTINE: ArrivalTypeInti
 ! !INTERFACE:
-  SUBROUTINE ArrivalTypeInit( singleArrival )
+  SUBROUTINE ArrivalTypeInit( singleArrival, nextArrival )
 ! !DESCRIPTION:
 ! Initializes the arrival MPI Datatype
 
@@ -484,6 +484,7 @@ CONTAINS
 
 ! !INPUT PARAMETERS:
   TYPE( Arrival ), INTENT( IN ) :: singleArrival
+  TYPE( Arrival ), INTENT( IN ) :: nextArrival
 ! !OUTPUT PARAMETERS: None
 
 ! !LOCAL VARIABLES:
@@ -491,12 +492,14 @@ CONTAINS
 ! base, addr :: base and address for current Arrival datatype and parameters
 ! ty         :: datatype of each Arrival parameter
 ! MPI_RL, MPI_CL :: MPI type depending on _RL90
-  INTEGER(KIND=MPI_ADDRESS_KIND) :: disp(4), base, addr(4)
-  INTEGER :: ierr, n, bl(4), ty(4)
-  INTEGER :: MPI_RL, MPI_CL
+  INTEGER, PARAMETER :: typesize = 4
+  INTEGER(KIND=MPI_ADDRESS_KIND) :: base, a2, extent
+  INTEGER(KIND=MPI_ADDRESS_KIND) :: addr(typesize), disp(typesize)
+  INTEGER :: bl(typesize), ty(typesize) 
+  INTEGER :: MPI_CL, MPI_RL
+  INTEGER :: ierr, n, tmptype
 !EOP
 
-  IF (ARRIVAL_TYPE_COMMITTED) RETURN
 
   ! Build Arrival MPI type
   IF (STORAGE_SIZE( singleArrival%Phase ).EQ.64) THEN
@@ -509,31 +512,38 @@ CONTAINS
     STOP "ABNORMAL END MPI_DATATYPE: Unsupported _RL90 size for MPI"
   ENDIF
 
-  ! Initiate all bl to 1 since all Arr parameters are scalars
-  bl=1
-  CALL MPI_Get_address(singleArrival, base, ierr)
+  IF (.not.ARRIVAL_TYPE_COMMITTED) THEN
+    ! Initiate all bl to 1 since all Arr parameters are scalars
+    bl=1
+    CALL MPI_Get_address(singleArrival, base, ierr)
 
-  n=1
-  CALL MPI_Get_address(singleArrival%A, addr(n), ierr)
-  ty(n)=MPI_RL
+    n=1
+    CALL MPI_Get_address(singleArrival%A, addr(n), ierr)
+    ty(n)=MPI_RL
 
-  n=n+1
-  CALL MPI_Get_address(singleArrival%Phase, addr(n), ierr)
-  ty(n)=MPI_RL
+    n=n+1
+    CALL MPI_Get_address(singleArrival%Phase, addr(n), ierr)
+    ty(n)=MPI_RL
 
-  n=n+1
-  CALL MPI_Get_address(singleArrival%delay, addr(n), ierr)
-  ty(n)=MPI_CL
+    n=n+1
+    CALL MPI_Get_address(singleArrival%delay, addr(n), ierr)
+    ty(n)=MPI_CL
 
-  n=n+1
-  CALL MPI_Get_address(singleArrival%delayR, addr(n), ierr)
-  ty(n)=MPI_RL
+    n=n+1
+    CALL MPI_Get_address(singleArrival%delayR, addr(n), ierr)
+    ty(n)=MPI_RL
 
-  disp(1:n)=addr(1:n)-base
+    disp(1:n)=addr(1:n)-base
 
-  CALL MPI_Type_create_struct(n, bl, disp, ty, MPI_IHOP_ARRIVAL, ierr)
-  CALL MPI_Type_commit(MPI_IHOP_ARRIVAL, ierr)
-  ARRIVAL_TYPE_COMMITTED = .true.
+    CALL MPI_Type_create_struct( n,bl,disp,ty,tmptype,ierr )
+    CALL MPI_Get_address( nextArrival,a2,ierr )
+    extent = a2 - base
+    CALL MPI_Type_create_resized( tmptype,0_mpi_address_kind,extent,&
+                                  MPI_IHOP_ARRIVAL,ierr )
+    CALL MPI_Type_commit( MPI_IHOP_ARRIVAL,ierr )
+    CALL MPI_Type_free( tmptype,ierr )
+    ARRIVAL_TYPE_COMMITTED = .true.
+  ENDIF
 
 RETURN
 END
