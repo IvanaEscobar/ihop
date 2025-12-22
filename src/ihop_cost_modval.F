@@ -106,10 +106,18 @@ C      r = Beam%nSteps
 C      modval = modval + real(ray2d(r)%tau)
 CC-- global ray2D%tau: F90 travel times END 
 
-C-- OPTION 3)
+CC-- OPTION 3)
+CC-- global ray2D%q(1): F90 dynmaic ray parameter
+C      r = Beam%nSteps
+C      modval = modval + ray2d(r)%q(1)
+C      PRINT *, "ESCOBAR modval", modval
+CC      PRINT *, "ESCOBAR q1", ray2d(r)%q(1)
+CC-- global ray2D%q(1): F90 dynamic ray parameter END 
+
+C-- OPTION 4)
 C-- global Arr%delay: F90 eigenray travel times
       DO ii = 1, nArrival(ri,rj)
-        modval = modval + REAL( Arr(ii,ri,rj)%delay )
+        modval = modval + Arr(ii,ri,rj)%delayR
       ENDDO
       PRINT *, "ESCOBAR ", modval
 C-- global Arr%delay: F90 eigenray travel times END

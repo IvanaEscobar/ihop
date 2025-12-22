@@ -148,7 +148,7 @@ CONTAINS
     CALL BcastArr( 0, MPI_COMM_WORLD )
   ENDIF
 #endif
-  PRINT *, "ESCOBAR myproc, q(1) ", myprocid, Beam%nsteps, ray2d(Beam%nsteps)%q(1)
+!  PRINT *, "ESCOBAR myproc, q(1) ", myprocid, Beam%nsteps, ray2d(Beam%nsteps)%q(1)
 
 #ifdef IHOP_WRITE_OUT
   IF ( myProcID.EQ.0 .AND. IHOP_dumpfreq.GE.0 ) THEN
@@ -175,7 +175,7 @@ CONTAINS
       STOP "ABNORMAL END: S/R IHOP_MAIN"
     END SELECT
 
-  ENDIF ! IF ( locProcID.EQ.0 )
+  ENDIF ! IF ( myProcID.EQ.0 )
 #endif /* IHOP_WRITE_OUT */
 
   RETURN

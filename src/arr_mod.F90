@@ -491,8 +491,8 @@ CONTAINS
 ! base, addr :: base and address for current Arrival datatype and parameters
 ! ty         :: datatype of each Arrival parameter
 ! MPI_RL, MPI_CL :: MPI type depending on _RL90
-  INTEGER(KIND=MPI_ADDRESS_KIND) :: disp(7), base, addr(7)
-  INTEGER :: ierr, n, bl(7), ty(7)
+  INTEGER(KIND=MPI_ADDRESS_KIND) :: disp(4), base, addr(4)
+  INTEGER :: ierr, n, bl(4), ty(4)
   INTEGER :: MPI_RL, MPI_CL
 !EOP
 
@@ -524,6 +524,10 @@ CONTAINS
   n=n+1
   CALL MPI_Get_address(singleArrival%delay, addr(n), ierr)
   ty(n)=MPI_CL
+
+  n=n+1
+  CALL MPI_Get_address(singleArrival%delayR, addr(n), ierr)
+  ty(n)=MPI_RL
 
   disp(1:n)=addr(1:n)-base
 
