@@ -28,7 +28,7 @@ MODULE ihop_mod
           nMax, nRz_per_range, iStep, afreq, SrcDeclAngle,      &
           Title, Beam, ray2D, ray2DPt, iSmallStepCtr, rxyz
 #ifdef ALLOW_USE_MPI
-    PUBLIC BcastRay
+    PUBLIC BcastRay, free_ihop_ray2d
 #endif /* ALLOW_USE_MPI */
 !=======================================================================
 
@@ -142,13 +142,13 @@ CONTAINS
 ! !DESCRIPTION:
 ! Free ray2d datatype
     INTEGER, INTENT( IN ) :: myThid
-!    INTEGER :: ierr
-!
-!    IF (RAY2D_TYPE_COMMITTED) THEN
-!      CALL MPI_Type_free(MPI_IHOP_RAY2D, ierr)
-!      MPI_IHOP_RAY2D = MPI_DATATYPE_NULL
-!      RAY2D_TYPE_COMMITTED = .false.
-!    ENDIF
+    INTEGER :: ierr
+
+    IF (RAY2D_TYPE_COMMITTED) THEN
+      CALL MPI_Type_free(MPI_IHOP_RAY2D, ierr)
+      MPI_IHOP_RAY2D = MPI_DATATYPE_NULL
+      RAY2D_TYPE_COMMITTED = .false.
+    ENDIF
 
   RETURN
   END !SUBROUTINE free_ihop_arrival
