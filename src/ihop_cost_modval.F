@@ -26,7 +26,7 @@ C     !USES:
 #endif
 #ifdef TEST_IHOP_COST_INLOOP
 C      USE ssp_mod,  only: SSP, Grid
-      USE ihop_mod, only: ray2D, nMax, Beam
+C      USE ihop_mod, only: ray2D, nMax, Beam
 #endif
       IMPLICIT NONE
 C == Global variables ===
@@ -43,6 +43,7 @@ C == Global variables ===
 #endif
 #ifdef ALLOW_IHOP
 # include "IHOP_SIZE.h"
+# include "IHOP.h"
 # include "netcdf.inc"
 # ifdef ALLOW_COST
 #  include "IHOP_COST.h"
@@ -86,7 +87,7 @@ CEOP
 ! Added uses of modules above, have access to Arr and Pos
 ! ===================================================================
 # ifdef TEST_IHOP_COST_INLOOP
-CC-- OPTION 1)
+CC-- OPTION 2)
 CC-- global summation: F90 Sound Speed if cMat is NOT default -99
 C       IF ( SSP%cMat(1,3).NE.-99. _d 0 ) THEN
 C       DO r = 1,Grid%nR
@@ -100,13 +101,13 @@ C       ENDDO !DO k
 C       ENDIF
 CC-- global summation: F90 Sound Speed END
 
-CC-- OPTION 2)
+CC-- OPTION 3)
 CC-- global ray2D%tau: F90 travel times if tau is NOT default 0
 C      r = Beam%nSteps
 C      modval = modval + real(ray2d(r)%tau)
 CC-- global ray2D%tau: F90 travel times END 
 
-CC-- OPTION 3)
+CC-- OPTION 4)
 CC-- global ray2D%q(1): F90 dynmaic ray parameter
 C      r = Beam%nSteps
 C      modval = modval + ray2d(r)%q(1)
@@ -114,10 +115,13 @@ C      PRINT *, "ESCOBAR modval", modval
 CC      PRINT *, "ESCOBAR q1", ray2d(r)%q(1)
 CC-- global ray2D%q(1): F90 dynamic ray parameter END 
 
-C-- OPTION 4)
-C-- global Arr%delay: F90 eigenray travel times
-      DO ii = 1, nArrival(ri,rj)
-        modval = modval + Arr(ii,ri,rj)%delayR
+CC-- OPTION 5)
+CC-- global Arr%delay: F90 eigenray travel times
+C      DO ii = 1, nArrival(ri,rj)
+C        modval = modval + REAL(Arr(ii,ri,rj)%delay)
+C      ENDDO
+      DO ii = 1,35504
+        modval = modval + geninfluence(ii)
       ENDDO
       PRINT *, "ESCOBAR ", modval
 C-- global Arr%delay: F90 eigenray travel times END

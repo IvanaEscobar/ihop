@@ -21,6 +21,9 @@ MODULE arr_mod
 #endif
 #include "IHOP_SIZE.h"
 #include "IHOP.h"
+#ifdef ALLOW_COST
+# include "IHOP_COST.h"
+#endif
 
 ! !SCOPE: 
   PRIVATE
@@ -443,6 +446,8 @@ CONTAINS
   ! We are on MPI rank 0
   arrSize = SIZE(nArrival)
   CALL MPI_Bcast( nArrival, arrSize, MPI_INTEGER, root, comm, ierr )
+  arrSize = SIZE(geninfluence)
+  CALL MPI_Bcast( geninfluence, arrSize, MPI_DOUBLE_PRECISION, root, comm, ierr )
 
   ! Broadcast MPI Arrival to all ranks, and free storage
   arrSize = SIZE(Arr)

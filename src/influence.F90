@@ -21,6 +21,9 @@ MODULE influence
 #include "PARAMS.h"
 #include "IHOP_SIZE.h"
 #include "IHOP.h"
+#ifdef ALLOW_COST
+# include "IHOP_COST.h"
+#endif
 
 ! !SCOPE: 
   PRIVATE
@@ -340,6 +343,11 @@ CONTAINS
   IF ( Beam%RunType( 4:4 ).EQ.'R' ) &
     Ratio1 = SQRT( ABS( COS( SrcDeclAngle / rad2deg ) ) )
 
+  !IESCO25 for TAF TLM
+  DO iH=1, 35504
+    geninfluence(iH) = 0.0
+  ENDDO
+
   Stepping: DO iH = 2, Beam%nSteps
 !!$TAF store phase,qold,ra = iiitape1
     xA  = ray2D( iH-1 )%x
@@ -366,8 +374,11 @@ CONTAINS
       ENDIF
 
       q      = ray2D( iH-1 )%q( 1 )
-      dqds   = ray2D( iH   )%q( 1 ) - q
+      geninfluence(iH)   = ray2D( iH   )%q( 1 ) - q
       dtauds = ray2D( iH   )%tau    - ray2D( iH-1 )%tau
+
+      !IESCO25: test some parts of influence, send geninfluence to ihop_cost_modval
+      dqds = geninfluence(iH)
 
       !IESCO22: q only changes signs on direct paths, no top/bot bounces
       IF( q.LE.0. .AND. qOld.GT.0. .OR. q.GE.0. .AND. qOld.LT.0. ) &
@@ -380,12 +391,12 @@ CONTAINS
       CALL locABS(ray2D(iH)%q(1),qBtmp)
       CALL locABS(rayn(2),rayntmp)
 
+      !IESCO25: RadusMax = MAX( qAtmp, qBtmp )
       IF (qAtmp.GE.qBtmp) THEN
         RadiusMax = qAtmp
       ELSE
         RadiusMax = qBtmp
       ENDIF
-      !RadusMax = MAX( qAtmp, qBtmp )
       RadiusMax = RadiusMax / q0 / rayntmp
 
       ! depth limits of beam; IESCO22: a large range of about 1/2 box depth
