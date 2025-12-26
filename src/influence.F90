@@ -374,11 +374,11 @@ CONTAINS
       ENDIF
 
       q      = ray2D( iH-1 )%q( 1 )
-      geninfluence(iH)   = ray2D( iH   )%q( 1 ) - q
-      dtauds = ray2D( iH   )%tau    - ray2D( iH-1 )%tau
+      dqds   = ray2D( iH   )%q( 1 ) - q
+      geninfluence(iH) = ray2D( iH   )%tau    - ray2D( iH-1 )%tau
 
       !IESCO25: test some parts of influence, send geninfluence to ihop_cost_modval
-      dqds = geninfluence(iH)
+      dtauds = geninfluence(iH)
 
       !IESCO22: q only changes signs on direct paths, no top/bot bounces
       IF( q.LE.0. .AND. qOld.GT.0. .OR. q.GE.0. .AND. qOld.LT.0. ) &
