@@ -571,6 +571,69 @@ common /eesupp_mpi_i/ mpipidw, mpipide, mpipids, mpipidn, mpipidse, mpipidsw, mp
 &mpitypexfacethread_xy_r8, mpitypeyfacethread_xy_r4, mpitypeyfacethread_xy_r8, mpitypexfacethread_xyz_r4, mpitypexfacethread_xyz_r8, &
 &mpitypeyfacethread_xyz_r4, mpitypeyfacethread_xyz_r8, mpitage, mpitagw, mpitagn, mpitags, mpitagse, mpitagsw, mpitagnw, mpitagne
 
+integer, private :: ihop_curfile_buff
+integer, private :: ihop_maxind_buff
+integer, private :: ihop_minind_buff
+common /ihop_buff_i/ ihop_minind_buff, ihop_maxind_buff, ihop_curfile_buff
+
+double precision, private :: ihop_data_buff(1000)
+double precision, private :: ihop_uncert_buff(1000)
+common /ihop_buff_r/ ihop_data_buff, ihop_uncert_buff
+
+character(len=7), private :: ihop_nameequi
+character(len=8), private :: ihop_namemask
+character(len=11), private :: ihop_nameuncert
+character(len=8), private :: ihop_nameval
+character(len=max_len_fnam), private :: ihopobs_dir
+character(len=max_len_fnam), private :: ihopobs_files(nfilesmax_ihop)
+common /ihop_cost_c/ ihopobs_dir, ihopobs_files, ihop_nameval, ihop_namemask, ihop_nameuncert, ihop_nameequi
+
+integer, private :: ihopobs_i_tiled(nfilesmax_ihop,nobsmax_ihop,nsx,nsy)
+integer, private :: ihopobs_ind_glob(nfilesmax_ihop,nobsmax_ihop)
+integer, private :: ihopobs_ind_glob_tiled(nfilesmax_ihop,nobsmax_ihop,nsx,nsy)
+integer, private :: ihopobs_j_tiled(nfilesmax_ihop,nobsmax_ihop,nsx,nsy)
+integer, private :: ihopobs_k_tiled(nfilesmax_ihop,nobsmax_ihop,nsx,nsy)
+integer, private :: ihopobs_sample1_ind(nfilesmax_ihop,nobsmax_ihop)
+integer, private :: ncidad(nfilesmax_ihop,nsx,nsy)
+integer, private :: ncidadglob(nfilesmax_ihop)
+integer, private :: nciddata(nfilesmax_ihop)
+integer, private :: ncidfwd(nfilesmax_ihop,nsx,nsy)
+integer, private :: ncidglob(nfilesmax_ihop)
+integer, private :: ncidtl(nfilesmax_ihop,nsx,nsy)
+integer, private :: ncidtlglob(nfilesmax_ihop)
+integer, private :: obsno(nfilesmax_ihop)
+integer, private :: obsno_tiled(nfilesmax_ihop,nsx,nsy)
+common /ihop_cost_i/ obsno, obsno_tiled, ihopobs_ind_glob, ihopobs_ind_glob_tiled, ncidfwd, ncidad, ncidtl, ncidglob, ncidadglob, ncidtlglob, &
+&nciddata, ihopobs_i_tiled, ihopobs_j_tiled, ihopobs_k_tiled, ihopobs_sample1_ind
+
+logical, private :: ihopdoncoutput
+common /ihop_cost_l/ ihopdoncoutput
+
+double precision, private :: geninfluence(35604)
+double precision, private :: ihopobs_depth(nfilesmax_ihop,nobsmax_ihop,nsx,nsy)
+double precision, private :: ihopobs_lat(nfilesmax_ihop,nobsmax_ihop,nsx,nsy)
+double precision, private :: ihopobs_lon(nfilesmax_ihop,nobsmax_ihop,nsx,nsy)
+double precision, private :: ihopobs_modmask
+double precision, private :: ihopobs_modmask_tiled(nsx,nsy)
+double precision, private :: ihopobs_time(nfilesmax_ihop,nobsmax_ihop,nsx,nsy)
+double precision, private :: ihopobs_uncert(nfilesmax_ihop,nobsmax_ihop,nsx,nsy)
+double precision, private :: mult_ihop(nfilesmax_ihop)
+double precision, private :: num_ihop(nfilesmax_ihop)
+double precision, private :: objf_ihop(nfilesmax_ihop)
+common /ihop_cost_r/ objf_ihop, num_ihop, mult_ihop, ihopobs_time, ihopobs_lat, ihopobs_lon, ihopobs_depth, ihopobs_uncert, ihopobs_modmask, &
+&ihopobs_modmask_tiled, geninfluence
+
+double precision, private :: objf_ihop_tl(nfilesmax_ihop)
+common /ihop_cost_r_tl/ objf_ihop_tl
+
+double precision, private :: ihop_dummy(nfilesmax_ihop,nsx,nsy)
+double precision, private :: ihop_globaldummy(nfilesmax_ihop)
+common /ihop_ctrl_dummy/ ihop_dummy, ihop_globaldummy
+
+double precision, private :: ihop_dummy_tl(nfilesmax_ihop,nsx,nsy)
+double precision, private :: ihop_globaldummy_tl(nfilesmax_ihop)
+common /ihop_ctrl_dummy_tl/ ihop_dummy_tl, ihop_globaldummy_tl
+
 logical, private :: ihop_mdsio
 logical, private :: ihop_mnc
 common /ihop_package/ ihop_mnc, ihop_mdsio
@@ -1618,6 +1681,8 @@ contains
   endif
   arrsize = size(narrival)
   call mpi_bcast( narrival,arrsize,mpi_integer,root,comm,ierr )
+  arrsize = size(geninfluence)
+  call mpi_bcast( geninfluence,arrsize,mpi_double_precision,root,comm,ierr )
   arrsize = size(arr)
   call mpi_bcast( arr,arrsize,mpi_ihop_arrival,root,comm,ierr )
   end subroutine bcastarr
@@ -1640,21 +1705,20 @@ contains
 ! declare local variables
 !==============================================
   integer :: arrsize
-  integer :: arrsize_tl
   integer :: ierr
 
 !----------------------------------------------
 ! TANGENT LINEAR AND FUNCTION STATEMENTS
 !----------------------------------------------
-  if (mpi_ihop_arrival == mpi_datatype_null .or. &
-      mpi_ihop_arrival_tl == mpi_datatype_null ) then
+  if (mpi_ihop_arrival == mpi_datatype_null .or. mpi_ihop_arrival_tl == mpi_datatype_null) then
     call arrivaltypeinit_tl( arr(1,1,1),arr_tl(1,1,1),arr(2,1,1),arr_tl(2,1,1) )
   endif
   arrsize = size(narrival)
   call mpi_bcast( narrival,arrsize,mpi_integer,root,comm,ierr )
+  arrsize = size(geninfluence)
+  call mpi_bcast( geninfluence,arrsize,mpi_double_precision,root,comm,ierr )
   arrsize = size(arr)
-  arrsize_tl = size(arr_tl)
-  call mpi_bcast( arr_tl,arrsize_tl,mpi_ihop_arrival_tl,root,comm,ierr )
+  call mpi_bcast( arr_tl,arrsize,mpi_ihop_arrival_tl,root,comm,ierr )
   call mpi_bcast( arr,arrsize,mpi_ihop_arrival,root,comm,ierr )
 
   end subroutine bcastarr_tl
