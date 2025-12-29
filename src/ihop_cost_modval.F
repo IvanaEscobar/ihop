@@ -116,16 +116,20 @@ CC      PRINT *, "ESCOBAR q1", ray2d(r)%q(1)
 CC-- global ray2D%q(1): F90 dynamic ray parameter END 
 
 CC-- OPTION 5)
-CC-- global Arr%delay: F90 eigenray travel times
-C      DO ii = 1, nArrival(ri,rj)
-C        modval = modval + REAL(Arr(ii,ri,rj)%delay)
+CC-- global geninfluence: F90 eigenray travel times
+C      DO ii = 1,35604
+C        modval = modval + geninfluence(ii)
+C        modval = modval + REAL(Arr(2,1,1)%delay)
 C      ENDDO
-      DO ii = 1,35604
-        modval = modval + geninfluence(ii)
-        modval = modval + REAL(Arr(2,1,1)%delay)
+CC-- global geninfluence: F90 eigenray travel times END
+
+C-- OPTION 6)
+C-- global Arr%delay: F90 eigenray travel times
+      DO ii = 1, nArrival(ri,rj)
+        modval = modval + REAL(Arr(ii,ri,rj)%delay)
       ENDDO
-      PRINT *, "ESCOBAR modval", modval
 C-- global Arr%delay: F90 eigenray travel times END
+      PRINT *, "ESCOBAR modval", modval
 
 # else /* TEST_IHOP_COST_INLOOP */
 
