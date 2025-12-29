@@ -124,12 +124,10 @@ C      ENDDO
 CC-- global geninfluence: F90 eigenray travel times END
 
 C-- OPTION 6)
-C-- global Arr%delay: F90 eigenray travel times
-      DO ii = 1, nArrival(ri,rj)
-        modval = modval + REAL(Arr(ii,ri,rj)%delay)
-      ENDDO
-C-- global Arr%delay: F90 eigenray travel times END
-      PRINT *, "ESCOBAR modval", modval
+C-- global Arr%delay: F90 eigenray travel time
+      ii = 4
+      modval = modval + REAL(Arr(ii,ri,rj)%delay)
+C-- global Arr%delay: F90 eigenray travel time END
 
 # else /* TEST_IHOP_COST_INLOOP */
 
@@ -169,6 +167,7 @@ C-- global Arr%delay: F90 eigenray travel times END
 
 ! ray storage of top arrival...
 # endif /* TEST_IHOP_COST_INLOOP */
+      PRINT *, "ESCOBAR modval", modval
 
 #endif /* ALLOW_IHOP */
 
