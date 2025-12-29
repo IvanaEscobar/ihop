@@ -353,7 +353,7 @@ CONTAINS
 
     ENDDO DeclinationAngle
 
-    PRINT *, "ESCOBAR ALL QS: ", tmpraytaur
+!    PRINT *, "ESCOBAR ALL QS: ", tmpraytaur
 
     ! Write results to disk
     SELECT CASE ( Beam%RunType( 1:1 ) )
