@@ -120,10 +120,11 @@ CC-- global Arr%delay: F90 eigenray travel times
 C      DO ii = 1, nArrival(ri,rj)
 C        modval = modval + REAL(Arr(ii,ri,rj)%delay)
 C      ENDDO
-      DO ii = 1,35504
+      DO ii = 1,35604
         modval = modval + geninfluence(ii)
+        modval = modval + REAL(Arr(2,1,1)%delay)
       ENDDO
-      PRINT *, "ESCOBAR ", modval
+      PRINT *, "ESCOBAR modval", modval
 C-- global Arr%delay: F90 eigenray travel times END
 
 # else /* TEST_IHOP_COST_INLOOP */

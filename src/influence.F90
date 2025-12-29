@@ -307,9 +307,9 @@ CONTAINS
   REAL (KIND=_RL90)    :: xA( 2 ), rayt( 2 ), rayn( 2 ), &
                           x_rcvr( 2, nRz_per_range ), rLen, RadiusMax, &
                           zMin, zMax, dqds
+  REAL (KIND=_RL90) :: qAtmp, qBtmp, rayntmp, qtmp
   COMPLEX (KIND=_RL90) :: dtauds
   LOGICAL              :: inRcvrRanges
-  REAL (KIND=_RL90) :: qAtmp, qBtmp, rayntmp, qtmp
 
 !!$TAF init iiitape1 = static, (Beam%nSteps-1)
 !!$TAF init iiitape2 = static, (Beam%nSteps-1)*ihop_nRR
@@ -320,6 +320,7 @@ CONTAINS
   phase        = 0.0
   qOld         = ray2D( 1 )%q( 1 )       ! old KMAH index
   rA           = ray2D( 1 )%x( 1 )       ! range at start of ray, typically 0
+  !IESCO25: TAF TLM inits
   W = 0
   s = 0
   n = 0
@@ -329,6 +330,20 @@ CONTAINS
   phaseint = 0
   rcvrdeclangle = 180
   delay = 0
+  xA = [zeroRL, zeroRL]
+  rayt = [zeroRL, zeroRL]
+  rayn = [zeroRL, zeroRL]
+  rLen = 0
+  RadiusMax = 0
+  zMin = 0
+  zMax = 0
+  dqds = 0
+  qatmp = 0
+  qbtmp = 0
+  rayntmp = 0
+  qtmp = 0
+  dtauds = (0,0)
+
 
 !  ! find index of first receiver to the right of rA
 !  irT = MINLOC( Pos%RR( 1:Pos%nRR ), MASK = Pos%RR( 1:Pos%nRR ).GT.rA )
@@ -344,7 +359,7 @@ CONTAINS
     Ratio1 = SQRT( ABS( COS( SrcDeclAngle / rad2deg ) ) )
 
   !IESCO25 for TAF TLM
-  DO iH=1, 35504
+  DO iH=1,35604
     geninfluence(iH) = 0.0
   ENDDO
 
@@ -367,6 +382,7 @@ CONTAINS
 !!$TAF store rlen,rayt= iiitape1
       rayt = rayt / rlen                    ! unit tangent of ray @ A
       rayn = [ -rayt( 2 ), rayt( 1 ) ]      ! unit normal  of ray @ A
+      
       IF ( ALL(rayt.EQ.0.0) ) THEN
         RcvrDeclAngle = 0.0
       ELSE
@@ -375,21 +391,21 @@ CONTAINS
 
       q      = ray2D( iH-1 )%q( 1 )
       dqds   = ray2D( iH   )%q( 1 ) - q
-      geninfluence(iH) = ray2D( iH   )%tau    - ray2D( iH-1 )%tau
-
-      !IESCO25: test some parts of influence, send geninfluence to ihop_cost_modval
-      dtauds = geninfluence(iH)
+      dtauds = ray2D( iH   )%tau    - ray2D( iH-1 )%tau
 
       !IESCO22: q only changes signs on direct paths, no top/bot bounces
       IF( q.LE.0. .AND. qOld.GT.0. .OR. q.GE.0. .AND. qOld.LT.0. ) &
         phase = phase + PI / 2.   ! phase shifts at caustics
-      qOld = q
+      qOld   = ray2D( iH-1 )%q( 1 )
 
       ! Radius calc from beam radius projected onto vertical line
       ! IESCO25: make this TAF TLM friendly, remove ABS() calls
-      CALL locABS(q,qAtmp)
-      CALL locABS(ray2D(iH)%q(1),qBtmp)
-      CALL locABS(rayn(2),rayntmp)
+      qAtmp = ABS(qOld)
+      qBtmp = ABS(ray2D(iH)%q(1))
+      rayntmp = ABS(rayn(2))
+!      CALL locABS(q,qAtmp)
+!      CALL locABS(ray2D(iH)%q(1),qBtmp)
+!      CALL locABS(rayn(2),rayntmp)
 
       !IESCO25: RadusMax = MAX( qAtmp, qBtmp )
       IF (qAtmp.GE.qBtmp) THEN
@@ -451,8 +467,11 @@ CONTAINS
 #endif /* IHOP_WRITE_OUT */
                 ! interpolated delay
                 delay    = ray2D( iH-1 )%tau + s*dtauds
+!      !IESCO25: test some parts of influence, send geninfluence to ihop_cost_modval
+              geninfluence(iH) = delay
 
-                CALL locABS(q,qtmp)
+!                CALL locABS(q,qtmp)
+                qtmp = ABS(q)
                 IF ( ray2D( iH )%c.GT.zeroRL ) THEN
                   Amp = SQRT( ray2D( iH )%c / qtmp )
                 ELSE
@@ -625,9 +644,12 @@ CONTAINS
 
       ! calculate beam width beam radius projected onto vertical line
       ! IESCO25: make this TAF TLM friendly, remove ABS() calls
-      CALL locABS(q,qAtmp)
-      CALL locABS(ray2D(iH)%q(1),qBtmp)
-      CALL locABS(rayn(2),rayntmp)
+!      CALL locABS(q,qAtmp)
+!      CALL locABS(ray2D(iH)%q(1),qBtmp)
+!      CALL locABS(rayn(2),rayntmp)
+      qAtmp = ABS(q)
+      qBtmp = ABS(ray2D(iH)%q(1))
+      rayntmp = ABS(rayn(2))
 
       IF (qAtmp.GE.qBtmp) THEN
         RadiusMax = qAtmp
@@ -699,7 +721,8 @@ CONTAINS
                 ! interpolated delay
                 delay    = ray2D( iH-1 )%tau + s*dtauds
 
-                CALL locABS(q,qtmp)
+!                CALL locABS(q,qtmp)
+                qtmp = ABS(q)
                 IF ( ray2D( iH )%c.GT.zeroRL ) THEN
                   Amp = SQRT( ray2D( iH )%c / qtmp )
                 ELSE
@@ -959,18 +982,18 @@ CONTAINS
   RETURN
   END !FUNCTION Hermite
 
-  SUBROUTINE locABS(varIn, varAbs)
-
-  REAL (KIND=_RL90), INTENT( IN ) :: varIn
-  REAL (KIND=_RL90), INTENT(INOUT) :: varAbs
-
-  IF ( varIn.LT.0 ) THEN
-    varAbs = -1 * varIn
-  ELSE
-    varAbs = varIn
-  ENDIF
-    
-  RETURN
-  END
+!  SUBROUTINE locABS(varIn, varAbs)
+!
+!  REAL (KIND=_RL90), INTENT( IN ) :: varIn
+!  REAL (KIND=_RL90), INTENT(INOUT) :: varAbs
+!
+!  IF ( varIn.LT.0 ) THEN
+!    varAbs = -1 * varIn
+!  ELSE
+!    varAbs = varIn
+!  ENDIF
+!    
+!  RETURN
+!  END
 
 END !MODULE influence

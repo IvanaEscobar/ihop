@@ -44,7 +44,7 @@ C     !LOCAL VARIABLES:
 # endif /* ALLOW_GRDCHK */
 CEOP
 
-      DO bj=1,35504
+      DO bj=1,35604
         geninfluence(bj) = 0. _d 0
       ENDDO
 

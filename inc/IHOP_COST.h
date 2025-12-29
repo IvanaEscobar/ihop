@@ -65,7 +65,7 @@
       _RL  ihopObs_uncert(NFILESMAX_IHOP,NOBSMAX_IHOP,nsx,nsy)
       _RL  ihopObs_modmask
       _RL  ihopObs_modmask_tiled(nsx,nsy)
-      _RL geninfluence(35504)
+      _RL geninfluence(35604)
       COMMON /IHOP_COST_R/                                                                                                          &
      &                objf_ihop,                                                                                                    &
      &                num_ihop,                                                                                                     &
