@@ -403,9 +403,6 @@ CONTAINS
       qAtmp = ABS(qOld)
       qBtmp = ABS(ray2D(iH)%q(1))
       rayntmp = ABS(rayn(2))
-!      CALL locABS(q,qAtmp)
-!      CALL locABS(ray2D(iH)%q(1),qBtmp)
-!      CALL locABS(rayn(2),rayntmp)
 
       !IESCO25: RadusMax = MAX( qAtmp, qBtmp )
       IF (qAtmp.GE.qBtmp) THEN
@@ -413,7 +410,7 @@ CONTAINS
       ELSE
         RadiusMax = qBtmp
       ENDIF
-      RadiusMax = RadiusMax / q0 / rayntmp
+      RadiusMax = RadiusMax * rayntmp / q0
 
       ! depth limits of beam; IESCO22: a large range of about 1/2 box depth
       IF ( rayt(1).GT.0.5 .OR. rayt(1).LT.-0.5 ) THEN   ! shallow angle ray
@@ -468,9 +465,8 @@ CONTAINS
                 ! interpolated delay
                 delay    = ray2D( iH-1 )%tau + s*dtauds
 !      !IESCO25: test some parts of influence, send geninfluence to ihop_cost_modval
-              geninfluence(iH) = delay
+!              geninfluence(iH) = delay
 
-!                CALL locABS(q,qtmp)
                 qtmp = ABS(q)
                 IF ( ray2D( iH )%c.GT.zeroRL ) THEN
                   Amp = SQRT( ray2D( iH )%c / qtmp )
@@ -643,10 +639,6 @@ CONTAINS
       qOld = q
 
       ! calculate beam width beam radius projected onto vertical line
-      ! IESCO25: make this TAF TLM friendly, remove ABS() calls
-!      CALL locABS(q,qAtmp)
-!      CALL locABS(ray2D(iH)%q(1),qBtmp)
-!      CALL locABS(rayn(2),rayntmp)
       qAtmp = ABS(q)
       qBtmp = ABS(ray2D(iH)%q(1))
       rayntmp = ABS(rayn(2))
@@ -721,7 +713,6 @@ CONTAINS
                 ! interpolated delay
                 delay    = ray2D( iH-1 )%tau + s*dtauds
 
-!                CALL locABS(q,qtmp)
                 qtmp = ABS(q)
                 IF ( ray2D( iH )%c.GT.zeroRL ) THEN
                   Amp = SQRT( ray2D( iH )%c / qtmp )
@@ -981,19 +972,5 @@ CONTAINS
 
   RETURN
   END !FUNCTION Hermite
-
-!  SUBROUTINE locABS(varIn, varAbs)
-!
-!  REAL (KIND=_RL90), INTENT( IN ) :: varIn
-!  REAL (KIND=_RL90), INTENT(INOUT) :: varAbs
-!
-!  IF ( varIn.LT.0 ) THEN
-!    varAbs = -1 * varIn
-!  ELSE
-!    varAbs = varIn
-!  ENDIF
-!    
-!  RETURN
-!  END
 
 END !MODULE influence
