@@ -233,7 +233,7 @@ C Combine all threads to global
 C IESCO25: ANOTHER dummy +/- of ihop_ssp to get TAF TLM to work
                 ihopObs_buff(irec)=ihopObs_buff(irec)+ihop_modvaltmp
      &            + myssp
-                ihopObs_buff(irec)=ihopObs_buff(irec)+ihop_modvaltmp
+                ihopObs_buff(irec)=ihopObs_buff(irec)
      &            - myssp
               ENDIF !IF (iObs.LE.ObsNo_tiled(num_file,bi,bj))
             ENDDO !DO iObs
