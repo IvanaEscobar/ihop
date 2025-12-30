@@ -308,9 +308,9 @@ C Set uncertainty to one
 
 #else /* TEST_IHOP_COST_INLOOP */
 C Read observation and uncertainty
-              CALL IHOP_COST_READ_OBS( 
+              CALL IHOP_COST_READ_OBS(
      I             num_file,  1, ihopObs_ind_glob(num_file,iObs),
-     O             ihop_data, 
+     O             ihop_data,
      I             myThid )
 
               CALL IHOP_COST_READ_OBS(
@@ -325,7 +325,7 @@ C Calc misfit
               IF (ihop_uncert.GT.zeroRL) THEN
                 ihop_weight = 1. _d 0 / (ihop_uncert*ihop_uncert)
 
-                objf_ihop(num_file) = objf_ihop(num_file) + 
+                objf_ihop(num_file) = objf_ihop(num_file) +
      &                                ihop_weight
      &                                *(ihop_modval-ihop_data)
      &                                *(ihop_modval-ihop_data)
