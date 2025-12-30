@@ -25,8 +25,8 @@ C     !USES:
       USE ihop_mod,  only: rad2deg
 #endif
 #ifdef TEST_IHOP_COST_INLOOP
-      USE ssp_mod,  only: SSP, Grid
-      USE ihop_mod, only: ray2D, nMax, Beam
+C      USE ssp_mod,  only: SSP, Grid
+C      USE ihop_mod, only: ray2D, nMax, Beam
 #endif
       IMPLICIT NONE
 C == Global variables ===
@@ -43,6 +43,7 @@ C == Global variables ===
 #endif
 #ifdef ALLOW_IHOP
 # include "IHOP_SIZE.h"
+# include "IHOP.h"
 # include "netcdf.inc"
 # ifdef ALLOW_COST
 #  include "IHOP_COST.h"
@@ -86,6 +87,7 @@ CEOP
 ! Added uses of modules above, have access to Arr and Pos
 ! ===================================================================
 # ifdef TEST_IHOP_COST_INLOOP
+CC-- OPTION 2)
 CC-- global summation: F90 Sound Speed if cMat is NOT default -99
 C       IF ( SSP%cMat(1,3).NE.-99. _d 0 ) THEN
 C       DO r = 1,Grid%nR
@@ -98,10 +100,34 @@ C       ENDDO !DO j
 C       ENDDO !DO k
 C       ENDIF
 CC-- global summation: F90 Sound Speed END
-C-- global ray2D%tau: F90 travel times if tau is NOT default 0
-      r = Beam%nSteps
-      modval = modval + real(ray2d(r)%tau)
-C-- global ray2D%tau: F90 travel times END 
+
+CC-- OPTION 3)
+CC-- global ray2D%tau: F90 travel times if tau is NOT default 0
+C      r = Beam%nSteps
+C      modval = modval + real(ray2d(r)%tau)
+CC-- global ray2D%tau: F90 travel times END 
+
+CC-- OPTION 4)
+CC-- global ray2D%q(1): F90 dynmaic ray parameter
+C      r = Beam%nSteps
+C      modval = modval + ray2d(r)%q(1)
+C      PRINT *, "ESCOBAR modval", modval
+CC      PRINT *, "ESCOBAR q1", ray2d(r)%q(1)
+CC-- global ray2D%q(1): F90 dynamic ray parameter END 
+
+CC-- OPTION 5)
+CC-- global geninfluence: F90 eigenray travel times
+C      DO ii = 1,35604
+C        modval = modval + geninfluence(ii)
+C        modval = modval + REAL(Arr(2,1,1)%delay)
+C      ENDDO
+CC-- global geninfluence: F90 eigenray travel times END
+
+C-- OPTION 6)
+C-- global Arr%delay: F90 eigenray travel time
+      ii = 4
+      modval = modval + REAL(Arr(ii,ri,rj)%delay)
+C-- global Arr%delay: F90 eigenray travel time END
 
 # else /* TEST_IHOP_COST_INLOOP */
 
@@ -141,6 +167,7 @@ C-- global ray2D%tau: F90 travel times END
 
 ! ray storage of top arrival...
 # endif /* TEST_IHOP_COST_INLOOP */
+      PRINT *, "ESCOBAR modval", modval
 
 #endif /* ALLOW_IHOP */
 

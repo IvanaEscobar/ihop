@@ -1,4 +1,14 @@
 !     *==========================================================*
+!     | SUBROUTINE LOCABS  is manually active                    |
+!     *==========================================================*
+!$TAF SUBROUTINE influence::locABS FTLNAME = locABS
+!$TAF SUBROUTINE influence::locABS ADNAME  = locABS
+!$TAF SUBROUTINE influence::locABS INPUT   = 1,2
+!$TAF SUBROUTINE influence::locABS OUTPUT  =   2
+!$TAF SUBROUTINE influence::locABS ACTIVE  = 1,2
+!$TAF SUBROUTINE influence::locABS DEPEND  = 
+
+!     *==========================================================*
 !     | SUBROUTINE WRITERAYOUTPUT  is passive                    |
 !     *==========================================================*
 !$TAF SUBROUTINE writeray::writerayoutput INPUT   = 1, 2, 3, 4, 5, 6
@@ -46,6 +56,7 @@
 
 !     *==========================================================*
 !     | SUBROUTINE READREFLECTIONCOEFFICIENT  is passive         |
+!     | SUBROUTINE WRITEREFCOEF               is passive         |
 !     *==========================================================*
 !$TAF SUBROUTINE refcoef::readreflectioncoefficient INPUT   = 1, 2, 3
 !$TAF SUBROUTINE refcoef::readreflectioncoefficient OUTPUT  =
@@ -53,6 +64,9 @@
 !$TAF SUBROUTINE refcoef::readreflectioncoefficient MODULE refCoef OUTPUT = NkTab
 !$TAF SUBROUTINE refcoef::readreflectioncoefficient MODULE refCoef OUTPUT = iTab,xTab,fTab,gTab
 !$TAF SUBROUTINE refcoef::readreflectioncoefficient MODULE refCoef OUTPUT = RBot,RTop
+!$TAF SUBROUTINE refcoef::writerefcoef INPUT   = 1
+!$TAF SUBROUTINE refcoef::writerefcoef OUTPUT  =
+!$TAF SUBROUTINE refcoef::writerefcoef MODULE bdry_mod INPUT = Bdry
 
 !     *==========================================================*
 !     | SUBROUTINE INITATI  is passive                           |
@@ -165,19 +179,48 @@
 !     *==========================================================*
 !     | MPI functions that are passive                           |
 !     *==========================================================*
-!$TAF SUBROUTINE arr_mod::free_ihop_arrival INPUT   = 1
-!$TAF SUBROUTINE arr_mod::bcastarr          INPUT   = 1,2
-!$TAF FUNCTION MPI_bcast                    FTLNAME = MPI_bcast
-!$TAF FUNCTION MPI_bcast                    ADNAME  = MPI_bcast
-!$TAF FUNCTION MPI_bcast                    INPUT   = 1,2,3,4,5,6
-!$TAF FUNCTION MPI_bcast                    OUTPUT  = 1
-!$TAF FUNCTION MPI_bcast                    ACTIVE  = 1
-!$TAF FUNCTION MPI_bcast                    DEPEND  =   2,3,4,5,6
 !$TAF FUNCTION MPI_barrier                  FTLNAME = MPI_barrier
 !$TAF FUNCTION MPI_barrier                  ADNAME  = MPI_barrier
 !$TAF FUNCTION MPI_barrier                  INPUT   = 1,2
 !$TAF FUNCTION MPI_barrier                  OUTPUT  =
 !$TAF FUNCTION MPI_barrier                  ACTIVE  =
 !$TAF FUNCTION MPI_barrier                  DEPEND  = 1,2
-!!$TAF SUBROUTINE arr_mod::free_ihop_ray     INPUT   = 1
-!!$TAF SUBROUTINE arr_mod::bcastray          INPUT   = 1,2
+
+!$TAF FUNCTION MPI_bcast                    FTLNAME = MPI_bcast
+!$TAF FUNCTION MPI_bcast                    ADNAME  = MPI_bcast
+!$TAF FUNCTION MPI_bcast                    INPUT   = 1,2,3,4,5,6
+!$TAF FUNCTION MPI_bcast                    OUTPUT  = 1
+!$TAF FUNCTION MPI_bcast                    ACTIVE  = 1,  3
+!$TAF FUNCTION MPI_bcast                    DEPEND  =   2,3,4,5,6
+!!!$TAF FUNCTION MPI_Type_free                FTLNAME = MPI_Type_free
+!!!$TAF FUNCTION MPI_Type_free                ADNAME  = MPI_Type_free
+!!$TAF FUNCTION MPI_Type_free                INPUT   = 1,2
+!!!$TAF FUNCTION MPI_Type_free                OUTPUT  =
+!!$TAF FUNCTION MPI_Type_free                ACTIVE  = 
+!!!$TAF FUNCTION MPI_Type_free                DEPEND  =   2
+!!!$TAF FUNCTION MPI_Type_commit              FTLNAME = MPI_Type_commit
+!!!$TAF FUNCTION MPI_Type_commit              ADNAME  = MPI_Type_commit
+!!$TAF FUNCTION MPI_Type_commit              INPUT   = 1,2
+!!!$TAF FUNCTION MPI_Type_commit              OUTPUT  =
+!!$TAF FUNCTION MPI_Type_commit              ACTIVE  =
+!!!$TAF FUNCTION MPI_Type_commit              DEPEND  =   2
+
+!!$TAF FUNCTION MPI_get_address              FTLNAME = MPI_get_address
+!!$TAF FUNCTION MPI_get_address              ADNAME  = MPI_get_address
+!!$TAF FUNCTION MPI_get_address              INPUT   = 1,2,3
+!!$TAF FUNCTION MPI_get_address              OUTPUT  =   2
+!!$TAF FUNCTION MPI_get_address              ACTIVE  = 1
+!!$TAF FUNCTION MPI_get_address              DEPEND  =   2,3
+!!!$TAF FUNCTION MPI_Type_create_struct       FTLNAME = MPI_Type_create_struct
+!!!$TAF FUNCTION MPI_Type_create_struct       ADNAME  = MPI_Type_create_struct
+!!$TAF FUNCTION MPI_Type_create_struct       INPUT   = 1,2,3,4,5,6
+!!$TAF FUNCTION MPI_Type_create_struct       OUTPUT  =         5
+!!!$TAF FUNCTION MPI_Type_create_struct       ACTIVE  =         5
+!!!$TAF FUNCTION MPI_Type_create_struct       DEPEND  = 1,2,3,4,  6
+
+!!$TAF SUBROUTINE ihop_mod::ray2dpttypeinit    FTLNAME = ray2dptytypeinit
+!!$TAF SUBROUTINE ihop_mod::ray2dpttypeinit    ADNAME  = ray2dptytypeinit
+!!$TAF SUBROUTINE ihop_mod::ray2dpttypeinit    INPUT   = 1,2,3,4
+!!$TAF SUBROUTINE ihop_mod::ray2dpttypeinit    OUTPUT  =     3,4
+!!$TAF SUBROUTINE ihop_mod::ray2dpttypeinit    ACTIVE  = 1,2,3,4
+!!$TAF SUBROUTINE ihop_mod::ray2dpttypeinit    DEPEND  = 1,2

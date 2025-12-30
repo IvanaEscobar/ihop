@@ -79,7 +79,7 @@ CONTAINS
   USE ssp_mod,        only: setSSP
   USE refCoef,        only: writeRefCoef 
   USE beampat,        only: writePat
-  USE ihop_mod,       only: Beam
+  USE ihop_mod,       only: Beam, ray2d
 #ifdef ALLOW_USE_MPI
   USE ihop_mod,       only: BcastRay
   USE arr_mod,        only: BcastArr
@@ -148,6 +148,7 @@ CONTAINS
     CALL BcastArr( 0, MPI_COMM_WORLD )
   ENDIF
 #endif
+!  PRINT *, "ESCOBAR myproc, q(1) ", myprocid, Beam%nsteps, ray2d(Beam%nsteps)%q(1)
 
 #ifdef IHOP_WRITE_OUT
   IF ( myProcID.EQ.0 .AND. IHOP_dumpfreq.GE.0 ) THEN
@@ -174,7 +175,7 @@ CONTAINS
       STOP "ABNORMAL END: S/R IHOP_MAIN"
     END SELECT
 
-  ENDIF ! IF ( locProcID.EQ.0 )
+  ENDIF ! IF ( myProcID.EQ.0 )
 #endif /* IHOP_WRITE_OUT */
 
   RETURN
@@ -194,8 +195,7 @@ CONTAINS
   USE srPos_mod, only: Pos
   USE arr_mod,   only: WriteArrivalsASCII, WriteArrivalsBinary, U
   USE writeRay,  only: WriteRayOutput
-  USE influence, only: InfluenceGeoHatRayCen, InfluenceGeoGaussianCart, &
-                       InfluenceGeoHatCart, ScalePressure
+  USE influence, only: calculateInfluence, ScalePressure
   USE beampat,   only: NSBPPts, SrcBmPat
   USE ihop_mod,  only: Beam, ray2D, rad2deg, SrcDeclAngle, afreq, &
                        nRz_per_range, RAYFile, DELFile, nMax
@@ -238,6 +238,7 @@ CONTAINS
   REAL(KIND=_RL90) :: Amp0, DalphaOpt, xs(2), RadMax, s, &
                       c, cimag, gradc(2), crr, crz, czz, rho
   REAL(KIND=_RL90) :: tmpDelay(nMax)
+  REAL(KIND=_RL90) :: tmpRaytauR(Angles%nAlpha)
 !EOP
 
 !$TAF init IHOPCore2 = static, Pos%nSZ*Angles%nAlpha
@@ -297,12 +298,12 @@ CONTAINS
         Amp0 = ( 1 - s ) * SrcBmPat( IBP, 2 ) + s * SrcBmPat( IBP+1, 2 )
         ! IEsco22: When a beam pattern isn't specified, Amp0 = 0
 
-!$TAF store amp0,beam%runtype,beam%nsteps = IHOPCore2
-! IESCO24: Store derived type by data type: Bdry from bdry_mod
-! Scalar components:
+!!$TAF store amp0,beam%runtype,beam%nsteps = IHOPCore2
+!! IESCO24: Store derived type by data type: Bdry from bdry_mod
+!! Scalar components:
 !!$TAF store bdry%top%hs%cp,bdry%top%hs%cs,bdry%top%hs%rho = IHOPCore2
-! Fixed arrays:
-! Allocatable arrays:
+!! Fixed arrays:
+!! Allocatable arrays:
 
         ! Lloyd mirror pattern for semi-coherent option
         IF ( Beam%RunType( 1:1 ).EQ.'S' ) &
@@ -341,31 +342,26 @@ CONTAINS
                 ray2D(nSteps)%nTopBnc, ray2D(nSteps)%nBotBnc )
             ENDIF
 
-          ELSE ! Compute the contribution to the field
-            SELECT CASE ( Beam%Type( 1:1 ) )
-            CASE ( 'g' )
-              CALL InfluenceGeoHatRayCen( U, myThid )
-            CASE ( 'B' )
-              CALL InfluenceGeoGaussianCart( U, myThid )
-            CASE ( 'G','^' )
-              CALL InfluenceGeoHatCart( U, myThid )
-            CASE DEFAULT !IEsco22: thesis is in default behavior
-              CALL InfluenceGeoHatCart( U, myThid )
-            END SELECT
+          ELSE ! Compute the contribution to the pressure field, U
+            CALL calculateInfluence( myThid )
 
           ENDIF ! IF ( Beam%RunType(1:1).EQ.'R')
 
       ENDIF ! IF ( Angles%iSingle_alpha.EQ.0 .OR. iAlpha.EQ.Angles%iSingle_alpha )
 
+      tmpRaytauR(iAlpha) = ray2d(beam%nsteps)%q(1)
+
     ENDDO DeclinationAngle
+
+!    PRINT *, "ESCOBAR ALL QS: ", tmpraytaur
 
     ! Write results to disk
     SELECT CASE ( Beam%RunType( 1:1 ) )
     CASE ( 'C', 'S', 'I' )   ! TL calculation
       CALL ScalePressure( ray2D( 1 )%c, Pos%RR, U, &
-                          nRz_per_range, Pos%nRR, Beam%RunType, &
-                          IHOP_freq )
+                          nRz_per_range, Pos%nRR )
       iRec = 10 + nRz_per_range * ( iH-1 )
+
       RcvrDepth: DO Irz1 = 1, nRz_per_range
         iRec = iRec + 1
         WRITE( SHDFile, REC=iRec ) U( Irz1, 1:Pos%nRR )

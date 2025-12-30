@@ -65,6 +65,7 @@
       _RL  ihopObs_uncert(NFILESMAX_IHOP,NOBSMAX_IHOP,nsx,nsy)
       _RL  ihopObs_modmask
       _RL  ihopObs_modmask_tiled(nsx,nsy)
+      _RL geninfluence(35604)
       COMMON /IHOP_COST_R/                                                                                                          &
      &                objf_ihop,                                                                                                    &
      &                num_ihop,                                                                                                     &
@@ -72,7 +73,7 @@
      &                ihopObs_time, ihopObs_lat, ihopObs_lon,                                                                       &
      &                ihopObs_depth,                                                                                                &
      &                ihopObs_uncert,                                                                                               &
-     &                ihopObs_modmask, ihopObs_modmask_tiled
+     &                ihopObs_modmask, ihopObs_modmask_tiled, geninfluence
 
 !    IHOP cost filenames
 !     IHOPObs_Dir   :: directory where ihop observations are found
@@ -91,8 +92,8 @@
 
       _RL ihop_dummy(NFILESMAX_IHOP,nsx,nsy)
       _RL ihop_globaldummy(NFILESMAX_IHOP)
-      COMMON /IHOP_CTRL_DUMMY/
-     &                ihop_dummy,
+      COMMON /IHOP_CTRL_DUMMY/                                                                                                      &
+     &                ihop_dummy,                                                                                                   &
      &                ihop_globaldummy
 
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|

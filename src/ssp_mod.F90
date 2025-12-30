@@ -28,7 +28,7 @@ MODULE ssp_mod
 ! !SCOPE: 
   PRIVATE
 !=======================================================================
-  PUBLIC init_fixed_SSP, init_varia_SSP, setSSP, evalSSP, &
+  PUBLIC init_fixed_SSP, setSSP, evalSSP, &
          Grid, SSP, &
          alphaR, betaR, alphaI, betaI, rhoR, iSegz, iSegr
 !=======================================================================
@@ -88,7 +88,6 @@ CONTAINS
 ! S/R init_fixed_SSP
 ! S/R ReadSSP
 ! S/R init_fixed_Grid
-! S/R init_varia_SSP
 
 ! S/R setSSP
 ! S/R evalSSP
@@ -391,56 +390,6 @@ CONTAINS
 
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 !BOP
-! !ROUTINE: init_varia_SSP
-! !INTERFACE:
-  SUBROUTINE init_varia_SSP( myThid )
-! !DESCRIPTION:
-!   Initialize the fixed SSP parameters that do not change within a time series.
-! Sets SSP%c,cz,cMat,czMat
-
-! !USES: None
-
-! !INPUT PARAMETERS:
-! myThid :: my thread ID
-  INTEGER, INTENT( IN ) :: myThid
-! !OUTPUT PARAMETERS: None
-
-! !LOCAL VARIABLES:
-! msgBuf :: Informational/error message buffer
-! iallocstat :: Allocation status
-#ifdef IHOP_WRITE_OUT
-  CHARACTER*(MAX_LEN_MBUF):: msgBuf
-#endif /* IHOP_WRITE_OUT */
-  INTEGER :: iallocstat
-
-  ! ONLY ALLOCATE cmat and czmat, to be filled per ihop run
-  IF (ALLOCATED( SSP%cMat )) DEALLOCATE( SSP%cMat )
-  IF (ALLOCATED( SSP%czMat )) DEALLOCATE( SSP%czMat )
-  ALLOCATE( SSP%cMat( Grid%nZ, Grid%nR ), &
-            SSP%czMat( Grid%nZ-1, Grid%nR ), &
-            STAT=iallocstat )
-  IF ( iallocstat.NE.0 ) THEN
-#ifdef IHOP_WRITE_OUT
-    WRITE(msgBuf,'(2A)') 'SSP_MOD::init_varia_SSP: ', &
-      'Insufficient memory to store SSP%cMat, SSP%czMat'
-    CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
-      STOP 'ABNORMAL END: S/R init_varia_SSP'
-  ENDIF
-
-  ! Initiate to nonsense
-  SSP%cMat  = -99.0 _d 0
-  SSP%czMat = -99.0 _d 0
-
-  ! init default SSP values (only fixed memory vars)
-  SSP%c    = -99.0 _d 0
-  SSP%cz   = -99.0 _d 0
-
-  RETURN
-  END !SUBROUTINE init_varia_SSP
-
-!---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
-!BOP
 ! !ROUTINE: setSSP
 ! !INTERFACE:
   SUBROUTINE setSSP( myThid )
@@ -627,6 +576,8 @@ CONTAINS
 ! !OUTPUT PARAMETERS: c, cimag, gradc, crr, crz, czz, rho
 
 ! !LOCAL VARIABLES: None
+  COMPLEX (KIND=_RL90) :: n2tmp
+  REAL (KIND=_RL90) :: n2tmpR, n2tmpI
 !EOP
 
   iSegz = 1 !RG
@@ -645,11 +596,12 @@ CONTAINS
   ENDIF ! IF ( x( 2 ).LT.Grid%Z( iSegz ) .OR. x( 2 ).GT.Grid%Z( iSegz+1 ) )
 
   W = ( x( 2 ) - Grid%Z( iSegz ) ) / ( Grid%Z( iSegz+1 ) - Grid%Z( iSegz ) )
+  n2tmp = ( 1-W )*n2( iSegz ) + W*n2( iSegz+1 ) 
 
-  c     = REAL(  1.0D0 / SQRT( ( 1.0D0-W ) * n2( iSegz ) &
-          + W * n2( iSegz+1 ) ) )
-  cimag = AIMAG( 1.0D0 / SQRT( ( 1.0D0-W ) * n2( iSegz ) &
-          + W * n2( iSegz+1 ) ) )
+  ! IESCO25: TO-DO Seperate complex sqrt for TAF...
+
+  c     = REAL(  1.0D0 / SQRT( n2tmp ) )
+  cimag = AIMAG( 1.0D0 / SQRT( n2tmp ) )
 
   gradc = [ 0.0D0, -0.5D0 * c * c * c * REAL( n2z( iSegz ) ) ]
   crr   = 0.0d0
@@ -1128,6 +1080,8 @@ USE splinec_mod,  only: splineall
     ENDIF ! IF ( iz.GE.2 )
 
     IF ( iz.EQ.1 ) THEN
+      ! IESCO25: dummy line for dummy TAF
+      ssp1buffer = ihop_ssp(i, j, iz, bi,bj)
       ! Top ihop vlayer: set to z=0
       ssp1buffer = CHEN_MILLERO(i, j, 0, bi,bj,myThid) * &
         ihop_idw_weights(ii, jj) / ihop_sumweights(ii, iz)

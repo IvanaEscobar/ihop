@@ -38,11 +38,15 @@ C     !FUNCTIONS:
 C     !LOCAL VARIABLES:
 #ifdef ALLOW_COST
       INTEGER bi, bj
-      INTEGER l, num_file
+      INTEGER num_file
 # ifdef ALLOW_GRDCHK
       INTEGER err
 # endif /* ALLOW_GRDCHK */
 CEOP
+
+      DO bj=1,35604
+        geninfluence(bj) = 0. _d 0
+      ENDDO
 
 C Initialize tiled cost fxn contributions.
       DO bj = myByLo(myThid), myByHi(myThid)

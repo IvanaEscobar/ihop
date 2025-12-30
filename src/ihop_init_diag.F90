@@ -1147,6 +1147,7 @@ CONTAINS
   Arr(:,:,:)%A              = -999.
   Arr(:,:,:)%Phase          = -999.
   Arr(:,:,:)%delay          = -999.
+  Arr(:,:,:)%delayR         = -999.
 
   ! From ssp_mod.f90
   IF (useSSPFile) THEN

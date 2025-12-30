@@ -28,7 +28,7 @@ MODULE ihop_mod
           nMax, nRz_per_range, iStep, afreq, SrcDeclAngle,      &
           Title, Beam, ray2D, ray2DPt, iSmallStepCtr, rxyz
 #ifdef ALLOW_USE_MPI
-    PUBLIC BcastRay
+    PUBLIC BcastRay, free_ihop_ray2d
 #endif /* ALLOW_USE_MPI */
 !=======================================================================
 
@@ -56,8 +56,8 @@ MODULE ihop_mod
   CHARACTER*(80)     :: Title
 
 #ifdef ALLOW_USE_MPI
-  INTEGER :: MPI_IHOP_RAY = MPI_DATATYPE_NULL
-  LOGICAL :: RAY_TYPE_COMMITTED = .false.
+  INTEGER :: MPI_IHOP_RAY2D = MPI_DATATYPE_NULL
+  LOGICAL :: RAY2D_TYPE_COMMITTED = .false.
 #endif /* ALLOW_USE_MPI */
 
 ! == Derived types ==
@@ -111,37 +111,110 @@ CONTAINS
 ! !LOCAL VARIABLES:
 ! arrSize    :: indices for range and depth
 ! ierr       :: MPI return code
-  COMPLEX (KIND=_RL90) :: tauBuf(nMax)
-  INTEGER :: i
-  INTEGER :: ierr, MPI_CL
+#ifdef ALLOW_USE_MPI
+  INTEGER :: ierr
+#endif /* ALLOW_USE_MPI */
+
 !EOP  
 
 #ifdef ALLOW_USE_MPI
-  ! Build Ray2Dpt MPI type
-  IF (STORAGE_SIZE( REAL(ray2d(1)%tau) ).EQ.64) THEN
-    MPI_CL = MPI_DOUBLE_COMPLEX
-  ELSE
-    MPI_CL = MPI_COMPLEX
-  ENDIF
-
-  IF (myProcID.eq.root) THEN
-    DO i=1,nMax
-      tauBuf(i) = ray2D(i)%tau
-    ENDDO
-  ENDIF
-  CALL MPI_Bcast( tauBuf, nMax, MPI_CL, root, comm, ierr )
-
-  IF (myProcID.ne.root) THEN
-    DO i=1,nMax
-      ray2D(i)%tau = tauBuf(i)
-    ENDDO
+! build custom MPI datatype for ray2d
+  IF ( MPI_IHOP_RAY2D.EQ.MPI_DATATYPE_NULL ) THEN
+    CALL ray2dPtTypeInit( ray2D(1), ray2D(2) )
   ENDIF
 
   ! We are on MPI rank 0
   CALL MPI_Bcast( Beam%nSteps, 1, MPI_INTEGER, root, comm, ierr )
+
+  !CALL MPI_Bcast( ray2d(beam%nsteps)%q(1), 1, MPI_RL, root, comm, ierr)
+  CALL MPI_Bcast( ray2D, nMax, MPI_IHOP_RAY2D, root, comm, ierr )
 #endif /* ALLOW_USE_MPI */
 
   RETURN
   END !SUBROUTINE BcastRay
+
+#ifdef ALLOW_USE_MPI
+!---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
+!BOP
+! !ROUTINE: free_ihop_ray2d
+! !INTERFACE:
+  SUBROUTINE free_ihop_ray2d(myThid)
+! !DESCRIPTION:
+! Free ray2d datatype
+    INTEGER, INTENT( IN ) :: myThid
+    INTEGER :: ierr
+
+    IF (RAY2D_TYPE_COMMITTED) THEN
+      CALL MPI_Type_free(MPI_IHOP_RAY2D, ierr)
+      MPI_IHOP_RAY2D = MPI_DATATYPE_NULL
+      RAY2D_TYPE_COMMITTED = .false.
+    ENDIF
+
+  RETURN
+  END !SUBROUTINE free_ihop_arrival
+
+!---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
+!BOP
+! !ROUTINE: Ray2DPtTypeInti
+! !INTERFACE:
+  SUBROUTINE Ray2DPtTypeInit( singleRay2D, nextRay2D )
+
+! !INPUT PARAMETERS:
+  TYPE( ray2dpt ), INTENT( IN ) :: singleRay2D
+  TYPE( ray2dpt ), INTENT( IN ) :: nextRay2D
+
+  ! LOCAL VARIABLES:
+  INTEGER, PARAMETER :: typeSize = 3
+  INTEGER(KIND=MPI_ADDRESS_KIND) :: disp(typeSize), addr(typeSize)
+  INTEGER(KIND=MPI_ADDRESS_KIND) :: base, extent, a2
+  INTEGER :: n, bl(typeSize), ty(typeSize)
+  INTEGER :: ierr, MPI_CL, MPI_RL, tmpType
+
+
+  ! Build partial ray2D MPI type
+  IF (STORAGE_SIZE( REAL(singleRay2D%tau) ).EQ.64) THEN
+    MPI_CL = MPI_DOUBLE_COMPLEX
+    MPI_RL = MPI_DOUBLE_PRECISION
+  ELSE
+    MPI_CL = MPI_COMPLEX
+    MPI_RL = MPI_REAL
+  ENDIF
+
+  IF ( .not.RAY2D_TYPE_COMMITTED) THEN
+    bl=1
+    CALL MPI_Get_address(singleRay2D, base, ierr)
+
+    n=1
+    CALL MPI_Get_address(singleRay2D%x(1), addr(n), ierr)
+    bl(n)=2
+    disp(n) = addr(n) - base
+    ty(n)=MPI_RL
+
+    n=n+1
+    CALL MPI_Get_address(singleRay2D%q(1), addr(n), ierr)
+    bl(n)=2
+    disp(n) = addr(n) - base
+    ty(n)=MPI_RL
+
+    n=n+1
+    CALL MPI_Get_address(singleRay2D%tau, addr(n), ierr)
+    disp(n) = addr(n) - base
+    ty(n)=MPI_CL
+
+    CALL MPI_Type_create_struct(n, bl, disp, ty, tmpType, ierr)
+
+    CALL MPI_get_address(nextRay2D, a2, ierr)
+    extent = a2-base
+
+    CALL MPI_Type_create_resized( tmpType, 0_MPI_ADDRESS_KIND, extent, &
+                                 MPI_IHOP_RAY2D, ierr )
+    CALL MPI_Type_commit( MPI_IHOP_RAY2D, ierr )
+    CALL MPI_Type_free( tmpType, ierr )
+    RAY2D_TYPE_COMMITTED = .true.
+  ENDIF
+
+  RETURN
+  END
+#endif /* ALLOW_USE_MPI */
 
 END !MODULE ihop_mod

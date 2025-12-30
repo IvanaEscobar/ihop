@@ -21,6 +21,9 @@ MODULE arr_mod
 #endif
 #include "IHOP_SIZE.h"
 #include "IHOP.h"
+#ifdef ALLOW_COST
+# include "IHOP_COST.h"
+#endif
 
 ! !SCOPE: 
   PRIVATE
@@ -56,6 +59,7 @@ MODULE arr_mod
     REAL (KIND=_RL90)    :: SrcAzimAngle, RcvrAzimAngle
 #endif /* IHOP_THREED */
     COMPLEX (KIND=_RL90) :: delay
+    REAL (KIND=_RL90)    :: delayR
   END TYPE
 
   TYPE(Arrival), ALLOCATABLE :: Arr( :, :, : )
@@ -94,11 +98,11 @@ CONTAINS
 ! iAllocStat          :: Allocation status
 ! x, y                :: Dimensions of the U matrix
 ! arrStorage          :: Storage for arrivals
-! minnArr             :: Minimum number of arrivals to allocate
+! nMinArr             :: Minimum number of arrivals to allocate
   CHARACTER*(MAX_LEN_MBUF):: msgBuf
   INTEGER             :: iAllocStat
   INTEGER             :: x, y
-  INTEGER, PARAMETER  :: arrStorage = 100, minnArr = 10
+  INTEGER, PARAMETER  :: arrStorage = 1000, nMinArr = 10
 !EOP
 
   ! reset memory
@@ -131,11 +135,12 @@ CONTAINS
   ENDIF
 
   ! for an arrivals run, allocate space for arrivals matrices
+  nMaxArr = -1
   SELECT CASE ( Beam%RunType( 1:1 ) )
   CASE ( 'A', 'a', 'e' )
-    ! allow space for at least minnArr arrivals
+    ! allow space for at least nMinArr arrivals
     nMaxArr = MAX( arrStorage / ( nRz_per_range * Pos%nRR ), &
-                  minnArr )
+                  nMinArr )
   CASE DEFAULT
     nMaxArr = 1
   END SELECT ! Beam%RunType( 1:1 )
@@ -153,8 +158,8 @@ CONTAINS
   ENDIF
 
 #ifdef ALLOW_USE_MPI
-! create MPI DerivedType
-  CALL ArrivalTypeInit( Arr(1,1,1) )
+! create MPI DerivedType, IF nMaxArr.gt.1
+  CALL ArrivalTypeInit( Arr(1,1,1),Arr(2,1,1) )
 
 #endif /* ALLOW_USE_MPI */
   ! init default values
@@ -167,6 +172,7 @@ CONTAINS
   Arr(:,:,:)%A              = -999.
   Arr(:,:,:)%Phase          = -999.
   Arr(:,:,:)%delay          = -999.
+  Arr(:,:,:)%delayR         = -999.
 
   END !SUBROUTINE initArr( myThid )
 
@@ -225,38 +231,41 @@ CONTAINS
     IF ( Nt.GE.nMaxArr ) THEN       ! space available to add an arrival?
       iArr = MINLOC( Arr( :, ir, iz )%A )   ! no: replace weakest arrival
       IF ( Amp.GT.Arr( iArr(1), ir, iz )%A ) THEN
-        Arr( iArr(1), ir, iz)%A             = SNGL( Amp )       ! amplitude
-        Arr( iArr(1), ir, iz)%Phase         = SNGL( Phase )     ! phase
-        Arr( iArr(1), ir, iz)%delay         = CMPLX( delay )    ! delay time
-        Arr( iArr(1), ir, iz)%SrcDeclAngle  = SNGL( SrcDeclAngle) ! angle
-        Arr( iArr(1), ir, iz)%RcvrDeclAngle = SNGL(RcvrDeclAngle) ! angle
-        Arr( iArr(1), ir, iz)%nTopBnc       = nTopBnc         ! top bounces
-        Arr( iArr(1), ir, iz)%nBotBnc       = nBotBnc         ! bottom bounces
+        Arr( iArr(1), ir, iz)%A             = Amp       ! amplitude
+        Arr( iArr(1), ir, iz)%Phase         = Phase     ! phase
+        Arr( iArr(1), ir, iz)%delay         = delay     ! delay time
+        Arr( iArr(1), ir, iz)%delayR        = REAL(delay)
+        Arr( iArr(1), ir, iz)%SrcDeclAngle  = SrcDeclAngle  ! angle
+        Arr( iArr(1), ir, iz)%RcvrDeclAngle = RcvrDeclAngle ! angle
+        Arr( iArr(1), ir, iz)%nTopBnc       = nTopBnc   ! top bounces
+        Arr( iArr(1), ir, iz)%nBotBnc       = nBotBnc   ! bottom bounces
       ENDIF
     ELSE
       Nt                             = Nt+1                ! # arrivals
-      Arr( Nt, ir, iz)%A             = SNGL( Amp )         ! amplitude
-      Arr( Nt, ir, iz)%Phase         = SNGL( Phase )       ! phase
-      Arr( Nt, ir, iz)%delay         = CMPLX( delay )      ! delay time
-      Arr( Nt, ir, iz)%SrcDeclAngle  = SNGL( SrcDeclAngle )  ! angle
-      Arr( Nt, ir, iz)%RcvrDeclAngle = SNGL( RcvrDeclAngle ) ! angle
-      Arr( Nt, ir, iz)%nTopBnc       = nTopBnc           ! top bounces
-      Arr( Nt, ir, iz)%nBotBnc       = nBotBnc           ! bottom bounces
+      Arr( Nt, ir, iz)%A             = Amp           ! amplitude
+      Arr( Nt, ir, iz)%Phase         = Phase         ! phase
+      Arr( Nt, ir, iz)%delay         = delay         ! delay time
+      Arr( Nt, ir, iz)%delayR        = REAL(delay)
+      Arr( Nt, ir, iz)%SrcDeclAngle  = SrcDeclAngle  ! angle
+      Arr( Nt, ir, iz)%RcvrDeclAngle = RcvrDeclAngle ! angle
+      Arr( Nt, ir, iz)%nTopBnc       = nTopBnc       ! top bounces
+      Arr( Nt, ir, iz)%nBotBnc       = nBotBnc       ! bottom bounces
     ENDIF !IF ( Nt.GE.nMaxArr )
 
   ELSE ! not a new ray
     ! calculate weights of old ray information vs. new
-    AmpTot = Arr( Nt, ir, iz )%A + SNGL( Amp )
+    AmpTot = Arr( Nt, ir, iz )%A + Amp
     w1     = Arr( Nt, ir, iz )%A / AmpTot
-    w2     = REAL( Amp ) / AmpTot
+    w2     = Amp / AmpTot
 
     Arr( Nt, ir, iz)%delay         =  w1 * Arr( Nt, ir, iz )%delay &
-                                    + w2 * CMPLX( delay ) ! weighted sum
+                                    + w2 * delay ! weighted sum
+    Arr( Nt, iR, iZ)%delayR        = REAL( Arr(Nt,ir,iz)%delay )
     Arr( Nt, ir, iz)%A             =  AmpTot
     Arr( Nt, ir, iz)%SrcDeclAngle  =  w1 * Arr( Nt, ir, iz )%SrcDeclAngle &
-                                    + w2 * SNGL( SrcDeclAngle  )
+                                    + w2 * SrcDeclAngle
     Arr( Nt, ir, iz)%RcvrDeclAngle =  w1 * Arr( Nt, ir, iz )%RcvrDeclAngle &
-                                    + w2 * SNGL( RcvrDeclAngle )
+                                    + w2 * RcvrDeclAngle
   ENDIF ! IF ( NewRay )
 
   ! Pass Nt to global Narrival
@@ -319,14 +328,14 @@ CONTAINS
 #ifdef IHOP_WRITE_OUT
       WRITE( ARRFile, '(I0)' ) nArrival( ir, iz )
       DO iArr = 1, nArrival( ir, iz )
-        WRITE( ARRFile, arrFMT ) &
-          SNGL( factor )  *Arr( iArr, ir, iz )%A,     &
-          SNGL( rad2deg ) *Arr( iArr, ir, iz )%Phase, &
-          REAL( Arr( iArr, ir, iz )%delay ),          &
-          AIMAG( Arr( iArr, ir, iz )%delay ),         &
-          Arr( iArr, ir, iz )%SrcDeclAngle,           &
-          Arr( iArr, ir, iz )%RcvrDeclAngle,          &
-          Arr( iArr, ir, iz )%NTopBnc,                &
+        WRITE( ARRFile, arrFMT )              &
+          factor  *Arr( iArr, ir, iz )%A,     &
+          rad2deg *Arr( iArr, ir, iz )%Phase, &
+          Arr( iArr, ir, iz )%delayR,         &
+          AIMAG( Arr( iArr, ir, iz )%delay ), &
+          Arr( iArr, ir, iz )%SrcDeclAngle,   &
+          Arr( iArr, ir, iz )%RcvrDeclAngle,  &
+          Arr( iArr, ir, iz )%NTopBnc,        &
           Arr( iArr, ir, iz )%NBotBnc
 
       ENDDO  ! next arrival
@@ -388,13 +397,13 @@ CONTAINS
       WRITE( ARRFile, '(I0)' ) nArrival( ir, iz )
       DO iArr = 1, nArrival( ir, iz )
         ! integers written out as reals below for fast reading in Matlab
-        WRITE( ARRFile ) &
-          SNGL( factor * Arr( iArr, ir, iz )%A ),      &
-          SNGL( rad2deg * Arr( iArr, ir, iz )%Phase ), &
-          Arr( iArr, ir, iz )%delay,                   &
-          Arr( iArr, ir, iz )%SrcDeclAngle,            &
-          Arr( iArr, ir, iz )%RcvrDeclAngle,           &
-          REAL( Arr( iArr, ir, iz )%NTopBnc ),         &
+        WRITE( ARRFile )                       &
+          factor * Arr( iArr, ir, iz )%A,      &
+          rad2deg * Arr( iArr, ir, iz )%Phase, &
+          Arr( iArr, ir, iz )%delay,           &
+          Arr( iArr, ir, iz )%SrcDeclAngle,    &
+          Arr( iArr, ir, iz )%RcvrDeclAngle,   &
+          REAL( Arr( iArr, ir, iz )%NTopBnc ), &
           REAL( Arr( iArr, ir, iz )%NBotBnc )
 
       ENDDO   ! next arrival
@@ -431,12 +440,14 @@ CONTAINS
 
 #ifdef ALLOW_USE_MPI
   IF ( MPI_IHOP_ARRIVAL.EQ.MPI_DATATYPE_NULL ) THEN
-    CALL ArrivalTypeInit( Arr(1,1,1) )
+    CALL ArrivalTypeInit( Arr(1,1,1), Arr(2,1,1) )
   ENDIF
 
   ! We are on MPI rank 0
   arrSize = SIZE(nArrival)
   CALL MPI_Bcast( nArrival, arrSize, MPI_INTEGER, root, comm, ierr )
+  arrSize = SIZE(geninfluence)
+  CALL MPI_Bcast( geninfluence, arrSize, MPI_DOUBLE_PRECISION, root, comm, ierr )
 
   ! Broadcast MPI Arrival to all ranks, and free storage
   arrSize = SIZE(Arr)
@@ -470,7 +481,7 @@ CONTAINS
 !BOP
 ! !ROUTINE: ArrivalTypeInti
 ! !INTERFACE:
-  SUBROUTINE ArrivalTypeInit( singleArrival )
+  SUBROUTINE ArrivalTypeInit( singleArrival, nextArrival )
 ! !DESCRIPTION:
 ! Initializes the arrival MPI Datatype
 
@@ -478,6 +489,7 @@ CONTAINS
 
 ! !INPUT PARAMETERS:
   TYPE( Arrival ), INTENT( IN ) :: singleArrival
+  TYPE( Arrival ), INTENT( IN ) :: nextArrival
 ! !OUTPUT PARAMETERS: None
 
 ! !LOCAL VARIABLES:
@@ -485,12 +497,14 @@ CONTAINS
 ! base, addr :: base and address for current Arrival datatype and parameters
 ! ty         :: datatype of each Arrival parameter
 ! MPI_RL, MPI_CL :: MPI type depending on _RL90
-  INTEGER(KIND=MPI_ADDRESS_KIND) :: disp(7), base, addr(7)
-  INTEGER :: ierr, n, bl(7), ty(7)
-  INTEGER :: MPI_RL, MPI_CL
+  INTEGER, PARAMETER :: typesize = 4
+  INTEGER(KIND=MPI_ADDRESS_KIND) :: base, a2, extent
+  INTEGER(KIND=MPI_ADDRESS_KIND) :: addr(typesize), disp(typesize)
+  INTEGER :: bl(typesize), ty(typesize) 
+  INTEGER :: MPI_CL, MPI_RL
+  INTEGER :: ierr, n, tmptype
 !EOP
 
-  IF (ARRIVAL_TYPE_COMMITTED) RETURN
 
   ! Build Arrival MPI type
   IF (STORAGE_SIZE( singleArrival%Phase ).EQ.64) THEN
@@ -503,43 +517,38 @@ CONTAINS
     STOP "ABNORMAL END MPI_DATATYPE: Unsupported _RL90 size for MPI"
   ENDIF
 
-  ! Initiate all bl to 1 since all Arr parameters are scalars
-  bl=1
-  CALL MPI_Get_address(singleArrival, base, ierr)
+  IF (.not.ARRIVAL_TYPE_COMMITTED) THEN
+    ! Initiate all bl to 1 since all Arr parameters are scalars
+    bl=1
+    CALL MPI_Get_address(singleArrival, base, ierr)
 
-  n=1
-  CALL MPI_Get_address(singleArrival%nTopBnc, addr(n), ierr)
-  ty(n)=MPI_INTEGER
+    n=1
+    CALL MPI_Get_address(singleArrival%A, addr(n), ierr)
+    ty(n)=MPI_RL
 
-  n=n+1
-  CALL MPI_Get_address(singleArrival%nBotBnc, addr(n), ierr)
-  ty(n)=MPI_INTEGER
+    n=n+1
+    CALL MPI_Get_address(singleArrival%Phase, addr(n), ierr)
+    ty(n)=MPI_RL
 
-  n=n+1
-  CALL MPI_Get_address(singleArrival%SrcDeclAngle, addr(n), ierr)
-  ty(n)=MPI_RL
+    n=n+1
+    CALL MPI_Get_address(singleArrival%delay, addr(n), ierr)
+    ty(n)=MPI_CL
 
-  n=n+1
-  CALL MPI_Get_address(singleArrival%RcvrDeclAngle, addr(n), ierr)
-  ty(n)=MPI_RL
+    n=n+1
+    CALL MPI_Get_address(singleArrival%delayR, addr(n), ierr)
+    ty(n)=MPI_RL
 
-  n=n+1
-  CALL MPI_Get_address(singleArrival%A, addr(n), ierr)
-  ty(n)=MPI_RL
+    disp(1:n)=addr(1:n)-base
 
-  n=n+1
-  CALL MPI_Get_address(singleArrival%Phase, addr(n), ierr)
-  ty(n)=MPI_RL
-
-  n=n+1
-  CALL MPI_Get_address(singleArrival%delay, addr(n), ierr)
-  ty(n)=MPI_CL
-
-  disp(1:n)=addr(1:n)-base
-
-  CALL MPI_Type_create_struct(n, bl, disp, ty, MPI_IHOP_ARRIVAL, ierr)
-  CALL MPI_Type_commit(MPI_IHOP_ARRIVAL, ierr)
-  ARRIVAL_TYPE_COMMITTED = .true.
+    CALL MPI_Type_create_struct( n,bl,disp,ty,tmptype,ierr )
+    CALL MPI_Get_address( nextArrival,a2,ierr )
+    extent = a2 - base
+    CALL MPI_Type_create_resized( tmptype,0_mpi_address_kind,extent,&
+                                  MPI_IHOP_ARRIVAL,ierr )
+    CALL MPI_Type_commit( MPI_IHOP_ARRIVAL,ierr )
+    CALL MPI_Type_free( tmptype,ierr )
+    ARRIVAL_TYPE_COMMITTED = .true.
+  ENDIF
 
 RETURN
 END

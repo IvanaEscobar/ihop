@@ -41,8 +41,8 @@
 !!! ihop cost options !!!
 ! QoI as J = C^2 or J = cMat^2 at final timestep!
 #undef TEST_IHOP_COST
-! QoI as J = cMat(t)^2
-#define TEST_IHOP_COST_INLOOP
+! QoI as J = cMat(t)^2, etc.
+#undef TEST_IHOP_COST_INLOOP
 
 #endif /* ALLOW_IHOP */
 #endif /* IHOP_OPTIONS_H */
