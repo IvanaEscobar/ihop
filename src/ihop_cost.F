@@ -129,7 +129,8 @@ C-- Reset local variables
 
        DO bj = jtlo,jthi
        DO bi = itlo,ithi
-CC-- OPTION 1: tile-wise summation: F77 Sound Speed
+CC-- OPTION 1)
+CC-- tile-wise summation: F77 Sound Speed
 C        DO k=1,5
 C        DO j=1,sNy
 C        jg = myYGlobalLo-1+(bj-1)*sNy+j
@@ -157,7 +158,8 @@ CC-- tile-wise summation: F77 Sound Speed END
        ENDDO !DO bi
        ENDDO !DO bj
 
-C-- OPTION 2: global summation: F90 Sound Speed
+C-- OPTION 2a)
+C-- global summation: F90 Sound Speed
        DO j = 1,Grid%nR
        DO k = 1,Grid%nZ
 C- sum of the squares

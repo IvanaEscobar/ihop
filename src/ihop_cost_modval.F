@@ -87,7 +87,7 @@ CEOP
 ! Added uses of modules above, have access to Arr and Pos
 ! ===================================================================
 # ifdef TEST_IHOP_COST_INLOOP
-CC-- OPTION 2)
+CC-- OPTION 2b)
 CC-- global summation: F90 Sound Speed if cMat is NOT default -99
 C       IF ( SSP%cMat(1,3).NE.-99. _d 0 ) THEN
 C       DO r = 1,Grid%nR
