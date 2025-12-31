@@ -73,7 +73,8 @@
      &                ihopObs_time, ihopObs_lat, ihopObs_lon,                                                                       &
      &                ihopObs_depth,                                                                                                &
      &                ihopObs_uncert,                                                                                               &
-     &                ihopObs_modmask, ihopObs_modmask_tiled, geninfluence
+     &                ihopObs_modmask, ihopObs_modmask_tiled,                                                                       &
+     &                geninfluence
 
 !    IHOP cost filenames
 !     IHOPObs_Dir   :: directory where ihop observations are found
