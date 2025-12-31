@@ -67,7 +67,7 @@ C     !LOCAL VARIABLES:
 C     bi,bj :: Tile indices
       INTEGER bi,bj
       INTEGER num_file, iObs
-      _RL ihop_modval, ihop_modvaltmp
+      _RL ihop_modval, ihop_modvaltmp, myssp
       _RL ihop_data, ihop_uncert, ihop_weight
 # ifndef ALLOW_CTRL
       INTEGER optimcycle
@@ -129,7 +129,8 @@ C-- Reset local variables
 
        DO bj = jtlo,jthi
        DO bi = itlo,ithi
-CC-- OPTION 1: tile-wise summation: F77 Sound Speed
+CC-- OPTION 1)
+CC-- tile-wise summation: F77 Sound Speed
 C        DO k=1,5
 C        DO j=1,sNy
 C        jg = myYGlobalLo-1+(bj-1)*sNy+j
@@ -157,7 +158,8 @@ CC-- tile-wise summation: F77 Sound Speed END
        ENDDO !DO bi
        ENDDO !DO bj
 
-C-- OPTION 2: global summation: F90 Sound Speed
+C-- OPTION 2a)
+C-- global summation: F90 Sound Speed
        DO j = 1,Grid%nR
        DO k = 1,Grid%nZ
 C- sum of the squares
@@ -214,6 +216,10 @@ C Open tiled files and read to buffer
             DO iObs = 1, NOBSMAX_IHOP
               IF (iObs.LE.ObsNo_tiled(num_file,bi,bj)) THEN
                 ihop_modvaltmp = zeroRL
+C IESCO25: dummy +/- of ihop_ssp to get TAF TLM to work
+                myssp = ihop_ssp(1,1,1,bi,bj)
+                ihop_modvaltmp = ihop_modvaltmp + myssp
+                ihop_modvaltmp = ihop_modvaltmp - myssp
 
                 CALL ACTIVE_READ_IHOP_TILE( 
      I              num_file,
@@ -224,11 +230,11 @@ C Open tiled files and read to buffer
 C Save tiled model equi from buffer, see PROFILES_READVECTOR
 C Combine all threads to global
                 irec = ihopObs_ind_glob_tiled(num_file,iObs,bi,bj)
-C IESCO25: dummy +/- of ihop_ssp to get TAF TLM to work
+C IESCO25: ANOTHER dummy +/- of ihop_ssp to get TAF TLM to work
                 ihopObs_buff(irec)=ihopObs_buff(irec)+ihop_modvaltmp
-     &                             + ihop_ssp(1,1,1,bi,bj)
+     &            + myssp
                 ihopObs_buff(irec)=ihopObs_buff(irec)
-     &                             - ihop_ssp(1,1,1,bi,bj)
+     &            - myssp
               ENDIF !IF (iObs.LE.ObsNo_tiled(num_file,bi,bj))
             ENDDO !DO iObs
 
@@ -302,9 +308,9 @@ C Set uncertainty to one
 
 #else /* TEST_IHOP_COST_INLOOP */
 C Read observation and uncertainty
-              CALL IHOP_COST_READ_OBS( 
+              CALL IHOP_COST_READ_OBS(
      I             num_file,  1, ihopObs_ind_glob(num_file,iObs),
-     O             ihop_data, 
+     O             ihop_data,
      I             myThid )
 
               CALL IHOP_COST_READ_OBS(
@@ -319,7 +325,7 @@ C Calc misfit
               IF (ihop_uncert.GT.zeroRL) THEN
                 ihop_weight = 1. _d 0 / (ihop_uncert*ihop_uncert)
 
-                objf_ihop(num_file) = objf_ihop(num_file) + 
+                objf_ihop(num_file) = objf_ihop(num_file) +
      &                                ihop_weight
      &                                *(ihop_modval-ihop_data)
      &                                *(ihop_modval-ihop_data)

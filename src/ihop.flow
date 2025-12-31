@@ -1,14 +1,4 @@
 !     *==========================================================*
-!     | SUBROUTINE LOCABS  is manually active                    |
-!     *==========================================================*
-!$TAF SUBROUTINE influence::locABS FTLNAME = locABS
-!$TAF SUBROUTINE influence::locABS ADNAME  = locABS
-!$TAF SUBROUTINE influence::locABS INPUT   = 1,2
-!$TAF SUBROUTINE influence::locABS OUTPUT  =   2
-!$TAF SUBROUTINE influence::locABS ACTIVE  = 1,2
-!$TAF SUBROUTINE influence::locABS DEPEND  = 
-
-!     *==========================================================*
 !     | SUBROUTINE WRITERAYOUTPUT  is passive                    |
 !     *==========================================================*
 !$TAF SUBROUTINE writeray::writerayoutput INPUT   = 1, 2, 3, 4, 5, 6
@@ -119,10 +109,6 @@
 !$TAF SUBROUTINE  ihop_cost_read_obs   INPUT  =  1,2,3, 5
 !$TAF SUBROUTINE  ihop_cost_read_obs   DEPEND =  1,2,3
 !$TAF SUBROUTINE  ihop_cost_read_obs   OUTPUT =        4
-
-!================================================================*
-!     *======================= COST FXN FILES ===================*
-!================================================================*
 
 !     *==========================================================*
 !     | SUBROUTINE ACTIVE_READ_IHOP_TILE is passive              |

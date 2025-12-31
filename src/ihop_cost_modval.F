@@ -72,7 +72,7 @@ C     !LOCAL VARIABLES:
       INTEGER ii
       INTEGER maxID
       _RL     maxarrVal, arrVal(nMaxArr)
-      COMPLEX*8 arrAmplitude(nMaxArr)
+      COMPLEX(KIND=_RL90) arrAmplitude(nMaxArr)
 CEOP
 
 ! ===================================================================
@@ -87,7 +87,7 @@ CEOP
 ! Added uses of modules above, have access to Arr and Pos
 ! ===================================================================
 # ifdef TEST_IHOP_COST_INLOOP
-CC-- OPTION 2)
+CC-- OPTION 2b)
 CC-- global summation: F90 Sound Speed if cMat is NOT default -99
 C       IF ( SSP%cMat(1,3).NE.-99. _d 0 ) THEN
 C       DO r = 1,Grid%nR
@@ -133,7 +133,7 @@ C-- global Arr%delay: F90 eigenray travel time END
 
 ! Are ri and rj contained in nRR AND nRD
       IF ( (ri.GT.nRR).AND.(rj.gt.nRD) ) THEN
-        WRITE(msgBuf,'(3A)')
+        WRITE(msgBuf,'(2A)')
      &    'IHOP_COST_MODVAL:',
      &    ' receiver range and depth ID larger than nRR and nRD.'
         CALL PRINT_ERROR( msgBuf, myThid )
@@ -142,8 +142,10 @@ C-- global Arr%delay: F90 eigenray travel time END
 
 ! Calc arrival amplitude with cylindrical spreading to receiver range
       DO ii = 1, nArrival(ri,rj)
-        arrAmplitude(ii) = Arr(ii,ri,rj)%A / SQRT( Pos%RR(ri) )
-     &   * EXP( CMPLX(0,1)*rad2deg*Arr(ii,ri,rj)%Phase )
+        IF ( Pos%RR(ri).GT.0) THEN
+          arrAmplitude(ii) = Arr(ii,ri,rj)%A / SQRT( Pos%RR(ri) )
+     &     * EXP( CMPLX(0,1)*rad2deg*Arr(ii,ri,rj)%Phase )
+        ENDIF
 
         arrVal(ii) = ABS( arrAmplitude(ii) )
 
