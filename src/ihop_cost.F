@@ -329,6 +329,9 @@ C Calc misfit
      &                                ihop_weight
      &                                *(ihop_modval-ihop_data)
      &                                *(ihop_modval-ihop_data)
+               WRITE(standardMessageUnit,'(a,F14.6,a,i)')
+     &              "ESCOBAR, J=|m-d|^2(t)= ", objf_ihop(num_file),
+     &                    " Obs# ", num_ihop(num_file)
 
                 num_ihop(num_file) = num_ihop(num_file) + 1
 
