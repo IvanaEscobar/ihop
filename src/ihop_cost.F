@@ -150,7 +150,7 @@ C        ENDDO !DO j
 C        ENDDO !DO k
 CC-- tile-wise summation: F77 Sound Speed END
 
-        WRITE(msgBuf,'(A,E22.17)') 'QoI sum(C2) tiled: ', 
+        WRITE(msgBuf,'(A,E22.17)') 'QoI sum(C) tiled: ',
      &                      objf_ihop_tloc(bi,bj)
         CALL PRINT_MESSAGE( msgBuf,
      &      standardMessageUnit, SQUEEZE_RIGHT, myThid )
@@ -321,14 +321,20 @@ C Read observation and uncertainty
 
               IF (ihop_data.EQ.-9999) ihop_uncert = zeroRL
 
-C Calc misfit
+C Calc misfit or QoI
               IF (ihop_uncert.GT.zeroRL) THEN
                 ihop_weight = 1. _d 0 / (ihop_uncert*ihop_uncert)
 
                 objf_ihop(num_file) = objf_ihop(num_file) +
      &                                ihop_weight
      &                                *(ihop_modval-ihop_data)
+#ifndef TEST_IHOP_COST_INLOOP
      &                                *(ihop_modval-ihop_data)
+#endif /* TEST_IHOP_COST_INLOOP */
+
+               WRITE(standardMessageUnit,'(A,F16.6,A,F10.0)')
+     &              "ESCOBAR, J=|m-d|^2(t)= ", objf_ihop(num_file),
+     &                    " Obs# ", num_ihop(num_file)
 
                 num_ihop(num_file) = num_ihop(num_file) + 1
 

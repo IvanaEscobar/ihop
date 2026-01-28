@@ -338,7 +338,7 @@ CONTAINS
   !==================================================
   ! Sum IDW weights
   DO ii = 1, Grid%nR
-    ihop_sumweights(ii,:) = sum(ihop_idw_weights(ii,:))
+    ihop_sumweights(ii,:) = SUM(ihop_idw_weights(ii,:))
   ENDDO
 
   ! Adapt IDW interpolation by bathymetry
