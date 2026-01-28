@@ -3,6 +3,9 @@
 # *********************
  &CTRL_NML
  ctrlDir = 'CTRL',
+## use a manually edited xx_theta file; don't overwrite with zeros
+# doinitxx=.false.,
+# domainunpack=.false.,
  &
 #
 # *********************
