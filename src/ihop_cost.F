@@ -332,7 +332,7 @@ C Calc misfit or QoI
      &                                *(ihop_modval-ihop_data)
 #endif /* TEST_IHOP_COST_INLOOP */
 
-               WRITE(standardMessageUnit,'(A,F16.6,A,F10.0)')
+      WRITE(standardMessageUnit,'(A,E22.17,A,F10.0)')
      &              "ESCOBAR, J=|m-d|^2(t)= ", objf_ihop(num_file),
      &                    " Obs# ", num_ihop(num_file)
 
