@@ -66,9 +66,7 @@ C     !OUTPUT PARAMETERS:
 C     !LOCAL VARIABLES:
 # ifdef TEST_IHOP_COST_INLOOP
       INTEGER r,k
-      INTEGER :: iG, jG
-      INTEGER :: t
-      INTEGER :: bi,bj, i,j
+      INTEGER bi,bj, i,j
       INTEGER itlo,ithi
       INTEGER jtlo,jthi
       _RL locQoI, locVol
@@ -110,14 +108,17 @@ C -- calc modVal for timesteps with signal transmissions
       DO bj = jtlo,jthi
       DO bi = itlo,ithi
 C-- top 85 layers
-        DO k=1,85 
+C        DO k=1,85 
+        DO k=1,5 
         DO j=1,sNy
-        jg=myYGlobalLo-1+(bj-1)*sNy+j
         DO i=1,sNx
-        ig=myXGlobalLo-1+(bi-1)*sNx+i
 C-- in bounding box [12-16degE] [44-52degN]
-          IF (jg.GE.44 .AND. jg.LE.52 .AND.
-     &        ig.GE.12 .AND. ig.LE.16 ) THEN
+          IF (yC(i,j,bi,bj).GE.44 .AND. yC(i,j,bi,bj).LE.52 .AND.
+     &        xC(i,j,bi,bj).GE.12 .AND. xC(i,j,bi,bj).LE.16 ) THEN
+      WRITE(standardMessageUnit,'(A,5I4,2F6.2)')
+     & "ESCOBAR modval hit ", i,j,k, bi,bj,
+     & xC(i,j, bi,bj), yC(i,j,bi,bj)
+
 C-- sum for total volume of 3D cell 
             locVol = rA(i,j,bi,bj)*drF(k)*hFacC(i,j,k,bi,bj)
       
