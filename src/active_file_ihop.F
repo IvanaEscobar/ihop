@@ -125,7 +125,6 @@ C     !OUTPUT PARAMETERS:
 CEOP
 
 #if (defined ALLOW_IHOP) && (defined ALLOW_COST)
-
       CALL ACTIVE_WRITE_IHOP_TILE_RL(
      &     ncidFWD(active_num_file,bi,bj),
      &     active_num_file,

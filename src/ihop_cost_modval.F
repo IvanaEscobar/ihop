@@ -66,13 +66,11 @@ C     !OUTPUT PARAMETERS:
 C     !LOCAL VARIABLES:
 # ifdef TEST_IHOP_COST_INLOOP
       INTEGER r,k
-      INTEGER :: iG, jG
-      INTEGER :: t
-      INTEGER :: bi,bj, i,j
+      INTEGER bi,bj, i,j
       INTEGER itlo,ithi
       INTEGER jtlo,jthi
-      _RL locQoI_tiled(nSx,nSy)
       _RL locQoI, locVol
+      _RL locTHETA
 # endif
 #ifdef ALLOW_IHOP
       CHARACTER*(MAX_LEN_MBUF) msgBuf
@@ -104,50 +102,46 @@ C   bcg.hd
 
 C -- calc modVal for timesteps with signal transmissions
       locVol=0.
-      DO bj = jtlo,jthi
-      DO bi = itlo,ithi
-        locQoI_tiled(bi,bj) = 0.
-      ENDDO
-      ENDDO
       locQoI = 0.
+      locTHETA = 0.
 
       DO bj = jtlo,jthi
       DO bi = itlo,ithi
 C-- top 85 layers
-        DO k=1,85 
+C        DO k=1,85 
+        DO k=1,5 
         DO j=1,sNy
-        jg=myYGlobalLo-1+(bj-1)*sNy+j
         DO i=1,sNx
-        ig=myXGlobalLo-1+(bi-1)*sNx+i
 C-- in bounding box [12-16degE] [44-52degN]
-          IF (jg.GE.44 .AND. jg.LE.52 .AND.
-     &        ig.GE.12 .AND. ig.LE.16 ) THEN
+          IF (yC(i,j,bi,bj).GE.44 .AND. yC(i,j,bi,bj).LE.52 .AND.
+     &        xC(i,j,bi,bj).GE.12 .AND. xC(i,j,bi,bj).LE.16 ) THEN
+      WRITE(standardMessageUnit,'(A,5I4,2F6.2)')
+     & "ESCOBAR modval hit ", i,j,k, bi,bj,
+     & xC(i,j, bi,bj), yC(i,j,bi,bj)
+
 C-- sum for total volume of 3D cell 
-            locVol = locVol + rA(i,j,bi,bj)*drF(k)*hFacC(i,j,k,bi,bj)
+            locVol = rA(i,j,bi,bj)*drF(k)*hFacC(i,j,k,bi,bj)
       
 C-- sum tile-wise QoI
-            locQoI_tiled(bi,bj) = locQoI_tiled(bi,bj) 
-     &                        + ihop_ssp(i,j,k,bi,bj)
+            locQoI   = locQoI + ihop_ssp(i,j,k,bi,bj)
+            locTHETA = locTHETA + theta(i,j,k,bi,bj)
+
+            locQoI = locQoI / locVol
+            locTHETA = locTHETA / locVol
           ENDIF
 
         ENDDO ! DO i
         ENDDO ! DO j
         ENDDO ! DO k
 
-        WRITE(standardMessageUnit, '(A,E22.17)') 
-     &    "ESCOBAR V*dt*QoI(t) tiled: ",
-     &    locQoI_tiled(bi,bj)
-
       ENDDO ! DO bi
       ENDDO ! DO bj
 
-C-- gloabl summation
-      IF (locQoI_tiled(1,1).NE.0) THEN
-        CALL GLOBAL_SUM_TILE_RL(locQoI_tiled,locQoI,myThid)
-        locQoI = locQoI / locVol / deltaT
-      ENDIF
-
-      modVal = locQoI
+C-- report values
+      modVal   = locQoI / deltaT
+      locTHETA = locTHETA / deltaT
+      WRITE(standardMessageUnit,'(A,E22.17)')
+     & "ESCOBAR THETA/vdt ", locTHETA
 C-- Sound Speed QoI END
 
 
@@ -234,7 +228,7 @@ CC-- global Arr%delay: F90 eigenray travel time END
 ! ray storage of top arrival...
 # endif /* TEST_IHOP_COST_INLOOP */
       WRITE(standardMessageUnit,'(A,E22.17)')
-     & "ESCOBAR modVal", modVal
+     & "ESCOBAR modVal ", modVal
 
 #endif /* ALLOW_IHOP */
 

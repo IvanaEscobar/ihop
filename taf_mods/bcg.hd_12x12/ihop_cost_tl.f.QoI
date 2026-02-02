@@ -251,9 +251,9 @@ C----------------------------------------------
                   ihop_weight = 1.d0/(ihop_uncert*ihop_uncert)
                   objf_ihop_tl(num_file) = ihop_modval_tl*ihop_weight+objf_ihop_tl(num_file)
                   objf_ihop(num_file) = objf_ihop(num_file)+ihop_weight*(ihop_modval-ihop_data)
-                  write(unit=standardmessageunit,fmt='(A,F16.6,A,F10.0)') 'ESCOBAR, J=|m-d|^2(t)= ',objf_ihop(num_file),' Obs# ',
+                  write(unit=standardmessageunit,fmt='(A,E22.17,A,F10.0)') 'ESCOBAR, J=|m-d|^2(t)= ',objf_ihop(num_file),' Obs# ',
      $num_ihop(num_file)
-                  write(unit=standardmessageunit,fmt='(A,F16.6,A,F10.0)') 'ESCOBAR, dJ/dT(t)= ',objf_ihop_tl(num_file),' Obs# ',
+                  write(unit=standardmessageunit,fmt='(A,E22.17,A,F10.0)') 'ESCOBAR, dJ/dT(t)= ',objf_ihop_tl(num_file),' Obs# ',
      $num_ihop(num_file)
                   num_ihop(num_file) = num_ihop(num_file)+1
                 endif
@@ -473,7 +473,7 @@ C==============================================
                 if (ihop_uncert > zerorl) then
                   ihop_weight = 1.d0/(ihop_uncert*ihop_uncert)
                   objf_ihop(num_file) = objf_ihop(num_file)+ihop_weight*(ihop_modval-ihop_data)
-                  write(unit=standardmessageunit,fmt='(A,F16.6,A,F10.0)') 'ESCOBAR, J=|m-d|^2(t)= ',objf_ihop(num_file),' Obs# ',
+                  write(unit=standardmessageunit,fmt='(A,E22.17,A,F10.0)') 'ESCOBAR, J=|m-d|^2(t)= ',objf_ihop(num_file),' Obs# ',
      $num_ihop(num_file)
                   num_ihop(num_file) = num_ihop(num_file)+1
                 endif
