@@ -109,10 +109,11 @@ C -- calc modVal for timesteps with signal transmissions
       DO bi = itlo,ithi
 C-- top 85 layers
 C        DO k=1,85 
-        DO k=1,5 
+C-- to deepest mixed layer depth in BoxSea
+        DO k=1,36 
         DO j=1,sNy
         DO i=1,sNx
-C-- in bounding box [12-16degE] [44-52degN]
+C-- BoxSea in bounding box [12-16degE] [44-52degN]
           IF (yC(i,j,bi,bj).GE.44 .AND. yC(i,j,bi,bj).LE.52 .AND.
      &        xC(i,j,bi,bj).GE.12 .AND. xC(i,j,bi,bj).LE.16 ) THEN
       WRITE(standardMessageUnit,'(A,5I4,2F6.2)')
@@ -123,11 +124,9 @@ C-- sum for total volume of 3D cell
             locVol = rA(i,j,bi,bj)*drF(k)*hFacC(i,j,k,bi,bj)
       
 C-- sum tile-wise QoI
-            locQoI   = locQoI + ihop_ssp(i,j,k,bi,bj)
-            locTHETA = locTHETA + theta(i,j,k,bi,bj)
+            locQoI   = locQoI + ihop_ssp(i,j,k,bi,bj) / locVol
+            locTHETA = locTHETA + theta(i,j,k,bi,bj) / locVol
 
-            locQoI = locQoI / locVol
-            locTHETA = locTHETA / locVol
           ENDIF
 
         ENDDO ! DO i
