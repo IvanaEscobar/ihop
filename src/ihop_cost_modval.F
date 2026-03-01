@@ -69,7 +69,7 @@ C     !LOCAL VARIABLES:
       INTEGER bi,bj, i,j
       INTEGER itlo,ithi
       INTEGER jtlo,jthi
-      _RL locQoI, locVol
+      _RL locQoI, locVol, totVol
       _RL locTHETA
 # endif
 #ifdef ALLOW_IHOP
@@ -102,6 +102,7 @@ C   bcg.hd
 
 C -- calc modVal for timesteps with signal transmissions
       locVol=0.
+      totVol=0.
       locQoI = 0.
       locTHETA = 0.
 
@@ -122,10 +123,11 @@ C-- BoxSea in bounding box [12-16degE] [44-52degN]
 
 C-- sum for total volume of 3D cell 
             locVol = rA(i,j,bi,bj)*drF(k)*hFacC(i,j,k,bi,bj)
+            totVol = totVol + locVol
       
 C-- sum tile-wise QoI
-            locQoI   = locQoI + ihop_ssp(i,j,k,bi,bj) / locVol
-            locTHETA = locTHETA + theta(i,j,k,bi,bj) / locVol
+            locQoI   = locQoI + ihop_ssp(i,j,k,bi,bj) * locVol
+            locTHETA = locTHETA + theta(i,j,k,bi,bj) * locVol
 
           ENDIF
 
@@ -137,10 +139,12 @@ C-- sum tile-wise QoI
       ENDDO ! DO bj
 
 C-- report values
-      modVal   = locQoI / deltaT
-      locTHETA = locTHETA / deltaT
-      WRITE(standardMessageUnit,'(A,E22.17)')
+      modVal   = locQoI / (totVol * deltaT)
+      locTHETA = locTHETA / (totVol * deltaT)
+      WRITE(standardMessageUnit,'(A,E30.17)')
      & "ESCOBAR THETA/vdt ", locTHETA
+      WRITE(standardMessageUnit,'(A,E30.17)')
+     & "ESCOBAR THETA/vdt ", totVol
 C-- Sound Speed QoI END
 
 
@@ -226,7 +230,7 @@ CC-- global Arr%delay: F90 eigenray travel time END
 
 ! ray storage of top arrival...
 # endif /* TEST_IHOP_COST_INLOOP */
-      WRITE(standardMessageUnit,'(A,E22.17)')
+      WRITE(standardMessageUnit,'(A,E30.17)')
      & "ESCOBAR modVal ", modVal
 
 #endif /* ALLOW_IHOP */
