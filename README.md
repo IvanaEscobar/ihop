@@ -37,7 +37,7 @@ a source and receiver. The number of range points can vary from 2 to N, and is s
 @software{ihop,
     author={Ivana Escobar},
     title = {{ihop}: Underwater Acoustics for MITgcm},
-    version = {0.4},
+    version = {0.6},
     year = {2025},
     url = {https://github.com/IvanaEscobar/ihop/tree/v0.4}
 }
