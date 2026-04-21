@@ -6,7 +6,7 @@
 !BOP
 !MODULE: ssp_mod
 MODULE ssp_mod
-! <CONTACT EMAIL="ivana@utexas.edu">
+! <CONTACT EMAIL=ivana@utexas.edu>
 !   Ivana Escobar
 ! </CONTACT>
 ! !DESCRIPTION:
@@ -835,7 +835,7 @@ USE splinec_mod,  only: splineall
 ! !INTERFACE:
   SUBROUTINE Quad( x, c, cimag, gradc, crr, crz, czz, rho, myThid )
 ! !DESCRIPTION:
-!   Bilinear quadrilateral interpolation of SSP data in 2D, Grid%Type = 'Q'
+!   Bilinear quadrilateral interpolation of SSP data in 2D, Grid%Type = Q
 
 ! !USES: None
 
@@ -1069,7 +1069,7 @@ USE splinec_mod,  only: splineall
       tkey = bi + (bj-1)*nSx + (ikey_dynamics-1)*nSx*nSy
 #endif
 
-! IESCO24: don't worry about gcm overlaps right now
+! IESCO24: dont worry about gcm overlaps right now
       DO j=1,sNy
       DO i=1,sNx
 #ifdef ALLOW_AUTODIFF_TAMC

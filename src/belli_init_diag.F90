@@ -637,7 +637,7 @@ CONTAINS
   IF (BELLI_dumpfreq.LT.0) RETURN
 
 #ifdef BELLI_WRITE_OUT
-  ! Echo to PRTFile user's choice of boundary condition
+  ! Echo user choice of boundary condition to PRTFile 
   SELECT CASE ( HS%BC )
   CASE ( 'V' )
     WRITE(msgBuf,'(A)') '    Surface modeled as a VACUUM'
@@ -741,7 +741,7 @@ CONTAINS
     IF (isOpen) CLOSE(RAYFile)
     OPEN ( FILE=TRIM( fullName ) // '.ray', UNIT=RAYFile, &
           FORM='FORMATTED' )
-    WRITE( RAYFile, '(3A)'    ) '''', Title( 1:50 ), ''''
+    WRITE( RAYFile, '(3A)'    ) "''", Title( 1:50 ), "''"
     WRITE( RAYFile, '(F10.3)' ) BELLI_freq
     WRITE( RAYFile, '(3I6)'   ) Pos%nSX, Pos%nSY, Pos%nSZ
     WRITE( RAYFile, '(I5)'    ) Angles%nAlpha
@@ -749,9 +749,9 @@ CONTAINS
     WRITE( RAYFile, '(F10.4)' ) Bdry%Bot%HS%Depth
 #ifdef BELLI_THREED
     WRITE( RAYFile, '(2I5)' ) Angles%nAlpha, Angles%nBeta
-    WRITE( RAYFile, '(A)'   ) '''xyz'''
+    WRITE( RAYFile, '(A)'   ) 'xyz'
 #else /* BELLI_THREED */
-    WRITE( RAYFile, '(A)'  ) '''rz'''
+    WRITE( RAYFile, '(A)'  ) 'rz'
 #endif /* BELLI_THREED */
 
     FLUSH( RAYFile )
@@ -762,7 +762,7 @@ CONTAINS
       IF (isOpen) CLOSE(DELFile)
       OPEN ( FILE=TRIM( fullName ) // '.delay', UNIT=DELFile, &
             FORM='FORMATTED' )
-      WRITE( DELFile, '(3A)'    ) '''', Title( 1:50 ), ''''
+      WRITE( DELFile, '(3A)'    ) "''", Title( 1:50 ), "''"
       WRITE( DELFile, '(F10.3)' ) BELLI_freq
       WRITE( DELFile, '(3I6)'   ) Pos%nSX, Pos%nSY, Pos%nSZ
       WRITE( DELFile, '(I5)'    ) Angles%nAlpha
@@ -770,9 +770,9 @@ CONTAINS
       WRITE( DELFile, '(F10.4)' ) Bdry%Bot%HS%Depth
 #ifdef BELLI_THREED
       WRITE( DELFile, '(2I5)' ) Angles%nAlpha, Angles%nBeta
-      WRITE( DELFile, '(A)'   ) '''xyz'''
+      WRITE( DELFile, '(A)'   ) 'xyz'
 # else /* BELLI_THREED */
-      WRITE( DELFile, '(A)'  ) '''rz'''
+      WRITE( DELFile, '(A)'  ) 'rz'
 # endif /* BELLI_THREED */
 
       FLUSH( DELFile )
@@ -786,9 +786,9 @@ CONTAINS
     OPEN ( FILE=TRIM( fullName ) // '.arr', UNIT=ARRFile, &
           FORM='FORMATTED' )
 # ifdef BELLI_THREED
-    WRITE( ARRFile, '(A)' ) '''3D'''
+    WRITE( ARRFile, '(A)' ) '3D'
 # else /* BELLI_THREED */
-    WRITE( ARRFile, '(A)' ) '''2D'''
+    WRITE( ARRFile, '(A)' ) '2D'
 # endif /* BELLI_THREED */
     WRITE( ARRFile, '(F10.4)' ) BELLI_freq
 
@@ -822,7 +822,7 @@ CONTAINS
     IF (isOpen) CLOSE(RAYFile)
     OPEN ( FILE=TRIM( fullName ) // '.ray', UNIT=RAYFile, &
           FORM='FORMATTED' )
-    WRITE( RAYFile, '(3A)'    ) '''', Title( 1:50 ), ''''
+    WRITE( RAYFile, '(3A)'    ) "''", Title( 1:50 ), "''"
     WRITE( RAYFile, '(F10.3)' ) BELLI_freq
     WRITE( RAYFile, '(3I6)'   ) Pos%nSX, Pos%nSY, Pos%nSZ
     WRITE( RAYFile, '(I5)'    ) Angles%nAlpha
@@ -830,9 +830,9 @@ CONTAINS
     WRITE( RAYFile, '(F10.4)' ) Bdry%Bot%HS%Depth
 # ifdef BELLI_THREED
     WRITE( RAYFile, '(2I5)' ) Angles%nAlpha, Angles%nBeta
-    WRITE( RAYFile, '(A)'   ) '''xyz'''
+    WRITE( RAYFile, '(A)'   ) 'xyz'
 # else /* BELLI_THREED */
-    WRITE( RAYFile, '(A)'  ) '''rz'''
+    WRITE( RAYFile, '(A)'  ) 'rz'
 # endif /* BELLI_THREED */
 
     FLUSH( RAYFile )
@@ -842,7 +842,7 @@ CONTAINS
       IF (isOpen) CLOSE(DELFile)
       OPEN ( FILE=TRIM( fullName ) // '.delay', UNIT=DELFile, &
             FORM='FORMATTED' )
-      WRITE( DELFile, '(3A)'    ) '''', Title( 1:50 ), ''''
+      WRITE( DELFile, '(3A)'    ) "''", Title( 1:50 ), "''"
       WRITE( DELFile, '(F10.3)' ) BELLI_freq
       WRITE( DELFile, '(3I6)'   ) Pos%nSX, Pos%nSY, Pos%nSZ
       WRITE( DELFile, '(I5)'    ) Angles%nAlpha
@@ -850,9 +850,9 @@ CONTAINS
       WRITE( DELFile, '(F10.4)' ) Bdry%Bot%HS%Depth
 #ifdef BELLI_THREED
       WRITE( DELFile, '(2I5)' ) Angles%nAlpha, Angles%nBeta
-      WRITE( DELFile, '(A)'   ) '''xyz'''
+      WRITE( DELFile, '(A)'   ) 'xyz'
 # else /* BELLI_THREED */
-      WRITE( DELFile, '(A)'  ) '''rz'''
+      WRITE( DELFile, '(A)'  ) 'rz'
 # endif /* BELLI_THREED */
 
       FLUSH( DELFile )
@@ -868,9 +868,9 @@ CONTAINS
           FORM='FORMATTED' )
 
 # ifdef BELLI_THREED
-    WRITE( ARRFile, '(A)' ) '''3D'''
+    WRITE( ARRFile, '(A)' ) '3D'
 # else /* BELLI_THREED */
-    WRITE( ARRFile, '(A)' ) '''2D'''
+    WRITE( ARRFile, '(A)' ) '2D'
 # endif /* BELLI_THREED */
     WRITE( ARRFile, '(F10.4)' ) BELLI_freq
 
@@ -908,9 +908,9 @@ CONTAINS
           FORM='UNFORMATTED' )
 
 # ifdef BELLI_THREED
-    WRITE( ARRFile, '(A)' ) '''3D'''
+    WRITE( ARRFile, '(A)' ) '3D'
 # else /* BELLI_THREED */
-    WRITE( ARRFile, '(A)' ) '''2D'''
+    WRITE( ARRFile, '(A)' ) '2D'
 # endif /* BELLI_THREED */
     WRITE( ARRFile, '(F10.4)' ) BELLI_freq
 

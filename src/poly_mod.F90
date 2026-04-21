@@ -3,7 +3,7 @@
 !BOP
 !MODULE: poly_mod
 MODULE poly_mod
-! <CONTACT EMAIL="ivana@utexas.edu">
+! <CONTACT EMAIL=ivana@utexas.edu>
 !   Ivana Escobar
 ! </CONTACT>
 ! !DESCRIPTION:
@@ -39,7 +39,7 @@ CONTAINS
   FUNCTION PolyR( x0, x, f, N )
 ! !DESCRIPTION:
 !   This function computes the value of a polynomial at a given point using
-!   Newton's divided difference method. The polynomial is defined by its
+!   Newtons divided difference method. The polynomial is defined by its
 !   values at a set of points (x, f).
 
 ! !USES: None
@@ -87,7 +87,7 @@ CONTAINS
   COMPLEX FUNCTION PolyC( x0, x, f, N )
 ! !DESCRIPTION:
 !   This function computes the value of a polynomial at a given point using
-!   Newton's divided difference method. The polynomial is defined by its
+!   Newtons divided difference method. The polynomial is defined by its
 !   values at a set of points (x, f).
 
 ! !USES: None
@@ -135,7 +135,7 @@ CONTAINS
   FUNCTION PolyZ( x0, x, f, N )
 ! !DESCRIPTION:
 !   This function computes the value of a polynomial at a given point using
-!   Newton's divided difference method. The polynomial is defined by its
+!   Newtons divided difference method. The polynomial is defined by its
 !   values at a set of points (x, f).
 
 ! !USES: None

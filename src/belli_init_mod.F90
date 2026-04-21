@@ -90,17 +90,18 @@ CONTAINS
   !   - Top%Natipts,x,
   ! - From bdry_mod.F90:initBTY
   !   - Bot%Natipts,x,
-  ! This subroutine will set parameters that shouldn't need to be modified
-  ! throughout the MITgcm model run
+  ! This subroutine sets fixed parameters 
 
   ! === Set local parameters ===
-  AttenUnit = ''
-  PlotType = ''
+  AttenUnit = ""
+  PlotType = ""
   Depth = -1.
 
   ! === Set nonallocatable derived type components from other modules ===
-  Bdry%Bot%HS = HSInfo(0.,0.,0.,0., 0.,0. , (0.,0.),(0.,0.), '', '' )
-  Bdry%Top%HS = HSInfo(0.,0.,0.,0., 0.,0. , (0.,0.),(0.,0.), '', '' )
+  Bdry%Bot%HS = HSInfo(0.,0.,0.,0., 0.,0. , (0.,0.),(0.,0.), &
+                       PlotType, PlotType )
+  Bdry%Top%HS = HSInfo(0.,0.,0.,0., 0.,0. , (0.,0.),(0.,0.), &
+                       PlotType, PlotType )
 
   Pos%nSX = -1
   Pos%nSY = -1
@@ -118,17 +119,17 @@ CONTAINS
   Grid%nZ = -1.
   Grid%Z  = -1.
   Grid%rho = -1.
-  Grid%Type = ''
-  Grid%AttenUnit = ''
+  Grid%Type = ""
+  Grid%AttenUnit = ""
 
   Beam%nSteps = -1
   Beam%iBeamWindow = -1
   Beam%deltas = -1.
   Beam%epsMultiplier = 1.
   Beam%rLoop = -1.
-  Beam%Component = ''
-  Beam%Type = 'G S '
-  Beam%RunType = ''
+  Beam%Component = ""
+  Beam%Type = "G S "
+  Beam%RunType = ""
   Beam%Box = rxyz(0.,0.,0.,0.)
 
   Angles%nAlpha = 0
@@ -235,7 +236,7 @@ CONTAINS
   ! *** Beam characteristics ***
   Beam%Type( 4:4 ) = Beam%RunType( 7:7 )   ! selects beam shift option
 
-  ! don't worry about the beam type if this is a ray trace run
+  ! do not worry about the beam type if this is a ray trace run
   ! IESCO23: using 'e' requires Beam%Type to be set
   IF ( Beam%RunType( 1:1 ).NE.'R' .OR. &
        Beam%RunType( 1:1 ).NE.'E' ) THEN

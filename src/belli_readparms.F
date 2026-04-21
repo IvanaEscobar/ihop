@@ -134,7 +134,7 @@ C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 C     Read parameters from open data file: BELLI_PARM01
       READ(UNIT=iUnit,NML=BELLI_PARM01)
       WRITE(msgBuf,'(2A)')
-     &    'BELLI_READPARMS: finished reading BELLI_PARM01 in '
+     &    'BELLI_READPARMS: finished reading BELLI_PARM01 in ',
      &    'data.belli'
       CALL PRINT_MESSAGE( msgBuf, standardMessageUnit,
      &                    SQUEEZE_RIGHT, myThid )
@@ -186,7 +186,7 @@ C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 C     Read parameters from open data file: BELLI_PARM02
       READ(UNIT=iUnit,NML=BELLI_PARM02)
       WRITE(msgBuf,'(2A)')
-     &    'BELLI_READPARMS: finished reading BELLI_PARM02 in '
+     &    'BELLI_READPARMS: finished reading BELLI_PARM02 in ',
      &    'data.belli'
       CALL PRINT_MESSAGE( msgBuf, standardMessageUnit,
      &                    SQUEEZE_RIGHT, myThid )
@@ -285,7 +285,7 @@ C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 C     Read parameters from open data file: BELLI_PARM03
       READ(UNIT=iUnit,NML=BELLI_PARM03)
       WRITE(msgBuf,'(2A)')
-     &    'BELLI_READPARMS: finished reading BELLI_PARM03 in ' 
+     &    'BELLI_READPARMS: finished reading BELLI_PARM03 in ',
      &    'data.belli'
       CALL PRINT_MESSAGE( msgBuf, standardMessageUnit,
      &                    SQUEEZE_RIGHT, myThid )
@@ -312,7 +312,7 @@ C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 C     Read parameters from open data file: BELLI_COST_NML
       READ(UNIT=iUnit,NML=BELLI_COST_NML)
       WRITE(msgBuf,'(2A)')
-     & 'BELLI_READPARMS: finished reading BELLI_COST_NML in '
+     & 'BELLI_READPARMS: finished reading BELLI_COST_NML in ',
      &    'data.belli'
       CALL PRINT_MESSAGE( msgBuf, standardMessageUnit,
      &                    SQUEEZE_RIGHT, myThid )

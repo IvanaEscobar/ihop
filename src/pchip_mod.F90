@@ -3,7 +3,7 @@
 !BOP
 !MODULE: pchip_mod
 MODULE pchip_mod
-! <CONTACT EMAIL="ivana@utexas.edu">
+! <CONTACT EMAIL=ivana@utexas.edu>
 !   Ivana Escobar
 ! </CONTACT>
 ! !DESCRIPTION:
@@ -45,11 +45,11 @@ CONTAINS
 ! polynomial (PCHIP) algorithm. This is a new variant of monotone PCHIP
 ! (paper submitted to JASA). Also see;
 !
-! F. N. Fritsch and J. Butland, "A Method for Constructing Local Monotone
-! Piecewise Cubic Interpolants", SIAM Journal on Scientific and Statistical
+! F. N. Fritsch and J. Butland, A Method for Constructing Local Monotone
+! Piecewise Cubic Interpolants, SIAM Journal on Scientific and Statistical
 ! Computing, 5(2):300-304, (1984) https://doi.org/10.1137/0905021
 !
-! F. N. Fritsch and R. E. Carlson. "Monotone Piecewise Cubic Interpolation",
+! F. N. Fritsch and R. E. Carlson. Monotone Piecewise Cubic Interpolation,
 ! SIAM Journal on Numerical Analysis, 17(2):238-246, (1980)
 ! https://doi.org/10.1137/0717021
 

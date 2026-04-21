@@ -19,8 +19,8 @@ C       the model setup specific EOS.
 C     
 C     *==========================================================*
 C     | o Reference:
-C     | C. Chen and F. J. Millero, "Speed of sound in seawater at
-C     | high pressures,"
+C     | C. Chen and F. J. Millero, Speed of sound in seawater at
+C     | high pressures,
 C     | J. Acoust. Soc. Am. 672.5, 1129-1135 (1977).
 C     *==========================================================*
 

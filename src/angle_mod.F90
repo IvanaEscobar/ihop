@@ -92,9 +92,9 @@ CONTAINS
     Angles%Nalpha = BELLI_nalpha
   ENDIF
 
-  IF ( Angles%Nalpha.EQ.0 ) THEN   ! automatically estimate Nalpha to use
+  IF ( Angles%Nalpha.EQ.0 ) THEN   ! estimate Nalpha
     IF ( RunType( 1:1 ).EQ.'R' ) THEN
-      ! For a ray trace plot, we don't want too many rays ...
+      ! For a ray trace plot, only plot a few rays ...
       Angles%Nalpha = 50
     ELSE
       ! Letting ME choose? OK: ideas based on an isospeed ocean

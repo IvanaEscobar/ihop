@@ -3,7 +3,7 @@
 !BOP
 !MODULE: writeRay
 MODULE writeRay
-! <CONTACT EMAIL="ivana@utexas.edu">
+! <CONTACT EMAIL=ivana@utexas.edu>
 !   Ivana Escobar
 ! </CONTACT>
 ! !DESCRIPTION:
@@ -76,7 +76,7 @@ CONTAINS
   ! In adjoint mode we do not write output besides on the first run
   IF (BELLI_dumpfreq.LT.0) RETURN
 
-  ! compression: don't print reflection points
+  ! compression: dont print reflection points
   N2    = 1
   iSkip = MAX( nSteps / MaxPoints, 1 )
   col1  = 0.0

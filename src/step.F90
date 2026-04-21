@@ -3,7 +3,7 @@
 !BOP
 !MODULE: step
 MODULE step
-! <CONTACT EMAIL="ivana@utexas.edu">
+! <CONTACT EMAIL=ivana@utexas.edu>
 !   Ivana Escobar
 ! </CONTACT>
 ! !DESCRIPTION:
@@ -96,7 +96,7 @@ CONTAINS
   ! The numerical integrator used here is a version of the polygon (a.k.a.
   ! midpoint, leapfrog, or Box) method, and similar
   ! to the Heun (second order Runge-Kutta method).
-  ! However, it's modified to allow for a dynamic step change, while
+  ! However, its modified to allow for a dynamic step change, while
   ! preserving second-order accuracy.
 
   ! *** Phase 1 (an Euler step)
@@ -121,7 +121,7 @@ CONTAINS
   ray1%x = ray0%x + halfh * urayt0
   ray1%t = ray0%t - halfh * gradc0 / csq0
   ray1%p = ray0%p - halfh * cnn0_csq0 * ray0%q
-  ray1%q = ray0%q + halfh * c0        * ray0%p !IESCO22: q /= 0 for 'G' beam
+  ray1%q = ray0%q + halfh * c0        * ray0%p !IESCO22: q /= 0 for G beam
 
   ! *** Phase 2 (update step size, and Polygon march forward)
   CALL evalSSP( ray1%x, c1, cimag1, gradc1, crr1, crz1, czz1, &
@@ -141,7 +141,7 @@ CONTAINS
   CALL ReduceStep2D( ray0%x, urayt1, iSegz0, iSegr0, Topx, Topn, &
                      Botx, Botn, h ) ! reduce h to stay in domain
 
-  ! use blend of f' based on proportion of a full step used.
+  ! use blend of f prime based on proportion of a full step used.
   w1  = h / ( 2.0d0 * halfh ) ! h/h_old
   w0  = 1.0d0 - w1
   hw0 = h * w0
@@ -301,7 +301,7 @@ CONTAINS
     h = 1.0d-4 * Beam%deltas            ! make sure we make some motion
     iSmallStepCtr = iSmallStepCtr + 1   ! keep a count of the number of sequential small steps
   ELSE
-    iSmallStepCtr = 0   ! didn't do a small step so reset the counter
+    iSmallStepCtr = 0   ! didnt do a small step so reset the counter
   ENDIF
 
   RETURN

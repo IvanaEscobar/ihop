@@ -3,7 +3,7 @@
 !BOP
 !MODULE: influence
 MODULE influence
-! <CONTACT EMAIL="ivana@utexas.edu">
+! <CONTACT EMAIL=ivana@utexas.edu>
 !   Ivana Escobar
 ! </CONTACT>
 ! !DESCRIPTION:
@@ -488,7 +488,7 @@ CONTAINS
                 IF (      q.LE.0.0d0 .AND. qOld.GT.0.0d0 &
                      .OR. q.GE.0.0d0 .AND. qOld.LT.0.0d0 ) THEN
                   phaseInt = phase + PI / 2.   ! phase shifts at caustics
-                  ! IESCO22: shouldn't this be = phaseInt + PI/2
+                  ! IESCO22:  = phaseInt + PI/2 ?
                 ELSE
                   phaseInt = ray2D( iH-1 )%Phase + phase
                 ENDIF
@@ -660,8 +660,8 @@ CONTAINS
       sigmatmp = MIN( 0.2*BELLI_freq*REAL( ray2D( iH )%tau ), &
                       PI*lambda )
       RadiusMax = MAX( RadiusMax, sigmatmp ) 
-      ! Note on min: "Weinberg and Keenan suggest limiting a beam to a
-      !               point, by imposing a minimum beam width of pilambda."
+      ! Note on min: Weinberg and Keenan suggest limiting a beam to a
+      !               point, by imposing a minimum beam width of pilambda.
       !               - Jensen, Comp OA 2011
       ! default is 2 standard deviations of coverage of the Gaussian curve
       RadiusMax = BeamWindow*RadiusMax

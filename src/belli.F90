@@ -3,7 +3,7 @@
 !BOP
 !MODULE: BELLI
 MODULE BELLI
-! <CONTACT EMAIL="ivana@utexas.edu">
+! <CONTACT EMAIL=ivana@utexas.edu>
 !   Ivana Escobar
 ! </CONTACT>
 ! !DESCRIPTION:
@@ -285,22 +285,22 @@ CONTAINS
       ! take-off declination angle in degrees
       SrcDeclAngle = Angles%adeg( iAlpha )
 
-      ! Single ray run? then don't visit code below
+      ! Single ray run? then dont visit code below
       IF ( Angles%iSingle_alpha.EQ.0 .OR. &
            iAlpha.EQ.Angles%iSingle_alpha ) THEN
         !!IESCO22: BEAM stuff !!
         IBPvec = maxloc( SrcBmPat( :, 1 ), mask=SrcBmPat( :, 1 ) &
                 < SrcDeclAngle )  ! index of ray angle in beam pattern
         IBP    = IBPvec( 1 )
-        IBP    = MAX( IBP, 1 )         ! don't go before beginning of table
-        IBP    = MIN( IBP, NSBPPts-1 ) ! don't go past end of table
-        ! IEsco22: When a beam pattern isn't specified, IBP = 1
+        IBP    = MAX( IBP, 1 )         ! dont go before beginning of table
+        IBP    = MIN( IBP, NSBPPts-1 ) ! dont go past end of table
+        ! IEsco22: When a beam pattern is not specified, IBP = 1
 
         ! linear interpolation to get amplitude
         s    = ( SrcDeclAngle  - SrcBmPat( IBP, 1 ) ) &
               / ( SrcBmPat( IBP+1, 1 ) - SrcBmPat( IBP, 1 ) )
         Amp0 = ( 1-s ) * SrcBmPat( IBP, 2 ) + s * SrcBmPat( IBP+1, 2 )
-        ! IEsco22: When a beam pattern isn't specified, Amp0 = 0
+        ! IEsco22: When a beam pattern is not specified, Amp0 = 0
 
 !!$TAF store amp0,beam%runtype,beam%nsteps = BELLICore2
 !! IESCO24: Store derived type by data type: Bdry from bdry_mod
@@ -963,7 +963,7 @@ CONTAINS
       ray2D( iH1 )%Phase = ray2D( iH )%Phase + &
                             ATAN2( AIMAG( Refl ), REAL( Refl ) )
 
-      IF ( Beam%Type( 4:4 ).EQ.'S' ) THEN   ! beam displacement & width change (Seongil's version)
+      IF ( Beam%Type( 4:4 ).EQ.'S' ) THEN   ! beam displacement & width change (Seongil version)
         ch = ray2D( iH )%c / conjg( HS%cP )
         co = ray2D( iH )%t( 1 ) * ray2D( iH )%c
         si = ray2D( iH )%t( 2 ) * ray2D( iH )%c
@@ -991,8 +991,8 @@ CONTAINS
         sddelta = rddelta / abs( rddelta )
 
         ! next 3 lines have an update by Diana McCammon to allow a sloping
-        ! bottom . I think the formulas are good, but this won't be reliable
-        ! because it doesn't have the logic that tracks crossing into new
+        ! bottom . I think the formulas are good, but this will not be reliable
+        ! because it does not have the logic that tracks crossing into new
         ! segments after the ray displacement.
 
         theta_bot = datan( tBdry( 2 ) / tBdry( 1 ))  ! bottom angle
