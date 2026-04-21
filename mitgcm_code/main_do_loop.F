@@ -27,8 +27,8 @@ c#endif
 #ifdef ALLOW_DIC
 # include "DIC_OPTIONS.h"
 #endif
-#ifdef ALLOW_IHOP
-# include "IHOP_OPTIONS.h"
+#ifdef ALLOW_BELLI
+# include "BELLI_OPTIONS.h"
 #endif
 #ifdef ALLOW_EXF
 # include "EXF_OPTIONS.h"

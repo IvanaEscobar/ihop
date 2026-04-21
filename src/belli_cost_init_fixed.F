@@ -1,0 +1,820 @@
+#include "BELLI_OPTIONS.h"
+#include "AD_CONFIG.h"
+
+C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
+CBOP
+C !ROUTINE: BELLI_COST_INIT_FIXED
+
+C !INTERFACE:
+      SUBROUTINE BELLI_COST_INIT_FIXED( myThid )
+
+C    !DESCRIPTION:
+C    Set contributions to cost function and the cost function
+C    itself to zero. Both are defined in header file "BELLI_COST.h".
+
+C    !USES:
+      IMPLICIT NONE
+C == Global Variables ===
+#include "EEPARAMS.h"
+#include "SIZE.h"
+#include "PARAMS.h"
+#include "GRID.h"
+#include "BELLI_SIZE.h"
+#ifdef ALLOW_COST
+# include "BELLI_COST.h"
+#endif
+#ifdef ALLOW_CAL
+# include "cal.h"
+#endif
+#ifdef HAVE_NETCDF
+#include "netcdf.inc"
+#endif
+
+C     !INPUT PARAMETERS:
+C     myThid :: my thread ID
+      INTEGER myThid
+C     !OUTPUT PARAMETERS:
+
+C     !FUNCTIONS:
+      INTEGER ILNBLNK
+      EXTERNAL ILNBLNK
+
+C     !LOCAL VARIABLES:
+#if ( defined (ALLOW_COST) && defined (ALLOW_BELLI) )
+      CHARACTER*(MAX_LEN_MBUF) :: msgBuf
+      CHARACTER*(MAX_LEN_FNAM) :: B_Obs_File, fnamedatanc
+      CHARACTER*(MAX_LEN_FNAM) :: fnameequinc
+      CHARACTER*(MAX_LEN_FNAM) :: adfnameequinc, tlfnameequinc
+      CHARACTER*(MAX_LEN_FNAM) :: fnameequincglo
+      CHARACTER*(MAX_LEN_FNAM) :: adfnameequincglo, tlfnameequincglo
+      LOGICAL :: exst
+      INTEGER :: JL, IL, err, ncid, dimId1, dimId2
+      INTEGER :: varId1a, varId1b, varId2, varId3
+      INTEGER :: varId4a, varId4b, varId4c
+      INTEGER :: varId5a, varId5b, varIdEquiv(2)
+      INTEGER :: weighbelliObs, obsIsInRunTime
+      INTEGER :: obsNo_valid, B_ObsInTile
+      INTEGER :: tmpdate(4), tmpdiff(4)
+      INTEGER :: num_file, hh, obsNo_hh
+      INTEGER :: bi, bj, nObs, i, j, k
+      INTEGER :: iG, jG
+      INTEGER :: stop_belli_cost
+      _RL :: yymmddMin, yymmddMax
+      _RL :: hhmmssMin, hhmmssMax
+      _RL :: tmpyymmdd(NOBSMAX_BELLI), tmphhmmss(NOBSMAX_BELLI)
+      _RL :: diffsecs
+      _RL :: tmp_B_Obs_time(NOBSMAX_BELLI)
+      _RL :: tmp_lon, tmp_lon2(NOBSMAX_BELLI)
+      _RL :: tmp_lat2(NOBSMAX_BELLI)
+      _RL :: lon_cur, lat_cur
+      _RL :: tmp_depth2(NOBSMAX_BELLI), depth_cur
+      _RL :: tmp_uncert2(NOBSMAX_BELLI)
+      _RL :: B_Obs_i
+      _RL :: B_Obs_j
+      _RL :: B_Obs_k1, B_Obs_k2
+      _RL :: lon_1, lon_2
+      _RL :: lat_1, lat_2
+      _RL :: depth_1, depth_2
+      _RL :: lon_tmp1, lon_tmp2, lat_tmp1, lat_tmp2
+      _RL :: depth_fac
+CBOP
+      stop_belli_cost = 0
+
+      WRITE(msgBuf,'(A)') ''// CHAR(10) //
+     & '                    belli COST general parameters :'
+      CALL PRINT_MESSAGE( msgBuf,
+     &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
+
+      JL = ILNBLNK( B_Obs_Dir )
+      IF (JL.NE.0) THEN
+        WRITE(msgBuf,'(2A)') '  B_Obs_Dir ',B_Obs_Dir(1:JL)
+      ELSE
+        WRITE(msgBuf,'(2A)') '  B_Obs_Dir ','./'
+      ENDIF
+      CALL PRINT_MESSAGE( msgBuf,
+     &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
+
+      WRITE(msgBuf,'(A,L5)') '  belliDoNcOutput ', belliDoNcOutput
+      CALL PRINT_MESSAGE( msgBuf,
+     &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
+      WRITE(msgBuf,'(A)') ' '
+      CALL PRINT_MESSAGE( msgBuf,
+     &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
+
+
+!====================================
+!       INIT BELLI OBS VARS
+!====================================
+      _BEGIN_MASTER( myThid )
+
+      yymmddMin=modelstartdate(1)
+      yymmddMax=modelenddate(1)
+      hhmmssMin=modelstartdate(2)
+      hhmmssMax=modelenddate(2)
+
+      DO num_file = 1, NFILESMAX_BELLI
+        obsNo_hh = 0
+
+        B_Obs_File=' '
+        IL = ILNBLNK( B_Obs_Files(num_file) )
+        IF (IL.NE.0) THEN
+          WRITE(B_Obs_File,'(A)') B_Obs_Files(num_file)(1:IL)
+          WRITE(msgBuf,'(A,I3,2A)') ''// CHAR(10) //
+     &      '                    belli file #', num_file,
+     &      ' is ', B_Obs_File(1:IL)
+          CALL PRINT_MESSAGE( msgBuf,
+     &         standardMessageUnit, SQUEEZE_RIGHT, myThid )
+        ENDIF
+
+        IL = ILNBLNK( B_Obs_File )
+        IF (IL.NE.0) THEN
+!===========================================================
+!       READ BELLI OBS NETCDF IDs
+!===========================================================
+          WRITE(fnamedatanc,'(2A)') B_Obs_File(1:IL),'.nc'
+          err = NF_OPEN( fnamedatanc, NF_NOWRITE, 
+     &          ncidData(num_file) )
+        CALL BELLI_COST_NF_ERROR('init_fixed 1',err,1,1,myThid)
+
+!1) Read number of observations and available dimensions:
+          ncid = ncidData(num_file)
+          err = NF_INQ_DIMID( ncid,'iOBS', dimId1 )
+        CALL BELLI_COST_NF_ERROR('init_fixed 2',err,1,1,myThid)
+          err = NF_INQ_DIMLEN( ncid, dimId1, obsNo(num_file) )
+        CALL BELLI_COST_NF_ERROR('init_fixed 3',err,1,1,myThid)
+
+          WRITE(msgBuf,'(A,I9)')
+     &      '  # of observations in file                   =',
+     &      obsNo(num_file)
+          CALL PRINT_MESSAGE( msgBuf,
+     &         standardMessageUnit, SQUEEZE_RIGHT, myThid )
+
+          err =       NF_INQ_VARID( ncid, 'belli_YYYYMMDD', varId1a )
+        CALL BELLI_COST_NF_ERROR('init_fixed 4',err,1,1,myThid)
+          err = err + NF_INQ_VARID( ncid, 'belli_HHMMSS', varId1b )
+        CALL BELLI_COST_NF_ERROR('init_fixed 5',err,1,1,myThid)
+          err = err + NF_INQ_VARID( ncid, 'belli_iter', varId2 )
+        CALL BELLI_COST_NF_ERROR('init_fixed 6',err,1,1,myThid)
+
+          IF (err.NE.NF_NOERR) THEN
+            WRITE(msgBuf,'(4A)')
+     &       'BELLI_COST_INIT_FIXED: file ', B_Obs_File(1:IL),
+     &       '.nc is not in the pkg/belli cost format: ',
+     &       'check iter,uncert'
+            CALL PRINT_ERROR( msgBuf, myThid )
+          ENDIF
+! Assume all belli observations are instantaneous
+
+!2 Weight for each belli obs (if missing, assume equal weights):
+          weighbelliObs = 1
+
+          err = NF_INQ_VARID( ncid, 'belli_uncert', varId3 )
+        CALL BELLI_COST_NF_ERROR('init_fixed 7',err,1,1,myThid)
+          IF (err.NE.NF_NOERR) THEN
+            WRITE(msgBuf,'(2A)')
+     &        '      belli obs file does not have uncertainties;',
+     &        '      assume all obs datum are weighed evenly '
+            CALL PRINT_MESSAGE( msgBuf,
+     &           standardMessageUnit, SQUEEZE_RIGHT, myThid )
+
+            weighbelliObs = 0
+
+          ENDIF
+
+!3 Read belli observation positions and values:
+          err =       NF_INQ_VARID( ncid, 'belli_x', varId4a )
+        CALL BELLI_COST_NF_ERROR('init_fixed 8',err,1,1,myThid)
+          err = err + NF_INQ_VARID( ncid, 'belli_y', varId4b )
+        CALL BELLI_COST_NF_ERROR('init_fixed 9',err,1,1,myThid)
+          err = err + NF_INQ_VARID( ncid, 'belli_z', varId4c )
+        CALL BELLI_COST_NF_ERROR('init_fixed10',err,1,1,myThid)
+
+          IF (err.NE.NF_NOERR) THEN
+            WRITE(msgBuf,'(3A)')
+     &        'BELLI_COST_INIT_FIXED: file ', B_Obs_File(1:IL),
+     &        '.nc is not in the pkg/belli cost format, check x,y,z'
+            CALL PRINT_ERROR( msgBuf, myThid )
+          ENDIF
+
+          err =       NF_INQ_VARID( ncid, 'belli_val', varId5a )
+        CALL BELLI_COST_NF_ERROR('init_fixed11',err,1,1,myThid)
+
+          IF (err.NE.NF_NOERR) THEN
+           WRITE(msgBuf,'(3A)')
+     &       'BELLI_COST_INIT_FIXED: file ', B_Obs_File(1:IL),
+     &       '.nc is not in pkg/belli cost format, check belli_val'
+           CALL PRINT_ERROR( msgBuf, myThid )
+          ENDIF
+
+!===========================================================
+!       SET BELLI GLOBAL EQUIV NETCDF VARIABLES
+!===========================================================
+! Variable names for model equivalent files
+          belli_nameequi = 'mod_val'
+          belli_namemask = 'mod_mask'
+          belli_nameval  = 'belli_val'
+          belli_nameuncert = 'belli_uncert'
+
+!4 Create global file for belli model equivalent
+          IF (myProcId.EQ.0) THEN
+            JL  = ILNBLNK( B_Obs_Dir )
+
+            WRITE(fnameequincglo,'(3A)') B_Obs_Dir(1:JL),
+     &        B_Obs_File(1:IL),'.equi.nc'
+
+# ifdef ALLOW_ADJOINT_RUN
+            WRITE(adfnameequincglo,'(4A)') B_Obs_Dir(1:JL),'ad',
+     &        B_Obs_File(1:IL),'.equi.nc'
+# endif
+# ifdef ALLOW_TANGENTLINEAR_RUN
+            WRITE(tlfnameequincglo,'(4A)') B_Obs_Dir(1:JL),'tl',
+     &        B_Obs_File(1:IL),'.equi.nc'
+# endif
+
+            JL = ILNBLNK( fnameequincglo )
+            INQUIRE( FILE=fnameequincglo(1:JL), EXIST=exst )
+            IF ( .NOT.exst ) THEN
+! Create NetCDF file
+              err = NF_CREATE( fnameequincglo(1:JL), NF_CLOBBER,
+     &              ncidGLOB(num_file) )
+              CALL BELLI_COST_NF_ERROR('init_fixed12',err,1,1,myThid)
+              err = NF_DEF_DIM( ncidGLOB(num_file),'iOBS',
+     &              obsNo(num_file), dimId1 )
+              CALL BELLI_COST_NF_ERROR('init_fixed13',err,1,1,myThid)
+
+              err = NF_DEF_VAR( ncidGLOB(num_file), 'mod_val',
+     &              NF_DOUBLE, 1, dimId1, varIdEquiv(1) )
+              CALL BELLI_COST_NF_ERROR('init_fixed14',err,1,1,myThid)
+              err = NF_PUT_ATT_DOUBLE( ncidGLOB(num_file),
+     &              varIdEquiv(1), '_FillValue',
+     &              NF_DOUBLE, 1, -9999. _d 0 )
+              CALL BELLI_COST_NF_ERROR('init_fixed15',err,1,1,myThid)
+
+              err = NF_DEF_VAR( ncidGLOB(num_file), 'mod_mask',
+     &              NF_DOUBLE, 1, dimId1, varIdEquiv(2) )
+              CALL BELLI_COST_NF_ERROR('init_fixed16',err,1,1,myThid)
+              err = NF_PUT_ATT_DOUBLE( ncidGLOB(num_file),
+     &              varIdEquiv(2), '_FillValue',
+     &              NF_DOUBLE, 1, -9999. _d 0 )
+              CALL BELLI_COST_NF_ERROR('init_fixed17',err,1,1,myThid)
+
+! Write buffer to file, reopen file with WRITE permissions
+              err = NF_ENDDEF( ncidGLOB(num_file) )
+              CALL BELLI_COST_NF_ERROR('init_fixed18',err,1,1,myThid)
+              err = NF_CLOSE( ncidGLOB(num_file) )
+              CALL BELLI_COST_NF_ERROR('init_fixed19',err,1,1,myThid)
+              err = NF_OPEN( fnameequincglo(1:JL), NF_WRITE, 
+     &              ncidGLOB(num_file) )
+              CALL BELLI_COST_NF_ERROR('init_fixed20',err,1,1,myThid)
+
+            ELSE
+! Obtain existing NetCDF file id
+              err = NF_OPEN( fnameequincglo(1:JL), NF_WRITE,
+     &              ncidGLOB(num_file) )
+              CALL BELLI_COST_NF_ERROR('init_fixed21',err,1,1,myThid)
+
+            ENDIF
+
+# ifdef ALLOW_ADJOINT_RUN
+            JL = ILNBLNK( adfnameequincglo )
+            INQUIRE( FILE=adfnameequincglo(1:JL), EXIST=exst )
+            IF ( .NOT.exst ) THEN
+! Create NetCDF AD file
+              err = NF_CREATE( adfnameequincglo(1:JL), NF_CLOBBER,
+     &              ncidADGLOB(num_file) )
+              CALL BELLI_COST_NF_ERROR('init_fixed22',err,1,1,myThid)
+              err = NF_DEF_DIM( ncidADGLOB(num_file), 'iOBS',
+     &              obsNo(num_file), dimId1 )
+              CALL BELLI_COST_NF_ERROR('init_fixed23',err,1,1,myThid)
+
+              err = NF_DEF_VAR( ncidADGLOB(num_file), 'mod_val',
+     &              NF_DOUBLE, 1, dimId1, varIdEquiv(1) )
+              CALL BELLI_COST_NF_ERROR('init_fixed24',err,1,1,myThid)
+              err = NF_PUT_ATT_DOUBLE( ncidADGLOB(num_file),
+     &              varIdEquiv(1), '_FillValue',
+     &              NF_DOUBLE, 1, 0. _d 0 )
+              CALL BELLI_COST_NF_ERROR('init_fixed25',err,1,1,myThid)
+
+! Write buffer to file, reopen file with WRITE permissions
+              err = NF_ENDDEF( ncidADGLOB(num_file) )
+              CALL BELLI_COST_NF_ERROR('init_fixed26',err,1,1,myThid)
+              err = NF_CLOSE( ncidADGLOB(num_file) )
+              CALL BELLI_COST_NF_ERROR('init_fixed27',err,1,1,myThid)
+              err = NF_OPEN( adfnameequincglo(1:JL), NF_WRITE,
+     &              ncidADGLOB(num_file) )
+              CALL BELLI_COST_NF_ERROR('init_fixed28',err,1,1,myThid)
+
+            ELSE
+! Obtain existing AD NetCDF file id
+              err = NF_OPEN( adfnameequincglo(1:JL), NF_WRITE,
+     &              ncidADGLOB(num_file) )
+              CALL BELLI_COST_NF_ERROR('init_fixed29',err,1,1,myThid)
+
+            ENDIF
+
+# endif
+# ifdef ALLOW_TANGENTLINEAR_RUN
+            JL = ILNBLNK( tlfnameequincglo )
+            INQUIRE( FILE=tlfnameequincglo(1:JL), EXIST=exst )
+            IF ( .NOT.exst ) THEN
+! Create NetCDF TL file
+              err = NF_CREATE( tlfnameequincglo(1:JL), NF_CLOBBER,
+     &              ncidTLGLOB(num_file) )
+              CALL BELLI_COST_NF_ERROR('init_fixed30',err,1,1,myThid)
+              err = NF_DEF_DIM( ncidTLGLOB(num_file), 'iOBS',
+     &              obsNo(num_file), dimId1 )
+              CALL BELLI_COST_NF_ERROR('init_fixed31',err,1,1,myThid)
+
+              err = NF_DEF_VAR( ncidTLGLOB(num_file), 'mod_val',
+     &              NF_DOUBLE, 1, dimId1, varIdEquiv(1) )
+              CALL BELLI_COST_NF_ERROR('init_fixed32',err,1,1,myThid)
+              err = NF_PUT_ATT_DOUBLE( ncidTLGLOB(num_file),
+     &              varIdEquiv(1), '_FillValue',
+     &              NF_DOUBLE, 1, 0. _d 0 )
+              CALL BELLI_COST_NF_ERROR('init_fixed33',err,1,1,myThid)
+
+! Write buffer to file, reopen file with WRITE permissions
+              err = NF_ENDDEF( ncidTLGLOB(num_file) )
+              CALL BELLI_COST_NF_ERROR('init_fixed34',err,1,1,myThid)
+              err = NF_CLOSE( ncidTLGLOB(num_file) )
+              CALL BELLI_COST_NF_ERROR('init_fixed35',err,1,1,myThid)
+              err = NF_OPEN( tlfnameequincglo(1:JL), NF_WRITE,
+     &              ncidTLGLOB(num_file) )
+              CALL BELLI_COST_NF_ERROR('init_fixed36',err,1,1,myThid)
+
+            ELSE
+! Obtain existing TL NetCDF file id
+              err = NF_OPEN( tlfnameequincglo(1:JL), NF_WRITE,
+     &              ncidTLGLOB(num_file) )
+              CALL BELLI_COST_NF_ERROR('init_fixed37',err,1,1,myThid)
+
+            ENDIF
+# endif
+
+          ENDIF !IF (myProcId.EQ.0)
+
+!===========================================================
+!       READ BELLI OBS NETCDF VARIABLES
+!===========================================================
+! NOTE: not applying reading in chunks
+!       see pkg/profiles or pkg/obsfit for how to chunk.
+
+! Default values
+          DO nObs = 1, NOBSMAX_BELLI
+            B_Obs_ind_glob(num_file,nObs) = 0
+          ENDDO
+          obsNo_valid = 0
+
+! Read time
+          err = NF_GET_VARA_DOUBLE( ncid, varId1a, 
+     &          1, obsNo(num_file), tmpyymmdd )
+          CALL BELLI_COST_NF_ERROR('init_fixed38',err,1,1,myThid)
+          err = NF_GET_VARA_DOUBLE(ncid,varId1b,
+     &          1, obsNo(num_file), tmphhmmss )
+          CALL BELLI_COST_NF_ERROR('init_fixed39',err,1,1,myThid)
+
+          IF ( err.NE.NF_NOERR ) THEN
+            WRITE(msgBuf,'(3A)')
+     &        'BELLI_COST_INIT_FIXED: file ', B_Obs_File(1:IL),
+     &        '.nc was not read properly: check yyyymmdd, hhmmss.'
+            CALL PRINT_ERROR( msgBuf, myThid )
+          ENDIF
+
+! Loop through number of observations, in obsfit this is a 'chunk'
+          DO nObs = 1, obsNo(num_file)
+!AV If obs starts before model run, will be ignored even if 
+!AV it ends after model starts - ok for now
+            IF (( (tmpyymmdd(nObs).GT.yymmddMin).OR.
+     &            ((tmpyymmdd(nObs).EQ.yymmddMin) .AND.
+     &             (tmphhmmss(nObs).GE.hhmmssMin)) ) .AND.
+     &          ( (tmpyymmdd(nObs).LT.yymmddMax).OR.
+     &            ((tmpyymmdd(nObs).EQ.yymmddMax) .AND.
+     &             (tmphhmmss(nObs).LE.hhmmssMax)) )) THEN
+              hh = INT(tmphhmmss(nObs)) / 10000
+
+              IF ( hh.LT.hoursPerDay ) THEN
+                obsIsInRunTime = 1
+#ifdef ALLOW_CAL
+                CALL CAL_FULLDATE( INT(tmpyymmdd(nObs)),
+     &               INT(tmphhmmss(nObs)), tmpdate, myThid )
+                CALL CAL_TIMEPASSED( modelstartdate, tmpdate,
+     &               tmpdiff, myThid )
+                CALL CAL_TOSECONDS( tmpdiff, diffsecs, myThid )
+#endif /* ALLOW_CAL */
+
+! Convert to absolute time in seconds
+                diffsecs = diffsecs+nIter0*deltaTclock
+
+              ELSE
+! If tmphhmmss is out of range then disregard belli obs
+                obsIsInRunTime = 0
+                diffsecs = -deltaTclock
+                obsNo_hh = obsNo_hh+1
+
+              ENDIF
+
+            ELSE
+             obsIsInRunTime = 0
+             diffsecs = -deltaTclock
+
+            ENDIF !IF (( (tmpyymmdd(nObs).GT.yymmddMin)
+
+            IF (obsIsInRunTime.EQ.1) THEN
+! If yes then store obs index position:
+              obsNo_valid = obsNo_valid+1
+              B_Obs_ind_glob(num_file,obsNo_valid) = nObs
+
+            ENDIF !IF (obsIsInRunTime.EQ.1)
+
+! Regardless of whether belli obs is in run time or not,
+! Keep track of belli obs index position and assign time to belli obs
+            tmp_B_Obs_time(nObs) = diffsecs
+
+! Check that maximum size was not reached:
+            IF (obsNo(num_file).GT.NOBSMAX_BELLI) THEN
+              WRITE(msgBuf,'(3A)')
+     &          'BELLI_COST_INIT_FIXED: file ', B_Obs_File(1:IL),
+     &          '.nc was not read properly: increase NOBSMAX_BELLI.'
+              CALL PRINT_ERROR( msgBuf, myThid )
+
+              stop_belli_cost = 1
+            ENDIF
+
+          ENDDO !DO nObs
+
+! Calibrate number of VALID obs datum
+          obsNo(num_file) = obsNo_valid
+
+! Output belli cost init info
+          WRITE(msgBuf,'(A,I9)')
+     &      '  # of belli obs with err HHMMSS values =', obsNo_hh
+          CALL PRINT_MESSAGE( msgBuf,
+     &         standardMessageUnit, SQUEEZE_RIGHT, myThid )
+
+          WRITE(msgBuf,'(A,I9)')
+     &      '  # of belli obs within time period  =', obsNo(num_file)
+          CALL PRINT_MESSAGE( msgBuf,
+     &         standardMessageUnit, SQUEEZE_RIGHT, myThid )
+
+! ====================================================================
+! Initiate tiled defaults for B_Obs before reading in from netcdf
+          DO bj = 1, nSy
+            DO bi = 1, nSx
+              obsNo_valid = 0
+              obsNo_tiled(num_file,bi,bj) = obsNo(num_file)
+
+              DO nObs = 1, NOBSMAX_BELLI
+                B_Obs_time(num_file,nObs,bi,bj) =     -999. _d 0
+                B_Obs_lon(num_file,nObs,bi,bj) =      -999. _d 0
+                B_Obs_lat(num_file,nObs,bi,bj) =      -999. _d 0
+                B_Obs_depth(num_file,nObs,bi,bj) =    -999. _d 0
+                B_Obs_uncert(num_file,nObs,bi,bj) =      1. _d 0
+                B_Obs_ind_glob_tiled(num_file,nObs,bi,bj) =    0
+              ENDDO !DO nObs
+
+! Read ALL info using respective varid and save to tmp, NO CHUNKS!
+              IF (weighbelliObs.EQ.1) THEN
+                err = NF_GET_VARA_DOUBLE( ncid, varId3,
+     &                1, obsNo_tiled(num_file,bi,bj), tmp_uncert2 )
+                CALL BELLI_COST_NF_ERROR('init_fixed40',err,bi,bj,
+     & myThid)
+              ENDIF
+
+              err = NF_GET_VARA_DOUBLE( ncid, varId4a,
+     &              1, obsNo_tiled(num_file,bi,bj), tmp_lon2 )
+              CALL BELLI_COST_NF_ERROR('init_fixed40',err,bi,bj,
+     & myThid)
+              err = NF_GET_VARA_DOUBLE( ncid, varId4b,
+     &              1, obsNo_tiled(num_file,bi,bj), tmp_lat2 )
+              CALL BELLI_COST_NF_ERROR('init_fixed41',err,bi,bj,
+     & myThid)
+              err = NF_GET_VARA_DOUBLE( ncid, varId4c,
+     &              1, obsNo_tiled(num_file,bi,bj), tmp_depth2 )
+              CALL BELLI_COST_NF_ERROR('init_fixed42',err,bi,bj,
+     & myThid)
+
+              IF (err.NE.NF_NOERR) THEN
+                WRITE(msgBuf,'(3A)')
+     &            'BELLI_COST_INIT_FIXED: file ', B_Obs_File(1:IL),
+     &            '.nc was not read properly: check x,y,z,uncert.'
+                CALL PRINT_ERROR( msgBuf, myThid )
+              ENDIF
+
+! Find obs datum in MITgcm spatial grid
+! Loop through observations, NOTE: in obsfit this is a 'chunk'
+              DO nObs = 1, obsNo_tiled(num_file,bi,bj)
+                B_ObsInTile = 1
+
+! In a valid time?
+                IF ( (tmp_B_Obs_time(nObs).LT.0. _d 0) .OR.
+     &               (tmp_B_Obs_time(nObs).GT.modelend) .OR.
+     &               (tmp_B_Obs_time(nObs).LT.modelstart) )
+     &          THEN
+                  B_ObsInTile = 0
+                ENDIF
+
+! Determine whether obs datum is in current tile domain
+                lon_cur = tmp_lon2(nObs)
+                lat_cur = tmp_lat2(nObs)
+                depth_cur = tmp_depth2(nObs)
+
+                IF (B_ObsInTile.EQ.1) THEN
+                  IF (xC(sNx+1,1,bi,bj).LT.xC(1,1,bi,bj)) THEN
+                    tmp_lon = xC(sNx+1,1,bi,bj)+360. _d 0
+                  ELSE
+                    tmp_lon = xC(sNx+1,1,bi,bj)
+                  ENDIF
+
+                  IF ( (xC(1,1,bi,bj).LE.lon_cur) .AND.
+     &                 (tmp_lon.GT.lon_cur) .AND.
+     &                 (yC(1,1,bi,bj).LE.lat_cur) .AND.
+     &                 (yC(1,sNy+1,bi,bj).GT.lat_cur) ) THEN
+! Do nothing
+
+                  ELSEIF ( (xC(sNx+1,1,bi,bj).LT.xC(1,1,bi,bj)) .AND.
+     &                     (xC(1,1,bi,bj).LE.lon_cur+360. _d 0) .AND.
+     &                     (tmp_lon.GT.lon_cur+360. _d 0) .AND.
+     &                     (yC(1,1,bi,bj).LE.lat_cur) .AND.
+     &                     (yC(1,sNy+1,bi,bj).GT.lat_cur) ) THEN
+                    lon_cur = lon_cur+360. _d 0
+
+                  ELSE
+! Not in this tile
+                    B_ObsInTile = 0
+
+                  ENDIF !IF ( (xC(1,1,bi,bj).LE.lon_cur)
+
+! Determine i,j,k to the south-west-down of obs datum
+! Set default values
+                  B_Obs_i = -10
+                  B_Obs_j = -10
+                  B_Obs_k1 = -10
+                  B_Obs_k2 = -10
+                  lon_1 = -999
+                  lon_2 = -999
+                  lat_1 = -999
+                  lat_2 = -999
+                  depth_1 = -10
+                  depth_2 = -10
+
+                  IF (B_ObsInTile.EQ.1) THEN
+! Value of k, below the data point:
+! Case 1: above first depth level
+                    IF (-rC(1).GT.depth_cur) THEN
+                      B_Obs_k1 = 1
+                      B_Obs_k2 = 1
+                      depth_fac = 1. _d 0
+                    ENDIF
+! Case 2: below last depth level
+                    IF (-rC(Nr).LE.depth_cur) THEN
+                      B_Obs_k1 = Nr
+                      B_Obs_k2 = Nr
+                      depth_fac = 1. _d 0
+                    ENDIF
+! Case 3: between two depth levels
+                    DO k = 1, Nr-1
+                      IF ( (-rC(k).LE.depth_cur).AND.
+     &                     (-rC(k+1).GT.depth_cur)) THEN
+                        B_Obs_k1 = k
+                        B_Obs_k2 = k+1
+                        depth_1 = -rC(k)
+                        depth_2 = -rC(k+1)
+                        depth_fac =
+     &                   (depth_cur-depth_1)/(depth_2-depth_1)
+                      ENDIF
+                    ENDDO
+
+                    DO j = 1, sNy+1
+                      DO i = 1, sNx+1
+                        lon_tmp1 = xC(i,j,bi,bj)
+                        lon_tmp2 = xC(i+1,j,bi,bj)
+                        lat_tmp1 = yC(i,j,bi,bj)
+                        lat_tmp2 = yC(i,j+1,bi,bj)
+
+! Value of j, south of obs datum:
+                        IF ( (lat_tmp1.LE.lat_cur) .AND.
+     &                       (lat_tmp2.GT.lat_cur) ) THEN
+                          B_Obs_j = j
+                          lat_1 = lat_tmp1
+                          lat_2 = lat_tmp2
+                        ENDIF
+
+! Value of i, west of obs datum:
+                        IF (xC(i+1,j,bi,bj).LT.xC(1,j,bi,bj)) THEN
+                          lon_tmp2=lon_tmp2+360
+                        ENDIF
+                        IF (xC(i,j,bi,bj).LT.xC(1,j,bi,bj)) THEN
+                          lon_tmp1 = lon_tmp1+360
+                        ENDIF
+
+                        IF ( (lon_tmp1.LE.lon_cur) .AND.
+     &                       (lon_tmp2.GT.lon_cur) ) THEN
+                          B_Obs_i = i
+                          lon_1 = lon_tmp1
+                          lon_2 = lon_tmp2
+                        ENDIF
+
+                      ENDDO !DO i
+                    ENDDO !DO j
+
+                  ENDIF !IF (B_ObsInTile.EQ.1)
+
+                  IF ( ((B_Obs_i.EQ.-10).OR.(B_Obs_j.EQ.-10)) .OR.
+     &                 ((B_Obs_k1.EQ.-10).OR.(B_Obs_k2.EQ.-10)) )
+     &            THEN
+                    B_ObsInTile = 0
+                  ENDIF
+
+! 'Reshape' observed datum to tiled structures
+                  IF (B_ObsInTile.EQ.1) THEN
+                    obsNo_valid = obsNo_valid+1
+                    B_Obs_ind_glob_tiled(num_file,
+     &               obsNo_valid,bi,bj) = nObs
+
+                    B_Obs_time(num_file,obsNo_valid,bi,bj) =
+     &               tmp_B_Obs_time(nObs)
+
+                    IF (weighbelliObs.EQ.1) THEN
+                      B_Obs_uncert(num_file,obsNo_valid,bi,bj) =
+     &                 tmp_uncert2(nObs)
+                    ENDIF
+
+                    B_Obs_lon(num_file,obsNo_valid,bi,bj) = lon_cur
+                    B_Obs_lat(num_file,obsNo_valid,bi,bj) = lat_cur
+                    B_Obs_depth(num_file,obsNo_valid,bi,bj) =
+     &               depth_cur
+
+                    B_Obs_i_tiled(num_file,obsNo_valid,bi,bj) = 
+     &               B_Obs_i
+                    B_Obs_j_tiled(num_file,obsNo_valid,bi,bj) =
+     &               B_Obs_j
+                    B_Obs_k_tiled(num_file,obsNo_valid,bi,bj) =
+     &               B_Obs_k1
+
+                  ENDIF !IF (B_ObsInTile.EQ.1) 3rd time
+
+                ENDIF !IF (B_ObsInTile.EQ.1) 1st time
+
+! ====================================================================
+! Check that maximum size was not reached:
+                IF (nObs.GE.NOBSMAX_BELLI) THEN
+                  WRITE(msgBuf,'(3A)')
+     &              'BELLI_COST_INIT_FIXED: file ',B_Obs_File(1:IL),
+     &              '.nc not read properly: increase NOBSMAX_BELLI.'
+                  CALL PRINT_ERROR( msgBuf, myThid )
+                ENDIF
+
+              ENDDO !DO nObs
+
+! Number of valid belli obs in the file
+              obsNo_tiled(num_file,bi,bj) = obsNo_valid
+
+              WRITE(msgBuf,'(2(A,I4))')
+     &          '  current tile is bi,bj                      =',
+     &          bi,',',bj
+              CALL PRINT_MESSAGE( msgBuf,
+     &             standardMessageUnit, SQUEEZE_RIGHT, myThid )
+
+              WRITE(msgBuf,'(A,I9)')
+     &          '  # of belli obs within tile and time period  =',
+     &          obsNo_tiled(num_file,bi,bj)
+              CALL PRINT_MESSAGE( msgBuf,
+     &             standardMessageUnit, SQUEEZE_RIGHT, myThid )
+
+!===========================================================
+! Create files for model counterparts to belli obs
+!===========================================================
+              IF (obsNo_tiled(num_file,bi,bj).GT.0) THEN
+! Kludge until unstructered tiles
+                iG=bi+(myXGlobalLo-1)/sNx
+                jG=bj+(myYGlobalLo-1)/sNy
+
+                JL = ILNBLNK( B_Obs_Dir )
+! ALWAYS Write to nc file
+                IF (belliDoNcOutput) THEN
+                  WRITE(fnameequinc,'(3A,2(I3.3,A))')
+     &              B_Obs_Dir(1:JL),B_Obs_File(1:IL),
+     &              '.',iG,'.',jG,'.equi.nc'
+# ifdef ALLOW_ADJOINT_RUN
+                  WRITE(adfnameequinc,'(4A,2(I3.3,A))')
+     &              B_Obs_Dir(1:JL),'ad',B_Obs_File(1:IL),
+     &              '.',iG,'.',jG,'.equi.nc'
+# endif
+# ifdef ALLOW_TANGENTLINEAR_RUN
+                  WRITE(tlfnameequinc,'(4A,2(I3.3,A))')
+     &              B_Obs_Dir(1:JL),'ad',B_Obs_File(1:IL),
+     &              '.',iG,'.',jG,'.equi.nc'
+# endif
+
+                  JL = ILNBLNK( fnameequinc )
+                  INQUIRE( FILE=fnameequinc(1:JL), EXIST=exst )
+                  IF ( .NOT.exst ) THEN
+                    CALL BELLI_COST_INIT_EQUI( num_file,
+     &                   ncidData(num_file), fnameequinc(1:JL),
+     &                   ncidFWD(num_file,bi,bj),
+     &                   obsNo_tiled(num_file,bi,bj),
+     &                   bi, bj, myThid )
+
+                  ELSE
+! Obtain existing NetCDF file id
+                    err = NF_OPEN( fnameequinc(1:JL), NF_WRITE,
+     &                    ncidFWD(num_file,bi,bj) )
+                    CALL BELLI_COST_NF_ERROR('init_fixed43',err,bi,bj,
+     &                myThid)
+                  ENDIF
+
+# ifdef ALLOW_ADJOINT_RUN
+                  JL = ILNBLNK( adfnameequinc )
+                  INQUIRE( FILE=adfnameequinc(1:JL), EXIST=exst )
+                  IF ( .NOT.exst ) THEN
+                    CALL BELLI_COST_INIT_EQUI( num_file,
+     &                   ncidData(num_file), adfnameequinc(1:JL), 
+     &                   ncidAD(num_file,bi,bj),
+     &                   obsNo_tiled(num_file,bi,bj),
+     &                   bi, bj, myThid )
+                  ELSE
+! Obtain existing AD NetCDF file id
+                    err = NF_OPEN( adfnameequinc(1:JL), NF_WRITE,
+     &                    ncidAD(num_file,bi,bj) )
+                    CALL BELLI_COST_NF_ERROR('init_fixed44',err,bi,bj,
+     &                myThid)
+                  ENDIF
+
+# endif /* ALLOW_ADJOINT_RUN */
+# ifdef ALLOW_TANGENTLINEAR_RUN
+                  JL = ILNBLNK( tlfnameequinc )
+                  INQUIRE( FILE=tlfnameequinc(1:JL), EXIST=exst )
+                  IF ( .NOT.exst ) THEN
+                    CALL BELLI_COST_INIT_EQUI( num_file,
+     &                   ncidData(num_file),tlfnameequinc(1:JL),
+     &                   ncidTL(num_file,bi,bj),
+     &                   obsNo_tiled(num_file,bi,bj),
+     &                   bi, bj, myThid )
+                  ELSE
+! Obtain existing TL NetCDF file id
+                    err = NF_OPEN( tlfnameequinc(1:JL), NF_WRITE,
+     &                    ncidTL(num_file,bi,bj) )
+                    CALL BELLI_COST_NF_ERROR('init_fixed45',err,bi,bj,
+     &                myThid)
+                  ENDIF
+# endif /* ALLOW_TANGENTLINEAR_RUN */
+
+                ELSE
+! Write to binary files... UNSUPPORTED
+                ENDIF !IF (belliDoNcOutput)
+
+              ENDIF !IF (obsNo_tiled(num_file,bi,bj).GT.0)
+
+            ENDDO !DO bi
+          ENDDO !DO bj
+!===========================================================
+        ELSE !IF (IL.NE.0)
+          DO bj = 1, nSy
+            DO bi = 1, nSx
+              obsNo(num_file) = 0
+              obsNo_tiled(num_file,bi,bj) = 0
+
+              DO nObs = 1, NOBSMAX_BELLI
+                B_Obs_lon(num_file,nObs,bi,bj) =      -999. _d 0
+                B_Obs_lat(num_file,nObs,bi,bj) =      -999. _d 0
+                B_Obs_depth(num_file,nObs,bi,bj) =    -999. _d 0
+                B_Obs_uncert(num_file,nObs,bi,bj) =      1. _d 0
+                B_Obs_ind_glob_tiled(num_file,nObs,bi,bj) =    0
+              ENDDO
+
+            ENDDO !DO bi
+          ENDDO !DO bj
+
+        ENDIF !IF (IL.NE.0)
+
+      ENDDO !DO num_file
+
+      _END_MASTER( myThid )
+      _BARRIER
+
+!===========================================================
+      CALL GLOBAL_SUM_INT( stop_belli_cost, myThid )
+      IF ( stop_belli_cost.GE.1 ) THEN
+        CALL ALL_PROC_DIE( myThid )
+        STOP 'ABNORMAL END: S/R BELLI_COST_INIT_FIXED'
+      ENDIF
+
+      WRITE(msgBuf,'(A)') ' '// CHAR(10) //
+     & '                    '//
+     & '// ======================================================='
+      CALL PRINT_MESSAGE( msgBuf,
+     &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
+      WRITE(msgBuf,'(A)')
+     & '// belli cost read obs data file >>> END <<<'
+      CALL PRINT_MESSAGE( msgBuf,
+     &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
+      WRITE(msgBuf,'(A)')
+     & '// ======================================================='
+     & // CHAR(10) //'                    '
+      CALL PRINT_MESSAGE( msgBuf,
+     &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
+
+#endif /* ALLOW_COST && ALLOW_BELLI*/
+
+      RETURN
+      END

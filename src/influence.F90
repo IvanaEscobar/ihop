@@ -1,4 +1,4 @@
-#include "IHOP_OPTIONS.h"
+#include "BELLI_OPTIONS.h"
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 !BOP
 !MODULE: influence
@@ -11,7 +11,7 @@ MODULE influence
 !   the pressure field.
 
 ! !USES:
-  USE ihop_mod,  only: rad2deg, oneCMPLX, PRTFile, nMax, Beam, ray2D, &
+  USE belli_mod, only: Beam, ray2D, rad2deg, oneCMPLX, PRTFile, nMax,&
                        SrcDeclAngle, nRz_per_range
   USE srPos_mod, only: Pos
   IMPLICIT NONE
@@ -19,10 +19,10 @@ MODULE influence
 #include "SIZE.h"
 #include "EEPARAMS.h"
 #include "PARAMS.h"
-#include "IHOP_SIZE.h"
-#include "IHOP.h"
+#include "BELLI_SIZE.h"
+#include "BELLI.h"
 #ifdef ALLOW_COST
-# include "IHOP_COST.h"
+# include "BELLI_COST.h"
 #endif
 
 ! !SCOPE: 
@@ -117,7 +117,7 @@ CONTAINS
 
 !!$TAF init iRayCen0  = 'influence_iraycen'
 !!$TAF init iRayCen1  = static, (Beam%nSteps-1)*nRz_per_range
-!!$TAF init iRayCen2  = static, (Beam%nSteps-1)*ihop_nRR*nRz_per_range
+!!$TAF init iRayCen2  = static, (Beam%nSteps-1)*belli_nRR*nRz_per_range
 !!$TAF store ray2d = iRayCen0
 ! init local variables
   W = 0
@@ -132,8 +132,8 @@ CONTAINS
 
   q0   = ray2D( 1 )%c / Angles%Dalpha   ! Reference for J = q0 / q
 
-  dq   = ray2D( 2:Beam%nSteps )%q( 1 ) - ray2D( 1:Beam%nSteps-1 )%q( 1 )
-  dtau = ray2D( 2:Beam%nSteps )%tau    - ray2D( 1:Beam%nSteps-1 )%tau
+  dq = ray2D( 2:Beam%nSteps )%q( 1 ) - ray2D( 1:Beam%nSteps-1 )%q( 1 )
+  dtau = ray2D( 2:Beam%nSteps )%tau  - ray2D( 1:Beam%nSteps-1 )%tau
 
   ! Set the ray-centered coordinates (znV, rnV)
   ! pre-calculate ray normal based on tangent with c(s) scaling
@@ -144,7 +144,8 @@ CONTAINS
     IF ( ALL(ray2D(ii)%t==0.0) ) THEN
       RcvrDeclAngleV(ii) = 0.0
     ELSE
-      RcvrDeclAngleV(ii) = rad2deg * ATAN2( ray2D(ii)%t(2), ray2D(ii)%t(1) )
+      RcvrDeclAngleV(ii) = rad2deg * &
+                           ATAN2( ray2D(ii)%t(2), ray2D(ii)%t(1) )
     ENDIF
   ENDDO
 
@@ -157,8 +158,9 @@ CONTAINS
     Ratio1 = SQRT( ABS( COS( SrcDeclAngle / rad2deg ) ) )
 
   ! Scale amplitude
-  ray2D( 1:Beam%nSteps )%Amp = Ratio1 * SQRT( ray2D( 1:Beam%nSteps )%c ) &
-                  * ray2D( 1:Beam%nSteps )%Amp
+  ray2D( 1:Beam%nSteps )%Amp = Ratio1 &
+                               * SQRT( ray2D( 1:Beam%nSteps )%c ) &
+                               * ray2D( 1:Beam%nSteps )%Amp
 
   RcvrDepths: DO iz = 1, nRz_per_range
     zR = Pos%RZ( iz )
@@ -175,7 +177,7 @@ CONTAINS
       nA  = ( zR - ray2D( 1 )%x( 2 ) ) / znV( 1 )
       rA  = ray2D( 1 )%x( 1 ) + nA*rnV( 1 )
       !!! Find index of receiver: assumes uniform spacing in Pos%RR
-      irA = MAX( MIN( INT( ( rA - Pos%RR( 1 ) ) / Pos%Delta_r )+1,  &
+      irA = MAX( MIN( INT( ( rA - Pos%RR( 1 ) ) / Pos%Delta_r )+1, &
                      Pos%nRR ),                                    &
                1 )
     ENDIF
@@ -305,15 +307,16 @@ CONTAINS
 !  INTEGER              :: irT(1), ! irT needs size of 1, see MINLOC
   INTEGER              :: irTT
   REAL (KIND=_RL90)    :: xA( 2 ), rayt( 2 ), rayn( 2 ), &
-                          x_rcvr( 2, nRz_per_range ), rLen, RadiusMax, &
+                          x_rcvr( 2, nRz_per_range ), rLen, &
+                          RadiusMax, &
                           zMin, zMax, dqds
   REAL (KIND=_RL90) :: qAtmp, qBtmp, rayntmp, qtmp
   COMPLEX (KIND=_RL90) :: dtauds
   LOGICAL              :: inRcvrRanges
 
 !!$TAF init iiitape1 = static, (Beam%nSteps-1)
-!!$TAF init iiitape2 = static, (Beam%nSteps-1)*ihop_nRR
-!!$TAF init iiitape3 = static, (Beam%nSteps-1)*ihop_nRR*nRz_per_range
+!!$TAF init iiitape2 = static, (Beam%nSteps-1)*belli_nRR
+!!$TAF init iiitape3 = static, (Beam%nSteps-1)*belli_nRR*nRz_per_range
 
   ! init local variables
   q0           = ray2D( 1 )%c / Angles%Dalpha   ! Reference for J = q0 / q
@@ -423,7 +426,7 @@ CONTAINS
 
       ! compute beam influence for this segment of the ray
       inRcvrRanges=.TRUE.
-      RcvrRanges: DO ir = 1, ihop_nRR
+      RcvrRanges: DO ir = 1, belli_nRR
 !!$TAF store inrcvrranges = iiitape2
         ! is Rr( ir ) contained in [ rA, rB )? Then compute beam influence
         IF ( Pos%RR( ir ).GE.MIN( rA, xB(1) ) .AND. &
@@ -455,16 +458,16 @@ CONTAINS
               RadiusMax = ABS( q / q0 )
 
               IF ( n.LT.RadiusMax ) THEN
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
                 WRITE(msgBuf,'(A,F10.2)') &
                   "Influence: Eigenray w RadiusMax = ", RadiusMax
-                IF ( IHOP_dumpfreq.GE.0 ) &
+                IF ( BELLI_dumpfreq.GE.0 ) &
                   CALL PRINT_MESSAGE( msgbuf, PRTFile, &
                                     SQUEEZE_RIGHT, myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
                 ! interpolated delay
                 delay    = ray2D( iH-1 )%tau + s*dtauds
-!      !IESCO25: test some parts of influence, send geninfluence to ihop_cost_modval
+!      !IESCO25: test some parts of influence, send geninfluence to belli_cost_modval
 !              geninfluence(iH) = delay
 
                 qtmp = ABS(q)
@@ -556,22 +559,24 @@ CONTAINS
   CHARACTER*(MAX_LEN_MBUF) :: msgBuf
   INTEGER :: iH, iZ, iR
   REAL    (KIND=_RL90) :: Ratio1 ! scale factor for a line source
-  REAL    (KIND=_RL90) :: W, s, n, phase, rA, xB(2),&
+  REAL    (KIND=_RL90) :: W, s, n, phase, rA, xB( 2 ), &
                           q0, q, qOld
   REAL    (KIND=_RL90) :: Amp, phaseInt, RcvrDeclAngle
   COMPLEX (KIND=_RL90) :: delay
   INTEGER, PARAMETER   :: BeamWindow = 4
   INTEGER              :: irT( 1 ), irTT
-  REAL (KIND=_RL90)    :: xA( 2 ), rayt( 2 ), rayn( 2 ), x_rcvr( 2 ), &
-                        rLen, RadiusMax, zMin, zMax, sigma, lambda, A, dqds
+  REAL (KIND=_RL90)    :: xA( 2 ), rayt( 2 ), rayn( 2 ), &
+                          x_rcvr( 2 ), &
+                          rLen, RadiusMax, zMin, zMax, &
+                          sigma, lambda, A, dqds
   COMPLEX (KIND=_RL90) :: dtauds
   LOGICAL              :: inRcvrRanges
   REAL (KIND=_RL90) :: qAtmp, qBtmp, rayntmp, qtmp, sigmatmp
 !EOP
 
 !$TAF init iGauCart1 = static, (Beam%nSteps-1)
-!$TAF init iGauCart2 = static, (Beam%nSteps-1)*ihop_nRR
-!$TAF init iGauCart3 = static, (Beam%nSteps-1)*ihop_nRR*nRz_per_range
+!$TAF init iGauCart2 = static, (Beam%nSteps-1)*belli_nRR
+!$TAF init iGauCart3 = static, (Beam%nSteps-1)*belli_nRR*nRz_per_range
   q0     = ray2D( 1 )%c / Angles%Dalpha   ! Reference for J = q0 / q
   phase  = 0
   qOld   = ray2D( 1 )%q( 1 )       ! used to track KMAH index
@@ -599,7 +604,7 @@ CONTAINS
   ! sqrt( 2 * PI ) represents a sum of Gaussians in free space
   Ratio1 = 1.0 _d 0
   IF ( Beam%RunType( 4:4 ).EQ.'R' ) THEN   ! point source
-    Ratio1 = SQRT( ABS( COS( SrcDeclAngle / rad2deg ) ) ) / SQRT( 2.*PI )
+    Ratio1 = SQRT( ABS( COS( SrcDeclAngle/rad2deg ) ) ) / SQRT( 2*PI )
   ELSE    ! line  source
     Ratio1 = 1 / SQRT( 2.*PI )
   ENDIF
@@ -651,8 +656,8 @@ CONTAINS
       RadiusMax = RadiusMax / q0 / rayntmp
       
       
-      lambda   = ray2D( iH-1 )%c / IHOP_freq
-      sigmatmp = MIN( 0.2*IHOP_freq*REAL( ray2D( iH )%tau ), &
+      lambda   = ray2D( iH-1 )%c / BELLI_freq
+      sigmatmp = MIN( 0.2*BELLI_freq*REAL( ray2D( iH )%tau ), &
                       PI*lambda )
       RadiusMax = MAX( RadiusMax, sigmatmp ) 
       ! Note on min: "Weinberg and Keenan suggest limiting a beam to a
@@ -672,7 +677,7 @@ CONTAINS
 
       ! compute beam influence for this segment of the ray
       inRcvrRanges=.TRUE.
-      RcvrRanges: DO ir = 1, ihop_nRR
+      RcvrRanges: DO ir = 1, belli_nRR
 !!$TAF store inrcvrranges = iGauCart2
         ! is Rr( ir ) contained in [ rA, rB )? Then compute beam influence
         IF ( Pos%RR( ir ).GE.MIN( rA, xB(1) ) .AND. &
@@ -703,13 +708,13 @@ CONTAINS
               RadiusMax = BeamWindow*RadiusMax
 
               IF ( n.LT.RadiusMax ) THEN   ! Within beam window?
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
                 WRITE(msgBuf,'(A,F10.2)') &
                   "Influence: Eigenray w RadiusMax = ", RadiusMax
-                 IF ( IHOP_dumpfreq .GE. 0) &
+                 IF ( BELLI_dumpfreq .GE. 0) &
                    CALL PRINT_MESSAGE( msgbuf, PRTFile, &
                      SQUEEZE_RIGHT, myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
                 ! interpolated delay
                 delay    = ray2D( iH-1 )%tau + s*dtauds
 
@@ -773,14 +778,15 @@ CONTAINS
 !BOP
 ! !ROUTINE: ApplyContribution
 ! !INTERFACE:
-  SUBROUTINE ApplyContribution( iH, iR, iZ, tau, Amp, phaseInt, arrAngle )
+  SUBROUTINE ApplyContribution( iH, iR, iZ, tau, Amp, phaseInt, &
+                                arrAngle )
 ! !DESCRIPTION:
 !   Apply the contribution of the current ray to the pressure field U.
 
 ! !USES:
   USE writeray, only: WriteRayOutput
   USE arr_mod,  only: AddArr, U
-  USE ihop_mod, only: afreq, RAYFile, DELFile, nMax
+  USE belli_mod, only: afreq, RAYFile, DELFile, nMax
 
 ! !INPUT PARAMETERS:
   COMPLEX (KIND=_RL90), INTENT( IN ) :: tau
@@ -834,7 +840,8 @@ CONTAINS
       arrAngle, ray2D(iH)%nTopBnc, ray2D(iH)%nBotBnc )
 
   CASE ( 'C' )                ! coherent TL
-    uPoint = uPoint + CMPLX( Amp * EXP( -oneCMPLX * ( afreq * tau - phaseInt ) ) )
+    uPoint = uPoint + &
+             CMPLX( Amp * EXP( -oneCMPLX*( afreq*tau - phaseInt ) ) )
 
   CASE ( 'S', 'I' )                ! incoherent/semicoherent TL
     IF ( Beam%Type( 1:1 ).EQ.'B' ) THEN   ! Gaussian beam
@@ -871,7 +878,7 @@ CONTAINS
 !   Scale the pressure field U according to the run type and range.
 
 ! !USES:
-  USE ihop_mod,  only: Beam
+  USE belli_mod,  only: Beam
   USE angle_mod, only: Angles
 
 ! !INPUT PARAMETERS:
@@ -897,9 +904,9 @@ CONTAINS
   ! Compute scale factor for field
   SELECT CASE ( Beam%RunType( 2:2 ) )
   CASE ( 'C' )   ! Cerveny Gaussian beams in Cartesian coordinates
-    const = -Angles%Dalpha * SQRT( IHOP_freq ) / c
+    const = -Angles%Dalpha * SQRT( BELLI_freq ) / c
   CASE ( 'R' )   ! Cerveny Gaussian beams in Ray-centered coordinates
-    const = -Angles%Dalpha * SQRT( IHOP_freq ) / c
+    const = -Angles%Dalpha * SQRT( BELLI_freq ) / c
   CASE DEFAULT
     const = -1.0
   END SELECT

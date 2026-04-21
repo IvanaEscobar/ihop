@@ -1,4 +1,4 @@
-#include "IHOP_OPTIONS.h"
+#include "BELLI_OPTIONS.h"
 #ifdef ALLOW_AUTODIFF
 # include "AUTODIFF_OPTIONS.h"
 #endif
@@ -14,7 +14,7 @@ MODULE ssp_mod
 ! SSP (Sound Speed Profile) data.
 
 ! !USES:
-  USE ihop_mod, only: PRTFile
+  USE belli_mod, only: PRTFile
   IMPLICIT NONE
 ! == Global variables ==
 #include "SIZE.h"
@@ -22,8 +22,8 @@ MODULE ssp_mod
 # include "EESUPPORT.h"
 #include "PARAMS.h"
 #include "GRID.h"
-#include "IHOP_SIZE.h"
-#include "IHOP.h"
+#include "BELLI_SIZE.h"
+#include "BELLI.h"
 
 ! !SCOPE: 
   PRIVATE
@@ -41,14 +41,14 @@ MODULE ssp_mod
   INTEGER, PARAMETER     :: MaxSSP = 201
   INTEGER                :: iSegr = 1, iSegz = 1
   LOGICAL                :: foundr, foundz
-#ifdef IHOP_THREED
+#ifdef BELLI_THREED
   INTEGER                :: iSegx = 1, iSegy = 1
   LOGICAL                :: foundx, foundy
-#endif /* IHOP_THREED */
+#endif /* BELLI_THREED */
   INTEGER                :: iostat, iallocstat
   INTEGER,           PRIVATE :: iz
   REAL (KIND=_RL90), PRIVATE :: Depth, W
-  ! DEFAULT values, IHOP only modifies alphaR
+  ! DEFAULT values, BELLI only modifies alphaR
   REAL (KIND=_RL90)      :: alphaR = 1500, betaR = 0, alphaI = 0, &
                             betaI = 0, rhoR = 1
   ! SSP interpolation parameters, only used in ssp_mod
@@ -58,7 +58,7 @@ MODULE ssp_mod
 ! == Derived types ==
   TYPE rxyz_vector
     REAL (KIND=_RL90), ALLOCATABLE :: r(:)
-#ifdef IHOP_THREED
+#ifdef BELLI_THREED
     REAL (KIND=_RL90), ALLOCATABLE :: x(:), y(:), z(:)
 #endif
   END TYPE rxyz_vector
@@ -74,9 +74,9 @@ MODULE ssp_mod
   TYPE SSPVariable
     COMPLEX (KIND=_RL90)              :: c( MaxSSP ), cz( MaxSSP )
     REAL    (KIND=_RL90), ALLOCATABLE :: cMat( :,: ), czMat( :,: )
-#ifdef IHOP_THREED
-    REAL    (KIND=_RL90), ALLOCATABLE :: cMat3( :,:,: ), czMat3( :,:,: )
-#endif /* IHOP_THREED */
+#ifdef BELLI_THREED
+    REAL (KIND=_RL90), ALLOCATABLE :: cMat3( :,:,: ), czMat3( :,:,: )
+#endif /* BELLI_THREED */
   END TYPE SSPVariable
 
   TYPE( SSPGrid )     :: Grid
@@ -136,12 +136,12 @@ CONTAINS
 
 ! !USES:
   USE atten_mod, only: CRCI
-  USE ihop_mod,  only: SSPFile
+  USE belli_mod,  only: SSPFile
   USE bdry_mod,  only: Bdry
 ! IESCO24
 ! fT = 1000 ONLY for acousto-elastic halfspaces, I will have to pass this
 ! parameter in a different way after ssp_mod is split btwn fixed and varia
-! USE initenvihop, only: fT
+! USE initenvbelli, only: fT
 
 ! !INPUT PARAMETERS:
 ! myThid :: my thread ID
@@ -167,13 +167,14 @@ CONTAINS
   _BEGIN_MASTER(myThid)
 
   ! OPEN SSPFile to read
-  OPEN ( FILE=TRIM(IHOP_fileroot) // '.ssp', UNIT=SSPFile, &
+  OPEN ( FILE=TRIM(BELLI_fileroot) // '.ssp', UNIT=SSPFile, &
     FORM='FORMATTED', STATUS='OLD', IOSTAT=iostat )
   IF ( IOSTAT.NE.0 ) THEN   ! successful open?
-#ifdef IHOP_WRITE_OUT
-    WRITE(msgBuf,'(A)') 'SSP_MOD::ReadSSP: Unable to open the SSP file'
+#ifdef BELLI_WRITE_OUT
+    WRITE(msgBuf,'(A)') &
+      'SSP_MOD::ReadSSP: Unable to open the SSP file'
     CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
     STOP 'ABNORMAL END: S/R ReadSSP'
   ENDIF
 
@@ -184,11 +185,11 @@ CONTAINS
             Grid%Seg%R( Grid%nR ), &
             STAT=iallocstat )
   IF ( iallocstat.NE.0 ) THEN
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
     WRITE(msgBuf,'(2A)') 'SSP_MOD::ReadSSP: ', &
       'Insufficient memory to store SSP'
     CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
     STOP 'ABNORMAL END: S/R ReadSSP'
   ENDIF
 
@@ -212,34 +213,36 @@ CONTAINS
   DO iz = 1, MaxSSP
     alphaR = SSP%cMat( iz, 1 )
 
-    SSP%c(iz) = CRCI( Grid%Z(iz), alphaR, alphaI, Grid%AttenUnit, bPower, fT, &
-                      myThid )
+    SSP%c(iz) = CRCI( Grid%Z(iz), alphaR, alphaI, Grid%AttenUnit, &
+                      bPower, fT, myThid )
     Grid%rho(iz) = rhoR !IEsco22: set to a default value of 1
 
     ! verify depths are monotone increasing
     IF ( iz.GT.1 ) THEN
       IF ( Grid%Z( iz ).LE.Grid%Z( iz-1 ) ) THEN
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
         WRITE(msgBuf,'(2A,F10.2)') 'SSP_MOD::ReadSSP: ', &
-          'The depths in the SSP must be monotone increasing', Grid%Z(iz)
+          'The depths in the SSP must be monotone increasing', &
+          Grid%Z(iz)
         CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
         STOP 'ABNORMAL END: S/R ReadSSP'
       ENDIF
     ENDIF
 
     ! compute gradient, cz
-    IF ( iz.GT.1 ) SSP%cz( iz-1 ) = ( SSP%c( iz ) - SSP%c( iz-1 ) ) / &
-                                    ( Grid%Z( iz ) - Grid%Z( iz-1 ) )
+    IF ( iz.GT.1 ) &
+      SSP%cz( iz-1 ) = ( SSP%c( iz ) - SSP%c( iz-1 ) ) / &
+                       ( Grid%Z( iz ) - Grid%Z( iz-1 ) )
 
     ! Did we read the last point?
     IF ( ABS( Grid%Z( iz ) - Depth ).LT.100.*EPSILON( 1.0e0 ) ) THEN
       IF ( Grid%nPts.EQ.1 ) THEN
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
         WRITE(msgBuf,'(2A)') 'SSP_MOD::ReadSSP: ', &
           'The SSP must have at least 2 points'
         CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
             STOP 'ABNORMAL END: S/R ReadSSP'
       ENDIF
 
@@ -252,11 +255,11 @@ CONTAINS
   ENDDO ! DO iz = 1, Grid%nZ
 
   ! Fall through means too many points in the profile
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
   WRITE(msgBuf,'(2A)') 'SSP_MOD::ReadSSP: ', &
     'Number of SSP points exceeds limit'
   CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
   STOP 'ABNORMAL END: S/R ReadSSP'
 
   ! I/O on main thread only
@@ -272,7 +275,7 @@ CONTAINS
   SUBROUTINE init_fixed_Grid( myThid )
 ! !DESCRIPTION:
 !   Initialize SSP Grid parameters that do not change within a time series.
-! Sets Grid%nR,nZ,Seg%R, and ihop_sumweights
+! Sets Grid%nR,nZ,Seg%R, and belli_sumweights
 
 ! !USES:
   USE bdry_mod, only: Bdry
@@ -293,7 +296,7 @@ CONTAINS
   LOGICAL :: skip_range
   INTEGER :: iallocstat
   INTEGER :: bi,bj, i,j,k, ii,jj
-  INTEGER :: nii(IHOP_NPTS_RANGE), njj(IHOP_NPTS_RANGE)
+  INTEGER :: nii(BELLI_NPTS_RANGE), njj(BELLI_NPTS_RANGE)
   REAL (KIND=_RL90) :: tolerance
 
   ! init local vars
@@ -307,29 +310,29 @@ CONTAINS
   Grid%Z    = -999.0
   Grid%rho  = -999.0
 
-  ! set ihop SSP Grid size
+  ! set belli SSP Grid size
   Grid%nZ = Nr+2 ! add z=0 z=Depth layers to GCM Nr
-  Grid%nR = IHOP_NPTS_RANGE
+  Grid%nR = BELLI_NPTS_RANGE
   Grid%nPts = Grid%nZ
 
-  ! set Grid%Z from rC, rkSign=-1 used bc ihop uses +ive depths
+  ! set Grid%Z from rC, rkSign=-1 used bc belli uses +ive depths
   Grid%Z( 1 )             = 0.0 _d 0
   Grid%Z( 2:(Grid%nZ-1) ) = rkSign*rC( 1:Nr )
   Grid%Z( Grid%nZ )       = Bdry%Bot%HS%Depth ! rkSign*rF(Nr+1)*1.05
 
-  ! set Grid%Seg%R from data.ihop -> ihop_ranges
+  ! set Grid%Seg%R from data.belli -> belli_ranges
   !IF (ALLOCATED(Grid%Seg%R)) DEALLOCATE(Grid%Seg%R)
   ALLOCATE( Grid%Seg%R( Grid%nR ), STAT=iallocstat )
   IF ( iallocstat.NE.0 ) THEN
-# ifdef IHOP_WRITE_OUT
+# ifdef BELLI_WRITE_OUT
     WRITE(msgBuf,'(2A)') 'SSP_MOD::init_fixed_Grid: ', &
       'Insufficient memory to store Grid%Seg%R'
     CALL PRINT_ERROR( msgBuf,myThid )
-# endif /* IHOP_WRITE_OUT */
+# endif /* BELLI_WRITE_OUT */
       STOP 'ABNORMAL END: S/R init_fixed_Grid'
   ENDIF
 
-  Grid%Seg%R( 1:Grid%nR ) = ihop_ranges( 1:Grid%nR )
+  Grid%Seg%R( 1:Grid%nR ) = belli_ranges( 1:Grid%nR )
   ! Modify from [m] to [km]
   Grid%Seg%R = 1000.0 * Grid%Seg%R
 
@@ -338,7 +341,7 @@ CONTAINS
   !==================================================
   ! Sum IDW weights
   DO ii = 1, Grid%nR
-    ihop_sumweights(ii,:) = SUM(ihop_idw_weights(ii,:))
+    belli_sumweights(ii,:) = SUM(belli_idw_weights(ii,:))
   ENDDO
 
   ! Adapt IDW interpolation by bathymetry
@@ -349,9 +352,11 @@ CONTAINS
           DO ii=1, Grid%nR
             skip_range = .FALSE.
 
-            DO jj=1,IHOP_npts_idw
-              IF ( ABS(xC(i, j, bi, bj) - ihop_xc(ii, jj)).LE.tolerance .AND. &
-                   ABS(yC(i, j, bi, bj) - ihop_yc(ii, jj)).LE.tolerance ) THEN
+            DO jj=1,BELLI_npts_idw
+              IF ( ABS(xC(i,j,bi,bj) - belli_xc(ii, jj)).LE.&
+                   tolerance .AND. &
+                   ABS(yC(i,j,bi,bj) - belli_yc(ii, jj)).LE.&
+                   tolerance ) THEN
                 DO k=1,Nr
     ! No IDW interpolation on xc, yc centered ranges
     IF ( nii(ii).EQ.1 .AND. k.GT.njj(ii) ) THEN
@@ -359,21 +364,22 @@ CONTAINS
     ENDIF
 
     IF ( .NOT.skip_range ) THEN
-      IF ( hFacC(i, j, k, bi, bj).EQ.0. ) THEN
-        ihop_sumweights(ii, k) = &
-          ihop_sumweights(ii, k) - ihop_idw_weights(ii, jj)
+      IF ( hFacC(i, j, k, bi,bj).EQ.0. ) THEN
+        belli_sumweights(ii, k) = &
+          belli_sumweights(ii, k) - belli_idw_weights(ii, jj)
 
         ! No interpolation on xc, yc centered ranges
-        IF ( ihop_idw_weights(ii, jj).EQ.0. ) THEN
-          ihop_sumweights(ii, k:Nr) = 0.0
+        IF ( belli_idw_weights(ii, jj).EQ.0. ) THEN
+          belli_sumweights(ii, k:Nr) = 0.0
           nii(ii) = 1
           njj(ii) = k
         ENDIF
 
-      ENDIF ! IF ( hFacC(i, j, k, bi, bj).EQ.0. )
+      ENDIF ! IF ( hFacC(i,j,k,bi,bj).EQ.0. )
 
       ! Set TINY and negative values to 0.0
-      IF (ihop_sumweights(ii, k).LT.1D-13) ihop_sumweights(ii, k) = 0.0
+      IF (belli_sumweights(ii, k).LT.1D-13) &
+        belli_sumweights(ii, k) = 0.
 
     ENDIF ! IF ( .NOT.skip_range )
                 ENDDO !k
@@ -442,7 +448,7 @@ CONTAINS
 
     ! compute gradient, n2z
     DO iz = 2, Grid%nPts
-      n2z( iz-1 ) = (  n2(   iz ) - n2(    iz-1 ) ) / &
+      n2z( iz-1 ) = (  n2( iz ) - n2( iz-1 ) ) / &
                     ( Grid%Z( iz ) - Grid%Z( iz-1 ) )
     END DO
 
@@ -477,10 +483,10 @@ CONTAINS
     END DO
 
   CASE DEFAULT
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
     WRITE(msgBuf,'(A)') 'SSP_MOD::setSSP: Invalid SSP profile option'
     CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
     STOP 'ABNORMAL END: S/R setSSP'
   END SELECT
 
@@ -508,8 +514,9 @@ CONTAINS
 ! rho    :: density at x
 ! myThid :: my thread ID
   REAL (KIND=_RL90), INTENT( IN  ) :: x(2)
-  REAL (KIND=_RL90), INTENT( OUT ) :: c, cimag, gradc(2), crr, crz, czz, rho
-  INTEGER, INTENT( IN )   :: myThid
+  REAL (KIND=_RL90), INTENT( OUT ) :: c, cimag, gradc(2), &
+                                      crr, crz, czz, rho
+  INTEGER,           INTENT( IN )  :: myThid
 ! !OUTPUT PARAMETERS: c, cimag, gradc, crr, crz, czz, rho
 
 ! !LOCAL VARIABLES:
@@ -528,14 +535,14 @@ CONTAINS
   CASE ( 'Q' )
     CALL Quad(     x, c, cimag, gradc, crr, crz, czz, rho, myThid )
   CASE DEFAULT
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
     WRITE(msgBuf,'(2A)') 'Profile option: ', Grid%Type
     ! In adjoint mode we do not write output besides on the first run
-    IF ( IHOP_dumpfreq.GE.0 ) &
+    IF ( BELLI_dumpfreq.GE.0 ) &
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
     WRITE(msgBuf,'(A)') 'SSP_MOD::evalSSP: Invalid SSP profile option'
     CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
     STOP 'ABNORMAL END: S/R evalSSP'
     c = 0.         !RG
     cimag = 0.     !RG
@@ -554,7 +561,8 @@ CONTAINS
 !BOP
 ! !ROUTINE: n2Linear
 ! !INTERFACE:
-  SUBROUTINE n2Linear( x, c, cimag, gradc, crr, crz, czz, rho, myThid )
+  SUBROUTINE n2Linear( x, c, cimag, gradc, crr, crz, czz, rho, &
+                       myThid )
 ! !DESCRIPTION:
 !   N2-linear interpolation of SSP data.
 
@@ -571,8 +579,9 @@ CONTAINS
 ! rho    :: density at x
 ! myThid :: my thread ID
   REAL (KIND=_RL90), INTENT( IN  ) :: x(2)
-  REAL (KIND=_RL90), INTENT( OUT ) :: c, cimag, gradc(2), crr, crz, czz, rho
-  INTEGER, INTENT( IN )   :: myThid
+  REAL (KIND=_RL90), INTENT( OUT ) :: c, cimag, gradc(2), &
+                                      crr, crz, czz, rho
+  INTEGER,           INTENT( IN  ) :: myThid
 ! !OUTPUT PARAMETERS: c, cimag, gradc, crr, crz, czz, rho
 
 ! !LOCAL VARIABLES: None
@@ -581,7 +590,7 @@ CONTAINS
 !EOP
 
   iSegz = 1 !RG
-  IF ( x( 2 ).LT.Grid%Z( iSegz ) .OR. x( 2 ).GT.Grid%Z( iSegz+1 ) ) THEN
+  IF ( x(2).LT.Grid%Z( iSegz ) .OR. x(2).GT.Grid%Z( iSegz+1 ) ) THEN
     foundz=.false.
 !IEsco23 Test this:
 !     DO iz = 2, Grid%nZ   ! Search for bracketting Depths
@@ -595,7 +604,8 @@ CONTAINS
 
   ENDIF ! IF ( x( 2 ).LT.Grid%Z( iSegz ) .OR. x( 2 ).GT.Grid%Z( iSegz+1 ) )
 
-  W = ( x( 2 ) - Grid%Z( iSegz ) ) / ( Grid%Z( iSegz+1 ) - Grid%Z( iSegz ) )
+  W = ( x(2) - Grid%Z( iSegz ) ) / &
+      ( Grid%Z( iSegz+1 ) - Grid%Z( iSegz ) )
   n2tmp = ( 1-W )*n2( iSegz ) + W*n2( iSegz+1 ) 
 
   ! IESCO25: TO-DO Seperate complex sqrt for TAF...
@@ -617,7 +627,7 @@ CONTAINS
 !BOP
 ! !ROUTINE: cLinear
 ! !INTERFACE:
-  SUBROUTINE cLinear( x, c, cimag, gradc, crr, crz, czz, rho, myThid  )
+  SUBROUTINE cLinear( x, c, cimag, gradc, crr, crz, czz, rho, myThid )
 ! !DESCRIPTION:
 !   C-linear interpolation of SSP data.
 
@@ -634,8 +644,9 @@ CONTAINS
 ! rho    :: density at x
 ! myThid :: my thread ID
   REAL (KIND=_RL90), INTENT( IN  ) :: x(2)
-  REAL (KIND=_RL90), INTENT( OUT ) :: c, cimag, gradc(2), crr, crz, czz, rho
-  INTEGER, INTENT( IN )   :: myThid
+  REAL (KIND=_RL90), INTENT( OUT ) :: c, cimag, gradc(2), &
+                                      crr, crz, czz, rho
+  INTEGER,           INTENT( IN  ) :: myThid
 ! !OUTPUT PARAMETERS: c, cimag, gradc, crr, crz, czz, rho
 
 ! !LOCAL VARIABLES: None
@@ -656,14 +667,17 @@ CONTAINS
 
   ENDIF ! IF ( x(2).LT.Grid%Z( iSegz ) .OR. x(2).GT.Grid%Z( iSegz+1 ) )
 
-  c     = REAL(  SSP%c( iSegz ) + ( x(2) - Grid%Z( iSegz ) ) * SSP%cz( iSegz ) )
-  cimag = AIMAG( SSP%c( iSegz ) + ( x(2) - Grid%Z( iSegz ) ) * SSP%cz( iSegz ) )
+  c     = REAL(  SSP%c( iSegz ) &
+          + ( x(2) - Grid%Z( iSegz ) ) * SSP%cz( iSegz ) )
+  cimag = AIMAG( SSP%c( iSegz ) &
+          + ( x(2) - Grid%Z( iSegz ) ) * SSP%cz( iSegz ) )
   gradc = [ 0.0D0, REAL( SSP%cz( iSegz ) ) ]
   crr   = 0.0d0
   crz   = 0.0d0
   czz   = 0.0d0
 
-  W     = ( x(2) - Grid%Z( iSegz ) ) / ( Grid%Z( iSegz+1 ) - Grid%Z( iSegz ) )
+  W     = ( x(2) - Grid%Z( iSegz ) ) / &
+          ( Grid%Z( iSegz+1 ) - Grid%Z( iSegz ) )
   rho   = ( 1.0D0-W ) * Grid%rho( iSegz ) + W * Grid%rho( iSegz+1 )
 
   RETURN
@@ -691,8 +705,9 @@ CONTAINS
 ! rho    :: density at x
 ! myThid :: my thread ID
   REAL (KIND=_RL90), INTENT( IN  ) :: x(2)
-  REAL (KIND=_RL90), INTENT( OUT ) :: c, cimag, gradc(2), crr, crz, czz, rho
-  INTEGER, INTENT( IN )   :: myThid
+  REAL (KIND=_RL90), INTENT( OUT ) :: c, cimag, gradc(2), &
+                                      crr, crz, czz, rho
+  INTEGER,           INTENT( IN  ) :: myThid
 ! !OUTPUT PARAMETERS: c, cimag, gradc, crr, crz, czz, rho
 
 ! !LOCAL VARIABLES:
@@ -735,7 +750,8 @@ CONTAINS
   czz   = REAL( 2.0D0 * cCoef( 3, iSegz ) + &
                 6.0D0 * cCoef( 4, iSegz ) * xt )   ! dgradc(2)/dxt
 
-  W     = ( x(2) - Grid%Z( iSegz ) ) / ( Grid%Z( iSegz+1 ) - Grid%Z( iSegz ) )
+  W     = ( x(2) - Grid%Z( iSegz ) ) / &
+          ( Grid%Z( iSegz+1 ) - Grid%Z( iSegz ) )
   ! linear interp of density
   rho   = ( 1.0D0-W ) * Grid%rho( iSegz ) + W * Grid%rho( iSegz+1 )
 
@@ -746,7 +762,7 @@ CONTAINS
 !BOP
 ! !ROUTINE: cCubic
 ! !INTERFACE:
-  SUBROUTINE cCubic( x, c, cimag, gradc, crr, crz, czz, rho, myThid  )
+  SUBROUTINE cCubic( x, c, cimag, gradc, crr, crz, czz, rho, myThid )
 ! !DESCRIPTION:
 !   Cubic spline interpolation for the sound speed and its derivatives.
 
@@ -764,8 +780,9 @@ USE splinec_mod,  only: splineall
 ! rho    :: density at x
 ! myThid :: my thread ID
   REAL (KIND=_RL90), INTENT( IN  ) :: x(2)
-  REAL (KIND=_RL90), INTENT( OUT ) :: c, cimag, gradc(2), crr, crz, czz, rho
-  INTEGER, INTENT( IN )   :: myThid
+  REAL (KIND=_RL90), INTENT( OUT ) :: c, cimag, gradc(2), &
+                                      crr, crz, czz, rho
+  INTEGER,           INTENT( IN  ) :: myThid
 ! !OUTPUT PARAMETERS: c, cimag, gradc, crr, crz, czz, rho
 
 ! !LOCAL VARIABLES:
@@ -794,7 +811,8 @@ USE splinec_mod,  only: splineall
 
   hSpline = x(2) - Grid%Z( iSegz )
 
-  CALL SplineALL( cSpln( 1, iSegz ), hSpline, c_cmplx, cz_cmplx, czz_cmplx )
+  CALL SplineALL( cSpln( 1, iSegz ), hSpline, &
+                  c_cmplx, cz_cmplx, czz_cmplx )
 
   c     = DBLE(  c_cmplx )
   cimag = AIMAG( c_cmplx )
@@ -804,7 +822,8 @@ USE splinec_mod,  only: splineall
   crz   = 0.0d0
 
   ! linear interpolation for density
-  W   = ( x(2) - Grid%Z( iSegz ) ) / ( Grid%Z( iSegz+1 ) - Grid%Z( iSegz ) )
+  W   = ( x(2) - Grid%Z( iSegz ) ) / &
+        ( Grid%Z( iSegz+1 ) - Grid%Z( iSegz ) )
   rho = ( 1.0D0-W ) * Grid%rho( iSegz ) + W * Grid%rho( iSegz+1 )
 
   RETURN
@@ -831,8 +850,9 @@ USE splinec_mod,  only: splineall
 ! rho    :: density at x
 ! myThid :: my thread ID
   REAL (KIND=_RL90), INTENT( IN  ) :: x(2)
-  REAL (KIND=_RL90), INTENT( OUT ) :: c, cimag, gradc(2), crr, crz, czz, rho
-  INTEGER, INTENT( IN )   :: myThid
+  REAL (KIND=_RL90), INTENT( OUT ) :: c, cimag, gradc(2), &
+                                      crr, crz, czz, rho
+  INTEGER,           INTENT( IN  ) :: myThid
 ! !OUTPUT PARAMETERS: c, cimag, gradc, crr, crz, czz, rho
 
 ! !LOCAL VARIABLES: None
@@ -843,7 +863,8 @@ USE splinec_mod,  only: splineall
 ! delta_r, delta_z :: Range and depth segment lengths
   CHARACTER*(MAX_LEN_MBUF) :: msgBuf
   INTEGER             :: irT, iz2, isegzold
-  REAL (KIND=_RL90)   :: c1, c2, cz1, cz2, cr, cz, s1, s2, delta_r, delta_z
+  REAL (KIND=_RL90)   :: c1, c2, cz1, cz2, cr, cz, s1, s2, &
+                         delta_r, delta_z
 !EOP
 
   ! INIT variables
@@ -868,11 +889,11 @@ USE splinec_mod,  only: splineall
   ENDIF ! IF ( x(2).LT.Grid%Z( iSegz ) .OR. x(2).GT.Grid%Z( iSegz+1 ) )
 
   ! Check that x is in SSP box range
-  IF ( x(1).LT.Grid%Seg%R( 1 ) .OR. x(1).GT.Grid%Seg%R( Grid%nR ) ) THEN
-#ifdef IHOP_WRITE_OUT
+  IF ( x(1).LT.Grid%Seg%R(1) .OR. x(1).GT.Grid%Seg%R( Grid%nR ) ) THEN
+#ifdef BELLI_WRITE_OUT
     ! In adjoint mode we do not write output besides on the first run
-    IF (IHOP_dumpfreq.GE.0) THEN
-      WRITE(msgBuf,'(2A)') 'ray is outside the box where ocean ',&
+    IF (BELLI_dumpfreq.GE.0) THEN
+      WRITE(msgBuf,'(2A)') 'ray is outside the box where ocean ', &
         'soundspeed is defined'
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
       WRITE(msgBuf,'(A,2F13.4)') ' x = ( r, z ) = ', x
@@ -881,13 +902,14 @@ USE splinec_mod,  only: splineall
         'ray is outside the box where the soundspeed is defined'
       CALL PRINT_ERROR( msgBuf,myThid )
     ENDIF
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
     STOP 'ABNORMAL END: S/R Quad'
   ENDIF ! IF ( x(1).LT.Grid%Seg%R( 1 ) .OR. x(1).GT.Grid%Seg%R( Grid%nR ) )
 
   ! Range segment where x(1) in [ Grid%Seg%R( iSegr ), Grid%Seg%R( iSegr+1 ) )
   iSegr = 1           !RG
-  IF ( x(1).LT.Grid%Seg%R( iSegr ) .OR. x(1).GE.Grid%Seg%R( iSegr+1 ) ) THEN
+  IF ( x(1).LT.Grid%Seg%R( iSegr ) .OR. &
+       x(1).GE.Grid%Seg%R( iSegr+1 ) ) THEN
     foundr=.false.
     DO irT = 2, Grid%nR   ! Search for bracketting segment ranges
       IF ( x(1).LT.Grid%Seg%R( irT ) .AND. .NOT.foundr ) THEN
@@ -903,13 +925,13 @@ USE splinec_mod,  only: splineall
   s2      = x(2)              - Grid%Z( iSegz )
   delta_z = Grid%Z( iSegz+1 ) - Grid%Z( iSegz )
   IF ( delta_z.LE.0 .OR. s2.GT.delta_z ) THEN
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
     WRITE(msgBuf, *) delta_z, s2, iSegz, Grid%Z(iSegz)
     CALL PRINT_ERROR( msgBuf,myThid )
     WRITE(msgBuf,'(2A)') 'SSP_MOD::Quad: ', &
       'depth is not monotonically increasing in Grid%Z'
     CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
     STOP 'ABNORMAL END: S/R Quad'
   ENDIF ! IF ( delta_z.LE.0 .OR. s2.GT.delta_z )
 
@@ -946,8 +968,9 @@ USE splinec_mod,  only: splineall
   czz   = 0.0
 
   ! linear interpolation for density
-  W   = ( x(2) - Grid%Z( iSegz ) ) / ( Grid%Z( iSegz+1 ) - Grid%Z( iSegz ) )
-  rho = ( 1.0D0-W ) * Grid%rho( iSegz ) + W * Grid%rho( iSegz+1 )
+  W   = ( x(2) - Grid%Z( iSegz ) ) / &
+        ( Grid%Z( iSegz+1 ) - Grid%Z( iSegz ) )
+  rho = ( 1.0D0-W ) * Grid%rho( iSegz ) + W*Grid%rho( iSegz+1 )
 
   !IESCO22: for thesis, czz=crr=0, and rho=1 at all times
   RETURN
@@ -959,7 +982,7 @@ USE splinec_mod,  only: splineall
 ! !INTERFACE:
   SUBROUTINE gcmSSP( myThid )
 ! !DESCRIPTION:
-!   Interpolate SSP from GCM grid to iHOP grid using adaptive IDW interpolation.
+!   Interpolate SSP from GCM grid to belli grid using adaptive IDW interpolation.
 
 ! !USES:
   USE atten_mod, only: CRCI
@@ -991,7 +1014,7 @@ USE splinec_mod,  only: splineall
   LOGICAL :: interp_finished
   INTEGER :: iallocstat
   INTEGER :: bi,bj, i,j,k, ii,jj
-  INTEGER :: njj(IHOP_NPTS_RANGE)
+  INTEGER :: njj(BELLI_NPTS_RANGE)
   INTEGER :: nZnR_size
   REAL (KIND=_RL90)             :: dcdz, tolerance
   REAL (KIND=_RL90), ALLOCATABLE:: sspTile(:,:,:,:), sspGlob(:)
@@ -1003,7 +1026,7 @@ USE splinec_mod,  only: splineall
   REAL (KIND=_RL90)             :: bPower, fT
 #ifdef ALLOW_AUTODIFF_TAMC
   INTEGER tkey, ijkey, hkey, lockey
-!$TAF init loctape_ihop_gcmssp_bibj_ij_iijj_k = STATIC, nSx*nSy*sNx*sNy*IHOP_MAX_RANGE*IHOP_MAX_NC_SIZE*(Nr + 2)
+!$TAF init loctape_belli_gcmssp_bibj_ij_iijj_k = STATIC, nSx*nSy*sNx*sNy*BELLI_MAX_RANGE*BELLI_MAX_NC_SIZE*(Nr + 2)
 #endif
 
   ! IESCO24 fT init
@@ -1025,11 +1048,11 @@ USE splinec_mod,  only: splineall
             sspGlob(nZnR_size), & 
             ssp3buffer(nSx,nSy,nZnR_size), STAT=iallocstat )
   IF ( iallocstat.NE.0 ) THEN
-# ifdef IHOP_WRITE_OUT
+# ifdef BELLI_WRITE_OUT
     WRITE(msgBuf,'(2A)') 'SSP_MOD::gcmSSP: ', &
       'Insufficient memory to store sspTile and/or sspGlob'
     CALL PRINT_ERROR( msgBuf,myThid )
-# endif /* IHOP_WRITE_OUT */
+# endif /* BELLI_WRITE_OUT */
       STOP 'ABNORMAL END: S/R gcmSSP'
   ENDIF
 
@@ -1039,7 +1062,7 @@ USE splinec_mod,  only: splineall
   ssp1buffer = 0.0 _d 0
   ssp3buffer = 0.0 _d 0
 
-  ! interpolate SSP with adaptive IDW from gcm grid to ihop grid
+  ! interpolate SSP with adaptive IDW from gcm grid to belli grid
   DO bj=myByLo(myThid),myByHi(myThid)
     DO bi=myBxLo(myThid),myBxHi(myThid)
 #ifdef ALLOW_AUTODIFF_TAMC
@@ -1051,97 +1074,101 @@ USE splinec_mod,  only: splineall
       DO i=1,sNx
 #ifdef ALLOW_AUTODIFF_TAMC
         ijkey = i + (j-1)*sNx + (tkey-1)*sNx*sNy
-!$TAF store njj(ii) = comlev1_bibj_ij_ihop, key=ijkey, kind=isbyte
+!$TAF store njj(ii) = comlev1_bibj_ij_belli, key=ijkey, kind=isbyte
 #endif
-        DO ii=1,IHOP_npts_range
+        DO ii=1,BELLI_npts_range
           interp_finished = .FALSE.
-          DO jj=1,IHOP_npts_idw
+          DO jj=1,BELLI_npts_idw
 #ifdef ALLOW_AUTODIFF_TAMC
-!$TAF STORE interp_finished = comlev1_bibj_ij_ihop, key=ijkey, kind=isbyte
+!$TAF STORE interp_finished = comlev1_bibj_ij_belli, key=ijkey, kind=isbyte
 #endif
             ! Interpolate from GCM grid cell centers
-            IF ( ABS(xC(i, j, bi,bj) - ihop_xc(ii, jj)).LE.tolerance .AND. &
-                 ABS(yC(i, j, bi,bj) - ihop_yc(ii, jj)).LE.tolerance .AND. &
-                .NOT.interp_finished ) THEN
+            IF ( &
+  ABS(xC(i, j, bi,bj) - belli_xc(ii, jj)).LE.tolerance .AND. &
+  ABS(yC(i, j, bi,bj) - belli_yc(ii, jj)).LE.tolerance .AND. &
+  .NOT.interp_finished ) THEN
               njj(ii) = njj(ii) + 1
 
               DO iz = 1, Grid%nZ-1
 #ifdef ALLOW_AUTODIFF_TAMC
-                hkey = jj + (ii-1)*IHOP_npts_idw + (ijkey-1)*sNy*sNx*nSy*nSx
-                lockey = iz + (hkey-1)*(Grid%nZ-1)*IHOP_npts_idw*IHOP_npts_range*sNx*sNy*nSx*nSy
-!                + ((jj-1) + ((ii-1) + (ijkey-1)*IHOP_npts_range)*IHOP_npts_idw)*(Grid%nZ-1)
-!$TAF store njj(ii) = loctape_ihop_gcmssp_bibj_ij_iijj_k, key=lockey, kind=isbyte
+                hkey = jj + (ii-1)*BELLI_npts_idw &
+                       + (ijkey-1)*sNy*sNx*nSy*nSx
+                lockey = iz &
+                       + (hkey-1)*(Grid%nZ-1)*BELLI_npts_idw* &
+                         BELLI_npts_range*sNx*sNy*nSx*nSy
+!$TAF store njj(ii) = loctape_belli_gcmssp_bibj_ij_iijj_k, key=lockey, kind=isbyte
 #endif
     IF ( iz.GE.2 ) THEN
       ! On vlayer iz, at an MITgcm cell center? skip interpolate
-      IF ( (ihop_sumweights(ii, iz-1).GT.0) .AND. &
-           (ihop_idw_weights(ii, jj).EQ.0) ) njj(ii) = IHOP_npts_idw+1
+      IF ( (belli_sumweights(ii, iz-1).GT.0) .AND. &
+           (belli_idw_weights(ii, jj).EQ.0) ) &
+        njj(ii) = BELLI_npts_idw+1
 
     ENDIF ! IF ( iz.GE.2 )
 
     IF ( iz.EQ.1 ) THEN
       ! IESCO25: dummy line for dummy TAF
-      ssp1buffer = ihop_ssp(i, j, iz, bi,bj)
-      ! Top ihop vlayer: set to z=0
+      ssp1buffer = belli_ssp(i, j, iz, bi,bj)
+      ! Top belli vlayer: set to z=0
       ssp1buffer = CHEN_MILLERO(i, j, 0, bi,bj,myThid) * &
-        ihop_idw_weights(ii, jj) / ihop_sumweights(ii, iz)
+        belli_idw_weights(ii, jj) / belli_sumweights(ii, iz)
 
     ELSE ! 2,Grid%nZ-1: use MITgcm vlayers
-      ssp1buffer = ihop_ssp(i, j, iz-1, bi,bj)
+      ssp1buffer = belli_ssp(i, j, iz-1, bi,bj)
 
       ! Middle depth layers, only when not already underground
-      IF ( ihop_sumweights(ii, iz-1).GT.0. _d 0 ) THEN
+      IF ( belli_sumweights(ii, iz-1).GT.0. _d 0 ) THEN
         ! Exactly on a cell center, ignore interpolation
-        IF ( ihop_idw_weights(ii, jj).EQ.0. _d 0 ) THEN
+        IF ( belli_idw_weights(ii, jj).EQ.0. _d 0 ) THEN
           ssp1buffer = ssp1buffer - sspTile(iz, ii, bi,bj) 
 
         ! Apply IDW interpolation
-        ELSEIF ( njj(ii).LE.IHOP_npts_idw ) THEN
+        ELSEIF ( njj(ii).LE.BELLI_npts_idw ) THEN
           ssp1buffer = ssp1buffer * &
-            ihop_idw_weights(ii, jj) / ihop_sumweights(ii, iz-1)
+            belli_idw_weights(ii, jj) / belli_sumweights(ii, iz-1)
 
         ELSE
           ! do nothing TAF NEEDS THIS LINE
           ssp1buffer = 0. _d 0
 
-        ENDIF ! IF ( ihop_idw_weights(ii, jj).EQ.0. )
-      ENDIF ! IF ( ihop_sumweights(ii, iz-1).GT.0. )
+        ENDIF ! IF ( belli_idw_weights(ii, jj).EQ.0. )
+      ENDIF ! IF ( belli_sumweights(ii, iz-1).GT.0. )
 
     ENDIF ! IF ( iz.EQ.1 )
 
     sspTile(iz, ii, bi,bj) = sspTile(iz, ii, bi,bj) + ssp1buffer
 
-    ! Bottom ihop vlayer or dry point: Extrapolate through bathymetry
+    ! Bottom belli vlayer or dry point: Extrapolate through bathymetry
     IF ( iz.GE.2 ) THEN
-    IF (iz.EQ.Grid%nZ-1 .OR. ihop_sumweights(ii, iz-1).EQ.0.0) THEN
+    IF (iz.EQ.Grid%nZ-1 .OR. belli_sumweights(ii, iz-1).EQ.0.0) THEN
       k = iz
 
-      IF ( njj(ii).GE.IHOP_npts_idw ) THEN
+      IF ( njj(ii).GE.BELLI_npts_idw ) THEN
         ! Determine if you are at the last vlevel
-        IF ( iz.EQ.Grid%nZ-1 .AND. ihop_sumweights(ii, iz-1).NE.0. ) &
-          k = k + 1
+        IF ( iz.EQ.Grid%nZ-1 .AND. belli_sumweights(ii,iz-1).NE.0. ) &
+          k = k+1
 
         ! Calc depth gradient
-        dcdz = (sspTile(k-1, ii, bi, bj) - sspTile(k-2, ii, bi, bj)) / &
+        dcdz = (sspTile(k-1, ii, bi,bj) - sspTile(k-2, ii, bi,bj)) / &
                (Grid%Z(k-1) - Grid%Z(k-2))
         ! Extrapolate
-        sspTile(k:Grid%nZ, ii, bi, bj) = &
-          sspTile(k-1, ii, bi, bj) + dcdz * Grid%Z(k:Grid%nZ)
+        sspTile(k:Grid%nZ, ii, bi,bj) = &
+          sspTile(k-1, ii, bi,bj) + dcdz * Grid%Z(k:Grid%nZ)
         ! Move to next range point, ii
         interp_finished = .TRUE.
 
       ELSE
         interp_finished = .FALSE.
 
-      ENDIF ! IF ( njj(ii).GE.IHOP_npts_idw )
+      ENDIF ! IF ( njj(ii).GE.BELLI_npts_idw )
 
-    ENDIF ! IF ( iz.EQ.Grid%nZ-1 .OR. ihop_sumweights(ii, iz-1).EQ.0.0 )
+    ENDIF ! IF ( iz.EQ.Grid%nZ-1 .OR. belli_sumweights(ii, iz-1).EQ.0.0 )
     ENDIF ! IF (iz.GE.2)
 
 
               ENDDO !iz
-            ENDIF ! IF ( ABS(xC(i, j, bi, bj) - ihop_xc(ii, jj)).LE.tolerance .AND. &
-                 ! ABS(yC(i, j, bi, bj) - ihop_yc(ii, jj)).LE.tolerance .AND. &
+            ENDIF ! IF ( ABS(xC(i, j, bi,bj) - belli_xc(ii, jj)).LE.tolerance .AND. &
+                 ! ABS(yC(i, j, bi,bj) - belli_yc(ii, jj)).LE.tolerance .AND. &
                  ! .NOT.interp_finished )
           ENDDO !jj
         ENDDO !ii
@@ -1193,18 +1220,19 @@ USE splinec_mod,  only: splineall
 
       IF ( iz.GT.1 ) THEN
         IF ( Grid%Z( iz ).LE.Grid%Z( iz-1 ) ) THEN
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
           WRITE( msgBuf,'(2A)' ) 'SSP_MOD::gcmSSP: ', &
             'The depths in the SSP must be monotone increasing'
           CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
           STOP 'ABNORMAL END: S/R gcmSSP'
         ENDIF
       ENDIF
 
       ! Compute gradient, cz
-      IF ( iz.GT.1 ) SSP%cz( iz-1 ) = ( SSP%c( iz ) - SSP%c( iz-1 ) ) / &
-                                   ( Grid%Z( iz ) - Grid%Z( iz-1 ) )
+      IF ( iz.GT.1 ) &
+        SSP%cz( iz-1 ) = ( SSP%c( iz ) - SSP%c( iz-1 ) ) / &
+                         ( Grid%Z( iz ) - Grid%Z( iz-1 ) )
 
     ENDDO ! DO iz = 1,Grid%nZ
 
@@ -1222,7 +1250,7 @@ END !SUBROUTINE gcmSSP
 !   Write the sound speed profile (SSP) to the output file.
 
 ! !USES:
-  USE ihop_mod, only: PRTFile
+  USE belli_mod, only: PRTFile
 
 ! !INPUT PARAMETERS:
 ! myThid :: my thread ID
@@ -1240,7 +1268,7 @@ END !SUBROUTINE gcmSSP
   INTEGER           :: iz
 
   ! In adjoint mode we do not write output besides on the first run
-  IF ( IHOP_dumpfreq.LT.0 ) RETURN
+  IF ( BELLI_dumpfreq.LT.0 ) RETURN
 
   ! init local vars
   ssptmp = 0.0
@@ -1248,7 +1276,7 @@ END !SUBROUTINE gcmSSP
   ! I/O on main thread only
   _BEGIN_MASTER(myThid)
 
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
   ! Write relevant diagnostics
   WRITE(msgBuf,'(A)') &
     '___________________________________________________________'
@@ -1309,11 +1337,11 @@ END !SUBROUTINE gcmSSP
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
     WRITE(msgBuf,'(A)') 'Sound speed profile:'
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(2A)')'      z         alphaR      betaR     rho      ', &
-                        '  alphaI     betaI'
+    WRITE(msgBuf,'(2A)')'      z         alphaR      betaR     ', &
+                        'rho      alphaI     betaI'
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-    WRITE(msgBuf,'(2A)')'     [m]         [m/s]      [m/s]   [g/cm^3]   ', &
-                        '   [m/s]     [m/s]'
+    WRITE(msgBuf,'(2A)')'     [m]         [m/s]      [m/s]   ', &
+                        '[g/cm^3]    [m/s]     [m/s]'
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 
     WRITE(msgBuf,'(A)') &
@@ -1335,7 +1363,7 @@ END !SUBROUTINE gcmSSP
   CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
   WRITE(msgBuf,'(A)')
   CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
 
   ! I/O on main thread only
   _END_MASTER(myThid)

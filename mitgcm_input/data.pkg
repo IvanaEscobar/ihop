@@ -1,8 +1,8 @@
 # Packages (lines beginning "#" are comments)
  &PACKAGES
- useMNC=.false.,
- useIHOP=.true.,
- useDiagnostics=.TRUE.,
+ useBELLI=.true.,
  useCal=.true.,
+ useMNC=.false.,
+ useDiagnostics=.TRUE.,
  useEcco=.true.,
  &

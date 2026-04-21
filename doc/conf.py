@@ -1,4 +1,4 @@
-# ihop documentation build configuration file
+# belli documentation build configuration file
 # Configuration file for the Sphinx documentation builder. Oct 27 2023.
 #
 # For the full list of built-in configuration values, see the documentation:
@@ -16,8 +16,8 @@ sys.path.insert(0, os.path.abspath('_extensions'))
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = u'ihop'
-copyright = u'2023, ihop contributors'
+project = u'belli'
+copyright = u'2023, belli contributors'
 author = u'Ivana Escobar'
 
 
@@ -59,11 +59,11 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.viewcode',
               'sphinxcontrib.bibtex',
               'sphinxcontrib.programoutput',
-              'ihop']
+              'belli']
 
 autodoc_mock_imports = ['matplotlib', 'mpl_toolkits']
 
-bibtex_bibfiles = ['ihop_references.bib']
+bibtex_bibfiles = ['belli_references.bib']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -157,7 +157,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'ihop.tex', u'ihop Documentation',
+    (master_doc, 'belli.tex', u'belli Documentation',
      u'Ivana Escobar', 'manual'),
 ]
 
@@ -167,7 +167,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'ihop', u'ihop Documentation',
+    (master_doc, 'belli', u'belli Documentation',
      [author], 1)
 ]
 
@@ -178,7 +178,7 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'ihop', u'ihop Documentation',
-     author, 'ihop', 'A package for underwater acoustics for MITgcm.',
+    (master_doc, 'belli', u'belli Documentation',
+     author, 'belli', 'A package for underwater acoustics for MITgcm.',
      'Miscellaneous'),
 ]

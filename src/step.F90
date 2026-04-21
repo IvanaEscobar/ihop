@@ -1,4 +1,4 @@
-#include "IHOP_OPTIONS.h"
+#include "BELLI_OPTIONS.h"
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 !BOP
 !MODULE: step
@@ -10,7 +10,7 @@ MODULE step
 !   This module implements 2D step along a single ray.
 
 ! !USES:
-  USE ihop_mod, only: Beam, ray2DPt
+  USE belli_mod, only: Beam, ray2DPt
   USE ssp_mod,  only: Grid, evalSSP, iSegz, iSegr
   IMPLICIT NONE
 ! == Global variables ==
@@ -18,8 +18,8 @@ MODULE step
 #include "GRID.h"
 #include "EEPARAMS.h"
 #include "PARAMS.h"
-#include "IHOP_SIZE.h"
-#include "IHOP.h"
+#include "BELLI_SIZE.h"
+#include "BELLI.h"
 #ifdef ALLOW_CTRL
 # include "CTRL_FIELDS.h"
 #endif
@@ -77,8 +77,10 @@ CONTAINS
   TYPE( ray2DPt ) :: ray1
   INTEGER         :: iSegz0, iSegr0
   REAL ( KIND=_RL90 ) :: gradc0( 2 ), gradc1( 2 ), gradc2( 2 ), &
-                        c0, cimag0, crr0, crz0, czz0, csq0, cnn0_csq0, &
-                        c1, cimag1, crr1, crz1, czz1, csq1, cnn1_csq1, &
+                        c0, cimag0, crr0, crz0, &
+                        czz0, csq0, cnn0_csq0, &
+                        c1, cimag1, crr1, crz1, &
+                        czz1, csq1, cnn1_csq1, &
                         c2, & 
                         urayt0( 2 ), urayt1( 2 ), &
                         h, halfh, hw0, hw1, ray2n( 2 ), RM, RN, &
@@ -98,7 +100,8 @@ CONTAINS
   ! preserving second-order accuracy.
 
   ! *** Phase 1 (an Euler step)
-  CALL evalSSP( ray0%x, c0, cimag0, gradc0, crr0, crz0, czz0, unused, myThid )
+  CALL evalSSP( ray0%x, c0, cimag0, gradc0, crr0, crz0, czz0, & 
+                unused, myThid )
 
   csq0      = c0 * c0
   cnn0_csq0 = crr0*ray0%t( 2 )**2 - 2.0*crz0*ray0%t( 1 )*ray0%t( 2 ) &
@@ -110,8 +113,8 @@ CONTAINS
   urayt0 = c0 * ray0%t  ! unit tangent
 
   ! reduce h to land on boundary
-  CALL ReduceStep2D( ray0%x, urayt0, iSegz0, iSegr0, Topx, Topn, Botx, &
-                    Botn, h )
+  CALL ReduceStep2D( ray0%x, urayt0, iSegz0, iSegr0, Topx, Topn, &
+                     Botx, Botn, h )
   halfh = 0.5 * h   ! first step of the modified polygon method is a half step
 
   ! Euler march forward
@@ -121,7 +124,8 @@ CONTAINS
   ray1%q = ray0%q + halfh * c0        * ray0%p !IESCO22: q /= 0 for 'G' beam
 
   ! *** Phase 2 (update step size, and Polygon march forward)
-  CALL evalSSP( ray1%x, c1, cimag1, gradc1, crr1, crz1, czz1, unused, myThid )
+  CALL evalSSP( ray1%x, c1, cimag1, gradc1, crr1, crz1, czz1, &
+                unused, myThid )
   csq1      = c1 * c1
   cnn1_csq1 = crr1*ray1%t( 2 )**2 - 2.0*crz1*ray1%t( 1 )*ray1%t( 2 ) &
               + czz1*ray1%t( 1 )**2
@@ -134,8 +138,8 @@ CONTAINS
 
   urayt1 = c1 * ray1%t   ! unit tangent
 
-  CALL ReduceStep2D( ray0%x, urayt1, iSegz0, iSegr0, Topx, Topn, Botx, &
-                    Botn, h ) ! reduce h to stay in domain
+  CALL ReduceStep2D( ray0%x, urayt1, iSegz0, iSegr0, Topx, Topn, &
+                     Botx, Botn, h ) ! reduce h to stay in domain
 
   ! use blend of f' based on proportion of a full step used.
   w1  = h / ( 2.0d0 * halfh ) ! h/h_old
@@ -144,10 +148,14 @@ CONTAINS
   hw1 = h * w1                ! hw0 + hw1 = h
 
   ! blended march forward
-  ray2%x   = ray0%x   + hw0 * urayt0              + hw1 * urayt1
-  ray2%t   = ray0%t   - hw0 * gradc0 / csq0       - hw1 * gradc1 / csq1
-  ray2%p   = ray0%p   - hw0 * cnn0_csq0 * ray0%q  - hw1 * cnn1_csq1 * ray1%q
-  ray2%q   = ray0%q   + hw0 * c0        * ray0%p  + hw1 * c1        * ray1%p
+  ray2%x   = ray0%x   + hw0 * urayt0              &
+             + hw1 * urayt1
+  ray2%t   = ray0%t   - hw0 * gradc0 / csq0       &
+             - hw1 * gradc1 / csq1
+  ray2%p   = ray0%p   - hw0 * cnn0_csq0 * ray0%q  &
+             - hw1 * cnn1_csq1 * ray1%q
+  ray2%q   = ray0%q   + hw0 * c0        * ray0%p  &
+             + hw1 * c1        * ray1%p
   ray2%tau = ray0%tau + hw0 / CMPLX( c0, cimag0, KIND=_RL90 ) &
              + hw1 / CMPLX( c1, cimag1, KIND=_RL90 )
 
@@ -199,7 +207,7 @@ CONTAINS
 !   environment leaves water, or on the top or bottom boundary.
 
 ! !USES:
-  USE ihop_mod, only: iSmallStepCtr
+  USE belli_mod, only: iSmallStepCtr
   USE bdry_mod, only: rTopSeg, rBotSeg
 
 ! !INPUT PARAMETERS:
@@ -283,8 +291,10 @@ CONTAINS
   hBoxr    = huge( hBoxr )
   hBoxz    = huge( hBoxz )
 
-  IF ( ABS( x( 1 ) ).GT.Beam%Box%R ) hBoxr = ( Beam%Box%R - ABS( x0( 1 ) ) ) / ABS( urayt( 1 ) )
-  IF ( ABS( x( 2 ) ).GT.Beam%Box%Z ) hBoxz = ( Beam%Box%Z - ABS( x0( 2 ) ) ) / ABS( urayt( 2 ) )
+  IF ( ABS( x( 1 ) ).GT.Beam%Box%R ) &
+    hBoxr = ( Beam%Box%R - ABS( x0( 1 ) ) ) / ABS( urayt( 1 ) )
+  IF ( ABS( x( 2 ) ).GT.Beam%Box%Z ) &
+    hBoxz = ( Beam%Box%Z - ABS( x0( 2 ) ) ) / ABS( urayt( 2 ) )
 
   h = MIN( h, hInt, hTop, hBot, hSeg, hBoxr, hBoxz )  ! take limit set by shortest distance to a crossing
   IF ( h.LT.1.0d-4 * Beam%deltas ) THEN   ! is it taking an infinitesimal step?

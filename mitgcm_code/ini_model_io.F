@@ -240,8 +240,8 @@ C       belonging to the core dynamical model
       IF ( useOBSFIT ) CALL OBSFIT_INI_IO( myThid )
 #endif
 
-#ifdef ALLOW_IHOP
-      IF ( useIHOP ) CALL IHOP_INI_IO( myThid )
+#ifdef ALLOW_BELLI
+      IF ( useBELLI ) CALL BELLI_INI_IO( myThid )
 #endif
 
 #ifdef ALLOW_DIAGNOSTICS

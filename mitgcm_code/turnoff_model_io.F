@@ -122,9 +122,9 @@ C--   Package specific S/R to turn-off IO flags (all threads do call S/R)
       ENDIF
 #endif
 
-#ifdef ALLOW_IHOP
-      IF ( useIHOP ) THEN
-        CALL IHOP_TURNOFF_IO( seqFlag, myThid )
+#ifdef ALLOW_BELLI
+      IF ( useBELLI ) THEN
+        CALL BELLI_TURNOFF_IO( seqFlag, myThid )
       ENDIF
 #endif
 

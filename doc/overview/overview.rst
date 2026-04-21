@@ -8,6 +8,6 @@ description of a simple use case via an example of a forward in time run.
 Introduction
 ============
 
-**ihop** is a simulation of underwater acoustics based on ray-traced wavefronts.
+**belli** is a simulation of underwater acoustics based on ray-traced wavefronts.
 The code started from BELLHOP, by Acoustics Toolbox :cite:`MP11`, and has been retrofit to
 work within MITgcm :cite:`AA18`. 

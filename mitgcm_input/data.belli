@@ -1,0 +1,36 @@
+# ***********************
+# BELLI package parameters
+# ***********************
+ &BELLI_PARM01
+ BELLI_fileroot='baroA',
+ BELLI_title='baroclinic_gyre+belli',
+ &
+
+ &BELLI_PARM02
+ BELLI_freq=550.0,
+ BELLI_topopt='QVF',
+
+ BELLI_botopt='A*',
+ BELLI_bcsound=1650.0,
+ BELLI_brho=1.80,
+
+ BELLI_sd=73.0,
+ BELLI_rd=300.0,
+# rr + belli_step < belli_ranges(end)
+ BELLI_rr=2542.0,
+# e: eigenrays; G: hat spreading
+ BELLI_runopt='eG',
+ BELLI_nalpha=40,
+ BELLI_alpha=-20.0, 20.0,
+ &
+
+ &BELLI_PARM03
+ BELLI_interpfile = 'bcg_belli-grid',
+ BELLI_iter = 6,7,8,
+
+ &
+
+ &BELLI_COST_NML
+# BELLIObs_Dir      = 'BELLI_obs/',
+# BELLIObs_Files(1) = 'bcg_tau_obs_3',
+ &

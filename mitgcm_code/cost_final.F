@@ -44,9 +44,9 @@ c     == global variables ==
 # include "OBSFIT.h"
 #endif
 
-#ifdef ALLOW_IHOP
-# include "IHOP_SIZE.h"
-# include "IHOP_COST.h"
+#ifdef ALLOW_BELLI
+# include "BELLI_SIZE.h"
+# include "BELLI_COST.h"
 #endif
 
 c     == routine arguments ==
@@ -62,8 +62,8 @@ c     == local variables ==
 #ifdef ALLOW_OBSFIT
       INTEGER num_file_obs
 #endif
-#ifdef ALLOW_IHOP
-      INTEGER num_file_ihop
+#ifdef ALLOW_BELLI
+      INTEGER num_file_belli
 #endif
       CHARACTER*(MAX_LEN_MBUF) msgBuf
 
@@ -189,15 +189,15 @@ c--   Sum up all contributions.
           ENDDO
          ENDIF
 #endif
-#ifdef ALLOW_IHOP
+#ifdef ALLOW_BELLI
 ! No need to add tile-wise, already in global file (see pkg/obsfit)
-!  Uncommenting this will double ihop_cost contributions on the global
+!  Uncommenting this will double belli_cost contributions on the global
 !  cost fxn
 !         IF (.NOT.useECCO) THEN
-!          DO num_file_ihop = 1, NFILESMAX_IHOP
+!          DO num_file_belli = 1, NFILESMAX_BELLI
 !           tile_fc(bi,bj) = tile_fc(bi,bj)
-!     &           + mult_ihop(num_file_ihop)
-!     &           *objf_ihop(num_file_ihop)
+!     &           + mult_belli(num_file_belli)
+!     &           *objf_belli(num_file_belli)
 !          ENDDO
 !         ENDIF
 #endif
@@ -226,12 +226,12 @@ c--   Do global summation.
        ENDDO
       ENDIF
 #endif
-#ifdef ALLOW_IHOP
+#ifdef ALLOW_BELLI
       IF (.NOT.useECCO) THEN
-       DO num_file_ihop = 1, NFILESMAX_IHOP
+       DO num_file_belli = 1, NFILESMAX_BELLI
         glofc = glofc
-     &          +  mult_ihop(num_file_ihop)
-     &            *objf_ihop(num_file_ihop)
+     &          +  mult_belli(num_file_belli)
+     &            *objf_belli(num_file_belli)
        ENDDO
       ENDIF
 #endif

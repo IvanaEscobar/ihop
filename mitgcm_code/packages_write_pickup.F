@@ -41,7 +41,7 @@ C       |-- PTRACERS_WRITE_PICKUP
 C       |
 C       |-- GCHEM_WRITE_PICKUP
 C       |
-C       |-- IHOP_WRITE_PICKUP
+C       |-- BELLI_WRITE_PICKUP
 C       |
 C       |-- STREAMICE_WRITE_PICKUP
 C       |
@@ -168,10 +168,10 @@ C     Write restart file for GCHEM pkg & GCHEM sub-packages
       ENDIF
 #endif
 
-#ifdef ALLOW_IHOP
-C     Write restart file for IHOP pkg & IHOP sub-packages
-      IF ( useIHOP ) THEN
-        CALL IHOP_WRITE_PICKUP( permPickup,
+#ifdef ALLOW_BELLI
+C     Write restart file for BELLI pkg & BELLI sub-packages
+      IF ( useBELLI ) THEN
+        CALL BELLI_WRITE_PICKUP( permPickup,
      I                      suffix, myTime, myIter, myThid )
       ENDIF
 #endif

@@ -1,4 +1,4 @@
-#include "IHOP_OPTIONS.h"
+#include "BELLI_OPTIONS.h"
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 !BOP
 !MODULE: pchip_mod
@@ -64,7 +64,8 @@ CONTAINS
   INTEGER,              INTENT( IN  )   :: N
   REAL    (KIND=_RL90), INTENT( IN  )   :: x( * )
   COMPLEX (KIND=_RL90), INTENT( IN  )   :: y( * )
-  COMPLEX (KIND=_RL90), INTENT( INOUT ) :: PolyCoef( 4, * ), csWork( 4, * )
+  COMPLEX (KIND=_RL90), INTENT( INOUT ) :: PolyCoef( 4, * ), &
+                                           csWork( 4, * )
 ! !OUTPUT PARAMETERS: PolyCoef, csWork
 
 ! !LOCAL VARIABLES:
@@ -77,7 +78,8 @@ CONTAINS
 ! fprimeT :: Temporary variable for the derivative at the endpoints
   INTEGER               :: ix, iBCBeg, iBCEnd
   REAL     (KIND=_RL90) :: h1, h2
-  COMPLEX  (KIND=_RL90) :: del1, del2, f1, f2, f1prime, f2prime, fprimeT
+  COMPLEX  (KIND=_RL90) :: del1, del2, f1, f2, &
+                           f1prime, f2prime, fprimeT
 !EOP
 
 
@@ -98,13 +100,13 @@ CONTAINS
 
     ! left endpoint (non-centered 3-point difference formula)
     CALL h_del( x, y, 2, h1, h2, del1, del2 )
-    fprimeT = ( ( 2.0D0 * h1 + h2 ) * del1 - h1 * del2 ) / ( h1 + h2 )
+    fprimeT = ( ( 2.0D0*h1 + h2 ) * del1 - h1*del2 ) / ( h1 + h2 )
     PolyCoef( 2, 1 ) = fprime_left_end_Cmplx( del1, del2, fprimeT )
 
     ! right endpoint (non-centered 3-point difference formula)
 
     CALL h_del( x, y, N-1, h1, h2, del1, del2 )
-    fprimeT = ( -h2 * del1 + ( h1 + 2.0D0 * h2 ) * del2 ) / ( h1 + h2 )
+    fprimeT = ( -h2 * del1 + ( h1 + 2.0D0*h2 ) * del2 ) / ( h1 + h2 )
     PolyCoef( 2, N ) = fprime_right_end_Cmplx( del1, del2, fprimeT )
 
     ! compute coefficients of the cubic spline interpolating polynomial
@@ -120,7 +122,8 @@ CONTAINS
     DO ix = 2, N - 1
       CALL h_del( x, y, ix, h1, h2, del1, del2 )
       ! check if the derivative from the cubic spline satisfies monotonicity
-      PolyCoef( 2, ix ) = fprime_interior_Cmplx( del1, del2, csWork( 2, ix ) )
+      PolyCoef( 2, ix ) = &
+        fprime_interior_Cmplx( del1, del2, csWork( 2, ix ) )
     ENDDO
 
   !                                                               2      3
@@ -136,8 +139,9 @@ CONTAINS
       f2prime = PolyCoef( 2, ix+1 )
 
       PolyCoef( 3, ix ) = ( 3.0D0 * ( f2 - f1 )  &
-                        - h * ( 2.0D0 * f1prime + f2prime ) ) / h**2
-      PolyCoef( 4, ix ) = ( h * ( f1prime + f2prime ) - 2.0D0 * ( f2 - f1 ) ) &
+                        - h * ( 2.0D0*f1prime + f2prime ) ) / h**2
+      PolyCoef( 4, ix ) = ( h * ( f1prime + f2prime ) &
+                            - 2.0D0*( f2 - f1 ) ) &
                         / h**3
     ENDDO
 
@@ -323,13 +327,15 @@ CONTAINS
   IF ( del1*del2.GT.0.0 ) THEN
     ! adjacent secant slopes have the same sign, enforce monotonicity
     IF ( del1.GT.0.0 ) THEN
-      fprime_interior = MIN( MAX(fprime, 0.0D0), 3.0D0 * MIN(del1, del2) )
+      fprime_interior = MIN( MAX(fprime, 0.0D0), &
+                             3.0D0 * MIN(del1, del2) )
     ELSE
-      fprime_interior = MAX( MIN(fprime, 0.0D0), 3.0D0 * MAX(del1, del2) )
+      fprime_interior = MAX( MIN(fprime, 0.0D0), &
+                             3.0D0 * MAX(del1, del2) )
     ENDIF
   ELSE
     ! force the interpolant to have an extrema here
-    fprime_interior = 0.0D0;
+    fprime_interior = 0.0D0
   ENDIF
 
   RETURN
@@ -361,11 +367,11 @@ CONTAINS
 
   IF ( del1*fprime.LE.0.0D0 ) THEN
       ! set derivative to zero if the sign differs from sign of secant slope
-      fprime_left_end = 0.0;
+      fprime_left_end = 0.0
   ELSEIF ( ( del1*del2.LE. 0.0D0 ) .AND. &
           ( ABS( fprime ).GT.ABS( 3.0D0 * del1 ) ) ) THEN
     ! adjust derivative value to enforce monotonicity
-    fprime_left_end = 3.0D0 * del1;
+    fprime_left_end = 3.0D0 * del1
   ELSE
     ! do nothing
   ENDIF

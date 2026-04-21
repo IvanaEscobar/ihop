@@ -1,9 +1,9 @@
 # Packages (lines beginning "#" are comments)
  &PACKAGES
- useMNC=.false.,
- useIHOP=.true.,
- useDiagnostics=.true.,
+ useBELLI=.true.,
  useCal=.true.,
+ useMNC=.false.,
+ useDiagnostics=.true.,
 # AD packages
  useGrdChk=.true.,
  useProfiles=.true.,

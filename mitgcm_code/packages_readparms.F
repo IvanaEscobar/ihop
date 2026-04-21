@@ -68,7 +68,7 @@ C       |-- PTRACERS_READPARMS
 C       |
 C       |-- GCHEM_READPARMS
 C       |
-C       |-- IHOP_READPARMS
+C       |-- BELLI_READPARMS
 C       |
 C       |-- RBCS_READPARMS
 C       |
@@ -258,9 +258,9 @@ C--   if useGCHEM=T, set GCHEM parameters; otherwise just return
       CALL GCHEM_READPARMS( myThid )
 #endif
 
-#ifdef ALLOW_IHOP
-C--   if useIHOP=T, set IHOP parameters; otherwise just return
-      CALL IHOP_READPARMS( myThid )
+#ifdef ALLOW_BELLI
+C--   if useBELLI=T, set BELLI parameters; otherwise just return
+      CALL BELLI_READPARMS( myThid )
 #endif
 
 #ifdef ALLOW_RBCS

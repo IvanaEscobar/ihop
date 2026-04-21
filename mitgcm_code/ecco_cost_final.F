@@ -46,9 +46,9 @@ c     == global variables ==
 # include "OBSFIT_SIZE.h"
 # include "OBSFIT.h"
 #endif
-#ifdef ALLOW_IHOP
-# include "IHOP_SIZE.h"
-# include "IHOP_COST.h"
+#ifdef ALLOW_BELLI
+# include "BELLI_SIZE.h"
+# include "BELLI_COST.h"
 #endif
 
 C     == routine arguments ==
@@ -77,9 +77,9 @@ C     == local variables ==
       INTEGER NFILESMAX_OBS
       PARAMETER ( NFILESMAX_OBS=1 )
 #endif
-#ifndef ALLOW_IHOP
-      INTEGER NFILESMAX_IHOP
-      PARAMETER ( NFILESMAX_IHOP=1 )
+#ifndef ALLOW_BELLI
+      INTEGER NFILESMAX_BELLI
+      PARAMETER ( NFILESMAX_BELLI=1 )
 #endif
 
 #ifndef ALLOW_COST
@@ -100,8 +100,8 @@ c the adjoint, pkg/autodiff most likely require cost though.
 #ifdef ALLOW_OBSFIT
       _RL f_obsfit(NFILESMAX_OBS)
 #endif
-#ifdef ALLOW_IHOP
-      _RL f_ihop(NFILESMAX_IHOP)
+#ifdef ALLOW_BELLI
+      _RL f_belli(NFILESMAX_BELLI)
 #endif
 #ifdef ALLOW_GENTIM2D_CONTROL
       _RL f_gentim2d(maxCtrlTim2D)
@@ -125,9 +125,9 @@ c the adjoint, pkg/autodiff most likely require cost though.
       INTEGER num_file_obs
       _RL no_obsfit(NFILESMAX_OBS)
 #endif
-#ifdef ALLOW_IHOP
-      INTEGER num_file_ihop
-      _RL no_ihop(NFILESMAX_IHOP)
+#ifdef ALLOW_BELLI
+      INTEGER num_file_belli
+      _RL no_belli(NFILESMAX_BELLI)
 #endif
 #ifdef ALLOW_GENTIM2D_CONTROL
       _RL no_gentim2d(maxCtrlTim2D)
@@ -172,10 +172,10 @@ c     == end of interface ==
        f_obsfit(num_file_obs) = objf_obsfit(num_file_obs)
       ENDDO
 #endif
-#ifdef ALLOW_IHOP
+#ifdef ALLOW_BELLI
 ! Already the global sum (see pkg/obsfit)
-      DO num_file_ihop=1,NFILESMAX_IHOP
-        f_ihop(num_file_ihop) = objf_ihop(num_file_ihop)
+      DO num_file_belli=1,NFILESMAX_BELLI
+        f_belli(num_file_belli) = objf_belli(num_file_belli)
       ENDDO
 #endif
 #ifdef ALLOW_GENCOST_CONTRIBUTION
@@ -221,10 +221,10 @@ c     == end of interface ==
        no_obsfit(num_file_obs) = num_obsfit(num_file_obs)
       ENDDO
 #endif
-#ifdef ALLOW_IHOP
-      DO num_file_ihop = 1, NFILESMAX_IHOP
+#ifdef ALLOW_BELLI
+      DO num_file_belli = 1, NFILESMAX_BELLI
 ! Already global sum (see pkg/obsfit)
-        no_ihop(num_file_ihop) = num_ihop(num_file_ihop)
+        no_belli(num_file_belli) = num_belli(num_file_belli)
       ENDDO
 #endif
 #ifdef ALLOW_GENCOST_CONTRIBUTION
@@ -542,14 +542,14 @@ c--   Do global summation for each part of the cost function
       ENDDO
       ENDIF
 #endif
-#ifdef ALLOW_IHOP
-! print f_ihop to standard output 
-      IF ( useIHOP ) THEN
-        DO num_file_ihop=1,NFILESMAX_IHOP
-          IF ( no_ihop(num_file_ihop).GT.zeroRL ) THEN
+#ifdef ALLOW_BELLI
+! print f_belli to standard output 
+      IF ( useBELLI ) THEN
+        DO num_file_belli=1,NFILESMAX_BELLI
+          IF ( no_belli(num_file_belli).GT.zeroRL ) THEN
             WRITE(msgBuf,'(A,D22.15,I2.0)')
-     &       ' --> f_ihop =', f_ihop(num_file_ihop),
-     &       num_file_ihop
+     &       ' --> f_belli =', f_belli(num_file_belli),
+     &       num_file_belli
             CALL PRINT_MESSAGE( msgBuf,
      &           standardMessageUnit, SQUEEZE_RIGHT, myThid )
           ENDIF
@@ -615,11 +615,11 @@ cgf this sum is now done in cost_final if allow_cost
      &            *objf_obsfit(num_file_obs)
       ENDDO
 #endif
-#ifdef ALLOW_IHOP
-      DO num_file_ihop=1,NFILESMAX_IHOP
+#ifdef ALLOW_BELLI
+      DO num_file_belli=1,NFILESMAX_BELLI
         glofc = glofc
-     &          +  mult_ihop(num_file_ihop)
-     &            *objf_ihop(num_file_ihop)
+     &          +  mult_belli(num_file_belli)
+     &            *objf_belli(num_file_belli)
       ENDDO
 #endif
 
@@ -702,17 +702,17 @@ C     only master thread of master CPU open and write to file
       ENDDO
       ENDIF
 #endif
-#ifdef ALLOW_IHOP
-C If no_ihop is non zero, print f_ihop and no_ihop
-        IF (useIHOP) THEN
-          DO num_file_ihop = 1, NFILESMAX_IHOP
-            IF (no_ihop(num_file_ihop).GT.zeroRL) THEN
-              IL = ILNBLNK( IHOPObs_Files(num_file_ihop) )
+#ifdef ALLOW_BELLI
+C If no_belli is non zero, print f_belli and no_belli
+        IF (useBELLI) THEN
+          DO num_file_belli = 1, NFILESMAX_BELLI
+            IF (no_belli(num_file_belli).GT.zeroRL) THEN
+              IL = ILNBLNK( B_Obs_Files(num_file_belli) )
               IL = MAX(IL,30)
               WRITE(ifc,'(4A,2D22.15)')
-     &         IHOPObs_Files(num_file_ihop)(1:IL),' ',
-     &         ihop_nameval, ' = ',
-     &         f_ihop(num_file_ihop), no_ihop(num_file_ihop)
+     &         B_Obs_Files(num_file_belli)(1:IL),' ',
+     &         belli_nameval, ' = ',
+     &         f_belli(num_file_belli), no_belli(num_file_belli)
             ENDIF
           ENDDO
         ENDIF
