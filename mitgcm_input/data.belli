@@ -31,6 +31,6 @@
  &
 
  &BELLI_COST_NML
-# BELLIObs_Dir      = 'BELLI_obs/',
-# BELLIObs_Files(1) = 'bcg_tau_obs_3',
+# B_Obs_Dir      = 'BELLI_obs/',
+# B_Obs_Files(1) = 'bcg_tau_obs_3',
  &
