@@ -59,6 +59,8 @@ C       |-- BBL_INIT_FIXED
 C       |
 C       |-- DWNSLP_INIT_FIXED
 C       |
+C       |-- COST_INIT_FIXED
+C       |
 C       |-- SEAICE_COST_INIT_FIXED
 C       |
 C       |-- SMOOTH_INIT_FIXED
@@ -110,8 +112,6 @@ C       |
 C       |-- FIZHI_INIT_FIXED
 C       |
 C       |-- GRIDALT_INITIALISE
-C       |
-C       |-- TIMEAVE_INIT_FIXED
 C       |
 C       |-- REGRID_INIT_FIXED
 C       |
@@ -355,10 +355,16 @@ C--   Initialize fixed arrays for Down-Slope pkg
       ENDIF
 #endif
 
+#ifdef ALLOW_COST
+C--   Initialise cost function.
+# ifdef ALLOW_DEBUG
+      IF (debugMode) CALL DEBUG_CALL('COST_INIT_FIXED',myThid)
+# endif
+      CALL COST_INIT_FIXED( myThid )
+#endif
+
 #ifdef ALLOW_SEAICE
-C--   Initialise ecco-specific cost function.
-C--   This needs to preceed the call CTRL_INIT_FIXED
-C--   in order to provide the weight files
+C--   Initialise seaice-specific cost function.
       IF (useSEAICE) THEN
 # ifdef ALLOW_DEBUG
         IF (debugMode) CALL DEBUG_CALL('SEAICE_COST_INIT_FIXED',myThid)
@@ -412,7 +418,7 @@ C--   provide the weight files.
       ENDIF
 #endif
 
-C--   Old place where CTRL_INIT & CTRL_ADMTLM used to be called
+C--   Old place where CTRL_INIT_FIXED & CTRL_ADMTLM used to be called
 
 #ifdef ALLOW_FLT
 C--   Initialise fixed array for Float pkg
@@ -601,16 +607,6 @@ C--   Initialise GRIDALT parameters - the alternative grid
         IF (debugMode) CALL DEBUG_CALL('GRIDALT_INITIALISE',myThid)
 # endif
         CALL GRIDALT_INITIALISE( myThid )
-      ENDIF
-#endif
-
-#ifdef ALLOW_TIMEAVE
-C     IF (useTIMEAVE) THEN
-      IF ( taveFreq.GT.0. ) THEN
-# ifdef ALLOW_DEBUG
-        IF (debugMode) CALL DEBUG_CALL('TIMEAVE_INIT_FIXED',myThid)
-# endif
-        CALL TIMEAVE_INIT_FIXED( myThid )
       ENDIF
 #endif
 

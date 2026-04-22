@@ -241,14 +241,10 @@ C     it is important that this file is included after SEAICE_SIZE.h
 #ifdef ALLOW_TAPENADE
 # ifdef ALLOW_GMREDI
 #  include "GMREDI.h"
-#  include "GMREDI_TAVE.h"
 # endif
 # ifdef ALLOW_KPP
 #  include "KPP.h"
 c#  include "KPP_PARAMS.h"
-# endif
-# ifdef ALLOW_TIMEAVE
-#  include "TIMEAVE_STATV.h"
 # endif
 # ifdef ALLOW_EXF
 #  include "EXF_PARAM.h"
@@ -720,9 +716,9 @@ c--     Accumulate in-situ time averages of theta, salt, and SSH.
 
 #ifdef ALLOW_BELLI
       IF (useBELLI) THEN
-#ifdef ALLOW_DEBUG
+# ifdef ALLOW_DEBUG
         IF (debugMode) CALL DEBUG_CALL('BELLI_COST_INLOOP',myThid)
-#endif
+# endif
 c--     Accumulate in-situ acoutsic travel times.
         CALL TIMER_START('BELLI_COST_INLOOP   [MAIN_DO_LOOP]', myThid)
         CALL BELLI_COST_INLOOP( myTime, myIter, myThid )
@@ -799,31 +795,25 @@ c--   Compute all obsfit cost function contributions.
 
 #ifdef ALLOW_BELLI
       IF ( useBELLI ) THEN
-c--   Accumulate travel times
-        CALL TIMER_START('BELLI_COST_INLOOP    [THE_MAIN_LOOP]', myThid)
+c--   Accumulate in-situ time averages of temperature, salinity, SSH.
+        CALL TIMER_START('BELLI_COST_INLOOP  [THE_MAIN_LOOP]', myThid)
         CALL BELLI_COST_INLOOP( endtime, myIter, myThid )
-        CALL TIMER_STOP ('BELLI_COST_INLOOP    [THE_MAIN_LOOP]', myThid)
+        CALL TIMER_STOP ('BELLI_COST_INLOOP  [THE_MAIN_LOOP]', myThid)
 c--   Compute all belli cost function contributions.
-        CALL TIMER_START('BELLI_COST   [THE_MAIN_LOOP]', myThid)
         CALL BELLI_COST( myTime, myIter, myThid )
-        CALL TIMER_STOP ('BELLI_COST   [THE_MAIN_LOOP]', myThid)
       ENDIF
 #endif /* ALLOW_BELLI */
 
-#ifdef ALLOW_ECCO
-      IF ( useECCO ) THEN
-c--   Compute all ecco cost function contributions.
-        CALL TIMER_START('ECCO_COST_DRIVER   [THE_MAIN_LOOP]', myThid)
-        CALL ECCO_COST_DRIVER ( endTime, myIter, myThid )
-        CALL TIMER_STOP ('ECCO_COST_DRIVER   [THE_MAIN_LOOP]', myThid)
-      ENDIF
-#endif /* ALLOW_ECCO */
-
 #ifdef ALLOW_COST
+c--   Compute all cost function contributions.
+      CALL TIMER_START('COST_DRIVER        [THE_MAIN_LOOP]', myThid)
+      CALL COST_DRIVER ( endTime, myIter, myThid )
+      CALL TIMER_STOP ('COST_DRIVER        [THE_MAIN_LOOP]', myThid)
+
 c--   Sum all cost function contributions.
-      CALL TIMER_START('COST_FINAL         [ADJOINT SPIN-DOWN]', myThid)
+      CALL TIMER_START('COST_FINAL         [THE_MAIN_LOOP]', myThid)
       CALL COST_FINAL ( myThid )
-      CALL TIMER_STOP ('COST_FINAL         [ADJOINT SPIN-DOWN]', myThid)
+      CALL TIMER_STOP ('COST_FINAL         [THE_MAIN_LOOP]', myThid)
 
 # ifdef ALLOW_OPENAD
 c$openad DEPENDENT(fc)

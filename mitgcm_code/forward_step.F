@@ -177,7 +177,6 @@ C       |
 C       |-- DO_STAGGER_FIELDS_EXCHANGES
 C       |
 C       |-- DYNAMICS
-C       ? myIter and myTime are incremented after this
 C       |
 C       |-- MNC_UPDATE_TIME
 C       |
@@ -223,8 +222,6 @@ C       |-- GRIDALT_UPDATE
 C       |-- STEP_FIZHI_CORR
 C       |
 C       |-- FLT_MAIN
-C       |
-C       |-- DO_STATEVARS_TAVE
 C       |
 C       |-- NEST_PARENT_IO_2
 C       |-- NEST_CHILD_TRANSP
@@ -395,12 +392,6 @@ C     == Global variables ==
 c# ifdef ALLOW_KPP
 c#  include "KPP_PARAMS.h"
 c# endif
-# ifdef ALLOW_GMREDI
-#  include "GMREDI_TAVE.h"
-# endif
-# ifdef ALLOW_TIMEAVE
-#  include "TIMEAVE_STATV.h"
-# endif
 # ifdef ALLOW_MOM_FLUXFORM
 #  include "MOM_FLUXFORM.h"
 # endif
@@ -659,6 +650,11 @@ CADJ STORE pTracer    = comlev1, key = ikey_dynamics, kind = isbyte
 # endif /* ALLOW_PTRACERS */
 # ifdef ALLOW_DEPTH_CONTROL
 CADJ STORE hFacC      = comlev1, key = ikey_dynamics, kind = isbyte
+#  ifdef ALLOW_SEAICE
+CADJ STORE hFacS      = comlev1, key = ikey_dynamics, kind = isbyte
+CADJ STORE hFacW      = comlev1, key = ikey_dynamics, kind = isbyte
+CADJ STORE recip_hFacC= comlev1, key = ikey_dynamics, kind = isbyte
+#  endif
 # endif
 #endif /* ALLOW_AUTODIFF_TAMC */
 
@@ -1155,13 +1151,6 @@ C--   Calculate float trajectories
         CALL FLT_MAIN( myTime, myIter, myThid )
         CALL TIMER_STOP ('FLOATS            [FORWARD_STEP]',myThid)
       ENDIF
-#endif
-
-#ifdef ALLOW_TIMEAVE
-C--   State-variables time-averaging
-      CALL TIMER_START('DO_STATEVARS_TAVE   [FORWARD_STEP]',myThid)
-      CALL DO_STATEVARS_TAVE( myTime, myIter, myThid )
-      CALL TIMER_STOP ('DO_STATEVARS_TAVE   [FORWARD_STEP]',myThid)
 #endif
 
 #ifdef ALLOW_NEST_PARENT

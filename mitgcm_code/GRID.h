@@ -307,12 +307,16 @@
 !                   (= +1 for R=P (P increases downward, +gravity direction)
 !     rkSign     :: Vertical coordinate to vertical index orientation.
 !                   ( +1 same orientation, -1 opposite orientation )
-!     globalArea :: Domain Integrated horizontal Area [m2]
+!     globalArea :: Domain Integrated horizontal Area ( m^2 )
+!     rAc_3dMean :: domain 3-d average of grid-cell horizontal area ( m^2 )
+!     n2dWetPts  :: number of non-empty columns (wet free-surface points)
+!     n3dWetPts  :: number of non-empty grid points (wet grid points)
       COMMON /GRID_RL/                                                                                                              &
      &  cosFacU, cosFacV, sqCosFacU, sqCosFacV,                                                                                     &
      &  deepFacC, deepFac2C, recip_deepFacC, recip_deepFac2C,                                                                       &
      &  deepFacF, deepFac2F, recip_deepFacF, recip_deepFac2F,                                                                       &
-     &  gravitySign, rkSign, globalArea
+     &  gravitySign, rkSign,                                                                                                        &
+     &  globalArea, rAc_3dMean, n2dWetPts, n3dWetPts
       _RL cosFacU        (1-OLy:sNy+OLy,nSx,nSy)
       _RL cosFacV        (1-OLy:sNy+OLy,nSx,nSy)
       _RL sqCosFacU      (1-OLy:sNy+OLy,nSx,nSy)
@@ -327,7 +331,8 @@
       _RL recip_deepFac2F(Nr+1)
       _RL gravitySign
       _RL rkSign
-      _RL globalArea
+      _RL globalArea, rAc_3dMean
+      _RL n2dWetPts, n3dWetPts
 
 !--   COMMON /GRID_RS/ RS valued grid defining variables.
 !     dxC     :: Cell center separation in X across western cell wall (m)

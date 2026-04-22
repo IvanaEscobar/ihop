@@ -423,7 +423,6 @@
 !     pickup_read_mdsio  :: use mdsio to read  pickups
 !     pickup_write_immed :: echo the pickup immediately (for conversion)
 !     writePickupAtEnd   :: write pickup at the last timestep
-!     timeave_mdsio      :: use mdsio for timeave output
 !     snapshot_mdsio     :: use mdsio for "snapshot" (dumpfreq/diagfreq) output
 !     monitor_stdio      :: use stdio for monitor output
 !     dumpInitAndLast :: dumps model state to files at Initial (nIter0)
@@ -468,7 +467,7 @@
      & pickupStrictlyMatch, usePickupBeforeC54, startFromPickupAB2,                                                                 &
      & pickup_read_mdsio, pickup_write_mdsio, pickup_write_immed,                                                                   &
      & writePickupAtEnd,                                                                                                            &
-     & timeave_mdsio, snapshot_mdsio, monitor_stdio,                                                                                &
+     & snapshot_mdsio, monitor_stdio,                                                                                &
      & outputTypesInclusive, dumpInitAndLast
 
       LOGICAL fluidIsAir
@@ -567,7 +566,7 @@
       LOGICAL startFromPickupAB2
       LOGICAL pickup_read_mdsio, pickup_write_mdsio
       LOGICAL pickup_write_immed, writePickupAtEnd
-      LOGICAL timeave_mdsio, snapshot_mdsio, monitor_stdio
+      LOGICAL snapshot_mdsio, monitor_stdio
       LOGICAL outputTypesInclusive
       LOGICAL dumpInitAndLast
 
@@ -783,11 +782,6 @@
 !     cosPower      :: Power of cosine of latitude to multiply viscosity
 !     cAdjFreq      :: Frequency of convective adjustment
 !
-!     taveFreq      :: Frequency with which time-averaged model state
-!                      is written to post-processing files ( s ).
-!     tave_lastIter :: (for state variable only) fraction of the last time
-!                      step (of each taveFreq period) put in the time average.
-!                      (fraction for 1rst iter = 1 - tave_lastIter)
 !     tauThetaClimRelax :: Relaxation to climatology time scale ( s ).
 !     tauSaltClimRelax :: Relaxation to climatology time scale ( s ).
 !     latBandClimRelax :: latitude band where Relaxation to Clim. is applied,
@@ -861,7 +855,7 @@
      & rVel2wUnit, wUnit2rVel, rUnit2z, z2rUnit, mass2rUnit, rUnit2mass,                                                            &
      & baseTime, startTime, endTime,                                                                                                &
      & chkPtFreq, pChkPtFreq, dumpFreq, adjDumpFreq,                                                                                &
-     & diagFreq, taveFreq, tave_lastIter, monitorFreq, adjMonitorFreq,                                                              &
+     & diagFreq, monitorFreq, adjMonitorFreq,                                                                                       &
      & afFacMom, vfFacMom, pfFacMom, cfFacMom, foFacMom, mtFacMom,                                                                  &
      & cosPower, cAdjFreq,                                                                                                          &
      & tauThetaClimRelax, tauSaltClimRelax, latBandClimRelax,                                                                       &
@@ -984,8 +978,6 @@
       _RL dumpFreq
       _RL adjDumpFreq
       _RL diagFreq
-      _RL taveFreq
-      _RL tave_lastIter
       _RL monitorFreq
       _RL adjMonitorFreq
       _RL afFacMom
@@ -1046,6 +1038,7 @@
 
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 !-- Logical flags for selecting packages
+      LOGICAL useBELLI
       LOGICAL useGAD
       LOGICAL useOBCS
       LOGICAL useSHAP_FILT
@@ -1068,6 +1061,7 @@
       LOGICAL useGrdchk
       LOGICAL useSMOOTH
       LOGICAL usePROFILES
+      LOGICAL useOBSFIT
       LOGICAL useECCO
       LOGICAL useCTRL
       LOGICAL useSBO
@@ -1098,13 +1092,13 @@
       LOGICAL useRunClock
       LOGICAL useEMBED_FILES
       LOGICAL useMYPACKAGE
-      LOGICAL useBELLI
       COMMON /PARM_PACKAGES/                                                                                                        &
      &        useGAD, useOBCS, useSHAP_FILT, useZONAL_FILT,                                                                         &
      &        useOPPS, usePP81, useKL10, useMY82, useGGL90, useKPP,                                                                 &
      &        useGMRedi, useBBL, useDOWN_SLOPE,                                                                                     &
      &        useCAL, useEXF, useBulkForce, useEBM, useCheapAML,                                                                    &
-     &        useGrdchk, useSMOOTH, usePROFILES, useECCO, useCTRL,                                                                  &
+     &        useGrdchk, useSMOOTH, usePROFILES, useOBSFIT,                                                                         &
+     &        useECCO, useCTRL,                                                                                                     &
      &        useSBO, useFLT, useAUTODIFF,                                                                                          &
      &        usePTRACERS, useGCHEM, useRBCS, useOffLine, useMATRIX,                                                                &
      &        useFRAZIL, useSEAICE, useSALT_PLUME, useShelfIce, useSTIC,                                                            &
