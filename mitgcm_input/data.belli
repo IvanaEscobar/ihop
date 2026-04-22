@@ -25,7 +25,7 @@
  &
 
  &BELLI_PARM03
- BELLI_interpfile = 'bcg_belli-grid',
+ BELLI_interpfile = 'bcg-grid',
  BELLI_iter = 6,7,8,
 
  &
