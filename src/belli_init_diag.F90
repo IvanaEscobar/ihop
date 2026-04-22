@@ -651,7 +651,7 @@ CONTAINS
     WRITE(msgBuf,'(A)')
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
     WRITE(msgBuf,'(2A)') &
-      '   z [m]     alphaR [m/s]   betaR  rho [g/cm^3]  '&
+      '   z [m]     alphaR [m/s]   betaR  rho [g/cm^3]  ',&
       'alphaI     betaI'
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
     WRITE(msgBuf,'( F10.2, 3X, 2F10.2, 3X, F6.2, 3X, 2F10.4 )' ) &
