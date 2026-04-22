@@ -75,7 +75,7 @@ C     !LOCAL VARIABLES:
         vec_count = 1
 
         err = NF_INQ_VARID( fid, belli_nameequi, varId )
-        CALL BELLI_COST_NF_ERROR('act_file_c 1',err,bi,bj,myThid)
+        CALL BELLI_NF_ERROR('act_file_c 1',err,bi,bj,myThid)
 
       ENDIF
 
@@ -90,7 +90,7 @@ C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
         IF (belliDoNcOutput) THEN
           err = NF_GET_VARA_DOUBLE( fid, varId, 
      &          vec_start, vec_count, active_var )
-          CALL BELLI_COST_NF_ERROR('act_file_c 2',err,bi,bj,myThid)
+          CALL BELLI_NF_ERROR('act_file_c 2',err,bi,bj,myThid)
 
         ELSE
           READ( fid, REC = (irec-1)*2+1 ) vec_tmp
@@ -116,7 +116,7 @@ C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
         IF (belliDoNcOutput) THEN
           err = NF_GET_VARA_DOUBLE( fid, varId, 
      &          vec_start, vec_count, active_data_t )
-          CALL BELLI_COST_NF_ERROR('act_file_c 3',err,bi,bj,myThid)
+          CALL BELLI_NF_ERROR('act_file_c 3',err,bi,bj,myThid)
 
 C Add active_var from appropriate location to data.
           active_data_t = active_data_t + active_var
@@ -124,7 +124,7 @@ C Add active_var from appropriate location to data.
 C Store the result on disk.
           err = NF_PUT_VARA_DOUBLE(fid, varId, 
      &          vec_start, vec_count, active_data_t )
-          CALL BELLI_COST_NF_ERROR('act_file_c 4',err,bi,bj,myThid)
+          CALL BELLI_NF_ERROR('act_file_c 4',err,bi,bj,myThid)
 
 C Set active_var to zero.
           active_var = 0. _d 0
@@ -166,7 +166,7 @@ C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
         IF (belliDoNcOutput) THEN
           err = NF_GET_VARA_DOUBLE( fid, varId,
      &          vec_start, vec_count, active_var )
-          CALL BELLI_COST_NF_ERROR('act_file_c 5',err,bi,bj,myThid)
+          CALL BELLI_NF_ERROR('act_file_c 5',err,bi,bj,myThid)
 
         ELSE
           READ( fid, REC = (irec-1)*2+1 ) vec_tmp
@@ -246,7 +246,7 @@ C     !LOCAL VARIABLES:
         vec_count = 1
 
         err = NF_INQ_VARID( fid, belli_nameequi, varId1 )
-        CALL BELLI_COST_NF_ERROR('act_file_c 6',err,bi,bj,myThid)
+        CALL BELLI_NF_ERROR('act_file_c 6',err,bi,bj,myThid)
 
       ENDIF
 
@@ -262,12 +262,12 @@ C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
         IF (belliDoNcOutput) THEN
           err = NF_PUT_VARA_DOUBLE( fid, varId1, 
      &          vec_start, vec_count, active_var )
-          CALL BELLI_COST_NF_ERROR('act_file_c 7',err,bi,bj,myThid)
+          CALL BELLI_NF_ERROR('act_file_c 7',err,bi,bj,myThid)
 
           err = NF_INQ_VARID( fid, 'B_Obs_ind_glob_tiled', varId2 )
-          CALL BELLI_COST_NF_ERROR('act_file_c 8',err,bi,bj,myThid)
+          CALL BELLI_NF_ERROR('act_file_c 8',err,bi,bj,myThid)
           err = NF_PUT_VAR1_INT( fid, varId2, vec_start, irecglob )
-          CALL BELLI_COST_NF_ERROR('act_file_c 9',err,bi,bj,myThid)
+          CALL BELLI_NF_ERROR('act_file_c 9',err,bi,bj,myThid)
 
         ELSE
           vec_tmp(1) = active_var
@@ -295,7 +295,7 @@ C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
         IF (belliDoNcOutput) THEN
           err = NF_GET_VARA_DOUBLE( fid, varId1,
      &          vec_start, vec_count, active_data_t )
-          CALL BELLI_COST_NF_ERROR('act_file_c10',err,bi,bj,myThid)
+          CALL BELLI_NF_ERROR('act_file_c10',err,bi,bj,myThid)
 
 C Add active_var to data.
           active_var = active_var + active_data_t
@@ -303,7 +303,7 @@ C Add active_var to data.
 
           err = NF_PUT_VARA_DOUBLE( fid, varId1,
      &          vec_start, vec_count, active_data_t )
-          CALL BELLI_COST_NF_ERROR('act_file_c11',err,bi,bj,myThid)
+          CALL BELLI_NF_ERROR('act_file_c11',err,bi,bj,myThid)
 
         ELSE
           READ( fid, REC = (irec-1)*2+1 ) vec_tmp
@@ -339,7 +339,7 @@ C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
         IF (belliDoNcOutput) THEN
           err = NF_PUT_VARA_DOUBLE( fid, varId1,
      &          vec_start, vec_count, active_var )
-          CALL BELLI_COST_NF_ERROR('act_file_c12',err,bi,bj,myThid)
+          CALL BELLI_NF_ERROR('act_file_c12',err,bi,bj,myThid)
 
         ELSE
           vec_tmp(1)=active_var
@@ -418,7 +418,7 @@ C     !LOCAL VARIABLES:
         vec_count = 1
 
         err = NF_INQ_VARID( fid, belli_nameequi, varId )
-        CALL BELLI_COST_NF_ERROR('act_file_c13',err,1,1,myThid)
+        CALL BELLI_NF_ERROR('act_file_c13',err,1,1,myThid)
 
       ENDIF
 
@@ -432,7 +432,7 @@ C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
 
         err = NF_GET_VARA_DOUBLE( fid, varId, 
      &        vec_start, vec_count, active_var )
-        CALL BELLI_COST_NF_ERROR('act_file_c14',err,1,1,myThid)
+        CALL BELLI_NF_ERROR('act_file_c14',err,1,1,myThid)
 
         _END_MASTER( myThid )
 
@@ -448,7 +448,7 @@ C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
 
         err = NF_GET_VARA_DOUBLE( fid, varId,
      &        vec_start, vec_count, active_data_t )
-        CALL BELLI_COST_NF_ERROR('act_file_c15',err,1,1,myThid)
+        CALL BELLI_NF_ERROR('act_file_c15',err,1,1,myThid)
 
 C Add active_var from appropriate location to data.
         active_data_t = active_data_t + active_var
@@ -457,7 +457,7 @@ C Store the result on disk.
 
         err = NF_PUT_VARA_DOUBLE( fid, varId,
      &        vec_start, vec_count, active_data_t )
-        CALL BELLI_COST_NF_ERROR('act_file_c16',err,1,1,myThid)
+        CALL BELLI_NF_ERROR('act_file_c16',err,1,1,myThid)
 
 C Set active_var to zero.
         active_var = 0. _d 0
@@ -476,7 +476,7 @@ C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
 
         err = NF_GET_VARA_DOUBLE( fid, varId, 
      &        vec_start, vec_count, active_var )
-        CALL BELLI_COST_NF_ERROR('act_file_c17',err,1,1,myThid)
+        CALL BELLI_NF_ERROR('act_file_c17',err,1,1,myThid)
 
         _END_MASTER( myThid )
 
@@ -543,7 +543,7 @@ C     !LOCAL VARIABLES:
         vec_count = 1
 
         err = NF_INQ_VARID( fid, belli_nameequi, varId )
-        CALL BELLI_COST_NF_ERROR('act_file_c18',err,1,1,myThid)
+        CALL BELLI_NF_ERROR('act_file_c18',err,1,1,myThid)
 
       ENDIF
 
@@ -557,7 +557,7 @@ C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
 
         err = NF_PUT_VARA_DOUBLE( fid, varId, 
      &        vec_start, vec_count, active_var )
-        CALL BELLI_COST_NF_ERROR('act_file_c19',err,1,1,myThid)
+        CALL BELLI_NF_ERROR('act_file_c19',err,1,1,myThid)
 
         _END_MASTER( myThid )
 
@@ -574,7 +574,7 @@ C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
         vec_start = irec
         err = NF_GET_VARA_DOUBLE( fid, varId,
      &        vec_start, vec_count, active_data_t )
-        CALL BELLI_COST_NF_ERROR('act_file_c20',err,1,1,myThid)
+        CALL BELLI_NF_ERROR('act_file_c20',err,1,1,myThid)
 
 C       Add active_var to data.
         active_var = active_var + active_data_t
@@ -583,7 +583,7 @@ C       Add active_var to data.
         vec_start = irecglob
         err = NF_PUT_VARA_DOUBLE( fid, varId,
      &        vec_start, vec_count, active_data_t )
-        CALL BELLI_COST_NF_ERROR('act_file_c21',err,1,1,myThid)
+        CALL BELLI_NF_ERROR('act_file_c21',err,1,1,myThid)
 
         _END_MASTER( myThid )
 
@@ -599,7 +599,7 @@ C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
 
         err = NF_PUT_VARA_DOUBLE( fid, varId, 
      &        vec_start, vec_count, active_var )
-        CALL BELLI_COST_NF_ERROR('act_file_c22',err,1,1,myThid)
+        CALL BELLI_NF_ERROR('act_file_c22',err,1,1,myThid)
 
         _END_MASTER( myThid )
 
