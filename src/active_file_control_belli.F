@@ -1,4 +1,4 @@
-#include "IHOP_OPTIONS.h"
+#include "BELLI_OPTIONS.h"
 
 C     ================================================================
 C     active_file_control_ihop.F: Routines that handle I/O of
@@ -42,11 +42,11 @@ C     == Global variables ===
 #include "EEPARAMS.h"
 #include "SIZE.h"
 #include "PARAMS.h"
-#ifdef ALLOW_IHOP
+#ifdef ALLOW_BELLI
 # include "netcdf.inc"
-# include "IHOP_SIZE.h"
+# include "BELLI_SIZE.h"
 # ifdef ALLOW_COST
-#  include "IHOP_COST.h"
+#  include "BELLI_COST.h"
 # endif
 #endif
 
@@ -64,7 +64,7 @@ C     !OUTPUT PARAMETERS:
 CEOP
 
 C     !LOCAL VARIABLES:
-#if (defined ALLOW_IHOP) && (defined ALLOW_COST)
+#if (defined ALLOW_BELLI) && (defined ALLOW_COST)
       INTEGER  err, varId
       INTEGER  vec_start, vec_count
       _RL      active_data_t
@@ -181,7 +181,7 @@ C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
 
       ENDIF
 
-#endif /* ALLOW_IHOP */
+#endif /* ALLOW_BELLI */
 
       RETURN
       END
@@ -214,11 +214,11 @@ C     == Global variables ===
 #include "EEPARAMS.h"
 #include "SIZE.h"
 #include "PARAMS.h"
-#ifdef ALLOW_IHOP
+#ifdef ALLOW_BELLI
 # include "netcdf.inc"
-# include "IHOP_SIZE.h"
+# include "BELLI_SIZE.h"
 # ifdef ALLOW_COST
-#  include "IHOP_COST.h"
+#  include "BELLI_COST.h"
 # endif
 #endif
 
@@ -235,7 +235,7 @@ C     !OUTPUT PARAMETERS:
 CEOP
 
 C     !LOCAL VARIABLES:
-#if (defined ALLOW_IHOP) && (defined ALLOW_COST)
+#if (defined ALLOW_BELLI) && (defined ALLOW_COST)
       INTEGER  err, varId1, varId2
       INTEGER  vec_start, vec_count
       _RL      active_data_t
@@ -355,7 +355,7 @@ C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
 
       ENDIF
 
-#endif /* ALLOW_IHOP */
+#endif /* ALLOW_BELLI */
 
       RETURN
       END
@@ -385,11 +385,11 @@ C     == Global variables ===
 #include "EEPARAMS.h"
 #include "SIZE.h"
 #include "PARAMS.h"
-#ifdef ALLOW_IHOP
+#ifdef ALLOW_BELLI
 # include "netcdf.inc"
-# include "IHOP_SIZE.h"
+# include "BELLI_SIZE.h"
 # ifdef ALLOW_COST
-#  include "IHOP_COST.h"
+#  include "BELLI_COST.h"
 # endif
 #endif
 
@@ -407,7 +407,7 @@ C     !OUTPUT PARAMETERS:
 CEOP
 
 C     !LOCAL VARIABLES:
-#if (defined ALLOW_IHOP) && (defined ALLOW_COST)
+#if (defined ALLOW_BELLI) && (defined ALLOW_COST)
       INTEGER  err, varId
       INTEGER  vec_start, vec_count
       _RL      active_data_t
@@ -482,7 +482,7 @@ C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
 
       ENDIF
 
-#endif /* ALLOW_IHOP */
+#endif /* ALLOW_BELLI */
 
       RETURN
       END
@@ -511,11 +511,11 @@ C     == Global variables ===
 #include "EEPARAMS.h"
 #include "SIZE.h"
 #include "PARAMS.h"
-#ifdef ALLOW_IHOP
+#ifdef ALLOW_BELLI
 # include "netcdf.inc"
-# include "IHOP_SIZE.h"
+# include "BELLI_SIZE.h"
 # ifdef ALLOW_COST
-#  include "IHOP_COST.h"
+#  include "BELLI_COST.h"
 # endif
 #endif
 
@@ -532,7 +532,7 @@ C     !OUTPUT PARAMETERS:
 CEOP
 
 C     !LOCAL VARIABLES:
-#if (defined ALLOW_IHOP) && (defined ALLOW_COST)
+#if (defined ALLOW_BELLI) && (defined ALLOW_COST)
       INTEGER  err, varId
       INTEGER  vec_start, vec_count
       _RL      active_data_t
@@ -605,7 +605,7 @@ C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
 
       ENDIF
 
-#endif /* ALLOW_IHOP */
+#endif /* ALLOW_BELLI */
 
       RETURN
       END

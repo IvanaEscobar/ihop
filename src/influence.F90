@@ -1,4 +1,4 @@
-#include "IHOP_OPTIONS.h"
+#include "BELLI_OPTIONS.h"
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 !BOP
 !MODULE: influence
@@ -19,10 +19,10 @@ MODULE influence
 #include "SIZE.h"
 #include "EEPARAMS.h"
 #include "PARAMS.h"
-#include "IHOP_SIZE.h"
-#include "IHOP.h"
+#include "BELLI_SIZE.h"
+#include "BELLI.h"
 #ifdef ALLOW_COST
-# include "IHOP_COST.h"
+# include "BELLI_COST.h"
 #endif
 
 ! !SCOPE: 
@@ -455,13 +455,13 @@ CONTAINS
               RadiusMax = ABS( q / q0 )
 
               IF ( n.LT.RadiusMax ) THEN
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
                 WRITE(msgBuf,'(A,F10.2)') &
                   "Influence: Eigenray w RadiusMax = ", RadiusMax
                 IF ( BELLI_dumpfreq.GE.0 ) &
                   CALL PRINT_MESSAGE( msgbuf, PRTFile, &
                                     SQUEEZE_RIGHT, myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
                 ! interpolated delay
                 delay    = ray2D( iH-1 )%tau + s*dtauds
 !      !IESCO25: test some parts of influence, send geninfluence to ihop_cost_modval
@@ -703,13 +703,13 @@ CONTAINS
               RadiusMax = BeamWindow*RadiusMax
 
               IF ( n.LT.RadiusMax ) THEN   ! Within beam window?
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
                 WRITE(msgBuf,'(A,F10.2)') &
                   "Influence: Eigenray w RadiusMax = ", RadiusMax
                  IF ( BELLI_dumpfreq .GE. 0) &
                    CALL PRINT_MESSAGE( msgbuf, PRTFile, &
                      SQUEEZE_RIGHT, myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
                 ! interpolated delay
                 delay    = ray2D( iH-1 )%tau + s*dtauds
 

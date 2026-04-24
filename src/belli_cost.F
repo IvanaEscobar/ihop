@@ -1,4 +1,4 @@
-#include "IHOP_OPTIONS.h"
+#include "BELLI_OPTIONS.h"
 #ifdef ALLOW_CTRL
 # include "CTRL_OPTIONS.h"
 #endif
@@ -17,7 +17,7 @@ C    !DESCRIPTION:
 C    Computes iHOP data misfit for cost function
 
 C    !USES:
-#if (defined ALLOW_IHOP) && (defined TEST_IHOP_COST)
+#if (defined ALLOW_BELLI) && (defined TEST_BELLI_COST)
 C     For Grid%nR,nZ, SSP%cMat
       USE ssp_mod, only: Grid, SSP
 
@@ -32,12 +32,12 @@ C == Global variables ===
 #ifdef ALLOW_CAL
 # include "cal.h"
 #endif
-#ifdef ALLOW_IHOP
-# include "IHOP_SIZE.h"
-# include "IHOP.h"
+#ifdef ALLOW_BELLI
+# include "BELLI_SIZE.h"
+# include "BELLI.h"
 # include "netcdf.inc"
 # ifdef ALLOW_COST
-#  include "IHOP_COST.h"
+#  include "BELLI_COST.h"
 # endif
 #endif
 #ifdef ALLOW_CTRL
@@ -58,7 +58,7 @@ C     myThid :: my thread ID
 C     !OUTPUT PARAMETERS:
 CEOP
 
-#ifdef ALLOW_IHOP
+#ifdef ALLOW_BELLI
 C     !FUNCTIONS:
       INTEGER  ILNBLNK
       EXTERNAL ILNBLNK
@@ -84,7 +84,7 @@ C     bi,bj :: Tile indices
       _RL  ihopObs_buff(NOBSMAX_BELLI)
       _RL  ihopObs_modval_glob(NOBSMAX_BELLI)
 # endif
-# ifdef TEST_IHOP_COST
+# ifdef TEST_BELLI_COST
       INTEGER ig, jg
       INTEGER itlo,ithi
       INTEGER jtlo,jthi
@@ -110,7 +110,7 @@ CADJ INIT tapelev_ihop_cost = COMMON, NFILESMAX_BELLI
 #endif
 
 # ifdef ALLOW_COST
-#  ifdef TEST_IHOP_COST
+#  ifdef TEST_BELLI_COST
       jtlo = mybylo(mythid)
       jthi = mybyhi(mythid)
       itlo = mybxlo(mythid)
@@ -187,7 +187,7 @@ C       CALL GLOBAL_SUM_TILE_RL( objf_belli_tloc,objf_belli_gloc,myThid )
 
       ENDDO !DO num_file
 
-#  else /* TEST_IHOP_COST */
+#  else /* TEST_BELLI_COST */
       _BEGIN_MASTER( myThid )
 
       DO num_file = 1, NFILESMAX_BELLI
@@ -302,11 +302,11 @@ C Read model equivalent from global file
      I             iObs,.false., optimcycle, myThid,
      I             belli_globaldummy(num_file) )
 
-#ifdef TEST_IHOP_COST_INLOOP
+#ifdef TEST_BELLI_COST_INLOOP
 C Set uncertainty to one
               ihop_uncert = 1. _d 0
 
-#else /* TEST_IHOP_COST_INLOOP */
+#else /* TEST_BELLI_COST_INLOOP */
 C Read observation and uncertainty
               CALL IHOP_COST_READ_OBS(
      I             num_file,  1, bObs_ind_glob(num_file,iObs),
@@ -317,7 +317,7 @@ C Read observation and uncertainty
      I             num_file, -1, bObs_ind_glob(num_file,iObs),
      O             ihop_uncert,
      I             myThid )
-#endif /* TEST_IHOP_COST_INLOOP */
+#endif /* TEST_BELLI_COST_INLOOP */
 
               IF (ihop_data.EQ.-9999) ihop_uncert = zeroRL
 
@@ -328,9 +328,9 @@ C Calc misfit or QoI
                 objf_belli(num_file) = objf_belli(num_file) +
      &                                ihop_weight
      &                                *(ihop_modval-ihop_data)
-#ifndef TEST_IHOP_COST_INLOOP
+#ifndef TEST_BELLI_COST_INLOOP
      &                                *(ihop_modval-ihop_data)
-#endif /* TEST_IHOP_COST_INLOOP */
+#endif /* TEST_BELLI_COST_INLOOP */
 
       write(unit=standardmessageunit,fmt='(A,1x,E30.17,1x,A,I0)') 
      &'ESCOBAR J=|m-d|^2(t)= ', objf_belli(num_file), 
@@ -350,7 +350,7 @@ C write(unit=standardmessageunit,fmt='(a,1x,E30.17,1x,a,i0)') 'ESCOBAR dJ_TL(t)=
       ENDDO !DO num_file
 
       _END_MASTER( myThid )
-#  endif /* TEST_IHOP_COST */
+#  endif /* TEST_BELLI_COST */
 # endif /* ALLOW_COST */
 
 # ifdef ALLOW_COST
@@ -377,7 +377,7 @@ C Print cost function values
       WRITE(msgBuf,'(A)') ' '
       CALL PRINT_MESSAGE( msgBuf,
      &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
-#endif /* ALLOW_IHOP */
+#endif /* ALLOW_BELLI */
 
       RETURN
       END

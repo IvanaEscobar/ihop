@@ -1,4 +1,4 @@
-#include "IHOP_OPTIONS.h"
+#include "BELLI_OPTIONS.h"
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
@@ -17,9 +17,9 @@ C     == Global variables ==
 #include "SIZE.h"
 #include "EEPARAMS.h"
 #include "PARAMS.h"
-#ifdef ALLOW_IHOP
-# include "IHOP_SIZE.h"
-# include "IHOP.h"
+#ifdef ALLOW_BELLI
+# include "BELLI_SIZE.h"
+# include "BELLI.h"
 #endif
 #ifdef ALLOW_MNC
 #endif /* ALLOW_MNC */
@@ -45,7 +45,7 @@ CEOP
      &  .OR. dumpInitAndLast.AND.( myTime.EQ.endTime .OR.
      &                             myTime.EQ.startTime  )
      &     ) THEN
-#ifdef ALLOW_IHOP
+#ifdef ALLOW_BELLI
 cccccccccccccccccccccc
 c diagnostics        c
 cccccccccccccccccccccc
@@ -80,7 +80,7 @@ C     &       'ihop_soundSpeed', belli_ssp, myThid )
 
        ENDIF ! IF ( BELLI_MDSIO ) THEN
 
-#endif /* ALLOW_IHOP */
+#endif /* ALLOW_BELLI */
       ENDIF ! DIFFERENT_MULTIPLE
 
       RETURN

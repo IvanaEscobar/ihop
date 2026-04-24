@@ -1,4 +1,4 @@
-#include "IHOP_OPTIONS.h"
+#include "BELLI_OPTIONS.h"
 #include "AD_CONFIG.h"
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
@@ -14,7 +14,7 @@ C     Print NetCDF error message
 C     !USES:
       IMPLICIT NONE
 C     == Global variables ===
-#ifdef ALLOW_IHOP
+#ifdef ALLOW_BELLI
 # include "SIZE.h"
 # include "EEPARAMS.h"
 # include "PARAMS.h"
@@ -36,7 +36,7 @@ C     !FUNCTIONS:
       EXTERNAL ILNBLNK
 
 C     !LOCAL VARIABLES:
-#ifdef ALLOW_IHOP
+#ifdef ALLOW_BELLI
       INTEGER IL
       CHARACTER*(MAX_LEN_MBUF) msgBuf
 CEOP
@@ -62,7 +62,7 @@ CEOP
 !        CALL PRINT_MESSAGE( msgBuf, standardMessageUnit,
 !     &       SQUEEZE_RIGHT, myThid )
 !      ENDIF
-#endif /* ALLOW_IHOP */
+#endif /* ALLOW_BELLI */
 
       RETURN
       END
@@ -80,11 +80,11 @@ C     Close NetCDF files
 C     !USES:
       IMPLICIT NONE
 C     == Global variables ===
-#ifdef ALLOW_IHOP
+#ifdef ALLOW_BELLI
 # include "SIZE.h"
 # include "EEPARAMS.h"
-# include "IHOP_SIZE.h"
-# include "IHOP_COST.h"
+# include "BELLI_SIZE.h"
+# include "BELLI_COST.h"
 # include "netcdf.inc"
 #endif
 
@@ -99,7 +99,7 @@ C     !FUNCTIONS:
       EXTERNAL ILNBLNK
 
 C     !LOCAL VARIABLES:
-#ifdef ALLOW_IHOP
+#ifdef ALLOW_BELLI
 C     bi,bj :: Tile indices
       INTEGER bi, bj
       INTEGER IL, numFile
@@ -211,7 +211,7 @@ C Tangent linear equivalent (.equi) file
         ENDDO !DO numFile
 
       ENDIF !IF (ihopDoNcOutput)
-#endif /* ALLOW_IHOP */
+#endif /* ALLOW_BELLI */
 
       RETURN
       END

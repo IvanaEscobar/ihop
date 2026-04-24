@@ -1,4 +1,4 @@
-#include "IHOP_OPTIONS.h"
+#include "BELLI_OPTIONS.h"
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 !BOP
 !MODULE: arr_mod
@@ -19,10 +19,10 @@ MODULE arr_mod
 #ifdef ALLOW_USE_MPI
 # include "EESUPPORT.h"
 #endif
-#include "IHOP_SIZE.h"
-#include "IHOP.h"
+#include "BELLI_SIZE.h"
+#include "BELLI.h"
 #ifdef ALLOW_COST
-# include "IHOP_COST.h"
+# include "BELLI_COST.h"
 #endif
 
 ! !SCOPE: 
@@ -30,9 +30,9 @@ MODULE arr_mod
 !=======================================================================
     PUBLIC WriteArrivalsASCII, WriteArrivalsBinary, &
            initArr, nMaxArr, nArrival, Arr, AddArr, U
-#ifdef IHOP_THREED
+#ifdef BELLI_THREED
     PUBLIC nArr3D, Arr3D
-#endif /* IHOP_THREED */
+#endif /* BELLI_THREED */
 #ifdef ALLOW_USE_MPI
     PUBLIC free_ihop_arrival, BcastArr
 #endif /* ALLOW_USE_MPI */
@@ -42,9 +42,9 @@ MODULE arr_mod
   INTEGER               :: nMaxArr
   INTEGER, ALLOCATABLE  :: nArrival( :, : )
   COMPLEX, ALLOCATABLE  :: U( :, : )
-#ifdef IHOP_THREED
+#ifdef BELLI_THREED
   INTEGER, ALLOCATABLE  :: nArr3D( :, :, : )
-#endif /* IHOP_THREED */
+#endif /* BELLI_THREED */
 
 #ifdef ALLOW_USE_MPI
   INTEGER :: MPI_IHOP_ARRIVAL = MPI_DATATYPE_NULL
@@ -55,17 +55,17 @@ MODULE arr_mod
   TYPE Arrival
     INTEGER              :: nTopBnc, nBotBnc
     REAL (KIND=_RL90)    :: SrcDeclAngle, RcvrDeclAngle, A, Phase
-#ifdef IHOP_THREED
+#ifdef BELLI_THREED
     REAL (KIND=_RL90)    :: SrcAzimAngle, RcvrAzimAngle
-#endif /* IHOP_THREED */
+#endif /* BELLI_THREED */
     COMPLEX (KIND=_RL90) :: delay
     REAL (KIND=_RL90)    :: delayR
   END TYPE
 
   TYPE(Arrival), ALLOCATABLE :: Arr( :, :, : )
-#ifdef IHOP_THREED
+#ifdef BELLI_THREED
   TYPE(Arrival), ALLOCATABLE :: Arr3D( :, :, :, : )
-#endif /* IHOP_THREED */
+#endif /* BELLI_THREED */
 !EOP
 
 CONTAINS
@@ -126,11 +126,11 @@ CONTAINS
 
   ALLOCATE( U( x,y ), Stat=iAllocStat )
   IF ( iAllocStat.NE.0 ) THEN
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
     WRITE(msgBuf,'(2A)') 'ARR_MOD INITARR: ', &
       'Insufficient memory for TL matrix: reduce Nr*NRz'
     CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
     STOP 'ABNORMAL END: S/R INITARR'
   ENDIF
 
@@ -149,11 +149,11 @@ CONTAINS
   ALLOCATE( Arr( nMaxArr, Pos%nRR, nRz_per_range ), &
             nArrival(Pos%nRR, nRz_per_range), STAT=iAllocStat )
   IF ( iAllocStat.NE.0 ) THEN
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
     WRITE(msgBuf,'(2A)') 'ARR_MOD INITARR: ', &
       'Not enough allocation for Arr; reduce arrStorage'
     CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
     STOP 'ABNORMAL END: S/R IHOP_MAIN'
   ENDIF
 
@@ -308,9 +308,9 @@ CONTAINS
 
   arrFMT='(G14.6,F10.2,F12.4,G10.2,2F14.6,2I6)'
 
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
   WRITE( ARRFile,'(I0)' ) MAXVAL( nArrival( 1:nRR, 1:Nrz ) )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
 
   DO iz = 1, Nrz
     DO ir = 1, nRR
@@ -325,7 +325,7 @@ CONTAINS
 
       ENDIF ! IF ( SourceType.EQ.'X' )
 
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
       WRITE( ARRFile, '(I0)' ) nArrival( ir, iz )
       DO iArr = 1, nArrival( ir, iz )
         WRITE( ARRFile, arrFMT )              &
@@ -340,7 +340,7 @@ CONTAINS
 
       ENDDO  ! next arrival
 
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
     ENDDO  ! DO ir: next range
   ENDDO  ! DO iz: next depth
 
@@ -377,9 +377,9 @@ CONTAINS
   ! In adjoint mode we do not write output besides on the first run
   IF (BELLI_dumpfreq.LT.0) RETURN
 
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
   WRITE( ARRFile, '(I0)' ) MAXVAL( nArrival( 1:nRR, 1:Nrz ) )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
 
   DO iz = 1, Nrz
     DO ir = 1, nRR
@@ -393,7 +393,7 @@ CONTAINS
         ENDIF
       ENDIF ! IF ( SourceType.EQ.'X' )
 
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
       WRITE( ARRFile, '(I0)' ) nArrival( ir, iz )
       DO iArr = 1, nArrival( ir, iz )
         ! integers written out as reals below for fast reading in Matlab
@@ -407,7 +407,7 @@ CONTAINS
           REAL( Arr( iArr, ir, iz )%NBotBnc )
 
       ENDDO   ! next arrival
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
     ENDDO ! DO ir: next range
   ENDDO ! DO iz: next depth
 

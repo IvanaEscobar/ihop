@@ -1,6 +1,6 @@
 #include "PACKAGES_CONFIG.h"
 #include "CPP_OPTIONS.h"
-#include "IHOP_OPTIONS.h"
+#include "BELLI_OPTIONS.h"
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
@@ -33,8 +33,8 @@ C     == Global variables ==
 #include "GRID.h"
 #include "DYNVARS.h"
 #include "EOS.h"
-#include "IHOP_SIZE.h"
-#include "IHOP.h"
+#include "BELLI_SIZE.h"
+#include "BELLI.h"
 
 C     !INPUT PARAMETERS:
 C     myThid :: Thread number for this instance of the routine.
@@ -42,7 +42,7 @@ C     myThid :: Thread number for this instance of the routine.
 C     !OUTPUT PARAMETERS: None
 
 C     !FUNCTIONS:
-#ifdef ALLOW_IHOP
+#ifdef ALLOW_BELLI
 
       _RL CHEN_MILLERO
       EXTERNAL CHEN_MILLERO
@@ -110,7 +110,7 @@ c     ENDIF
       ENDIF
 #endif /* ALLOW_DIAGNOSTICS */
 
-#endif /* ALLOW_IHOP */
+#endif /* ALLOW_BELLI */
 
       RETURN
       END

@@ -1,4 +1,4 @@
-#include "IHOP_OPTIONS.h"
+#include "BELLI_OPTIONS.h"
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
@@ -17,8 +17,8 @@ C == Global Variables ===
 #include "SIZE.h"
 #include "GRID.h"
 #ifdef ALLOW_COST
-# include "IHOP_SIZE.h"
-# include "IHOP_COST.h"
+# include "BELLI_SIZE.h"
+# include "BELLI_COST.h"
 #endif
 #ifdef ALLOW_GRDCHK
 # include "netcdf.inc"

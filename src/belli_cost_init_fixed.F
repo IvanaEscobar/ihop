@@ -1,4 +1,4 @@
-#include "IHOP_OPTIONS.h"
+#include "BELLI_OPTIONS.h"
 #include "AD_CONFIG.h"
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
@@ -10,7 +10,7 @@ C !INTERFACE:
 
 C    !DESCRIPTION:
 C    Set contributions to cost function and the cost function
-C    itself to zero. Both are defined in header file "IHOP_COST.h".
+C    itself to zero. Both are defined in header file "BELLI_COST.h".
 
 C    !USES:
       IMPLICIT NONE
@@ -19,9 +19,9 @@ C == Global Variables ===
 #include "SIZE.h"
 #include "PARAMS.h"
 #include "GRID.h"
-#include "IHOP_SIZE.h"
+#include "BELLI_SIZE.h"
 #ifdef ALLOW_COST
-# include "IHOP_COST.h"
+# include "BELLI_COST.h"
 #endif
 #ifdef ALLOW_CAL
 # include "cal.h"
@@ -40,7 +40,7 @@ C     !FUNCTIONS:
       EXTERNAL ILNBLNK
 
 C     !LOCAL VARIABLES:
-#if ( defined (ALLOW_COST) && defined (ALLOW_IHOP) )
+#if ( defined (ALLOW_COST) && defined (ALLOW_BELLI) )
       CHARACTER*(MAX_LEN_MBUF) :: msgBuf
       CHARACTER*(MAX_LEN_FNAM) :: IHOPObs_File, fnamedatanc
       CHARACTER*(MAX_LEN_FNAM) :: fnameequinc
@@ -810,7 +810,7 @@ CBOP
       CALL PRINT_MESSAGE( msgBuf,
      &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
-#endif /* ALLOW_COST && ALLOW_IHOP*/
+#endif /* ALLOW_COST && ALLOW_BELLI*/
 
       RETURN
       END

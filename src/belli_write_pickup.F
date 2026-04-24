@@ -1,4 +1,4 @@
-#include "IHOP_OPTIONS.h"
+#include "BELLI_OPTIONS.h"
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
@@ -17,8 +17,8 @@ C     == Global variables ==
 #include "SIZE.h"
 #include "EEPARAMS.h"
 #include "PARAMS.h"
-#include "IHOP_SIZE.h"
-#include "IHOP.h"
+#include "BELLI_SIZE.h"
+#include "BELLI.h"
 
 C     !INPUT PARAMETERS:
 C     permPickup      :: write a permanent pickup
@@ -33,8 +33,8 @@ C     myThid          :: thread number
       INTEGER myThid
 C     !OUTPUT PARAMETERS: None
 
-#ifdef ALLOW_IHOP
-#if (defined IHOP_3D_STATE) || (defined IHOP_2D_STATE)
+#ifdef ALLOW_BELLI
+#if (defined BELLI_3D_STATE) || (defined BELLI_2D_STATE)
 
 C     !FUNCTIONS:
       INTEGER  ILNBLNK
@@ -71,20 +71,20 @@ C        j  = 0
 C
 CC       Firstly, write 3-D fields as consecutive records,
 C
-C#ifdef IHOP_3D_STATE
+C#ifdef BELLI_3D_STATE
 CC     record number < 0 : a hack not to write meta files now:
 C        j = j + 1
 C        CALL WRITE_REC_3D_RL( fn, fp, Nr,
 C     &                        belli_ssp, -j, myIter, myThid )
 C        IF (j.LE.listDim) wrFldList(j) = 'SVEL    '
 C
-C#endif /* IHOP_3D_STATE */
+C#endif /* BELLI_3D_STATE */
 C
 CC-    switch to 2-D fields:
 C        nj = -j*Nr
 C
-C#ifdef IHOP_2D_STATE
-C#endif /* IHOP_2D_STATE */
+C#ifdef BELLI_2D_STATE
+C#endif /* BELLI_2D_STATE */
 C
 CC--------------------------
 C        nWrFlds = j
@@ -116,8 +116,8 @@ C     &                         nj, myIter, myThid )
 C#endif /* ALLOW_MDSIO */
 CC--------------------------
 
-#endif /* IHOP_3D_STATE or IHOP_2D_STATE */
-#endif /* ALLOW_IHOP */
+#endif /* BELLI_3D_STATE or BELLI_2D_STATE */
+#endif /* ALLOW_BELLI */
 
       RETURN
       END

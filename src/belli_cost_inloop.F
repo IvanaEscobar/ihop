@@ -1,4 +1,4 @@
-#include "IHOP_OPTIONS.h"
+#include "BELLI_OPTIONS.h"
 #ifdef ALLOW_CTRL
 # include "CTRL_OPTIONS.h"
 #endif
@@ -35,11 +35,11 @@ C == Global variables ===
 #ifdef ALLOW_CTRL
 # include "OPTIMCYCLE.h"
 #endif
-#ifdef ALLOW_IHOP
-# include "IHOP_SIZE.h"
+#ifdef ALLOW_BELLI
+# include "BELLI_SIZE.h"
 # include "netcdf.inc"
 # ifdef ALLOW_COST
-#  include "IHOP_COST.h"
+#  include "BELLI_COST.h"
 # endif
 #endif
 #ifdef ALLOW_AUTODIFF
@@ -56,7 +56,7 @@ C     myThid :: my thread ID
 C     !OUTPUT PARAMETERS:
 
 C    !LOCAL VARIABLES:
-#ifdef ALLOW_IHOP
+#ifdef ALLOW_BELLI
       INTEGER bi,bj
       INTEGER num_file, nObs
       INTEGER maxindex(nRR, nRD)
@@ -126,7 +126,7 @@ CEOP
       _END_MASTER( myThid )
 
 # endif /* ALLOW_COST */
-#endif /* ALLOW_IHOP */
+#endif /* ALLOW_BELLI */
 
       RETURN
       END

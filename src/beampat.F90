@@ -1,4 +1,4 @@
-#include "IHOP_OPTIONS.h"
+#include "BELLI_OPTIONS.h"
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 !BOP
 !MODULE: beamPat
@@ -16,8 +16,8 @@ MODULE beamPat
 #include "GRID.h"
 #include "EEPARAMS.h"
 #include "PARAMS.h"
-#include "IHOP_SIZE.h"
-#include "IHOP.h"
+#include "BELLI_SIZE.h"
+#include "BELLI.h"
 
 ! !SCOPE: 
   PRIVATE
@@ -68,13 +68,13 @@ SUBROUTINE ReadPat( myThid )
     OPEN( UNIT=SBPFile, FILE=TRIM( BELLI_fileroot ) // '.sbp', &
           STATUS='OLD', IOSTAT=IOStat, ACTION='READ' )
     IF ( IOStat.NE.0 ) THEN
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
       ! In adjoint mode we do not write output besides on the first run
       IF (BELLI_dumpfreq.GE.0) &
         WRITE(msgBuf,'(2A)') 'BEAMPATTERN ReadPat: ', &
           'Unable to open source beampattern file'
       CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
       STOP 'ABNORMAL END: S/R ReadPat'
     ENDIF ! IF ( IOStat.NE.0 )
 
@@ -82,11 +82,11 @@ SUBROUTINE ReadPat( myThid )
 
     ALLOCATE( SrcBmPat( NSBPPts, 2 ), Stat=IAllocStat )
     IF ( IAllocStat.NE.0 ) THEN
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
       WRITE(msgBuf,'(2A)') 'BEAMPATTERN ReadPat: ', &
         'Insufficient memory for beam pattern data: reduce # SBP points'
       CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
       STOP 'ABNORMAL END: S/R ReadPat'
     ENDIF ! IF ( IAllocStat.NE.0 )
 
@@ -98,10 +98,10 @@ SUBROUTINE ReadPat( myThid )
     NSBPPts = 2
     ALLOCATE( SrcBmPat( NSBPPts, 2 ), Stat = IAllocStat )
     IF ( IAllocStat.NE.0 ) THEN
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
       WRITE(msgBuf,'(A)') 'BEAMPATTERN ReadPat: Insufficient memory'
       CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
       STOP 'ABNORMAL END: S/R ReadPat'
     ENDIF ! IF ( IAllocStat.NE.0 )
 
@@ -143,7 +143,7 @@ SUBROUTINE ReadPat( myThid )
 !  ! I/O on main thread only
 !  _BEGIN_MASTER(myThid)
 !
-!#ifdef IHOP_WRITE_OUT
+!#ifdef BELLI_WRITE_OUT
 !  IF ( SBPFlag.EQ.'*' ) THEN
 !    WRITE( PRTFile, * )
 !    WRITE( PRTFile, * ) '______________________________'
@@ -158,7 +158,7 @@ SUBROUTINE ReadPat( myThid )
 !      WRITE( PRTFile, FMT = "( 2G11.3 )" ) SrcBmPat( I, : )
 !    END DO
 !  END IF
-!#endif /* IHOP_WRITE_OUT */
+!#endif /* BELLI_WRITE_OUT */
 !
 !  ! I/O on main thread only
 !  _END_MASTER(myThid)

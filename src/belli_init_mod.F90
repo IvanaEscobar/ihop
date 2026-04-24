@@ -1,4 +1,4 @@
-#include "IHOP_OPTIONS.h"
+#include "BELLI_OPTIONS.h"
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 !BOP
 !MODULE: ihop_init_mod
@@ -33,7 +33,7 @@ CONTAINS
 ! !INTERFACE:
   SUBROUTINE INIT_FIXED_ENV ( myThid )
 ! !DESCRIPTION:
-!   Initiate fixed variable for ihop time series. Note: NO IHOP_THREED here
+!   Initiate fixed variable for ihop time series. Note: NO BELLI_THREED here
 
   ! USES:
   USE bdry_mod,  only: Bdry, HSInfo, initATI, initBTY
@@ -41,9 +41,9 @@ CONTAINS
   USE ssp_mod,   only: Grid, init_fixed_SSP, alphar
   USE ihop_mod,  only: Beam, rxyz, nRz_per_range
   USE angle_mod, only: Angles, ReadRayElevationAngles
-#ifdef IHOP_THREED
+#ifdef BELLI_THREED
   USE angle_mod, only: ReadRayBearingAngles
-#endif /* IHOP_THREED */
+#endif /* BELLI_THREED */
   USE refcoef,   only: ReadReflectionCoefficient
   USE beampat,   only: SBPFlag, readPat
   USE arr_mod,   only: initArr
@@ -51,9 +51,9 @@ CONTAINS
 #include "SIZE.h"
 #include "GRID.h"
 #include "EEPARAMS.h"
-#ifdef ALLOW_IHOP
-# include "IHOP_SIZE.h"
-# include "IHOP.h"
+#ifdef ALLOW_BELLI
+# include "BELLI_SIZE.h"
+# include "BELLI.h"
 #endif
 
 ! !INPUT PARAMETERS:
@@ -158,11 +158,11 @@ CONTAINS
   SELECT CASE ( Bdry%Bot%HS%Opt( 2:2 ) )
   CASE( '~', '*', ' ' )
   CASE DEFAULT
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
     WRITE(msgBuf,'(2A)') 'IHOP_INIT_MOD init_fixed_env: ',&
       'Unknown Bdry%Bot%HS%Opt(2)'
     CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
     STOP 'ABNORMAL END: S/R init_fixed_env'
   END SELECT
 
@@ -197,9 +197,9 @@ CONTAINS
   CALL ReadRcvrRanges( myThid )
   ! set dummy for receiver bearing
   CALL AllocatePos( Pos%nTheta, Pos%theta, BELLI_rr( 1:1 ), myThid )
-#ifdef IHOP_THREED
+#ifdef BELLI_THREED
   CALL ReadRcvrBearings( myThid )
-#endif /* IHOP_THREED */
+#endif /* BELLI_THREED */
 
 
   ! *** Broadband frequencies ***
@@ -210,9 +210,9 @@ CONTAINS
   Beam%RunType = BELLI_runopt
   CALL ReadRunType( Beam%RunType, PlotType, myThid )
   CALL ReadRayElevationAngles( Depth, Bdry%Top%HS%Opt, Beam%RunType, myThid )
-#ifdef IHOP_THREED
+#ifdef BELLI_THREED
   CALL ReadRayBearingAngles( Bdry%Top%HS%Opt, Beam%RunType, myThid )
-#endif /* IHOP_THREED */
+#endif /* BELLI_THREED */
 
 
   ! *** Acoustic grid ***
@@ -264,7 +264,7 @@ CONTAINS
     SELECT CASE ( Beam%Type( 1:1 ) )
     CASE ( 'G', 'g' , '^', 'B', 'b', 'S' )
     CASE DEFAULT
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
       !   Only do I/O if in the main thread
       _BEGIN_MASTER(myThid)
       WRITE(msgBuf,'(2A)') 'IHOP_INIT_MOD init_fixed_env: ', &
@@ -272,7 +272,7 @@ CONTAINS
       CALL PRINT_ERROR( msgBuf,myThid )
       !   Only do I/O in the main thread
       _END_MASTER(myThid)
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
       STOP 'ABNORMAL END: S/R init_fixed_env'
     END SELECT
 
@@ -320,9 +320,9 @@ CONTAINS
 !     == Global Variables ==
 #include "SIZE.h"
 #include "EEPARAMS.h"
-#ifdef ALLOW_IHOP
-# include "IHOP_SIZE.h"
-# include "IHOP.h"
+#ifdef ALLOW_BELLI
+# include "BELLI_SIZE.h"
+# include "BELLI.h"
 #endif
 
 ! !INPUT PARAMETERS:
@@ -351,11 +351,11 @@ CONTAINS
   SELECT CASE ( Grid%Type )
   CASE ( 'N','C','P','S','Q','A' )
   CASE DEFAULT
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
     WRITE(msgBuf,'(2A)') 'INIT_FIXED_ENV ReadTopOpt: ', &
       'Unknown option for SSP Grid approximation'
     CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
     STOP 'ABNORMAL END: S/R ReadTopOpt'
   END SELECT
 
@@ -363,11 +363,11 @@ CONTAINS
   SELECT CASE ( AttenUnit( 1:1 ) )
   CASE ( 'N','F','M','W','Q','L' )
   CASE DEFAULT
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
     WRITE(msgBuf,'(2A)') 'INIT_FIXED_ENV ReadTopOpt: ', &
       'Unknown attenuation units'
     CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
     STOP 'ABNORMAL END: S/R ReadTopOpt'
   END SELECT
 
@@ -375,11 +375,11 @@ CONTAINS
   SELECT CASE ( AttenUnit( 2:2 ) )
   CASE ( 'T','F','B',' ' )
   CASE DEFAULT
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
     WRITE(msgBuf,'(2A)') 'INIT_FIXED_ENV ReadTopOpt: ', &
       'Unknown top option letter in fourth position'
     CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
     STOP 'ABNORMAL END: S/R ReadTopOpt'
   END SELECT
 
@@ -387,11 +387,11 @@ CONTAINS
   CASE ( '~', '*' )
   CASE ( '-', '_', ' ' )
   CASE DEFAULT
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
     WRITE(msgBuf,'(2A)') 'INIT_FIXED_ENV ReadTopOpt: ', &
       'Unknown top option letter in fifth position'
     CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
     STOP 'ABNORMAL END: S/R ReadTopOpt'
   END SELECT
 
@@ -399,11 +399,11 @@ CONTAINS
   CASE ( 'I' )
   CASE ( ' ' )
   CASE DEFAULT
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
     WRITE(msgBuf,'(2A)') 'INIT_FIXED_ENV ReadTopOpt: ', &
       'Unknown top option letter in sixth position'
     CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
     STOP 'ABNORMAL END: S/R ReadTopOpt'
   END SELECT
 
@@ -425,9 +425,9 @@ CONTAINS
 ! == Global Variables ==
 #include "SIZE.h"
 #include "EEPARAMS.h"
-#ifdef ALLOW_IHOP
-# include "IHOP_SIZE.h"
-# include "IHOP.h"
+#ifdef ALLOW_BELLI
+# include "BELLI_SIZE.h"
+# include "BELLI.h"
 #endif
 
 ! !INPUT PARAMETERS:
@@ -460,11 +460,11 @@ CONTAINS
   SELECT CASE ( HS%BC )
   CASE ( 'V','R','A','G','F','W','P' )
   CASE DEFAULT
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
     WRITE(msgBuf,'(2A)') 'INIT_FIXED_ENV TopBot: ', &
       'Unknown boundary condition type'
     CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
     STOP 'ABNORMAL END: S/R TopBot'
   END SELECT
 
@@ -526,10 +526,10 @@ CONTAINS
     IF ( ALLOCATED(x_out) ) DEALLOCATE(x_out)
     ALLOCATE( x_out(MAX(3, Nx)), STAT=iAllocStat )
     IF ( iAllocStat.NE.0 ) THEN
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
       WRITE(msgBuf,'(A)') 'IHOP ALLOCATEPOS: failed allocation Pos'
       CALL PRINT_ERROR( msgBuf, myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
       STOP 'ABNORMAL END: S/R ALLOCATEPOS'
     ENDIF
 
@@ -574,11 +574,11 @@ CONTAINS
   SELECT CASE ( RunType( 1:1 ) )
   CASE ( 'R','E','I','S','C','A','a','e' )
   CASE DEFAULT
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
     WRITE(msgBuf,'(2A)') 'INIT_FIXED_ENV ReadRunType: ', &
       'Unknown RunType selected'
     CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
     STOP 'ABNORMAL END: S/R ReadRunType'
   END SELECT
 
@@ -599,11 +599,11 @@ CONTAINS
     PlotType = 'rectilin  '
   CASE ( 'I' )
     IF ( Pos%nRZ.NE.Pos%nRR ) THEN
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
       WRITE(msgBuf,'(2A)') 'INIT_FIXED_ENV ReadRunType: ', &
         'Irregular grid option selected with nRZ != nRR'
       CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
       STOP 'ABNORMAL END: S/R ReadRunType'
     ENDIF ! IF ( Pos%nRZ.NE.Pos%nRR )
 

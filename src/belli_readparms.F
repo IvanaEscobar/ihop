@@ -1,4 +1,4 @@
-#include "IHOP_OPTIONS.h"
+#include "BELLI_OPTIONS.h"
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
@@ -19,10 +19,10 @@ C     == Global variables ===
 #ifdef ALLOW_MNC
 # include "MNC_PARAMS.h"
 #endif
-#include "IHOP_SIZE.h"
-#include "IHOP.h"
+#include "BELLI_SIZE.h"
+#include "BELLI.h"
 #ifdef ALLOW_COST
-# include "IHOP_COST.h"
+# include "BELLI_COST.h"
 #endif
 
 C     !INPUT PARAMETERS:
@@ -37,7 +37,7 @@ C    !FUNCTIONS:
       EXTERNAL ILNBLNK
 
 C     !LOCAL VARIABLES:
-#ifdef ALLOW_IHOP
+#ifdef ALLOW_BELLI
 C     msgBuf :: Informational/error message buffer
 C     iUnit  :: Work variable for IO unit number
       CHARACTER*(MAX_LEN_MBUF) msgBuf
@@ -56,13 +56,13 @@ C     iUnit  :: Work variable for IO unit number
      &      BELLI_topopt,
      &      BELLI_botopt,
      &      BELLI_runopt,
-#ifdef IHOP_MULTIPLE_SOURCES
+#ifdef BELLI_MULTIPLE_SOURCES
      &      BELLI_nsd,
 #endif
-#ifdef IHOP_MULTIPLE_RECEIVER_DEPTHS
+#ifdef BELLI_MULTIPLE_RECEIVER_DEPTHS
      &      BELLI_nrd,
 #endif
-#ifdef IHOP_MULTIPLE_RECEIVER_RANGES
+#ifdef BELLI_MULTIPLE_RECEIVER_RANGES
      &      BELLI_nrr,
 #endif
      &      BELLI_nalpha,
@@ -350,6 +350,6 @@ C     Fix to avoid running without getting any output:
 C--   Everyone else must wait for the parameters to be loaded
       _BARRIER
 
-#endif /* ALLOW_IHOP */
+#endif /* ALLOW_BELLI */
       RETURN
       END

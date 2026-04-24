@@ -1,4 +1,4 @@
-#include "IHOP_OPTIONS.h"
+#include "BELLI_OPTIONS.h"
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
@@ -17,10 +17,10 @@ C     == Global variables ===
 #include "EEPARAMS.h"
 #include "EESUPPORT.h"
 #include "PARAMS.h"
-#include "IHOP_SIZE.h"
-#include "IHOP.h"
+#include "BELLI_SIZE.h"
+#include "BELLI.h"
 #ifdef ALLOW_COST
-# include "IHOP_COST.h"
+# include "BELLI_COST.h"
 #endif
 
 
@@ -34,7 +34,7 @@ C     !FUNCTIONS:
       EXTERNAL ILNBLNK
 
 C     !LOCAL VARIABLES:
-#if (defined ALLOW_IHOP) && (defined ALLOW_COST)
+#if (defined ALLOW_BELLI) && (defined ALLOW_COST)
 # ifndef HAVE_SYSTEM
       CHARACTER*(MAX_LEN_MBUF) msgBuf
 # endif
@@ -69,7 +69,7 @@ C Create directory
 
       _END_MASTER( myThid )
 
-#endif /* ALLOW_IHOP && ALLOW_COST */
+#endif /* ALLOW_BELLI && ALLOW_COST */
 
       RETURN
       END

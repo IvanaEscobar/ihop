@@ -1,4 +1,4 @@
-#include "IHOP_OPTIONS.h"
+#include "BELLI_OPTIONS.h"
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
@@ -16,8 +16,8 @@ C     == Global variables ==
 #include "SIZE.h"
 #include "EEPARAMS.h"
 #include "PARAMS.h"
-#include "IHOP_SIZE.h"
-#include "IHOP.h"
+#include "BELLI_SIZE.h"
+#include "BELLI.h"
 
 C     !INPUT PARAMETERS:
 C     myIter            :: time-step number
@@ -25,8 +25,8 @@ C     myThid            :: thread number
       INTEGER myIter
       INTEGER myThid
 
-#ifdef ALLOW_IHOP
-#if (defined IHOP_3D_STATE) || (defined IHOP_2D_STATE)
+#ifdef ALLOW_BELLI
+#if (defined BELLI_3D_STATE) || (defined BELLI_2D_STATE)
 
 C     !LOCAL VARIABLES:
 C     fn          :: character buffer for creating filename
@@ -122,18 +122,18 @@ C       ELSE
 CC---   New way to read IHOP pickup:
 C        nj = 0
 CC---    read IHOP 3-D fields for restart
-C#ifdef IHOP_3D_STATE
+C#ifdef BELLI_3D_STATE
 C        CALL READ_MFLDS_3D_RL( 'SVEL    ', belli_ssp,
 C     &                                 nj, fp, Nr, myIter, myThid )
-C#endif /* IHOP_3D_STATE */
+C#endif /* BELLI_3D_STATE */
 C        nj = nj*Nr
 CC---    read IHOP 2-D fields for restart
-C#ifdef IHOP_2D_STATE
+C#ifdef BELLI_2D_STATE
 C        CALL READ_MFLDS_3D_RL( 'myPaSur1', myPa_Surf1,
 C     &                                 nj, fp, 1 , myIter, myThid )
 C        CALL READ_MFLDS_3D_RL( 'myPaSur2', myPa_Surf2,
 C     &                                 nj, fp, 1 , myIter, myThid )
-C#endif /* IHOP_2D_STATE */
+C#endif /* BELLI_2D_STATE */
 C
 CC--    end: new way to read pickup file
 C       ENDIF
@@ -163,16 +163,16 @@ C        STOP 'ABNORMAL END: S/R IHOP_READ_PICKUP'
 C       ENDIF
 C
 CC--    Update overlap regions:
-C#ifdef IHOP_3D_STATE
+C#ifdef BELLI_3D_STATE
 C        CALL EXCH_3D_RL( belli_ssp, Nr, myThid )
-C#endif /* IHOP_3D_STATE */
-C#ifdef IHOP_2D_STATE
+C#endif /* BELLI_3D_STATE */
+C#ifdef BELLI_2D_STATE
 C        CALL EXCH_XY_RL( myPa_Surf1, myThid )
 C        CALL EXCH_XY_RL( myPa_Surf2, myThid )
-C#endif /* IHOP_2D_STATE */
+C#endif /* BELLI_2D_STATE */
 
-#endif /* IHOP_3D_STATE or IHOP_2D_STATE */
-#endif /* ALLOW_IHOP */
+#endif /* BELLI_3D_STATE or BELLI_2D_STATE */
+#endif /* ALLOW_BELLI */
 
       RETURN
       END

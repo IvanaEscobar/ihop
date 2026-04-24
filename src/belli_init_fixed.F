@@ -1,4 +1,4 @@
-#include "IHOP_OPTIONS.h"
+#include "BELLI_OPTIONS.h"
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
@@ -17,8 +17,8 @@ C == Global Variables ==
 #include "EEPARAMS.h"
 #include "SIZE.h"
 #include "PARAMS.h"
-#include "IHOP_SIZE.h"
-#include "IHOP.h"
+#include "BELLI_SIZE.h"
+#include "BELLI.h"
 #ifdef HAVE_NETCDF
 #include "netcdf.inc"
 #endif
@@ -29,7 +29,7 @@ C     myThid ::  my Thread Id number
 C     !OUTPUT PARAMETERS: None
 
 
-#ifdef ALLOW_IHOP
+#ifdef ALLOW_BELLI
 C     !FUNCTIONS:
       INTEGER ILNBLNK
       EXTERNAL ILNBLNK
@@ -169,6 +169,6 @@ C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
       ENDIF
 #endif /* ALLOW_DIAGNOSTICS */
 
-#endif /* ALLOW_IHOP */
+#endif /* ALLOW_BELLI */
       RETURN
       END

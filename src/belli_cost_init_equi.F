@@ -1,4 +1,4 @@
-#include "IHOP_OPTIONS.h"
+#include "BELLI_OPTIONS.h"
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
@@ -25,11 +25,11 @@ C == Global Variables ===
 #include "SIZE.h"
 #include "GRID.h"
 #include "DYNVARS.h"
-#ifdef ALLOW_IHOP
-# include "IHOP_SIZE.h"
+#ifdef ALLOW_BELLI
+# include "BELLI_SIZE.h"
 # include "netcdf.inc"
 # ifdef ALLOW_COST
-# include "IHOP_COST.h"
+# include "BELLI_COST.h"
 # endif
 #endif
 
@@ -43,7 +43,7 @@ C     !OUTPUT PARAMETERS:
       INTEGER fID2
 
 C     !LOCAL VARIABLES:
-#if (defined ALLOW_IHOP) && (defined ALLOW_COST)
+#if (defined ALLOW_BELLI) && (defined ALLOW_COST)
       INTEGER dimID, varID(3), varID0
       INTEGER irec, err
       CHARACTER*(MAX_LEN_MBUF) msgBuf
@@ -138,7 +138,7 @@ C Create a netcdf file
         ENDDO
 
       ENDIF !IF (ihopDoNcOutput)
-#endif /* ALLOW_IHOP && ALLOW_COST */
+#endif /* ALLOW_BELLI && ALLOW_COST */
 
       RETURN
       END

@@ -1,4 +1,4 @@
-#include "IHOP_OPTIONS.h"
+#include "BELLI_OPTIONS.h"
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 !BOP
 !MODULE: IHOP
@@ -39,8 +39,8 @@ MODULE IHOP
 # include "EESUPPORT.h"
 !#endif
 #include "PARAMS.h"
-#include "IHOP_SIZE.h"
-#include "IHOP.h"
+#include "BELLI_SIZE.h"
+#include "BELLI.h"
 #ifdef ALLOW_CTRL
 # include "CTRL_FIELDS.h"
 #endif
@@ -150,7 +150,7 @@ CONTAINS
 #endif
 !  PRINT *, "ESCOBAR myproc, q(1) ", myprocid, Beam%nsteps, ray2d(Beam%nsteps)%q(1)
 
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
   IF ( myProcID.EQ.0 .AND. BELLI_dumpfreq.GE.0 ) THEN
     WRITE(msgBuf, '(A)' )
     CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
@@ -176,7 +176,7 @@ CONTAINS
     END SELECT
 
   ENDIF ! IF ( myProcID.EQ.0 )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
 
   RETURN
   END !SUBROUTINE IHOP_MAIN
@@ -262,7 +262,7 @@ CONTAINS
       DalphaOpt = SQRT( c / ( 6.0 * BELLI_freq * Pos%RR( Pos%nRR ) ) )
       nAlphaOpt = 2 + INT( ( Angles%arad( Angles%nAlpha ) &
                             - Angles%arad( 1 ) ) / DalphaOpt )
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
       IF ( Angles%nAlpha .LT. nAlphaOpt ) THEN
         WRITE( msgBuf, '(A,/,A,I10.4)' ) 'WARNING: Too few beams', &
           'nAlpha should be at least = ', nAlphaOpt
@@ -270,7 +270,7 @@ CONTAINS
         IF (BELLI_dumpfreq.GE.0) &
           CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
       ENDIF
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
     ENDIF ! IF ( Beam%RunType( 1:1 ).EQ.'C' )
     !!IESCO22: end BEAM stuff !!
 
@@ -312,7 +312,7 @@ CONTAINS
                   * SIN( Angles%arad( iAlpha ) ) ) )
         !!IESCO22: end BEAM stuff !!
 
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
           ! report progress in PRTFile (skipping some angles)
           IF ( MOD( iAlpha-1, MAX( Angles%nAlpha/50, 1 ) ).EQ.0 ) THEN
             WRITE(msgBuf,'(A,I7,F10.2)') 'Tracing ray ', &
@@ -324,7 +324,7 @@ CONTAINS
             ENDIF
 
           ENDIF
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
 
           ! Trace a ray, update ray2D structure
           CALL TraceRay2D( xs, Angles%arad( iAlpha ), Amp0, myThid )
@@ -505,13 +505,13 @@ CONTAINS
 ! Source MUST be within the domain
   IF ( DistBegTop.LE.0 .OR. DistBegBot.LE.0 ) THEN
     Beam%nSteps = 1
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
     WRITE(msgBuf,'(A)') &
       'WARNING: TraceRay2D: The source is outside the domain boundaries'
     ! In adjoint mode we do not write output besides on the first run
     IF (BELLI_dumpfreq.GE.0) &
       CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
   ELSE
     ! Trace the beam (Reflect2D increments the step index, iH)
     iH = 0
@@ -683,12 +683,12 @@ CONTAINS
           endRay=.FALSE.
         ENDIF
 
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
         IF ( endRay ) THEN
           IF ( BELLI_dumpfreq.GE.0 ) &
             CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
         ENDIF
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
 
         IF (INDEX(msgBuf, 'TraceRay2D').EQ.1) THEN
           Beam%nSteps = iH+1
@@ -998,14 +998,14 @@ CONTAINS
     ENDIF ! IF ( ABS( Refl ).LT.1.0E-5 )
 
   CASE DEFAULT
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
     WRITE(msgBuf,'(2A)') 'HS%BC = ', HS%BC
     ! In adjoint mode we do not write output besides on the first run
     IF ( BELLI_dumpfreq.GE.0 ) &
       CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
     WRITE(msgBuf,'(A)') 'IHOP Reflect2D: Unknown boundary condition type'
     CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
       STOP 'ABNORMAL END: S/R Reflect2D'
   END SELECT !CASE ( Beam%Type( 3:3 ) )
 
@@ -1015,11 +1015,11 @@ CONTAINS
   ELSEIF ( BotTop.EQ.'BOT' ) THEN
     ray2D( iH+1 )%nBotBnc = ray2D( iH )%nBotBnc + 1
   ELSE
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
     WRITE(msgBuf,'(2A)') 'IHOP Reflect2D: ', &
       'no reflection bounce, but in reflect2d somehow'
     CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
     STOP 'ABNORMAL END: S/R Reflect2D'
     
   ENDIF

@@ -1,4 +1,4 @@
-#include "IHOP_OPTIONS.h"
+#include "BELLI_OPTIONS.h"
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
@@ -24,12 +24,12 @@ C == Global variables ===
 #include "PARAMS.h"
 #include "GRID.h"
 #include "DYNVARS.h"
-#ifdef ALLOW_IHOP
+#ifdef ALLOW_BELLI
 # include "netcdf.inc"
-# include "IHOP_SIZE.h"
-# include "IHOP.h"
+# include "BELLI_SIZE.h"
+# include "BELLI.h"
 # ifdef ALLOW_COST
-#  include "IHOP_COST.h"
+#  include "BELLI_COST.h"
 # endif
 #endif
 
@@ -46,7 +46,7 @@ C     vec_loc   ::
       _RL     vec_loc
 
 C     !LOCAL VARIABLES:
-#if (defined ALLOW_IHOP) && (defined ALLOW_COST)
+#if (defined ALLOW_BELLI) && (defined ALLOW_COST)
 C tmpbObsNo :: number of obs in the file
       CHARACTER*(MAX_LEN_MBUF) msgBuf
       INTEGER v1, err, varId1, tmpbObsNo
@@ -129,7 +129,7 @@ C Get vec_loc from the buffer
 
       ENDIF
 
-#endif /* ALLOW_IHOP */
+#endif /* ALLOW_BELLI */
 
       RETURN
       END

@@ -1,4 +1,4 @@
-#include "IHOP_OPTIONS.h"
+#include "BELLI_OPTIONS.h"
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP 0
@@ -15,8 +15,8 @@ C     !USES:
 #include "SIZE.h"
 #include "EEPARAMS.h"
 #include "PARAMS.h"
-#include "IHOP_SIZE.h"
-#include "IHOP.h"
+#include "BELLI_SIZE.h"
+#include "BELLI.h"
 
 C     !INPUT PARAMETERS:
       INTEGER myThid
@@ -25,7 +25,7 @@ C    !OUTPUT PARAMETERS:
 C    !LOCAL VARIABLES:
 CEOP
 
-C#ifdef ALLOW_IHOP
+C#ifdef ALLOW_BELLI
 C#ifdef ALLOW_MNC
 C
 C      IF (useMNC) THEN
@@ -42,7 +42,7 @@ C
 C      ENDIF
 C
 C#endif /* ALLOW_MNC */
-C#endif /* ALLOW_IHOP */
+C#endif /* ALLOW_BELLI */
 
       RETURN
       END

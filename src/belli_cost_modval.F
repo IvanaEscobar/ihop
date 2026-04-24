@@ -1,4 +1,4 @@
-#include "IHOP_OPTIONS.h"
+#include "BELLI_OPTIONS.h"
 #ifdef ALLOW_CTRL
 # include "CTRL_OPTIONS.h"
 #endif
@@ -19,12 +19,12 @@ C     !DESCRIPTION:
 C     Computes ihop predicted datum
 
 C     !USES:
-#ifdef ALLOW_IHOP
+#ifdef ALLOW_BELLI
       USE arr_mod,   only: Arr, nArrival, nMaxArr
       USE srPos_mod, only: Pos
       USE ihop_mod,  only: rad2deg
 #endif
-#ifdef TEST_IHOP_COST_INLOOP
+#ifdef TEST_BELLI_COST_INLOOP
 C      USE ssp_mod,  only: SSP, Grid
 C      USE ihop_mod, only: ray2D, nMax, Beam
 #endif
@@ -41,12 +41,12 @@ C == Global variables ===
 #ifdef ALLOW_CTRL
 # include "OPTIMCYCLE.h"
 #endif
-#ifdef ALLOW_IHOP
-# include "IHOP_SIZE.h"
-# include "IHOP.h"
+#ifdef ALLOW_BELLI
+# include "BELLI_SIZE.h"
+# include "BELLI.h"
 # include "netcdf.inc"
 # ifdef ALLOW_COST
-#  include "IHOP_COST.h"
+#  include "BELLI_COST.h"
 # endif
 #endif
 #ifdef ALLOW_AUTODIFF
@@ -64,7 +64,7 @@ C     !OUTPUT PARAMETERS:
       _RL     modVal
 
 C     !LOCAL VARIABLES:
-# ifdef TEST_IHOP_COST_INLOOP
+# ifdef TEST_BELLI_COST_INLOOP
       INTEGER r,k
       INTEGER bi,bj, i,j
       INTEGER itlo,ithi
@@ -72,7 +72,7 @@ C     !LOCAL VARIABLES:
       _RL locQoI, locVol, totVol
       _RL locTHETA
 # endif
-#ifdef ALLOW_IHOP
+#ifdef ALLOW_BELLI
       CHARACTER*(MAX_LEN_MBUF) msgBuf
       INTEGER ii
       INTEGER maxID
@@ -91,7 +91,7 @@ CEOP
 
 ! Added uses of modules above, have access to Arr and Pos
 ! ===================================================================
-# ifdef TEST_IHOP_COST_INLOOP
+# ifdef TEST_BELLI_COST_INLOOP
 C-- OPTION 0)
 C-- global summation of sound speed field within a prescribed box of
 C   bcg.hd
@@ -190,7 +190,7 @@ C      ii = 4
 C      modval = modval + REAL(Arr(ii,ri,rj)%delay)
 CC-- global Arr%delay: F90 eigenray travel time END
 
-# else /* TEST_IHOP_COST_INLOOP */
+# else /* TEST_BELLI_COST_INLOOP */
 
 ! Are ri and rj contained in nRR AND nRD
       IF ( (ri.GT.nRR).AND.(rj.gt.nRD) ) THEN
@@ -229,11 +229,11 @@ CC-- global Arr%delay: F90 eigenray travel time END
       modVal = REAL( Arr( maxID,ri,rj )%delay )
 
 ! ray storage of top arrival...
-# endif /* TEST_IHOP_COST_INLOOP */
+# endif /* TEST_BELLI_COST_INLOOP */
       WRITE(standardMessageUnit,'(A,E30.17)')
      & "ESCOBAR modVal ", modVal
 
-#endif /* ALLOW_IHOP */
+#endif /* ALLOW_BELLI */
 
       RETURN
       END

@@ -1,4 +1,4 @@
-#include "IHOP_OPTIONS.h"
+#include "BELLI_OPTIONS.h"
 
 C   ==================================================================
 C   active_file_ihop_ad.F: Routines that handle I/O of
@@ -39,10 +39,10 @@ C     !USES:
 C     == Global variables ===
 #include "EEPARAMS.h"
 #include "SIZE.h"
-#ifdef ALLOW_IHOP
-# include "IHOP_SIZE.h"
+#ifdef ALLOW_BELLI
+# include "BELLI_SIZE.h"
 # ifdef ALLOW_COST
-#  include "IHOP_COST.h"
+#  include "BELLI_COST.h"
 # endif
 #endif
 
@@ -63,7 +63,7 @@ C     myThid          :: my thread ID
 C     !OUTPUT PARAMETERS:
 CEOP
 
-#if (defined ALLOW_IHOP) && (defined ALLOW_COST)
+#if (defined ALLOW_BELLI) && (defined ALLOW_COST)
 
       CALL ACTIVE_READ_IHOP_TILE_RL(
      &     ncidAD(active_num_file,bi,bj),
@@ -103,10 +103,10 @@ C     !USES:
 C     == Global variables ===
 #include "EEPARAMS.h"
 #include "SIZE.h"
-#ifdef ALLOW_IHOP
-# include "IHOP_SIZE.h"
+#ifdef ALLOW_BELLI
+# include "BELLI_SIZE.h"
 # ifdef ALLOW_COST
-#  include "IHOP_COST.h"
+#  include "BELLI_COST.h"
 # endif
 #endif
 
@@ -125,7 +125,7 @@ C     myThid          :: my thread ID
 C     !OUTPUT PARAMETERS:
 CEOP
 
-#if (defined ALLOW_IHOP) && (defined ALLOW_COST)
+#if (defined ALLOW_BELLI) && (defined ALLOW_COST)
 
       CALL ACTIVE_WRITE_IHOP_TILE_RL(
      &     ncidAD(active_num_file,bi,bj),
@@ -161,10 +161,10 @@ C     !USES:
 C     == Global variables ===
 #include "EEPARAMS.h"
 #include "SIZE.h"
-#ifdef ALLOW_IHOP
-# include "IHOP_SIZE.h"
+#ifdef ALLOW_BELLI
+# include "BELLI_SIZE.h"
 # ifdef ALLOW_COST
-#  include "IHOP_COST.h"
+#  include "BELLI_COST.h"
 # endif
 #endif
 
@@ -185,7 +185,7 @@ C     myThid          :: my thread ID
 C     !OUTPUT PARAMETERS:
 CEOP
 
-#if (defined ALLOW_IHOP) && (defined ALLOW_COST)
+#if (defined ALLOW_BELLI) && (defined ALLOW_COST)
 
       CALL ACTIVE_READ_IHOP_GLOB_RL(
      &     ncidADGLOB(active_num_file),
@@ -221,10 +221,10 @@ C     !USES:
 C     == Global variables ===
 #include "EEPARAMS.h"
 #include "SIZE.h"
-#ifdef ALLOW_IHOP
-# include "IHOP_SIZE.h"
+#ifdef ALLOW_BELLI
+# include "BELLI_SIZE.h"
 # ifdef ALLOW_COST
-#  include "IHOP_COST.h"
+#  include "BELLI_COST.h"
 # endif
 #endif
 
@@ -243,7 +243,7 @@ C     myThid          :: my thread ID
 C     !OUTPUT PARAMETERS:
 CEOP
 
-#if (defined ALLOW_IHOP) && (defined ALLOW_COST)
+#if (defined ALLOW_BELLI) && (defined ALLOW_COST)
 
       CALL ACTIVE_WRITE_IHOP_GLOB_RL(
      &     ncidADGLOB(active_num_file),
