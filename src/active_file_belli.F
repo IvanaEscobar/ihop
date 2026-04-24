@@ -1,25 +1,25 @@
 #include "BELLI_OPTIONS.h"
 
 C   ==================================================================
-C   active_file_ihop.F: Routines that handle I/O of
+C   active_file_belli.F: Routines that handle I/O of
 C                          tiled and global active 
 C                          variables for adjoint/tangent
 C                          linear calculations, related to 
-C                          NetCDF iHOP cost data files
+C                          NetCDF belli cost data files
 C
 C   Routines:
-C   o active_read_ihop_tile  - Read an active 1D record from file
-C   o active_write_ihop_tile - Write an active 1D record to file
-C   o active_read_ihop_glob  - Read an active 1D record from file
-C   o active_write_ihop_glob - Write an active 1D record to file
+C   o active_read_belli_tile  - Read an active 1D record from file
+C   o active_write_belli_tile - Write an active 1D record to file
+C   o active_read_belli_glob  - Read an active 1D record from file
+C   o active_write_belli_glob - Write an active 1D record to file
 C   ==================================================================
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
-C !ROUTINE: ACTIVE_READ_IHOP_TILE
+C !ROUTINE: ACTIVE_READ_BELLI_TILE
 
 C !INTERFACE:
-      SUBROUTINE ACTIVE_READ_IHOP_TILE(
+      SUBROUTINE ACTIVE_READ_BELLI_TILE(
      I                               active_num_file,
      O                               active_var,
      I                               irec,
@@ -31,7 +31,7 @@ C !INTERFACE:
      I                               dummy )
 
 C     !DESCRIPTION:
-C     Read an active record from an iHOP .equi tiled NetCDF or 
+C     Read an active record from an belli .equi tiled NetCDF or 
 C     Binary file
 
 C     !USES:
@@ -66,7 +66,7 @@ CEOP
 
 #if (defined ALLOW_BELLI) && (defined ALLOW_COST)
 
-      CALL ACTIVE_READ_IHOP_TILE_RL(
+      CALL ACTIVE_READ_BELLI_TILE_RL(
      &     ncidFWD(active_num_file,bi,bj),
      &     active_num_file,
      &     active_var, lAdInit, irec,
@@ -80,10 +80,10 @@ CEOP
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
-C !ROUTINE: ACTIVE_WRITE_IHOP_TILE
+C !ROUTINE: ACTIVE_WRITE_BELLI_TILE
 
 C !INTERFACE:
-      SUBROUTINE ACTIVE_WRITE_IHOP_TILE(
+      SUBROUTINE ACTIVE_WRITE_BELLI_TILE(
      I                           active_num_file,
      I                           active_var,
      I                           irec,
@@ -94,7 +94,7 @@ C !INTERFACE:
      O                           dummy )
 
 C     !DESCRIPTION:
-C     Write an active record from an iHOP .equi tiled NetCDF or 
+C     Write an active record from an belli .equi tiled NetCDF or 
 C     Binary file
 
 C     !USES:
@@ -125,7 +125,7 @@ C     !OUTPUT PARAMETERS:
 CEOP
 
 #if (defined ALLOW_BELLI) && (defined ALLOW_COST)
-      CALL ACTIVE_WRITE_IHOP_TILE_RL(
+      CALL ACTIVE_WRITE_BELLI_TILE_RL(
      &     ncidFWD(active_num_file,bi,bj),
      &     active_num_file,
      &     active_var, irec,
@@ -139,10 +139,10 @@ CEOP
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
-C !ROUTINE: ACTIVE_READ_IHOP_GLOB
+C !ROUTINE: ACTIVE_READ_BELLI_GLOB
 
 C !INTERFACE:
-      SUBROUTINE ACTIVE_READ_IHOP_GLOB(
+      SUBROUTINE ACTIVE_READ_BELLI_GLOB(
      I                               active_num_file,
      O                               active_var,
      I                               irec,
@@ -152,7 +152,7 @@ C !INTERFACE:
      I                               dummy )
 
 C     !DESCRIPTION:
-C     Read an active record from an iHOP .equi global NetCDF
+C     Read an active record from an belli .equi global NetCDF
 
 C     !USES:
       IMPLICIT NONE
@@ -186,7 +186,7 @@ CEOP
 
 #if (defined ALLOW_BELLI) && (defined ALLOW_COST)
 
-      CALL ACTIVE_READ_IHOP_GLOB_RL(
+      CALL ACTIVE_READ_BELLI_GLOB_RL(
      &     ncidGLOB(active_num_file),
      &     active_num_file,
      &     active_var, lAdInit, irec,
@@ -200,10 +200,10 @@ CEOP
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
-C !ROUTINE: ACTIVE_WRITE_IHOP_GLOB
+C !ROUTINE: ACTIVE_WRITE_BELLI_GLOB
 
 C !INTERFACE:
-      SUBROUTINE ACTIVE_WRITE_IHOP_GLOB(
+      SUBROUTINE ACTIVE_WRITE_BELLI_GLOB(
      I                           active_num_file,
      I                           active_var,
      I                           irec,
@@ -212,7 +212,7 @@ C !INTERFACE:
      O                           dummy )
 
 C     !DESCRIPTION:
-C     Write an active record from an iHOP .equi global NetCDF
+C     Write an active record from an belli .equi global NetCDF
 
 C     !USES:
       IMPLICIT NONE
@@ -243,7 +243,7 @@ CEOP
 
 #if (defined ALLOW_BELLI) && (defined ALLOW_COST)
 
-      CALL ACTIVE_WRITE_IHOP_GLOB_RL(
+      CALL ACTIVE_WRITE_BELLI_GLOB_RL(
      &     ncidGLOB(active_num_file),
      &     active_num_file,
      &     active_var, irec,
