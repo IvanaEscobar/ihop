@@ -293,7 +293,7 @@ CONTAINS
   LOGICAL :: skip_range
   INTEGER :: iallocstat
   INTEGER :: bi,bj, i,j,k, ii,jj
-  INTEGER :: nii(IHOP_NPTS_RANGE), njj(IHOP_NPTS_RANGE)
+  INTEGER :: nii(BELLI_NPTS_RANGE), njj(BELLI_NPTS_RANGE)
   REAL (KIND=_RL90) :: tolerance
 
   ! init local vars
@@ -309,7 +309,7 @@ CONTAINS
 
   ! set belli SSP Grid size
   Grid%nZ = Nr+2 ! add z=0 z=Depth layers to GCM Nr
-  Grid%nR = IHOP_NPTS_RANGE
+  Grid%nR = BELLI_NPTS_RANGE
   Grid%nPts = Grid%nZ
 
   ! set Grid%Z from rC, rkSign=-1 used bc belli uses +ive depths
@@ -991,7 +991,7 @@ USE splinec_mod,  only: splineall
   LOGICAL :: interp_finished
   INTEGER :: iallocstat
   INTEGER :: bi,bj, i,j,k, ii,jj
-  INTEGER :: njj(IHOP_NPTS_RANGE)
+  INTEGER :: njj(BELLI_NPTS_RANGE)
   INTEGER :: nZnR_size
   REAL (KIND=_RL90)             :: dcdz, tolerance
   REAL (KIND=_RL90), ALLOCATABLE:: sspTile(:,:,:,:), sspGlob(:)

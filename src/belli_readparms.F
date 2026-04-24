@@ -49,7 +49,7 @@ C     iUnit  :: Work variable for IO unit number
       NAMELIST /BELLI_PARM01/
      &      BELLI_fileroot,
      &      BELLI_title,
-     &      IHOP_dumpFreq,
+     &      BELLI_dumpFreq,
      &      BELLI_MNC
 
       NAMELIST /BELLI_PARM02/
@@ -128,7 +128,7 @@ C--   Default values for BELLI_PARM01
       BELLI_fileroot = ''
       BELLI_title    = 'belli'
       BELLI_MNC      = useMNC
-      IHOP_dumpFreq = dumpFreq
+      BELLI_dumpFreq = dumpFreq
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 C     Read parameters from open data file: BELLI_PARM01

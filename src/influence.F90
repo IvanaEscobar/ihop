@@ -423,7 +423,7 @@ CONTAINS
 
       ! compute beam influence for this segment of the ray
       inRcvrRanges=.TRUE.
-      RcvrRanges: DO ir = 1, ihop_nRR
+      RcvrRanges: DO ir = 1, BELLI_nRR
 !!$TAF store inrcvrranges = iiitape2
         ! is Rr( ir ) contained in [ rA, rB )? Then compute beam influence
         IF ( Pos%RR( ir ).GE.MIN( rA, xB(1) ) .AND. &
@@ -672,7 +672,7 @@ CONTAINS
 
       ! compute beam influence for this segment of the ray
       inRcvrRanges=.TRUE.
-      RcvrRanges: DO ir = 1, ihop_nRR
+      RcvrRanges: DO ir = 1, BELLI_nRR
 !!$TAF store inrcvrranges = iGauCart2
         ! is Rr( ir ) contained in [ rA, rB )? Then compute beam influence
         IF ( Pos%RR( ir ).GE.MIN( rA, xB(1) ) .AND. &

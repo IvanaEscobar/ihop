@@ -159,7 +159,7 @@ CONTAINS
   CASE( '~', '*', ' ' )
   CASE DEFAULT
 #ifdef BELLI_WRITE_OUT
-    WRITE(msgBuf,'(2A)') 'IHOP_INIT_MOD init_fixed_env: ',&
+    WRITE(msgBuf,'(2A)') 'BELLI_INIT_MOD init_fixed_env: ',&
       'Unknown Bdry%Bot%HS%Opt(2)'
     CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* BELLI_WRITE_OUT */

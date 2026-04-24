@@ -41,7 +41,7 @@ C     !LOCAL VARIABLES:
 #endif /* ALLOW_MNC */
 CEOP
 
-      IF ( DIFFERENT_MULTIPLE(IHOP_dumpFreq,myTime,deltaTClock)
+      IF ( DIFFERENT_MULTIPLE(BELLI_dumpFreq,myTime,deltaTClock)
      &  .OR. dumpInitAndLast.AND.( myTime.EQ.endTime .OR.
      &                             myTime.EQ.startTime  )
      &     ) THEN

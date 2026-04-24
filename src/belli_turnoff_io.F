@@ -42,7 +42,7 @@ C--   only master-thread resets shared flags (in common block)
 
 C--   Set output freq. to zero to avoid re-write of
 C     averaged fields in reverse checkpointing loops
-      IHOP_dumpFreq    = -1.
+      BELLI_dumpFreq    = -1.
 
       _END_MASTER( myThid )
 
