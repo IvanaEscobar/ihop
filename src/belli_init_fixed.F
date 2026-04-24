@@ -44,7 +44,7 @@ C     !LOCAL VARIABLES:
       _RS :: data2vec( BELLI_MAX_NC_SIZE*BELLI_MAX_NC_SIZE )
       _RS :: data3vec( BELLI_MAX_NC_SIZE*BELLI_MAX_NC_SIZE )
       _RL :: data4vec( BELLI_MAX_NC_SIZE*BELLI_MAX_NC_SIZE )
-      CHARACTER*(MAX_LEN_FNAM) :: ihop_file
+      CHARACTER*(MAX_LEN_FNAM) :: b_file
 CEOP
 
 C Only do I/O if in the main thread
@@ -53,11 +53,11 @@ C Only do I/O if in the main thread
 C Read NetCDF input: setting the acoustic domain
       IL  = ILNBLNK( BELLI_interpfile )
       IF (IL.NE.0) THEN
-          WRITE(ihop_file,'(2A)') ihop_interpfile(1:IL),'.nc'
+          WRITE(b_file,'(2A)') ihop_interpfile(1:IL),'.nc'
       ELSE
-          ihop_file = BELLI_interpfile
+          b_file = BELLI_interpfile
       END IF
-      err = NF_OPEN(ihop_file, NF_NOWRITE, ncid)
+      err = NF_OPEN(b_file, NF_NOWRITE, ncid)
       CALL BELLI_COST_NF_ERROR('INIT_FIXED NF_OPEN',err,1,1,myThid)
       IF (err .NE. NF_NOERR) THEN
         WRITE(msgBuf, '(2A)') 'S/R BELLI_INIT_FIXED: ',

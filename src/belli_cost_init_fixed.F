@@ -42,7 +42,7 @@ C     !FUNCTIONS:
 C     !LOCAL VARIABLES:
 #if ( defined (ALLOW_COST) && defined (ALLOW_BELLI) )
       CHARACTER*(MAX_LEN_MBUF) :: msgBuf
-      CHARACTER*(MAX_LEN_FNAM) :: IHOPObs_File, fnamedatanc
+      CHARACTER*(MAX_LEN_FNAM) :: bObs_File, fnamedatanc
       CHARACTER*(MAX_LEN_FNAM) :: fnameequinc
       CHARACTER*(MAX_LEN_FNAM) :: adfnameequinc, tlfnameequinc
       CHARACTER*(MAX_LEN_FNAM) :: fnameequincglo
@@ -52,13 +52,13 @@ C     !LOCAL VARIABLES:
       INTEGER :: varId1a, varId1b, varId2, varId3
       INTEGER :: varId4a, varId4b, varId4c
       INTEGER :: varId5a, varId5b, varIdEquiv(2)
-      INTEGER :: weighIhopObs, obsIsInRunTime
-      INTEGER :: obsNo_valid, ihopObsInTile
+      INTEGER :: weighObs, obsIsInRunTime
+      INTEGER :: obsNo_valid, obsInTile
       INTEGER :: tmpdate(4), tmpdiff(4)
       INTEGER :: num_file, hh, obsNo_hh
       INTEGER :: bi, bj, nObs, i, j, k
       INTEGER :: iG, jG
-      INTEGER :: stop_ihop_cost
+      INTEGER :: stop_cost
       _RL :: yymmddMin, yymmddMax
       _RL :: hhmmssMin, hhmmssMax
       _RL :: tmpyymmdd(NOBSMAX_BELLI), tmphhmmss(NOBSMAX_BELLI)
@@ -69,16 +69,16 @@ C     !LOCAL VARIABLES:
       _RL :: lon_cur, lat_cur
       _RL :: tmp_depth2(NOBSMAX_BELLI), depth_cur
       _RL :: tmp_uncert2(NOBSMAX_BELLI)
-      _RL :: ihopObs_i
-      _RL :: ihopObs_j
-      _RL :: ihopObs_k1, ihopObs_k2
+      _RL :: bObs_i
+      _RL :: bObs_j
+      _RL :: bObs_k1, bObs_k2
       _RL :: lon_1, lon_2
       _RL :: lat_1, lat_2
       _RL :: depth_1, depth_2
       _RL :: lon_tmp1, lon_tmp2, lat_tmp1, lat_tmp2
       _RL :: depth_fac
 CBOP
-      stop_ihop_cost = 0
+      stop_cost = 0
 
       WRITE(msgBuf,'(A)') ''// CHAR(10) //
      & '                    BELLI COST general parameters :'
@@ -115,23 +115,23 @@ CBOP
       DO num_file = 1, NFILESMAX_BELLI
         obsNo_hh = 0
 
-        IHOPObs_File=' '
+        bObs_File=' '
         IL = ILNBLNK( bObs_Files(num_file) )
         IF (IL.NE.0) THEN
-          WRITE(IHOPObs_File,'(A)') bObs_Files(num_file)(1:IL)
+          WRITE(bObs_File,'(A)') bObs_Files(num_file)(1:IL)
           WRITE(msgBuf,'(A,I3,2A)') ''// CHAR(10) //
      &      '                    belli file #', num_file,
-     &      ' is ', IHOPObs_File(1:IL)
+     &      ' is ', bObs_File(1:IL)
           CALL PRINT_MESSAGE( msgBuf,
      &         standardMessageUnit, SQUEEZE_RIGHT, myThid )
         ENDIF
 
-        IL = ILNBLNK( IHOPObs_File )
+        IL = ILNBLNK( bObs_File )
         IF (IL.NE.0) THEN
 !===========================================================
 !       READ BELLI OBS NETCDF IDs
 !===========================================================
-          WRITE(fnamedatanc,'(2A)') IHOPObs_File(1:IL),'.nc'
+          WRITE(fnamedatanc,'(2A)') bObs_File(1:IL),'.nc'
           err = NF_OPEN( fnamedatanc, NF_NOWRITE, 
      &          ncidData(num_file) )
         CALL BELLI_COST_NF_ERROR('init_fixed 1',err,1,1,myThid)
@@ -158,7 +158,7 @@ CBOP
 
           IF (err.NE.NF_NOERR) THEN
             WRITE(msgBuf,'(4A)')
-     &       'BELLI_COST_INIT_FIXED: file ', IHOPObs_File(1:IL),
+     &       'BELLI_COST_INIT_FIXED: file ', bObs_File(1:IL),
      &       '.nc is not in the pkg/belli cost format: ',
      &       'check iter,uncert'
             CALL PRINT_ERROR( msgBuf, myThid )
@@ -166,7 +166,7 @@ CBOP
 ! Assume all belli observations are instantaneous
 
 !2 Weight for each belli obs (if missing, assume equal weights):
-          weighIhopObs = 1
+          weighObs = 1
 
           err = NF_INQ_VARID( ncid, 'belli_uncert', varId3 )
         CALL BELLI_COST_NF_ERROR('init_fixed 7',err,1,1,myThid)
@@ -177,7 +177,7 @@ CBOP
             CALL PRINT_MESSAGE( msgBuf,
      &           standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
-            weighIhopObs = 0
+            weighObs = 0
 
           ENDIF
 
@@ -191,7 +191,7 @@ CBOP
 
           IF (err.NE.NF_NOERR) THEN
             WRITE(msgBuf,'(3A)')
-     &        'BELLI_COST_INIT_FIXED: file ', IHOPObs_File(1:IL),
+     &        'BELLI_COST_INIT_FIXED: file ', bObs_File(1:IL),
      &        '.nc is not in the pkg/belli cost format, check x,y,z'
             CALL PRINT_ERROR( msgBuf, myThid )
           ENDIF
@@ -201,7 +201,7 @@ CBOP
 
           IF (err.NE.NF_NOERR) THEN
            WRITE(msgBuf,'(3A)')
-     &       'BELLI_COST_INIT_FIXED: file ', IHOPObs_File(1:IL),
+     &       'BELLI_COST_INIT_FIXED: file ', bObs_File(1:IL),
      &       '.nc is not in the pkg/belli cost format, check belli_val'
            CALL PRINT_ERROR( msgBuf, myThid )
           ENDIF
@@ -220,15 +220,15 @@ CBOP
             JL  = ILNBLNK( bObs_Dir )
 
             WRITE(fnameequincglo,'(3A)') bObs_Dir(1:JL),
-     &        IHOPObs_File(1:IL),'.equi.nc'
+     &        bObs_File(1:IL),'.equi.nc'
 
 # ifdef ALLOW_ADJOINT_RUN
             WRITE(adfnameequincglo,'(4A)') bObs_Dir(1:JL),'ad',
-     &        IHOPObs_File(1:IL),'.equi.nc'
+     &        bObs_File(1:IL),'.equi.nc'
 # endif
 # ifdef ALLOW_TANGENTLINEAR_RUN
             WRITE(tlfnameequincglo,'(4A)') bObs_Dir(1:JL),'tl',
-     &        IHOPObs_File(1:IL),'.equi.nc'
+     &        bObs_File(1:IL),'.equi.nc'
 # endif
 
             JL = ILNBLNK( fnameequincglo )
@@ -375,7 +375,7 @@ CBOP
 
           IF ( err.NE.NF_NOERR ) THEN
             WRITE(msgBuf,'(3A)')
-     &        'BELLI_COST_INIT_FIXED: file ', IHOPObs_File(1:IL),
+     &        'BELLI_COST_INIT_FIXED: file ', bObs_File(1:IL),
      &        '.nc was not read properly: check yyyymmdd, hhmmss.'
             CALL PRINT_ERROR( msgBuf, myThid )
           ENDIF
@@ -433,11 +433,11 @@ CBOP
 ! Check that maximum size was not reached:
             IF (obsNo(num_file).GT.NOBSMAX_BELLI) THEN
               WRITE(msgBuf,'(3A)')
-     &          'BELLI_COST_INIT_FIXED: file ', IHOPObs_File(1:IL),
+     &          'BELLI_COST_INIT_FIXED: file ', bObs_File(1:IL),
      &          '.nc was not read properly: increase NOBSMAX_BELLI.'
               CALL PRINT_ERROR( msgBuf, myThid )
 
-              stop_ihop_cost = 1
+              stop_cost = 1
             ENDIF
 
           ENDDO !DO nObs
@@ -473,7 +473,7 @@ CBOP
               ENDDO !DO nObs
 
 ! Read ALL info using respective varid and save to tmp, NO CHUNKS!
-              IF (weighIhopObs.EQ.1) THEN
+              IF (weighObs.EQ.1) THEN
                 err = NF_GET_VARA_DOUBLE( ncid, varId3,
      &                1, obsNo_tiled(num_file,bi,bj), tmp_uncert2 )
                 CALL BELLI_COST_NF_ERROR('init_fixed40',err,bi,bj,myThid)
@@ -491,7 +491,7 @@ CBOP
 
               IF (err.NE.NF_NOERR) THEN
                 WRITE(msgBuf,'(3A)')
-     &            'BELLI_COST_INIT_FIXED: file ', IHOPObs_File(1:IL),
+     &            'BELLI_COST_INIT_FIXED: file ', bObs_File(1:IL),
      &            '.nc was not read properly: check x,y,z,uncert.'
                 CALL PRINT_ERROR( msgBuf, myThid )
               ENDIF
@@ -499,14 +499,14 @@ CBOP
 ! Find obs datum in MITgcm spatial grid
 ! Loop through observations, NOTE: in obsfit this is a 'chunk'
               DO nObs = 1, obsNo_tiled(num_file,bi,bj)
-                ihopObsInTile = 1
+                obsInTile = 1
 
 ! In a valid time?
                 IF ( (tmp_bObs_time(nObs).LT.0. _d 0) .OR.
      &               (tmp_bObs_time(nObs).GT.modelend) .OR.
      &               (tmp_bObs_time(nObs).LT.modelstart) )
      &          THEN
-                  ihopObsInTile = 0
+                  obsInTile = 0
                 ENDIF
 
 ! Determine whether obs datum is in current tile domain
@@ -514,7 +514,7 @@ CBOP
                 lat_cur = tmp_lat2(nObs)
                 depth_cur = tmp_depth2(nObs)
 
-                IF (ihopObsInTile.EQ.1) THEN
+                IF (obsInTile.EQ.1) THEN
                   IF (xC(sNx+1,1,bi,bj).LT.xC(1,1,bi,bj)) THEN
                     tmp_lon = xC(sNx+1,1,bi,bj)+360. _d 0
                   ELSE
@@ -536,16 +536,16 @@ CBOP
 
                   ELSE
 ! Not in this tile
-                    ihopObsInTile = 0
+                    obsInTile = 0
 
                   ENDIF !IF ( (xC(1,1,bi,bj).LE.lon_cur)
 
 ! Determine i,j,k to the south-west-down of obs datum
 ! Set default values
-                  ihopObs_i = -10
-                  ihopObs_j = -10
-                  ihopObs_k1 = -10
-                  ihopObs_k2 = -10
+                  bObs_i = -10
+                  bObs_j = -10
+                  bObs_k1 = -10
+                  bObs_k2 = -10
                   lon_1 = -999
                   lon_2 = -999
                   lat_1 = -999
@@ -553,26 +553,26 @@ CBOP
                   depth_1 = -10
                   depth_2 = -10
 
-                  IF (ihopObsInTile.EQ.1) THEN
+                  IF (obsInTile.EQ.1) THEN
 ! Value of k, below the data point:
 ! Case 1: above first depth level
                     IF (-rC(1).GT.depth_cur) THEN
-                      ihopObs_k1 = 1
-                      ihopObs_k2 = 1
+                      bObs_k1 = 1
+                      bObs_k2 = 1
                       depth_fac = 1. _d 0
                     ENDIF
 ! Case 2: below last depth level
                     IF (-rC(Nr).LE.depth_cur) THEN
-                      ihopObs_k1 = Nr
-                      ihopObs_k2 = Nr
+                      bObs_k1 = Nr
+                      bObs_k2 = Nr
                       depth_fac = 1. _d 0
                     ENDIF
 ! Case 3: between two depth levels
                     DO k = 1, Nr-1
                       IF ( (-rC(k).LE.depth_cur).AND.
      &                     (-rC(k+1).GT.depth_cur)) THEN
-                        ihopObs_k1 = k
-                        ihopObs_k2 = k+1
+                        bObs_k1 = k
+                        bObs_k2 = k+1
                         depth_1 = -rC(k)
                         depth_2 = -rC(k+1)
                         depth_fac =
@@ -590,7 +590,7 @@ CBOP
 ! Value of j, south of obs datum:
                         IF ( (lat_tmp1.LE.lat_cur) .AND.
      &                       (lat_tmp2.GT.lat_cur) ) THEN
-                          ihopObs_j = j
+                          bObs_j = j
                           lat_1 = lat_tmp1
                           lat_2 = lat_tmp2
                         ENDIF
@@ -605,7 +605,7 @@ CBOP
 
                         IF ( (lon_tmp1.LE.lon_cur) .AND.
      &                       (lon_tmp2.GT.lon_cur) ) THEN
-                          ihopObs_i = i
+                          bObs_i = i
                           lon_1 = lon_tmp1
                           lon_2 = lon_tmp2
                         ENDIF
@@ -613,16 +613,16 @@ CBOP
                       ENDDO !DO i
                     ENDDO !DO j
 
-                  ENDIF !IF (ihopObsInTile.EQ.1)
+                  ENDIF !IF (obsInTile.EQ.1)
 
-                  IF ( ((ihopObs_i.EQ.-10).OR.(ihopObs_j.EQ.-10)) .OR.
-     &                 ((ihopObs_k1.EQ.-10).OR.(ihopObs_k2.EQ.-10)) )
+                  IF ( ((bObs_i.EQ.-10).OR.(bObs_j.EQ.-10)) .OR.
+     &                 ((bObs_k1.EQ.-10).OR.(bObs_k2.EQ.-10)) )
      &            THEN
-                    ihopObsInTile = 0
+                    obsInTile = 0
                   ENDIF
 
 ! 'Reshape' observed datum to tiled structures
-                  IF (ihopObsInTile.EQ.1) THEN
+                  IF (obsInTile.EQ.1) THEN
                     obsNo_valid = obsNo_valid+1
                     bObs_ind_glob_tiled(num_file,
      &               obsNo_valid,bi,bj) = nObs
@@ -630,7 +630,7 @@ CBOP
                     bObs_time(num_file,obsNo_valid,bi,bj) =
      &               tmp_bObs_time(nObs)
 
-                    IF (weighIhopObs.EQ.1) THEN
+                    IF (weighObs.EQ.1) THEN
                       bObs_uncert(num_file,obsNo_valid,bi,bj) =
      &                 tmp_uncert2(nObs)
                     ENDIF
@@ -641,21 +641,21 @@ CBOP
      &               depth_cur
 
                     bObs_i_tiled(num_file,obsNo_valid,bi,bj) = 
-     &               ihopObs_i
+     &               bObs_i
                     bObs_j_tiled(num_file,obsNo_valid,bi,bj) =
-     &               ihopObs_j
+     &               bObs_j
                     bObs_k_tiled(num_file,obsNo_valid,bi,bj) =
-     &               ihopObs_k1
+     &               bObs_k1
 
-                  ENDIF !IF (ihopObsInTile.EQ.1) 3rd time
+                  ENDIF !IF (obsInTile.EQ.1) 3rd time
 
-                ENDIF !IF (ihopObsInTile.EQ.1) 1st time
+                ENDIF !IF (obsInTile.EQ.1) 1st time
 
 ! ====================================================================
 ! Check that maximum size was not reached:
                 IF (nObs.GE.NOBSMAX_BELLI) THEN
                   WRITE(msgBuf,'(3A)')
-     &              'BELLI_COST_INIT_FIXED: file ',IHOPObs_File(1:IL),
+     &              'BELLI_COST_INIT_FIXED: file ',bObs_File(1:IL),
      &              '.nc not read properly: increase NOBSMAX_BELLI.'
                   CALL PRINT_ERROR( msgBuf, myThid )
                 ENDIF
@@ -689,16 +689,16 @@ CBOP
 ! ALWAYS Write to nc file
                 IF (belliDoNcOutput) THEN
                   WRITE(fnameequinc,'(3A,2(I3.3,A))')
-     &              bObs_Dir(1:JL),IHOPObs_File(1:IL),
+     &              bObs_Dir(1:JL),bObs_File(1:IL),
      &              '.',iG,'.',jG,'.equi.nc'
 # ifdef ALLOW_ADJOINT_RUN
                   WRITE(adfnameequinc,'(4A,2(I3.3,A))')
-     &              bObs_Dir(1:JL),'ad',IHOPObs_File(1:IL),
+     &              bObs_Dir(1:JL),'ad',bObs_File(1:IL),
      &              '.',iG,'.',jG,'.equi.nc'
 # endif
 # ifdef ALLOW_TANGENTLINEAR_RUN
                   WRITE(tlfnameequinc,'(4A,2(I3.3,A))')
-     &              bObs_Dir(1:JL),'ad',IHOPObs_File(1:IL),
+     &              bObs_Dir(1:JL),'ad',bObs_File(1:IL),
      &              '.',iG,'.',jG,'.equi.nc'
 # endif
 
@@ -789,8 +789,8 @@ CBOP
       _BARRIER
 
 !===========================================================
-      CALL GLOBAL_SUM_INT( stop_ihop_cost, myThid )
-      IF ( stop_ihop_cost.GE.1 ) THEN
+      CALL GLOBAL_SUM_INT( stop_cost, myThid )
+      IF ( stop_cost.GE.1 ) THEN
         CALL ALL_PROC_DIE( myThid )
         STOP 'ABNORMAL END: S/R BELLI_COST_INIT_FIXED'
       ENDIF
