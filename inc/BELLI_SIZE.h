@@ -1,13 +1,13 @@
 !BOP
-!    !ROUTINE: IHOP_SIZE.h
+!    !ROUTINE: BELLI_SIZE.h
 !    !INTERFACE:
-! #include IHOP_SIZE.h
+! #include BELLI_SIZE.h
 
 !    !DESCRIPTION: \bv
 !     ==================================================================
-!     IHOP_SIZE.h
+!     BELLI_SIZE.h
 !     ==================================================================
-!     Contains IHOP source receiver array dimension
+!     Contains BELLI source receiver array dimension
 !     \ev
 !EOP
 
@@ -16,7 +16,7 @@
 !     Number of time series:
 !     ================================
       INTEGER nts
-#ifdef IHOP_MULTIPLE_TIMES
+#ifdef BELLI_MULTIPLE_TIMES
       PARAMETER ( nts=1080 )
 #else
       PARAMETER ( nts=1 )
@@ -30,7 +30,7 @@
 !     Number of Sources:
 !     ================================
       INTEGER nsd
-#ifdef IHOP_MULTIPLE_SOURCES
+#ifdef BELLI_MULTIPLE_SOURCES
       PARAMETER ( nsd=10 )
 #else
       PARAMETER ( nsd=1 )
@@ -40,13 +40,13 @@
 !     ================================
       INTEGER nrd
       INTEGER nrr
-#ifdef IHOP_MULTIPLE_RECEIVER_DEPTHS
+#ifdef BELLI_MULTIPLE_RECEIVER_DEPTHS
       PARAMETER ( nrd=30 )
 #else
       PARAMETER ( nrd=1 )
 #endif
 
-#ifdef IHOP_MULTIPLE_RECEIVER_RANGES
+#ifdef BELLI_MULTIPLE_RECEIVER_RANGES
       PARAMETER ( nrr=30 )
 #else
       PARAMETER ( nrr=1 )
@@ -54,26 +54,26 @@
 
 !     Number of interpolation points:
 !     ================================
-      INTEGER IHOP_MAX_NC_SIZE
-      PARAMETER ( IHOP_MAX_NC_SIZE = 15 )
-      INTEGER IHOP_MAX_RANGE
-      PARAMETER( IHOP_MAX_RANGE = 22 )
-      INTEGER IHOP_MAX_IDW
-      PARAMETER( IHOP_MAX_IDW = 4 )
+      INTEGER BELLI_MAX_NC_SIZE
+      PARAMETER ( BELLI_MAX_NC_SIZE = 15 )
+      INTEGER BELLI_MAX_RANGE
+      PARAMETER( BELLI_MAX_RANGE = 22 )
+      INTEGER BELLI_MAX_IDW
+      PARAMETER( BELLI_MAX_IDW = 4 )
 
 
 
 !     Cost function sizes
 !     ================================
-! NFILESMAX_ihop      :: maximum number of input files
-! NOBSMAX_ihop        :: maximum number of observations per file per tile
+! NFILESMAX_BELLI      :: maximum number of input files
+! NOBSMAX_BELLI        :: maximum number of observations per file per tile
 
 #ifdef ALLOW_COST
-      INTEGER NFILESMAX_IHOP
-      PARAMETER ( NFILESMAX_IHOP=1 )
+      INTEGER NFILESMAX_BELLI
+      PARAMETER ( NFILESMAX_BELLI=1 )
 
-      INTEGER NOBSMAX_IHOP
-      PARAMETER ( NOBSMAX_IHOP=10 )
+      INTEGER NOBSMAX_BELLI
+      PARAMETER ( NOBSMAX_BELLI=10 )
 
 #endif
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|

@@ -1,51 +1,51 @@
-#ifndef IHOP_OPTIONS_H
-#define IHOP_OPTIONS_H
+#ifndef BELLI_OPTIONS_H
+#define BELLI_OPTIONS_H
 #include "PACKAGES_CONFIG.h"
 #include "CPP_OPTIONS.h"
 
 !BOP
-! !ROUTINE: IHOP_OPTIONS.h
+! !ROUTINE: BELLI_OPTIONS.h
 ! !INTERFACE:
-! #include "IHOP_OPTIONS.h"
+! #include "BELLI_OPTIONS.h"
 
 ! !DESCRIPTION:
-! CPP options file for IHOP package:
-! Use this file for selecting options within package "ihop"
+! CPP options file for BELLI package:
+! Use this file for selecting options within package "belli"
 !EOP
 
-#ifdef ALLOW_IHOP
+#ifdef ALLOW_BELLI
 ! Place CPP define/undef flag here
-#define IHOP_DEBUG
+#define BELLI_DEBUG
 
 ! Allow writing to PRTFile and RAY/DEL/ARR Files
-#define IHOP_WRITE_OUT
+#define BELLI_WRITE_OUT
 
 ! Three-dimensional sound propagation
-#undef IHOP_THREED
+#undef BELLI_THREED
 
 ! to reduce memory storage, disable unused array with those CPP flags :
-#define IHOP_3D_STATE
-#define IHOP_2D_STATE
-#undef IHOP_TENDENCY
+#define BELLI_3D_STATE
+#define BELLI_2D_STATE
+#undef BELLI_TENDENCY
 
 ! a time-series of sound source propagation
-#define IHOP_MULTIPLE_TIMES
+#define BELLI_MULTIPLE_TIMES
 
 ! multiple sound sources
-#undef IHOP_MULTIPLE_SOURCES
+#undef BELLI_MULTIPLE_SOURCES
 
 ! multiple sound receivers; e.g. a VLA
-#undef IHOP_MULTIPLE_RECEIVER_DEPTHS
-#undef IHOP_MULTIPLE_RECEIVER_RANGES
+#undef BELLI_MULTIPLE_RECEIVER_DEPTHS
+#undef BELLI_MULTIPLE_RECEIVER_RANGES
 
-!!! ihop cost options !!!
+!!! belli cost options !!!
 ! QoI as J = C^2 or J = cMat^2 at final timestep!
-#undef TEST_IHOP_COST
+#undef TEST_BELLI_COST
 ! QoI as J = cMat(t)^2, etc.
-#undef TEST_IHOP_COST_INLOOP
+#undef TEST_BELLI_COST_INLOOP
 
-#endif /* ALLOW_IHOP */
-#endif /* IHOP_OPTIONS_H */
+#endif /* ALLOW_BELLI */
+#endif /* BELLI_OPTIONS_H */
 
 !EH3 ;;; Local Variables: ***
 !EH3 ;;; mode:fortran ***
