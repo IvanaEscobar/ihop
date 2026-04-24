@@ -10,7 +10,7 @@ MODULE step
 !   This module implements 2D step along a single ray.
 
 ! !USES:
-  USE ihop_mod, only: Beam, ray2DPt
+  USE belli_mod, only: Beam, ray2DPt
   USE ssp_mod,  only: Grid, evalSSP, iSegz, iSegr
   IMPLICIT NONE
 ! == Global variables ==
@@ -199,7 +199,7 @@ CONTAINS
 !   environment leaves water, or on the top or bottom boundary.
 
 ! !USES:
-  USE ihop_mod, only: iSmallStepCtr
+  USE belli_mod, only: iSmallStepCtr
   USE bdry_mod, only: rTopSeg, rBotSeg
 
 ! !INPUT PARAMETERS:

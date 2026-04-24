@@ -55,7 +55,7 @@ C Initialize tiled cost fxn contributions.
             belli_dummy(num_file,bi,bj) = 0. _d 0
 # ifdef ALLOW_GRDCHK
             IF ( obsNo_tiled(num_file,bi,bj).GT.0 .AND.
-     &           ihopDoNcOutput ) THEN
+     &           belliDoNcOutput ) THEN
 C Sync tiled .equi file so data in buffer is not lost
               err = NF_SYNC( ncidFWD(num_file,bi,bj) )
               CALL IHOP_COST_NF_ERROR(
@@ -90,7 +90,7 @@ C Initialize global cost fxn contributions.
 
 C# ifdef ALLOW_GRDCHK
 C      DO num_file = 1, NFILESMAX_BELLI
-C        IF (obsNo(num_file).GT.0 .AND. ihopDoNcOutput) THEN
+C        IF (obsNo(num_file).GT.0 .AND. belliDoNcOutput) THEN
 CC Sync global .equi file so data in buffer is not lost
 C          err = NF_SYNC( ncidGLOB(num_file) )
 C          CALL IHOP_COST_NF_ERROR(

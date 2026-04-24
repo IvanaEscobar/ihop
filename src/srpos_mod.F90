@@ -15,7 +15,7 @@ MODULE srpos_mod
   USE sort_mod,         only: Sort
   USE subTab_mod,       only: SubTab
   USE monotonic_mod,    only: monotonic
-  USE ihop_mod,         only: PRTFile
+  USE belli_mod,         only: PRTFile
   IMPLICIT NONE
 !  == Global variables ==
 #include "SIZE.h"

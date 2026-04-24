@@ -70,7 +70,7 @@ C     !LOCAL VARIABLES:
       _RL      active_data_t
       REAL*8   vec_tmp(2)
 
-      IF (ihopDoNcOutput) THEN
+      IF (belliDoNcOutput) THEN
         vec_start = irec
         vec_count = 1
 
@@ -87,7 +87,7 @@ C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
 
         _BEGIN_MASTER( myThid )
 
-        IF (ihopDoNcOutput) THEN
+        IF (belliDoNcOutput) THEN
           err = NF_GET_VARA_DOUBLE( fid, varId, 
      &          vec_start, vec_count, active_var )
           CALL IHOP_COST_NF_ERROR('act_file_c 2',err,bi,bj,myThid)
@@ -113,7 +113,7 @@ C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
 
         _BEGIN_MASTER( myThid )
 
-        IF (ihopDoNcOutput) THEN
+        IF (belliDoNcOutput) THEN
           err = NF_GET_VARA_DOUBLE( fid, varId, 
      &          vec_start, vec_count, active_data_t )
           CALL IHOP_COST_NF_ERROR('act_file_c 3',err,bi,bj,myThid)
@@ -163,7 +163,7 @@ C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
 
         _BEGIN_MASTER( myThid )
 
-        IF (ihopDoNcOutput) THEN
+        IF (belliDoNcOutput) THEN
           err = NF_GET_VARA_DOUBLE( fid, varId,
      &          vec_start, vec_count, active_var )
           CALL IHOP_COST_NF_ERROR('act_file_c 5',err,bi,bj,myThid)
@@ -241,7 +241,7 @@ C     !LOCAL VARIABLES:
       _RL      active_data_t
       REAL*8   vec_tmp(2)
 
-      IF (ihopDoNcOutput) THEN
+      IF (belliDoNcOutput) THEN
         vec_start = irec
         vec_count = 1
 
@@ -259,7 +259,7 @@ C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
 
         _BEGIN_MASTER( myThid )
 
-        IF (ihopDoNcOutput) THEN
+        IF (belliDoNcOutput) THEN
           err = NF_PUT_VARA_DOUBLE( fid, varId1, 
      &          vec_start, vec_count, active_var )
           CALL IHOP_COST_NF_ERROR('act_file_c 7',err,bi,bj,myThid)
@@ -292,7 +292,7 @@ C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
 
         _BEGIN_MASTER( myThid )
 
-        IF (ihopDoNcOutput) THEN
+        IF (belliDoNcOutput) THEN
           err = NF_GET_VARA_DOUBLE( fid, varId1,
      &          vec_start, vec_count, active_data_t )
           CALL IHOP_COST_NF_ERROR('act_file_c10',err,bi,bj,myThid)
@@ -336,7 +336,7 @@ C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
 
         _BEGIN_MASTER( myThid )
 
-        IF (ihopDoNcOutput) THEN
+        IF (belliDoNcOutput) THEN
           err = NF_PUT_VARA_DOUBLE( fid, varId1,
      &          vec_start, vec_count, active_var )
           CALL IHOP_COST_NF_ERROR('act_file_c12',err,bi,bj,myThid)
@@ -413,7 +413,7 @@ C     !LOCAL VARIABLES:
       _RL      active_data_t
       REAL*8   vec_tmp(2)
 
-      IF (ihopDoNcOutput) THEN
+      IF (belliDoNcOutput) THEN
         vec_start = irecglob
         vec_count = 1
 
@@ -538,7 +538,7 @@ C     !LOCAL VARIABLES:
       _RL      active_data_t
       REAL*8   vec_tmp(2)
 
-      IF (ihopDoNcOutput) THEN
+      IF (belliDoNcOutput) THEN
         vec_start = irecglob
         vec_count = 1
 

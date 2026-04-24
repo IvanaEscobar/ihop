@@ -11,7 +11,7 @@ MODULE influence
 !   the pressure field.
 
 ! !USES:
-  USE ihop_mod,  only: rad2deg, oneCMPLX, PRTFile, nMax, Beam, ray2D, &
+  USE belli_mod,  only: rad2deg, oneCMPLX, PRTFile, nMax, Beam, ray2D, &
                        SrcDeclAngle, nRz_per_range
   USE srPos_mod, only: Pos
   IMPLICIT NONE
@@ -780,7 +780,7 @@ CONTAINS
 ! !USES:
   USE writeray, only: WriteRayOutput
   USE arr_mod,  only: AddArr, U
-  USE ihop_mod, only: afreq, RAYFile, DELFile, nMax
+  USE belli_mod, only: afreq, RAYFile, DELFile, nMax
 
 ! !INPUT PARAMETERS:
   COMPLEX (KIND=_RL90), INTENT( IN ) :: tau
@@ -871,7 +871,7 @@ CONTAINS
 !   Scale the pressure field U according to the run type and range.
 
 ! !USES:
-  USE ihop_mod,  only: Beam
+  USE belli_mod,  only: Beam
   USE angle_mod, only: Angles
 
 ! !INPUT PARAMETERS:

@@ -12,7 +12,7 @@ MODULE atten_mod
 
 ! !USES:
 #ifdef BELLI_WRITE_OUT
-  USE ihop_mod, only: PRTFile
+  USE belli_mod, only: PRTFile
 #endif
   IMPLICIT NONE
 ! == Global variables ==

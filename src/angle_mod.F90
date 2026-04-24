@@ -189,7 +189,7 @@ CONTAINS
 ! Read ray bearing angles from the environment file.
 
 ! !USES:
-  USE ihop_mod,     only: PRTFile
+  USE belli_mod,     only: PRTFile
 
 ! !INPUT PARAMETERS:
 ! TopOpt  :: Options for ray trace

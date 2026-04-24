@@ -39,7 +39,7 @@ CONTAINS
   USE bdry_mod,  only: Bdry, HSInfo, initATI, initBTY
   USE srpos_mod, only: Pos, ReadSXSY, ReadSZRz, ReadRcvrRanges, ReadFreqVec
   USE ssp_mod,   only: Grid, init_fixed_SSP, alphar
-  USE ihop_mod,  only: Beam, rxyz, nRz_per_range
+  USE belli_mod,  only: Beam, rxyz, nRz_per_range
   USE angle_mod, only: Angles, ReadRayElevationAngles
 #ifdef BELLI_THREED
   USE angle_mod, only: ReadRayBearingAngles

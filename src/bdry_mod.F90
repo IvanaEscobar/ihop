@@ -92,12 +92,12 @@ CONTAINS
 !  Reads in the top altimetry
 
 ! !USES:
-    USE ihop_mod,        only: ATIFile
+    USE belli_mod,        only: ATIFile
     USE monotonic_mod,   only: monotonic
     USE atten_mod,       only: CRCI
   ! fT = 1000 ONLY for acousto-elastic halfspaces, I will have to pass this
   ! parameter in a different way after ssp_mod is split btwn fixed and varia
-  !USE initenvihop, only: fT
+  !USE initenvbelli, only: fT
 
 ! !INPUT PARAMETERS:
 ! TopATI :: Type of top altimetry
@@ -297,12 +297,12 @@ CONTAINS
 ! Initializes the bottom bathymetry data structure
 
 ! !USES:
-    USE ihop_mod,      only: BTYFile
+    USE belli_mod,      only: BTYFile
     USE monotonic_mod, only: monotonic
     USE atten_mod,     only: CRCI
   ! fT = 1000 ONLY for acousto-elastic halfspaces, I will have to pass this
   ! parameter in a different way after ssp_mod is split btwn fixed and varia
-  !USE initenvihop, only: fT
+  !USE initenvbelli, only: fT
 
 ! !INPUT PARAMETERS:
 ! BotBTY :: Type of bottom bathymetry
@@ -436,7 +436,7 @@ CONTAINS
         IF (Bot(ii)%x(2).LT.gcmmin .OR. Bot(ii)%x(2).GT.gcmmax) THEN
           WRITE(msgBuf,'(2A,F10.2,A,F10.2)')   &
             '** Warning ** BDRYMOD initBTY: ', &
-            'ihop and gcm bathymetry vary, ihop:', Bot(ii)%x(2), &
+            'belli and gcm bathymetry vary, belli:', Bot(ii)%x(2), &
             'gcm:', gcmmax
           ! In adjoint mode we do not write output besides on first run
           IF (BELLI_dumpfreq.GE.0) &
@@ -705,7 +705,7 @@ CONTAINS
 ! Get the Top segment info (index and range interval) for range, r
 
 ! !USES:
-  USE ihop_mod, only: PRTFile
+  USE belli_mod, only: PRTFile
 
 ! !INPUT PARAMETERS:
 ! r      :: Range at which to get the segment info
@@ -758,7 +758,7 @@ CONTAINS
 ! Get the Bottom segment info (index and range interval) for range, r
 
 ! !USES:
-  USE ihop_mod, only: PRTFile
+  USE belli_mod, only: PRTFile
 
 ! !INPUT PARAMETERS:
 ! r      :: Range at which to get the segment info
@@ -834,7 +834,7 @@ CONTAINS
 ! Write Top or Bottom boundary info to PRTFile
 
 ! !USES:
-  USE ihop_mod, only: PRTFile
+  USE belli_mod, only: PRTFile
 
 ! !INPUT PARAMETERS:
 ! locBdry :: Array of boundary points to write

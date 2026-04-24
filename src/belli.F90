@@ -29,7 +29,7 @@ MODULE IHOP
 ! Systems Center
 
 ! !USES:
-  USE ihop_mod, only: oneCMPLX, PRTFile, SHDFile, ARRFile, RAYFile, DELFile
+  USE belli_mod, only: oneCMPLX, PRTFile, SHDFile, ARRFile, RAYFile, DELFile
   IMPLICIT NONE
 ! == Global variables ==
 #include "SIZE.h"
@@ -74,14 +74,14 @@ CONTAINS
 !   Main routine for IHOP ray tracing
 
 ! !USES:
-  USE ihop_init_diag, only: initPRTFile, openOutputFiles, resetMemory
+  USE belli_init_diag, only: initPRTFile, openOutputFiles, resetMemory
   USE bdry_mod,       only: Bdry, writeBdry
   USE ssp_mod,        only: setSSP
   USE refCoef,        only: writeRefCoef 
   USE beampat,        only: writePat
-  USE ihop_mod,       only: Beam, ray2d
+  USE belli_mod,       only: Beam, ray2d
 #ifdef ALLOW_USE_MPI
-  USE ihop_mod,       only: BcastRay
+  USE belli_mod,       only: BcastRay
   USE arr_mod,        only: BcastArr
 #endif
 
@@ -197,7 +197,7 @@ CONTAINS
   USE writeRay,  only: WriteRayOutput
   USE influence, only: calculateInfluence, ScalePressure
   USE beampat,   only: NSBPPts, SrcBmPat
-  USE ihop_mod,  only: Beam, ray2D, rad2deg, SrcDeclAngle, afreq, &
+  USE belli_mod,  only: Beam, ray2D, rad2deg, SrcDeclAngle, afreq, &
                        nRz_per_range, RAYFile, DELFile, nMax
 ! IESCO25: FOR TAF -RG
 !  USE influence,  only: ratio1, rB
@@ -393,12 +393,12 @@ CONTAINS
 !   angle alpha [rad]. Stores ray path parameters in ray2D
 
 ! !USES:
-  USE ihop_mod, only: nMax, istep
+  USE belli_mod, only: nMax, istep
   USE bdry_mod, only: GetTopSeg, GetBotSeg, atiType, btyType, Bdry, &
                       iSegTop, iSegBot, rTopSeg, rBotSeg, Top, Bot
   USE refCoef,  only: RTop, RBot, NBotPts, NTopPts
   USE step,     only: Step2D
-  USE ihop_mod, only: Beam, ray2D, iSmallStepCtr
+  USE belli_mod, only: Beam, ray2D, iSmallStepCtr
 ! IESCO25: FOR TAF -RG
   USE ssp_mod,  only: evalSSP, iSegr
 
@@ -764,7 +764,7 @@ CONTAINS
   USE ssp_mod,  only: evalSSP
   USE bdry_mod, only: HSInfo
   USE refCoef,  only: ReflectionCoef, InterpolateReflectionCoefficient
-  USE ihop_mod, only: Beam, ray2D, rad2deg, afreq
+  USE belli_mod, only: Beam, ray2D, rad2deg, afreq
 
 ! !INPUT PARAMETERS:
 ! iH     :: Step index of the ray to be reflected

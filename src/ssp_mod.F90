@@ -14,7 +14,7 @@ MODULE ssp_mod
 ! SSP (Sound Speed Profile) data.
 
 ! !USES:
-  USE ihop_mod, only: PRTFile
+  USE belli_mod, only: PRTFile
   IMPLICIT NONE
 ! == Global variables ==
 #include "SIZE.h"
@@ -136,12 +136,12 @@ CONTAINS
 
 ! !USES:
   USE atten_mod, only: CRCI
-  USE ihop_mod,  only: SSPFile
+  USE belli_mod,  only: SSPFile
   USE bdry_mod,  only: Bdry
 ! IESCO24
 ! fT = 1000 ONLY for acousto-elastic halfspaces, I will have to pass this
 ! parameter in a different way after ssp_mod is split btwn fixed and varia
-! USE initenvihop, only: fT
+! USE initenvbelli, only: fT
 
 ! !INPUT PARAMETERS:
 ! myThid :: my thread ID
@@ -1222,7 +1222,7 @@ END !SUBROUTINE gcmSSP
 !   Write the sound speed profile (SSP) to the output file.
 
 ! !USES:
-  USE ihop_mod, only: PRTFile
+  USE belli_mod, only: PRTFile
 
 ! !INPUT PARAMETERS:
 ! myThid :: my thread ID

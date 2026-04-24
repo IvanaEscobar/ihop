@@ -94,7 +94,7 @@ CBOP
       CALL PRINT_MESSAGE( msgBuf,
      &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
-      WRITE(msgBuf,'(A,L5)') '  ihopDoNcOutput ', ihopDoNcOutput
+      WRITE(msgBuf,'(A,L5)') '  belliDoNcOutput ', belliDoNcOutput
       CALL PRINT_MESSAGE( msgBuf,
      &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
       WRITE(msgBuf,'(A)') ' '
@@ -687,7 +687,7 @@ CBOP
 
                 JL = ILNBLNK( bObs_Dir )
 ! ALWAYS Write to nc file
-                IF (ihopDoNcOutput) THEN
+                IF (belliDoNcOutput) THEN
                   WRITE(fnameequinc,'(3A,2(I3.3,A))')
      &              bObs_Dir(1:JL),IHOPObs_File(1:IL),
      &              '.',iG,'.',jG,'.equi.nc'
@@ -757,7 +757,7 @@ CBOP
 
                 ELSE
 ! Write to binary files... UNSUPPORTED
-                ENDIF !IF (ihopDoNcOutput)
+                ENDIF !IF (belliDoNcOutput)
 
               ENDIF !IF (obsNo_tiled(num_file,bi,bj).GT.0)
 

@@ -107,7 +107,7 @@ C     bi,bj :: Tile indices
       CHARACTER*(MAX_LEN_MBUF) msgBuf
 CEOP
 
-      IF (ihopDoNcOutput) THEN
+      IF (belliDoNcOutput) THEN
 ! Close tiled files
         DO bj = myByLo(myThid), myByHi(myThid)
           DO bi = myBxLo(myThid), myBxHi(myThid)
@@ -210,7 +210,7 @@ C Tangent linear equivalent (.equi) file
 
         ENDDO !DO numFile
 
-      ENDIF !IF (ihopDoNcOutput)
+      ENDIF !IF (belliDoNcOutput)
 #endif /* ALLOW_BELLI */
 
       RETURN

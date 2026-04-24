@@ -10,7 +10,7 @@ MODULE arr_mod
 !   Contains the subroutines to read the ray arrival angles
 
 ! !USES:
-  USE ihop_mod,   only: rad2deg, ARRFile
+  USE belli_mod,   only: rad2deg, ARRFile
   IMPLICIT NONE
 ! == Global variables ==
 #include "SIZE.h"
@@ -86,7 +86,7 @@ CONTAINS
 
 ! !USES:
   USE srPos_mod, only: Pos
-  USE ihop_mod,  only: Beam, nRz_per_range
+  USE belli_mod,  only: Beam, nRz_per_range
 
 ! !INPUT PARAMETERS:
 ! myThid  :: my thread ID
@@ -186,7 +186,7 @@ CONTAINS
 ! Adds the amplitude and delay for an arrival into Arr.
 
 ! !USES:
-  USE ihop_mod, only: SrcDeclAngle
+  USE belli_mod, only: SrcDeclAngle
 
 
 ! !INPUT PARAMETERS:

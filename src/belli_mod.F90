@@ -1,8 +1,8 @@
 #include "BELLI_OPTIONS.h"
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 !BOP
-!MODULE: ihop_mod
-MODULE ihop_mod
+!MODULE: belli_mod
+MODULE belli_mod
 ! <CONTACT EMAIL="ivana@utexas.edu">
 !   Ivana Escobar
 ! </CONTACT>
@@ -217,4 +217,4 @@ CONTAINS
   END
 #endif /* ALLOW_USE_MPI */
 
-END !MODULE ihop_mod
+END !MODULE belli_mod

@@ -102,12 +102,12 @@ CEOP
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 
-      IF ( .NOT.useIHOP ) THEN
-C-    pkg IHOP is not used
+      IF ( .NOT.useBELLI ) THEN
+C-    pkg/belli is not used
         _BEGIN_MASTER(myThid)
 C-    Track pkg activation status:
-C     print a (weak) warning if data.ihop is found
-         CALL PACKAGES_UNUSED_MSG( 'useIHOP', ' ', ' ' )
+C     print a (weak) warning if data.belli is found
+         CALL PACKAGES_UNUSED_MSG( 'useBELLI', ' ', ' ' )
         _END_MASTER(myThid)
         RETURN
       ENDIF

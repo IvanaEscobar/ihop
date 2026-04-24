@@ -53,7 +53,7 @@ CONTAINS
   ! Assuming col2 is always depth
 
   ! !USES:
-  USE ihop_mod, only: rad2deg, SrcDeclAngle
+  USE belli_mod, only: rad2deg, SrcDeclAngle
   USE bdry_mod, only: Bdry
 
 ! !INPUT PARAMETERS:

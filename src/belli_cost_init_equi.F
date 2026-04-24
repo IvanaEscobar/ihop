@@ -50,7 +50,7 @@ C     !LOCAL VARIABLES:
       _RL tmp_vec(2)
 CEOP
 
-      IF (ihopDoNcOutput) THEN
+      IF (belliDoNcOutput) THEN
 C Create a netcdf file
         err = NF_CREATE( file2, NF_CLOBBER, fID2 )
         CALL IHOP_COST_NF_ERROR( 'INIT_EQUI: NF_CREATE fID2',
@@ -114,7 +114,7 @@ C Create a netcdf file
         CALL IHOP_COST_NF_ERROR( 'INIT_EQUI: NF_OPEN'//file2//'',
      &       err,bi,bj,myThid )
 
-      ELSE !IF (ihopDoNcOutput)
+      ELSE !IF (belliDoNcOutput)
         WRITE(msgBuf,'(2A)') "**ERROR** IHOP COST doesn't support ",
      &    "binary model equivalents est.2024"
         CALL PRINT_MESSAGE( msgBuf,
@@ -137,7 +137,7 @@ C Create a netcdf file
           WRITE(fID2, REC = (irec*2)) tmp_vec
         ENDDO
 
-      ENDIF !IF (ihopDoNcOutput)
+      ENDIF !IF (belliDoNcOutput)
 #endif /* ALLOW_BELLI && ALLOW_COST */
 
       RETURN

@@ -58,7 +58,7 @@ CONTAINS
 !   Initializes the iHOP print file.
 
 ! !USES:
-  USE ihop_mod,  only: PRTFile, Beam
+  USE belli_mod,  only: PRTFile, Beam
   USE angle_mod, only: Angles
   USE srpos_mod, only: WriteSxSy, WriteSzRz, WriteRcvrRanges, WriteFreqVec
 
@@ -215,7 +215,7 @@ CONTAINS
 !   Opens the iHOP print file for writing.
 
 ! !USES:
-  USE ihop_mod, only: PRTFile, Title
+  USE belli_mod, only: PRTFile, Title
 
 ! !INPUT PARAMETERS:
 ! myTime :: Current time in simulation
@@ -350,7 +350,7 @@ CONTAINS
 !  Write the top options for iHOP model.
 
 ! !USES:
-  USE ihop_mod,  only: PRTFile
+  USE belli_mod,  only: PRTFile
   USE ssp_mod,   only: Grid
   USE atten_mod, only: T, Salinity, pH, z_bar, iBio, NBioLayers, bio
 
@@ -489,7 +489,7 @@ CONTAINS
 ! Write the RunType variable to .prt file
 
 ! !USES:
-  USE ihop_mod, only: PRTFile
+  USE belli_mod, only: PRTFile
 
 ! !INPUT PARAMETERS:
 ! RunType :: String describing the run type
@@ -610,7 +610,7 @@ CONTAINS
 !   Writes the boundary condition information to the print file.
 
 ! !USES:
-  USE ihop_mod,only: PRTFile
+  USE belli_mod,only: PRTFile
   USE ssp_mod, only: rhoR, alphaR, betaR, alphaI, betaI
 
 ! !INPUT PARAMETERS:
@@ -686,7 +686,7 @@ CONTAINS
 !   Opens the unique output files for iHOP model.
 
 ! !USES:
-  USE ihop_mod,  only: RAYFile, DELFile, ARRFile, SHDFile, &
+  USE belli_mod,  only: RAYFile, DELFile, ARRFile, SHDFile, &
                        Title, Beam
   USE angle_mod, only: Angles
   USE srPos_mod, only: Pos
@@ -965,7 +965,7 @@ CONTAINS
 
 ! !USES:
   USE srPos_mod,  only: Pos, Nfreq, freqVec
-  USE ihop_mod,   only: SHDFile
+  USE belli_mod,   only: SHDFile
 
 ! !INPUT PARAMETERS:
 ! FileName :: Name of the SHD file to write
@@ -1061,7 +1061,7 @@ CONTAINS
 !   Writes the pressure field to the SHD file.
 
 ! !USES:
-  USE ihop_mod, only: SHDFile
+  USE belli_mod, only: SHDFile
     
 ! !INPUT PARAMETERS:
 ! P     :: Pressure field to write
@@ -1135,7 +1135,7 @@ CONTAINS
 ! !USES:
   USE ssp_mod,    only: SSP
   USE arr_mod,    only: nArrival, Arr, U
-  USE ihop_mod,   only: ray2D, nMax, iStep
+  USE belli_mod,   only: ray2D, nMax, iStep
 
   ! From arr_mod.f90
   U                         = 0.
@@ -1161,7 +1161,7 @@ CONTAINS
 #endif /* BELLI_THREED */
   ENDIF ! IF (useSSPFile)
 
-  ! From ihop_mod.f90
+  ! From belli_mod.f90
   DO iStep = 1,nMax
     ray2D(iStep)%x = [zeroRL, zeroRL]
     ray2D(iStep)%t = [zeroRL, zeroRL]

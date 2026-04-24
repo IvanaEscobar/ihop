@@ -11,7 +11,7 @@ C     !DESCRIPTION:
 C     Calculate ray travel times, tau
 
 C     !USES:
-      USE ihop, only: ihop_main
+      USE belli, only: belli_main
       IMPLICIT NONE
 C     == Global variables ===
 #ifdef ALLOW_BELLI

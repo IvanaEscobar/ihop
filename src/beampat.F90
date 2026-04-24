@@ -46,7 +46,7 @@ SUBROUTINE ReadPat( myThid )
 ! Reads the source beam pattern from a file or sets to default omni pattern.
 
 ! !USES:
-  USE ihop_mod, only: SBPFile
+  USE belli_mod, only: SBPFile
 
 ! !INPUT PARAMETERS:
 ! myThid  :: my thread ID
@@ -126,7 +126,7 @@ SUBROUTINE ReadPat( myThid )
 ! Writes the source beam pattern to an output file.
 
 !! !USES:
-!  USE ihop_mod, only: PRTFile
+!  USE belli_mod, only: PRTFile
 !
 ! !INPUT PARAMETERS:
 ! myThid  :: my thread ID

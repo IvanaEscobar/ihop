@@ -22,11 +22,11 @@ C     !USES:
 #ifdef ALLOW_BELLI
       USE arr_mod,   only: Arr, nArrival, nMaxArr
       USE srPos_mod, only: Pos
-      USE ihop_mod,  only: rad2deg
+      USE belli_mod,  only: rad2deg
 #endif
 #ifdef TEST_BELLI_COST_INLOOP
 C      USE ssp_mod,  only: SSP, Grid
-C      USE ihop_mod, only: ray2D, nMax, Beam
+C      USE belli_mod, only: ray2D, nMax, Beam
 #endif
       IMPLICIT NONE
 C == Global variables ===
@@ -212,13 +212,13 @@ CC-- global Arr%delay: F90 eigenray travel time END
 
       ENDDO !DO ii
 
-!$TAF init ihop_modVal = 'ihop_cost_modVal'
+!$TAF init belli_modVal = 'ihop_cost_modVal'
 ! Find index of max amplitude for each ri,rj arrival, custom maxloc 
       maxarrVal = arrVal(1)
       maxID = 1
 
       DO ii = 1, nArrival(ri,rj)
-!$TAF store maxarrVal = ihop_modVal
+!$TAF store maxarrVal = belli_modVal
         IF (arrVal(ii)>maxarrVal) THEN
           maxarrVal = arrVal(ii)
           maxID = ii
