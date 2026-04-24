@@ -95,8 +95,8 @@ C step 1: determine depth of global minimum
           kMin = -1*kDir
 
           DO k=kU,kL,kDir
-           IF ( ihop_ssp(i,j,k,bi,bj).LT.min_val ) THEN
-               min_val = ihop_ssp(i,j,k,bi,bj)
+           IF ( belli_ssp(i,j,k,bi,bj).LT.min_val ) THEN
+               min_val = belli_ssp(i,j,k,bi,bj)
                kMin = k
            ENDIF
           ENDDO
@@ -113,8 +113,8 @@ C step 2: find vertical level of the truncated global maximum
           kMin = ihop_kMin(i,j)
 
           DO k=kU,kMin,kDir
-           IF (ihop_ssp(i,j,k,bi,bj).GT.max_val ) THEN
-               max_val = ihop_ssp(i,j,k,bi,bj)
+           IF (belli_ssp(i,j,k,bi,bj).GT.max_val ) THEN
+               max_val = belli_ssp(i,j,k,bi,bj)
                kMax = k
            ENDIF
           ENDDO
@@ -133,7 +133,7 @@ C c) store depth of max ssp
         DO j=1-OLy,sNy+OLy
          DO i=1-OLx,sNx+OLx
           kMax = ihop_kMax(i,j)
-          ihop_sld(i,j,bi,bj) = gravitySign * rC(kMax) 
+          belli_sld(i,j,bi,bj) = gravitySign * rC(kMax) 
      &                          * maskC(i,j,kMax,bi,bj)
 
          ENDDO
@@ -141,7 +141,7 @@ C c) store depth of max ssp
 
 #ifdef ALLOW_DIAGNOSTICS
        IF ( useDiagnostics ) THEN
-        CALL DIAGNOSTICS_FILL( ihop_sld, 'SLD     ',
+        CALL DIAGNOSTICS_FILL( belli_sld, 'SLD     ',
      &                         0, 1, 1, bi, bj, myThid )
        ENDIF
 #endif /* ALLOW_DIAGNOSTICS */

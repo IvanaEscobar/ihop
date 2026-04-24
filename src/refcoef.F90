@@ -95,7 +95,7 @@ CONTAINS
 
   ! == read any Reflection Coefficients ==
   IF ( BotRC.EQ.'F' ) THEN
-    OPEN( FIlE=TRIM( IHOP_fileroot )//'.brc', UNIT=BRCFile, STATUS='OLD',&
+    OPEN( FIlE=TRIM( BELLI_fileroot )//'.brc', UNIT=BRCFile, STATUS='OLD',&
           IOSTAT=IOStat, ACTION='READ', ACCESS='direct', RECL=100 )
     IF ( IOStat.NE.0 ) THEN
 #ifdef IHOP_WRITE_OUT
@@ -140,7 +140,7 @@ CONTAINS
 
   ! Optionally read in top reflection coefficient
   IF ( TopRC.EQ.'F' ) THEN
-    OPEN( FIlE=TRIM( IHOP_fileroot )//'.trc', UNIT=TRCFile, STATUS='OLD',&
+    OPEN( FIlE=TRIM( BELLI_fileroot )//'.trc', UNIT=TRCFile, STATUS='OLD',&
           IOSTAT=IOStat, ACTION='READ', ACCESS='direct', RECL=100 )
     IF ( IOStat.NE.0 ) THEN
 #ifdef IHOP_WRITE_OUT
@@ -186,7 +186,7 @@ CONTAINS
 
   ! Optionally read in internal reflection coefficient data
   IF ( BotRC.EQ.'P' ) THEN
-    OPEN( FIlE=TRIM( IHOP_fileroot )//'.irc', UNIT=TRCFile, STATUS='OLD',&
+    OPEN( FIlE=TRIM( BELLI_fileroot )//'.irc', UNIT=TRCFile, STATUS='OLD',&
           IOSTAT=IOStat, ACTION='READ', ACCESS='direct', RECL=100 )
     IF ( IOStat.NE.0 ) THEN
 #ifdef IHOP_WRITE_OUT
@@ -274,7 +274,7 @@ CONTAINS
     RInt%phi = 0.0     ! R( iLeft  )%phi
 #ifdef IHOP_WRITE_OUT
     ! In adjoint mode we do not write output besides on the first run
-    IF ( IHOP_dumpfreq.GE.0 ) THEN
+    IF ( BELLI_dumpfreq.GE.0 ) THEN
     WRITE( PRTFile, '(2A)' ) 'Warning in InterpolateReflectionCoefficient : ',&
       'Ref. Coef. being set to 0 outside tabulated domain'
     WRITE( PRTFile, * ) 'angle = ', thetaIntr, 'lower limit = ', &
@@ -441,7 +441,7 @@ CONTAINS
       '__________________________________________________________________________'
     WRITE( PRTFile,'(A)' )
     WRITE( PRTFile,'(A)' ) 'Using tabulated bottom reflection coef.'
-    WRITE( PRTFile,'(2A)' ) 'BRCFile=', TRIM( IHOP_fileroot )//'.brc'
+    WRITE( PRTFile,'(2A)' ) 'BRCFile=', TRIM( BELLI_fileroot )//'.brc'
 
     WRITE( PRTFile,'(2A,I10)' ) 'Number of points in bottom reflection ', &
       'coefficient = ', NBotPts
@@ -452,7 +452,7 @@ CONTAINS
       '__________________________________________________________________________'
     WRITE( PRTFile,'(A)' )
     WRITE( PRTFile,'(A)' ) 'Using tabulated top reflection coef.'
-    WRITE( PRTFile,'(2A)' ) 'TRCFile=', TRIM( IHOP_fileroot )//'.trc'
+    WRITE( PRTFile,'(2A)' ) 'TRCFile=', TRIM( BELLI_fileroot )//'.trc'
 
     WRITE( PRTFile,'(2A,I10)' ) 'Number of points in top reflection ', &
       'coefficient = ', NTopPts

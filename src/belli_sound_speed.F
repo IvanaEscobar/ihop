@@ -79,7 +79,7 @@ c     IF ( calc_soundSpeed ) THEN
          DO k=1,Nr
           DO j=1-OLy,sNy+OLy
            DO i=1-OLx,sNx+OLx
-            ihop_ssp(i,j,k,bi,bj) = 0.0 _d 0
+            belli_ssp(i,j,k,bi,bj) = 0.0 _d 0
            ENDDO
           ENDDO
          ENDDO
@@ -87,7 +87,7 @@ c     IF ( calc_soundSpeed ) THEN
           DO j=1,sNy
            DO i=1,sNx
             IF ( maskC(i,j,k,bi,bj).EQ.oneRS ) THEN
-             ihop_ssp(i,j,k,bi,bj) = CHEN_MILLERO(i,j,k,bi,bj,myThid)
+             belli_ssp(i,j,k,bi,bj) = CHEN_MILLERO(i,j,k,bi,bj,myThid)
             ENDIF
            ENDDO
           ENDDO

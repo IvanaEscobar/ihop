@@ -61,14 +61,14 @@ C     !LOCAL VARIABLES:
       INTEGER :: stop_ihop_cost
       _RL :: yymmddMin, yymmddMax
       _RL :: hhmmssMin, hhmmssMax
-      _RL :: tmpyymmdd(NOBSMAX_IHOP), tmphhmmss(NOBSMAX_IHOP)
+      _RL :: tmpyymmdd(NOBSMAX_BELLI), tmphhmmss(NOBSMAX_BELLI)
       _RL :: diffsecs
-      _RL :: tmp_ihopObs_time(NOBSMAX_IHOP)
-      _RL :: tmp_lon, tmp_lon2(NOBSMAX_IHOP)
-      _RL :: tmp_lat2(NOBSMAX_IHOP)
+      _RL :: tmp_bObs_time(NOBSMAX_BELLI)
+      _RL :: tmp_lon, tmp_lon2(NOBSMAX_BELLI)
+      _RL :: tmp_lat2(NOBSMAX_BELLI)
       _RL :: lon_cur, lat_cur
-      _RL :: tmp_depth2(NOBSMAX_IHOP), depth_cur
-      _RL :: tmp_uncert2(NOBSMAX_IHOP)
+      _RL :: tmp_depth2(NOBSMAX_BELLI), depth_cur
+      _RL :: tmp_uncert2(NOBSMAX_BELLI)
       _RL :: ihopObs_i
       _RL :: ihopObs_j
       _RL :: ihopObs_k1, ihopObs_k2
@@ -85,11 +85,11 @@ CBOP
       CALL PRINT_MESSAGE( msgBuf,
      &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
-      JL = ILNBLNK( IHOPObs_Dir )
+      JL = ILNBLNK( bObs_Dir )
       IF (JL.NE.0) THEN
-        WRITE(msgBuf,'(2A)') '  IHOPObs_Dir ',IHOPObs_Dir(1:JL)
+        WRITE(msgBuf,'(2A)') '  bObs_Dir ',bObs_Dir(1:JL)
       ELSE
-        WRITE(msgBuf,'(2A)') '  IHOPObs_Dir ','./'
+        WRITE(msgBuf,'(2A)') '  bObs_Dir ','./'
       ENDIF
       CALL PRINT_MESSAGE( msgBuf,
      &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
@@ -112,13 +112,13 @@ CBOP
       hhmmssMin=modelstartdate(2)
       hhmmssMax=modelenddate(2)
 
-      DO num_file = 1, NFILESMAX_IHOP
+      DO num_file = 1, NFILESMAX_BELLI
         obsNo_hh = 0
 
         IHOPObs_File=' '
-        IL = ILNBLNK( IHOPObs_Files(num_file) )
+        IL = ILNBLNK( bObs_Files(num_file) )
         IF (IL.NE.0) THEN
-          WRITE(IHOPObs_File,'(A)') IHOPObs_Files(num_file)(1:IL)
+          WRITE(IHOPObs_File,'(A)') bObs_Files(num_file)(1:IL)
           WRITE(msgBuf,'(A,I3,2A)') ''// CHAR(10) //
      &      '                    ihop file #', num_file,
      &      ' is ', IHOPObs_File(1:IL)
@@ -153,7 +153,7 @@ CBOP
         CALL IHOP_COST_NF_ERROR('init_fixed 4',err,1,1,myThid)
           err = err + NF_INQ_VARID( ncid, 'ihop_HHMMSS', varId1b )
         CALL IHOP_COST_NF_ERROR('init_fixed 5',err,1,1,myThid)
-          err = err + NF_INQ_VARID( ncid, 'ihop_iter', varId2 )
+          err = err + NF_INQ_VARID( ncid, 'belli_iter', varId2 )
         CALL IHOP_COST_NF_ERROR('init_fixed 6',err,1,1,myThid)
 
           IF (err.NE.NF_NOERR) THEN
@@ -210,24 +210,24 @@ CBOP
 !       SET IHOP GLOBAL EQUIV NETCDF VARIABLES
 !===========================================================
 ! Variable names for model equivalent files
-          ihop_nameequi = 'mod_val'
-          ihop_namemask = 'mod_mask'
-          ihop_nameval  = 'ihop_val'
-          ihop_nameuncert = 'ihop_uncert'
+          belli_nameequi = 'mod_val'
+          belli_namemask = 'mod_mask'
+          belli_nameval  = 'ihop_val'
+          belli_nameuncert = 'ihop_uncert'
 
 !4 Create global file for ihop model equivalent
           IF (myProcId.EQ.0) THEN
-            JL  = ILNBLNK( IHOPObs_Dir )
+            JL  = ILNBLNK( bObs_Dir )
 
-            WRITE(fnameequincglo,'(3A)') IHOPObs_Dir(1:JL),
+            WRITE(fnameequincglo,'(3A)') bObs_Dir(1:JL),
      &        IHOPObs_File(1:IL),'.equi.nc'
 
 # ifdef ALLOW_ADJOINT_RUN
-            WRITE(adfnameequincglo,'(4A)') IHOPObs_Dir(1:JL),'ad',
+            WRITE(adfnameequincglo,'(4A)') bObs_Dir(1:JL),'ad',
      &        IHOPObs_File(1:IL),'.equi.nc'
 # endif
 # ifdef ALLOW_TANGENTLINEAR_RUN
-            WRITE(tlfnameequincglo,'(4A)') IHOPObs_Dir(1:JL),'tl',
+            WRITE(tlfnameequincglo,'(4A)') bObs_Dir(1:JL),'tl',
      &        IHOPObs_File(1:IL),'.equi.nc'
 # endif
 
@@ -360,8 +360,8 @@ CBOP
 !       see pkg/profiles or pkg/obsfit for how to chunk.
 
 ! Default values
-          DO nObs = 1, NOBSMAX_IHOP
-            ihopObs_ind_glob(num_file,nObs) = 0
+          DO nObs = 1, NOBSMAX_BELLI
+            bObs_ind_glob(num_file,nObs) = 0
           ENDDO
           obsNo_valid = 0
 
@@ -422,19 +422,19 @@ CBOP
             IF (obsIsInRunTime.EQ.1) THEN
 ! If yes then store obs index position:
               obsNo_valid = obsNo_valid+1
-              ihopObs_ind_glob(num_file,obsNo_valid) = nObs
+              bObs_ind_glob(num_file,obsNo_valid) = nObs
 
             ENDIF !IF (obsIsInRunTime.EQ.1)
 
 ! Regardless of whether ihop obs is in run time or not,
 ! Keep track of ihop obs index position and assign time to ihop obs
-            tmp_ihopObs_time(nObs) = diffsecs
+            tmp_bObs_time(nObs) = diffsecs
 
 ! Check that maximum size was not reached:
-            IF (obsNo(num_file).GT.NOBSMAX_IHOP) THEN
+            IF (obsNo(num_file).GT.NOBSMAX_BELLI) THEN
               WRITE(msgBuf,'(3A)')
      &          'IHOP_COST_INIT_FIXED: file ', IHOPObs_File(1:IL),
-     &          '.nc was not read properly: increase NOBSMAX_IHOP.'
+     &          '.nc was not read properly: increase NOBSMAX_BELLI.'
               CALL PRINT_ERROR( msgBuf, myThid )
 
               stop_ihop_cost = 1
@@ -463,13 +463,13 @@ CBOP
               obsNo_valid = 0
               obsNo_tiled(num_file,bi,bj) = obsNo(num_file)
 
-              DO nObs = 1, NOBSMAX_IHOP
-                ihopObs_time(num_file,nObs,bi,bj) =     -999. _d 0
-                ihopObs_lon(num_file,nObs,bi,bj) =      -999. _d 0
-                ihopObs_lat(num_file,nObs,bi,bj) =      -999. _d 0
-                ihopObs_depth(num_file,nObs,bi,bj) =    -999. _d 0
-                ihopObs_uncert(num_file,nObs,bi,bj) =      1. _d 0
-                ihopObs_ind_glob_tiled(num_file,nObs,bi,bj) =    0
+              DO nObs = 1, NOBSMAX_BELLI
+                bObs_time(num_file,nObs,bi,bj) =     -999. _d 0
+                bObs_lon(num_file,nObs,bi,bj) =      -999. _d 0
+                bObs_lat(num_file,nObs,bi,bj) =      -999. _d 0
+                bObs_depth(num_file,nObs,bi,bj) =    -999. _d 0
+                bObs_uncert(num_file,nObs,bi,bj) =      1. _d 0
+                bObs_ind_glob_tiled(num_file,nObs,bi,bj) =    0
               ENDDO !DO nObs
 
 ! Read ALL info using respective varid and save to tmp, NO CHUNKS!
@@ -502,9 +502,9 @@ CBOP
                 ihopObsInTile = 1
 
 ! In a valid time?
-                IF ( (tmp_ihopObs_time(nObs).LT.0. _d 0) .OR.
-     &               (tmp_ihopObs_time(nObs).GT.modelend) .OR.
-     &               (tmp_ihopObs_time(nObs).LT.modelstart) )
+                IF ( (tmp_bObs_time(nObs).LT.0. _d 0) .OR.
+     &               (tmp_bObs_time(nObs).GT.modelend) .OR.
+     &               (tmp_bObs_time(nObs).LT.modelstart) )
      &          THEN
                   ihopObsInTile = 0
                 ENDIF
@@ -624,27 +624,27 @@ CBOP
 ! 'Reshape' observed datum to tiled structures
                   IF (ihopObsInTile.EQ.1) THEN
                     obsNo_valid = obsNo_valid+1
-                    ihopObs_ind_glob_tiled(num_file,
+                    bObs_ind_glob_tiled(num_file,
      &               obsNo_valid,bi,bj) = nObs
 
-                    ihopObs_time(num_file,obsNo_valid,bi,bj) =
-     &               tmp_ihopObs_time(nObs)
+                    bObs_time(num_file,obsNo_valid,bi,bj) =
+     &               tmp_bObs_time(nObs)
 
                     IF (weighIhopObs.EQ.1) THEN
-                      ihopObs_uncert(num_file,obsNo_valid,bi,bj) =
+                      bObs_uncert(num_file,obsNo_valid,bi,bj) =
      &                 tmp_uncert2(nObs)
                     ENDIF
 
-                    ihopObs_lon(num_file,obsNo_valid,bi,bj) = lon_cur
-                    ihopObs_lat(num_file,obsNo_valid,bi,bj) = lat_cur
-                    ihopObs_depth(num_file,obsNo_valid,bi,bj) =
+                    bObs_lon(num_file,obsNo_valid,bi,bj) = lon_cur
+                    bObs_lat(num_file,obsNo_valid,bi,bj) = lat_cur
+                    bObs_depth(num_file,obsNo_valid,bi,bj) =
      &               depth_cur
 
-                    ihopObs_i_tiled(num_file,obsNo_valid,bi,bj) = 
+                    bObs_i_tiled(num_file,obsNo_valid,bi,bj) = 
      &               ihopObs_i
-                    ihopObs_j_tiled(num_file,obsNo_valid,bi,bj) =
+                    bObs_j_tiled(num_file,obsNo_valid,bi,bj) =
      &               ihopObs_j
-                    ihopObs_k_tiled(num_file,obsNo_valid,bi,bj) =
+                    bObs_k_tiled(num_file,obsNo_valid,bi,bj) =
      &               ihopObs_k1
 
                   ENDIF !IF (ihopObsInTile.EQ.1) 3rd time
@@ -653,10 +653,10 @@ CBOP
 
 ! ====================================================================
 ! Check that maximum size was not reached:
-                IF (nObs.GE.NOBSMAX_IHOP) THEN
+                IF (nObs.GE.NOBSMAX_BELLI) THEN
                   WRITE(msgBuf,'(3A)')
      &              'IHOP_COST_INIT_FIXED: file ',IHOPObs_File(1:IL),
-     &              '.nc not read properly: increase NOBSMAX_IHOP.'
+     &              '.nc not read properly: increase NOBSMAX_BELLI.'
                   CALL PRINT_ERROR( msgBuf, myThid )
                 ENDIF
 
@@ -685,20 +685,20 @@ CBOP
                 iG=bi+(myXGlobalLo-1)/sNx
                 jG=bj+(myYGlobalLo-1)/sNy
 
-                JL = ILNBLNK( IHOPObs_Dir )
+                JL = ILNBLNK( bObs_Dir )
 ! ALWAYS Write to nc file
                 IF (ihopDoNcOutput) THEN
                   WRITE(fnameequinc,'(3A,2(I3.3,A))')
-     &              IHOPObs_Dir(1:JL),IHOPObs_File(1:IL),
+     &              bObs_Dir(1:JL),IHOPObs_File(1:IL),
      &              '.',iG,'.',jG,'.equi.nc'
 # ifdef ALLOW_ADJOINT_RUN
                   WRITE(adfnameequinc,'(4A,2(I3.3,A))')
-     &              IHOPObs_Dir(1:JL),'ad',IHOPObs_File(1:IL),
+     &              bObs_Dir(1:JL),'ad',IHOPObs_File(1:IL),
      &              '.',iG,'.',jG,'.equi.nc'
 # endif
 # ifdef ALLOW_TANGENTLINEAR_RUN
                   WRITE(tlfnameequinc,'(4A,2(I3.3,A))')
-     &              IHOPObs_Dir(1:JL),'ad',IHOPObs_File(1:IL),
+     &              bObs_Dir(1:JL),'ad',IHOPObs_File(1:IL),
      &              '.',iG,'.',jG,'.equi.nc'
 # endif
 
@@ -770,12 +770,12 @@ CBOP
               obsNo(num_file) = 0
               obsNo_tiled(num_file,bi,bj) = 0
 
-              DO nObs = 1, NOBSMAX_IHOP
-                ihopObs_lon(num_file,nObs,bi,bj) =      -999. _d 0
-                ihopObs_lat(num_file,nObs,bi,bj) =      -999. _d 0
-                ihopObs_depth(num_file,nObs,bi,bj) =    -999. _d 0
-                ihopObs_uncert(num_file,nObs,bi,bj) =      1. _d 0
-                ihopObs_ind_glob_tiled(num_file,nObs,bi,bj) =    0
+              DO nObs = 1, NOBSMAX_BELLI
+                bObs_lon(num_file,nObs,bi,bj) =      -999. _d 0
+                bObs_lat(num_file,nObs,bi,bj) =      -999. _d 0
+                bObs_depth(num_file,nObs,bi,bj) =    -999. _d 0
+                bObs_uncert(num_file,nObs,bi,bj) =      1. _d 0
+                bObs_ind_glob_tiled(num_file,nObs,bi,bj) =    0
               ENDDO
 
             ENDDO !DO bi

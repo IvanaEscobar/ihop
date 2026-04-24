@@ -89,7 +89,7 @@ CONTAINS
   IF ( TopOpt( 6:6 ).EQ.'I' ) THEN ! option to trace a single beam
     Angles%Nalpha = 0
   ELSE
-    Angles%Nalpha = IHOP_nalpha
+    Angles%Nalpha = BELLI_nalpha
   ENDIF
 
   IF ( Angles%Nalpha.EQ.0 ) THEN   ! automatically estimate Nalpha to use
@@ -99,7 +99,7 @@ CONTAINS
     ELSE
       ! Letting ME choose? OK: ideas based on an isospeed ocean
       ! limit based on phase of adjacent beams at maximum range
-      Angles%Nalpha = MAX( INT( 0.3*Pos%RR( Pos%nRR )*IHOP_freq/c0 ), 300 )
+      Angles%Nalpha = MAX( INT( 0.3*Pos%RR( Pos%nRR )*BELLI_freq/c0 ), 300 )
 
       ! limit based on having beams that are thin with respect to the water
       ! depth assumes also a full 360 degree angular spread of rays should
@@ -124,7 +124,7 @@ CONTAINS
   ! init Angles%adeg,arad
   Angles%adeg = 0.0
   Angles%arad = 0.0
-  Angles%adeg(1:2) = IHOP_alpha
+  Angles%adeg(1:2) = BELLI_alpha
   IF ( Angles%Nalpha.GT.2 ) Angles%adeg(3) = -999.9
 
   ! set intermediate values of alpha
@@ -223,7 +223,7 @@ CONTAINS
       ! For a ray trace plot, we don't want too many rays ...
       Angles%Nbeta = 50
     ELSE
-      Angles%Nbeta = MAX( INT( 0.1*Pos%RR( Pos%nRR )*IHOP_freq / c0 ), 300 )
+      Angles%Nbeta = MAX( INT( 0.1*Pos%RR( Pos%nRR )*BELLI_freq / c0 ), 300 )
     ENDIF
   ENDIF ! IF ( Angles%Nbeta.EQ.0 )
 
@@ -253,12 +253,12 @@ CONTAINS
 #ifdef IHOP_WRITE_OUT
     WRITE(msgBuf,'(A)')
     ! In adjoint mode we do not write output besides on the first run
-    IF (IHOP_dumpfreq.GE.0) &
+    IF (BELLI_dumpfreq.GE.0) &
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
     WRITE(msgBuf,'(2A)') 'Replacing beam take-off angles, beta, with ', &
       'receiver bearing lines, theta'
     ! In adjoint mode we do not write output besides on the first run
-    IF (IHOP_dumpfreq.GE.0) &
+    IF (BELLI_dumpfreq.GE.0) &
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 #endif /* IHOP_WRITE_OUT */
     DEALLOCATE( Angles%beta )
@@ -280,7 +280,7 @@ CONTAINS
 
 #ifdef IHOP_WRITE_OUT
   ! In adjoint mode we do not write output besides on the first run
-  IF (IHOP_dumpfreq.GE.0) THEN
+  IF (BELLI_dumpfreq.GE.0) THEN
     WRITE(msgBuf,'(A)')
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
     WRITE(msgBuf,'(A,I10)') 'Number of beams in bearing   = ', Angles%Nbeta
@@ -306,7 +306,7 @@ CONTAINS
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
     ENDIF
 
-  ENDIF ! IF (IHOP_dumpfreq.GE.0)
+  ENDIF ! IF (BELLI_dumpfreq.GE.0)
 #endif /* IHOP_WRITE_OUT */
 
   IF ( Angles%Nbeta.GT.1 &

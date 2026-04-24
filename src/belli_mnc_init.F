@@ -2,10 +2,10 @@
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP 0
-C     !ROUTINE: IHOP_MNC_INIT
+C     !ROUTINE: BELLI_MNC_INIT
 
 C     !INTERFACE:
-      SUBROUTINE IHOP_MNC_INIT( myThid )
+      SUBROUTINE BELLI_MNC_INIT( myThid )
 
 C     !DESCRIPTION:
 C     Initialize MNC lookup tables for Mypackage.

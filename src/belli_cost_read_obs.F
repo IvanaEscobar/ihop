@@ -47,60 +47,60 @@ C     vec_loc   ::
 
 C     !LOCAL VARIABLES:
 #if (defined ALLOW_IHOP) && (defined ALLOW_COST)
-C tmpObsNo :: number of obs in the file
+C tmpbObsNo :: number of obs in the file
       CHARACTER*(MAX_LEN_MBUF) msgBuf
-      INTEGER v1, err, varId1, tmpObsNo
+      INTEGER v1, err, varId1, tmpbObsNo
       INTEGER vec_start, vec_count
       _RL     vec_tmp1(1000), vec_tmp2(1000)
 CEOP
 
-      IF ( (irec.LT.ihop_minind_buff) .OR.
-     &     (irec.GT.ihop_maxind_buff) .OR.
-     &     (ihop_curfile_buff.NE.fNb) ) THEN
+      IF ( (irec.LT.belli_minind_buff) .OR.
+     &     (irec.GT.belli_maxind_buff) .OR.
+     &     (belli_curfile_buff.NE.fNb) ) THEN
         err = NF_INQ_DIMID( ncidData(fNb), 'iOBS', varId1 )
         CALL IHOP_COST_NF_ERROR('read_obs 1',err,1,1,myThid)
-        err = NF_INQ_DIMLEN( ncidData(fNb), varId1, tmpObsNo )
+        err = NF_INQ_DIMLEN( ncidData(fNb), varId1, tmpbObsNo )
         CALL IHOP_COST_NF_ERROR('read_obs 2',err,1,1,myThid)
 
-        IF (ihop_curfile_buff.NE.fNb) THEN
+        IF (belli_curfile_buff.NE.fNb) THEN
 C No asumption on whether a forward or a backward loop is calling
-          ihop_minind_buff = MAX(1,irec-500+1)
-          ihop_maxind_buff = MIN(tmpObsNo,irec+500)
+          belli_minind_buff = MAX(1,irec-500+1)
+          belli_maxind_buff = MIN(tmpbObsNo,irec+500)
 
-        ELSEIF (irec.LT.ihop_minind_buff) THEN
+        ELSEIF (irec.LT.belli_minind_buff) THEN
 C Implies that a backward loop is calling
-          ihop_minind_buff = MAX(1,irec-999)
-          ihop_maxind_buff = irec
+          belli_minind_buff = MAX(1,irec-999)
+          belli_maxind_buff = irec
 
         ELSE
 C Implies that a forward loop is calling
-          ihop_minind_buff = irec
-          ihop_maxind_buff = MIN(tmpObsNo,irec+999)
+          belli_minind_buff = irec
+          belli_maxind_buff = MIN(tmpbObsNo,irec+999)
 
-       ENDIF !IF (ihop_curfile_buff.NE.fNb)
+       ENDIF !IF (belli_curfile_buff.NE.fNb)
 
 #ifdef ALLOW_DEBUG
         IF ( debugLevel.GE.debLevD ) THEN
           WRITE(msgBuf,'(A,5I9)')
      &      'buffer readobsfile ',
-     &      ihop_minind_buff, ihop_maxind_buff,
-     &      irec, ObsNo(fNb), tmpObsNo
+     &      belli_minind_buff, belli_maxind_buff,
+     &      irec, bObsNo(fNb), tmpbObsNo
           CALL PRINT_MESSAGE( msgBuf,
      &      standardmessageunit, SQUEEZE_RIGHT, myThid )
         ENDIF
 #endif
 
-        vec_start = ihop_minind_buff
-        vec_count = ihop_maxind_buff-ihop_minind_buff+1
+        vec_start = belli_minind_buff
+        vec_count = belli_maxind_buff-belli_minind_buff+1
 
-        err = NF_INQ_VARID( ncidData(fNb), ihop_nameval,
+        err = NF_INQ_VARID( ncidData(fNb), belli_nameval,
      &        varId1 )
         CALL IHOP_COST_NF_ERROR('read_obs 3',err,1,1,myThid)
         err = NF_GET_VARA_DOUBLE(ncidData(fNb), varId1,
      &        vec_start, vec_count, vec_tmp1 )
         CALL IHOP_COST_NF_ERROR('read_obs 4',err,1,1,myThid)
 
-        err = NF_INQ_VARID( ncidData(fNb), ihop_nameuncert,
+        err = NF_INQ_VARID( ncidData(fNb), belli_nameuncert,
      &        varId1 )
         CALL IHOP_COST_NF_ERROR('read_obs 5',err,1,1,myThid)
         err = NF_GET_VARA_DOUBLE(ncidData(fNb), varId1,
@@ -117,15 +117,15 @@ C Implies that a forward loop is calling
           ihop_uncert_buff(v1) = vec_tmp2(v1)
         ENDDO
 
-        ihop_curfile_buff = fNb
-      ENDIF !IF ( (irec.LT.ihop_minind_buff)
+        belli_curfile_buff = fNb
+      ENDIF !IF ( (irec.LT.belli_minind_buff)
 
 C Get vec_loc from the buffer
       IF (vNb.LT.0) THEN
-        vec_loc = ihop_uncert_buff(irec-ihop_minind_buff+1)
+        vec_loc = ihop_uncert_buff(irec-belli_minind_buff+1)
 
       ELSE
-        vec_loc = ihop_data_buff(irec-ihop_minind_buff+1)
+        vec_loc = ihop_data_buff(irec-belli_minind_buff+1)
 
       ENDIF
 

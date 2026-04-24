@@ -50,7 +50,7 @@ cccccccccccccccccccccc
 c diagnostics        c
 cccccccccccccccccccccc
 # ifdef ALLOW_MNC
-       IF ( IHOP_MNC ) THEN
+       IF ( BELLI_MNC ) THEN
         IF ( writeBinaryPrec .EQ. precFloat64 ) THEN
           pf(1:1) = 'D'
         ELSE
@@ -64,21 +64,21 @@ C        CALL MNC_CW_RL_W_S('D','ihop',0,0,'model_time',
 C     &       myTime,myThid)
 C
 C        CALL MNC_CW_RL_W( pf, 'ihop', 0, 0,
-C     &       'ihop_soundSpeed', ihop_ssp, myThid )
+C     &       'ihop_soundSpeed', belli_ssp, myThid )
 
-       ENDIF ! IF ( IHOP_MNC ) THEN
+       ENDIF ! IF ( BELLI_MNC ) THEN
 # endif /* ALLOW_MNC */
 
-       IF ( IHOP_MDSIO ) THEN 
+       IF ( BELLI_MDSIO ) THEN 
         IF ( rwSuffixType.EQ.0 ) THEN
           WRITE(suff,'(I10.10)') myIter
         ELSE
           CALL RW_GET_SUFFIX( suff, myTime, myIter, myThid )
         ENDIF
 
-        CALL WRITE_FLD_XYZ_RL('SVEL.',suff,ihop_ssp,myIter,myThid)
+        CALL WRITE_FLD_XYZ_RL('SVEL.',suff,belli_ssp,myIter,myThid)
 
-       ENDIF ! IF ( IHOP_MDSIO ) THEN
+       ENDIF ! IF ( BELLI_MDSIO ) THEN
 
 #endif /* ALLOW_IHOP */
       ENDIF ! DIFFERENT_MULTIPLE

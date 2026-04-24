@@ -111,7 +111,7 @@ CEOP
 ! Close tiled files
         DO bj = myByLo(myThid), myByHi(myThid)
           DO bi = myBxLo(myThid), myBxHi(myThid)
-            DO numFile = 1, NFILESMAX_IHOP
+            DO numFile = 1, NFILESMAX_BELLI
 
               IF (obsNo_tiled(numFile,bi,bj).GT.0) THEN
                 IL = ILNBLNK( ihopObs_Files(numFile) )
@@ -159,7 +159,7 @@ C Tangent linear equivalent (.equi) file
         ENDDO !DO bj
 
 ! Close global files
-        DO numFile = 1, NFILESMAX_IHOP
+        DO numFile = 1, NFILESMAX_BELLI
           IF (myProcId.EQ.0) THEN 
             IL = ILNBLNK( ihopObs_Files(numFile) )
 

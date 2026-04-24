@@ -126,7 +126,7 @@ C-- sum for total volume of 3D cell
             totVol = totVol + locVol
       
 C-- sum tile-wise QoI
-            locQoI   = locQoI + ihop_ssp(i,j,k,bi,bj) * locVol
+            locQoI   = locQoI + belli_ssp(i,j,k,bi,bj) * locVol
             locTHETA = locTHETA + theta(i,j,k,bi,bj) * locVol
 
           ENDIF

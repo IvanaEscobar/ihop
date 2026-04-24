@@ -304,7 +304,7 @@ CONTAINS
 !EOP
 
   ! In adjoint mode we do not write output besides on the first run
-  IF (IHOP_dumpfreq.LT.0) RETURN
+  IF (BELLI_dumpfreq.LT.0) RETURN
 
   arrFMT='(G14.6,F10.2,F12.4,G10.2,2F14.6,2I6)'
 
@@ -375,7 +375,7 @@ CONTAINS
 !EOP  
 
   ! In adjoint mode we do not write output besides on the first run
-  IF (IHOP_dumpfreq.LT.0) RETURN
+  IF (BELLI_dumpfreq.LT.0) RETURN
 
 #ifdef IHOP_WRITE_OUT
   WRITE( ARRFile, '(I0)' ) MAXVAL( nArrival( 1:nRR, 1:Nrz ) )

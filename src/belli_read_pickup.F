@@ -123,7 +123,7 @@ CC---   New way to read IHOP pickup:
 C        nj = 0
 CC---    read IHOP 3-D fields for restart
 C#ifdef IHOP_3D_STATE
-C        CALL READ_MFLDS_3D_RL( 'SVEL    ', ihop_ssp,
+C        CALL READ_MFLDS_3D_RL( 'SVEL    ', belli_ssp,
 C     &                                 nj, fp, Nr, myIter, myThid )
 C#endif /* IHOP_3D_STATE */
 C        nj = nj*Nr
@@ -164,7 +164,7 @@ C       ENDIF
 C
 CC--    Update overlap regions:
 C#ifdef IHOP_3D_STATE
-C        CALL EXCH_3D_RL( ihop_ssp, Nr, myThid )
+C        CALL EXCH_3D_RL( belli_ssp, Nr, myThid )
 C#endif /* IHOP_3D_STATE */
 C#ifdef IHOP_2D_STATE
 C        CALL EXCH_XY_RL( myPa_Surf1, myThid )

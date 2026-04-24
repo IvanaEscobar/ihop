@@ -86,12 +86,12 @@ CEOP
 
       DO bj = 1, nSy
         DO bi = 1, nSx
-          DO num_file = 1, NFILESMAX_IHOP
-            DO nObs = 1, NOBSMAX_IHOP
-              IF ( nObs.LE.ObsNo_tiled(num_file,bi,bj) ) THEN
-                IF ( (ihopObs_time(num_file,nObs,bi,bj).GE.
+          DO num_file = 1, NFILESMAX_BELLI
+            DO nObs = 1, NOBSMAX_BELLI
+              IF ( nObs.LE.bbObsNo_tiled(num_file,bi,bj) ) THEN
+                IF ( (bObs_time(num_file,nObs,bi,bj).GE.
      &                myTime) .AND.
-     &               (ihopObs_time(num_file,nObs,bi,bj).LT.
+     &               (bObs_time(num_file,nObs,bi,bj).LT.
      &                (myTime+deltaTclock)) ) THEN
 #  ifdef ALLOW_AUTODIFF_TAMC
 !!$TAF STORE ihop_modVal  = comlev1_bibj, key=itdkey, byte=isbyte
@@ -107,10 +107,10 @@ CEOP
                   CALL ACTIVE_WRITE_IHOP_TILE( 
      &                 num_file, ihop_modVal,
      &                 nObs, optimcycle, bi, bj, myThid,
-     &                 ihop_dummy(num_file,bi,bj) )
+     &                 belli_dummy(num_file,bi,bj) )
 
-                ENDIF !IF ( (ihopObs_time
-              ENDIF !IF (ObsNo_tiled(num_file,bi,bj).NE.0)
+                ENDIF !IF ( (bObs_time
+              ENDIF !IF (bbObsNo_tiled(num_file,bi,bj).NE.0)
             ENDDO !DO nObs
           ENDDO !DO num_file
         ENDDO !DO bi

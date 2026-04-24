@@ -75,7 +75,7 @@ C#ifdef IHOP_3D_STATE
 CC     record number < 0 : a hack not to write meta files now:
 C        j = j + 1
 C        CALL WRITE_REC_3D_RL( fn, fp, Nr,
-C     &                        ihop_ssp, -j, myIter, myThid )
+C     &                        belli_ssp, -j, myIter, myThid )
 C        IF (j.LE.listDim) wrFldList(j) = 'SVEL    '
 C
 C#endif /* IHOP_3D_STATE */

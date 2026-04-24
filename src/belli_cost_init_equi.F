@@ -59,7 +59,7 @@ C Create a netcdf file
         CALL IHOP_COST_NF_ERROR( 'INIT_EQUI: NF_DEF_DIM iOBS',
      &       err,bi,bj,myThid )
 
-        err = NF_DEF_VAR( fID2, 'ihopObs_ind_glob_tiled',
+        err = NF_DEF_VAR( fID2, 'bObs_ind_glob_tiled',
      &        NF_INT, 1, dimID, varID(1) )
         CALL IHOP_COST_NF_ERROR( 'INIT_EQUI: NF_DEF_VAR ind_glob',
      &       err,bi,bj,myThid )
@@ -69,12 +69,12 @@ C Create a netcdf file
      &       err,bi,bj,myThid )
 
 ! If 'ihop_val' exists in data file, then add info to equi file
-        err = NF_INQ_VARID( fID1, ihop_nameval, varID0 )
+        err = NF_INQ_VARID( fID1, belli_nameval, varID0 )
         CALL IHOP_COST_NF_ERROR( 'INIT_EQUI: NF_INQ_VARID ihop_val',
      &       err,bi,bj,myThid )
 
         IF (err.EQ.NF_NOERR) THEN
-          err = NF_DEF_VAR( fID2, ihop_nameequi,
+          err = NF_DEF_VAR( fID2, belli_nameequi,
      &          NF_DOUBLE, 1, dimID, varID(2) )
           CALL IHOP_COST_NF_ERROR( 'INIT_EQUI: NF_DEF_VAR val',
      &         err,bi,bj,myThid )
@@ -83,7 +83,7 @@ C Create a netcdf file
           CALL IHOP_COST_NF_ERROR( 'INIT_EQUI: NF_PUT_ATT_D val',
      &         err,bi,bj,myThid )
 
-          err = NF_DEF_VAR( fID2, ihop_namemask,
+          err = NF_DEF_VAR( fID2, belli_namemask,
      &          NF_DOUBLE, 1, dimID, varID(3) )
           CALL IHOP_COST_NF_ERROR( 'INIT_EQUI: NF_DEF_VAR mask',
      &         err,bi,bj,myThid )
@@ -95,7 +95,7 @@ C Create a netcdf file
         ELSE
           WRITE(msgBuf,'(2A)')
      &         'S/R IHOP_COST_INIT_EQUI: no variable ihop_val',
-     &         ihop_nameval
+     &         belli_nameval
           CALL PRINT_MESSAGE( msgBuf,
      &         standardMessageUnit, SQUEEZE_RIGHT, myThid )
 

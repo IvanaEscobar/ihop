@@ -40,10 +40,10 @@ C     !LOCAL VARIABLES:
       INTEGER :: IL, err, ncid, dimId1, dimId2
       INTEGER :: varId1, varId2, varId3, varId4
       INTEGER :: k, i, j
-      _RS :: data1vec( IHOP_MAX_NC_SIZE )
-      _RS :: data2vec( IHOP_MAX_NC_SIZE*IHOP_MAX_NC_SIZE )
-      _RS :: data3vec( IHOP_MAX_NC_SIZE*IHOP_MAX_NC_SIZE )
-      _RL :: data4vec( IHOP_MAX_NC_SIZE*IHOP_MAX_NC_SIZE )
+      _RS :: data1vec( BELLI_MAX_NC_SIZE )
+      _RS :: data2vec( BELLI_MAX_NC_SIZE*BELLI_MAX_NC_SIZE )
+      _RS :: data3vec( BELLI_MAX_NC_SIZE*BELLI_MAX_NC_SIZE )
+      _RL :: data4vec( BELLI_MAX_NC_SIZE*BELLI_MAX_NC_SIZE )
       CHARACTER*(MAX_LEN_FNAM) :: ihop_file
 CEOP
 
@@ -51,11 +51,11 @@ C Only do I/O if in the main thread
        _BEGIN_MASTER( myThid )
 
 C Read NetCDF input: setting the acoustic domain
-      IL  = ILNBLNK( IHOP_interpfile )
+      IL  = ILNBLNK( BELLI_interpfile )
       IF (IL.NE.0) THEN
           WRITE(ihop_file,'(2A)') ihop_interpfile(1:IL),'.nc'
       ELSE
-          ihop_file = IHOP_interpfile
+          ihop_file = BELLI_interpfile
       END IF
       err = NF_OPEN(ihop_file, NF_NOWRITE, ncid)
       CALL IHOP_COST_NF_ERROR('INIT_FIXED NF_OPEN',err,1,1,myThid)
@@ -69,16 +69,16 @@ C Read NetCDF input: setting the acoustic domain
 C Get dimension IDs and lengths
       err = NF_INQ_DIMID( ncid, 'nrange', dimId1 )
       CALL IHOP_COST_NF_ERROR('init_fixed 2',err,1,1,myThid)
-      err = NF_INQ_DIMLEN( ncid, dimId1, IHOP_npts_range )
+      err = NF_INQ_DIMLEN( ncid, dimId1, BELLI_npts_range )
 
       CALL IHOP_COST_NF_ERROR('init_fixed 3',err,1,1,myThid)
       err = NF_INQ_DIMID( ncid, 'nidw', dimId2 )
       CALL IHOP_COST_NF_ERROR('init_fixed 4',err,1,1,myThid)
-      err = NF_INQ_DIMLEN( ncid, dimId2, IHOP_npts_idw )
+      err = NF_INQ_DIMLEN( ncid, dimId2, BELLI_npts_idw )
       CALL IHOP_COST_NF_ERROR('init_fixed 5',err,1,1,myThid)
 
-      IF ( IHOP_npts_range>IHOP_MAX_RANGE .OR.
-     &     IHOP_npts_idw>IHOP_MAX_IDW ) THEN
+      IF ( BELLI_npts_range>BELLI_MAX_RANGE .OR.
+     &     BELLI_npts_idw>BELLI_MAX_IDW ) THEN
         WRITE(msgBuf, '(2A)') 'S/R IHOP_INIT_FIXED: reading dims ',
      &    'NetCDF Dimensions exceed maximum allowable size'
         CALL PRINT_ERROR( msgBuf, myThid )
@@ -86,13 +86,13 @@ C Get dimension IDs and lengths
       ENDIF
 
 C Get data variable IDs
-      err = NF_INQ_VARID( ncid, 'ihop_ranges', varId1 )
+      err = NF_INQ_VARID( ncid, 'belli_ranges', varId1 )
       CALL IHOP_COST_NF_ERROR('init_fixed 6',err,1,1,myThid)
-      err = NF_INQ_VARID( ncid, 'ihop_xc', varId2 )
+      err = NF_INQ_VARID( ncid, 'belli_xc', varId2 )
       CALL IHOP_COST_NF_ERROR('init_fixed 7',err,1,1,myThid)
-      err = NF_INQ_VARID( ncid, 'ihop_yc', varId3 )
+      err = NF_INQ_VARID( ncid, 'belli_yc', varId3 )
       CALL IHOP_COST_NF_ERROR('init_fixed 8',err,1,1,myThid)
-      err = NF_INQ_VARID( ncid, 'ihop_idw_weights', varId4 )
+      err = NF_INQ_VARID( ncid, 'belli_idw_weights', varId4 )
       CALL IHOP_COST_NF_ERROR('init_fixed 9',err,1,1,myThid)
 
       IF (err .NE. NF_NOERR) THEN
@@ -121,12 +121,12 @@ C get data variables
 
 C 'reshape' data variables to 2D arrays
       k=1
-      DO i=1,IHOP_npts_range
-        ihop_ranges(i) = data1vec(i)
-        DO j=1,IHOP_npts_idw
-          ihop_xc(i,j) = data2vec(k)
-          ihop_yc(i,j) = data3vec(k)
-          ihop_idw_weights(i,j) = data4vec(k)
+      DO i=1,BELLI_npts_range
+        belli_ranges(i) = data1vec(i)
+        DO j=1,BELLI_npts_idw
+          belli_xc(i,j) = data2vec(k)
+          belli_yc(i,j) = data3vec(k)
+          belli_idw_weights(i,j) = data4vec(k)
           k = k+1
         END DO
       END DO
@@ -136,7 +136,7 @@ C Close NetCDF file
       CALL IHOP_COST_NF_ERROR('init_fixed14',err,1,1,myThid)
       IF (err.NE.NF_NOERR) THEN
         WRITE(msgBuf, '(3A)') 'S/R IHOP_INIT_FIXED: ',
-     &    'NetCDF ERROR: Cannot close file ', IHOP_interpfile(1:IL)
+     &    'NetCDF ERROR: Cannot close file ', BELLI_interpfile(1:IL)
         CALL PRINT_ERROR( msgBuf, myThid )
         STOP 'ABNORMAL END: S/R IHOP_INIT_FIXED'
       ENDIF
@@ -145,9 +145,9 @@ C Only do I/O if in the main thread
       _END_MASTER( myThid )
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
-      DO k = 1,IHOP_MAX_NC_SIZE !Nr
-        DO i=1,IHOP_MAX_RANGE !IHOP_npts_range
-          ihop_sumweights(i,k) = -1.0
+      DO k = 1,BELLI_MAX_NC_SIZE !Nr
+        DO i=1,BELLI_MAX_RANGE !BELLI_npts_range
+          belli_sumweights(i,k) = -1.0
         END DO
       END DO
 
@@ -158,7 +158,7 @@ C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 #ifdef ALLOW_MNC
       IF (useMNC) THEN
 C       Initialize the MNC variable types for IHOP
-        CALL IHOP_MNC_INIT( myThid )
+        CALL BELLI_MNC_INIT( myThid )
       ENDIF
 #endif /* ALLOW_MNC */
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|

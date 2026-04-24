@@ -29,7 +29,7 @@
       INTEGER bObs_k_tiled(NFILESMAX_BELLI,NOBSMAX_BELLI,nsx,nsy)
       INTEGER bObs_sample1_ind(NFILESMAX_BELLI,NOBSMAX_BELLI)
       COMMON /BELLI_COST_I/                                                                                                         &
-     &                  ObsNo, ObsNo_tiled,                                                                                         &
+     &                  bObsNo, bObsNo_tiled,                                                                                       &
      &                  bObs_ind_glob, bObs_ind_glob_tiled,                                                                         &
      &                  ncidFWD, ncidAD, ncidTL,                                                                                    &
      &                  ncidGLOB, ncidADGLOB, ncidTLGLOB,                                                                           &

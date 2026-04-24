@@ -73,7 +73,7 @@ CONTAINS
 !EOP
 
   ! In adjoint mode we do not write output besides on the first run
-  IF (IHOP_dumpfreq.LT.0) RETURN
+  IF (BELLI_dumpfreq.LT.0) RETURN
 
   ! compression: don't print reflection points
   N2    = 1

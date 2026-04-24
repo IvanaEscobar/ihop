@@ -74,7 +74,7 @@ C     !LOCAL VARIABLES:
         vec_start = irec
         vec_count = 1
 
-        err = NF_INQ_VARID( fid, ihop_nameequi, varId )
+        err = NF_INQ_VARID( fid, belli_nameequi, varId )
         CALL IHOP_COST_NF_ERROR('act_file_c 1',err,bi,bj,myThid)
 
       ENDIF
@@ -245,7 +245,7 @@ C     !LOCAL VARIABLES:
         vec_start = irec
         vec_count = 1
 
-        err = NF_INQ_VARID( fid, ihop_nameequi, varId1 )
+        err = NF_INQ_VARID( fid, belli_nameequi, varId1 )
         CALL IHOP_COST_NF_ERROR('act_file_c 6',err,bi,bj,myThid)
 
       ENDIF
@@ -264,7 +264,7 @@ C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
      &          vec_start, vec_count, active_var )
           CALL IHOP_COST_NF_ERROR('act_file_c 7',err,bi,bj,myThid)
 
-          err = NF_INQ_VARID( fid, 'ihopObs_ind_glob_tiled', varId2 )
+          err = NF_INQ_VARID( fid, 'bObs_ind_glob_tiled', varId2 )
           CALL IHOP_COST_NF_ERROR('act_file_c 8',err,bi,bj,myThid)
           err = NF_PUT_VAR1_INT( fid, varId2, vec_start, irecglob )
           CALL IHOP_COST_NF_ERROR('act_file_c 9',err,bi,bj,myThid)
@@ -417,7 +417,7 @@ C     !LOCAL VARIABLES:
         vec_start = irecglob
         vec_count = 1
 
-        err = NF_INQ_VARID( fid, ihop_nameequi, varId )
+        err = NF_INQ_VARID( fid, belli_nameequi, varId )
         CALL IHOP_COST_NF_ERROR('act_file_c13',err,1,1,myThid)
 
       ENDIF
@@ -542,7 +542,7 @@ C     !LOCAL VARIABLES:
         vec_start = irecglob
         vec_count = 1
 
-        err = NF_INQ_VARID( fid, ihop_nameequi, varId )
+        err = NF_INQ_VARID( fid, belli_nameequi, varId )
         CALL IHOP_COST_NF_ERROR('act_file_c18',err,1,1,myThid)
 
       ENDIF

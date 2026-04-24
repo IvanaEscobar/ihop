@@ -136,7 +136,7 @@ CONTAINS
 
   ! Fill pkg/ihop environment variables
   ! *** Top Boundary ***
-  Bdry%Top%HS%Opt = IHOP_topopt
+  Bdry%Top%HS%Opt = BELLI_topopt
   Bdry%Top%HS%Depth = 0 !initiate to dummy value
 
   CALL ReadTopOpt( Bdry%Top%HS%BC, AttenUnit, myThid )
@@ -144,12 +144,12 @@ CONTAINS
 
 
   ! *** Bottom Boundary ***
-  Bdry%Bot%HS%Opt = IHOP_botopt
-  IF ( IHOP_depth.NE.0 ) THEN
-    Bdry%Bot%HS%Depth = IHOP_depth
+  Bdry%Bot%HS%Opt = BELLI_botopt
+  IF ( BELLI_depth.NE.0 ) THEN
+    Bdry%Bot%HS%Depth = BELLI_depth
   ELSE
     ! Extend by 5 wavelengths
-    Bdry%Bot%HS%Depth = rkSign*rF( Nr+1 ) + 5*c0/IHOP_freq
+    Bdry%Bot%HS%Depth = rkSign*rF( Nr+1 ) + 5*c0/BELLI_freq
   ENDIF
 
   Bdry%Bot%HS%BC = Bdry%Bot%HS%Opt( 1:1 )
@@ -179,24 +179,24 @@ CONTAINS
   ! *** Source locations ***
   CALL ReadSXSY( myThid ) ! Read source/receiver x-y coordinates
 
-  Pos%nSZ = IHOP_nsd
+  Pos%nSZ = BELLI_nsd
   IF ( Pos%nSZ.GE.1 ) THEN
     Pos%nSX = Pos%nSZ
     Pos%nSY = Pos%nSZ
   ENDIF
-  Pos%nRZ = IHOP_nrd
+  Pos%nRZ = BELLI_nrd
 
-  CALL AllocatePos( Pos%nSZ, Pos%SZ, IHOP_sd, myThid )
-  CALL AllocatePos( Pos%nRZ, Pos%RZ, IHOP_rd, myThid )
+  CALL AllocatePos( Pos%nSZ, Pos%SZ, BELLI_sd, myThid )
+  CALL AllocatePos( Pos%nRZ, Pos%RZ, BELLI_rd, myThid )
   CALL ReadSZRz( Bdry%Top%HS%Depth, Bdry%Bot%HS%Depth, myThid )
 
 
   ! *** Receiver locations ***
   Pos%nRR = IHOP_nRR
-  CALL AllocatePos( Pos%nRR, Pos%RR, IHOP_rr, myThid )
+  CALL AllocatePos( Pos%nRR, Pos%RR, BELLI_rr, myThid )
   CALL ReadRcvrRanges( myThid )
   ! set dummy for receiver bearing
-  CALL AllocatePos( Pos%nTheta, Pos%theta, IHOP_rr( 1:1 ), myThid )
+  CALL AllocatePos( Pos%nTheta, Pos%theta, BELLI_rr( 1:1 ), myThid )
 #ifdef IHOP_THREED
   CALL ReadRcvrBearings( myThid )
 #endif /* IHOP_THREED */
@@ -207,7 +207,7 @@ CONTAINS
 
 
   ! *** Run type ***
-  Beam%RunType = IHOP_runopt
+  Beam%RunType = BELLI_runopt
   CALL ReadRunType( Beam%RunType, PlotType, myThid )
   CALL ReadRayElevationAngles( Depth, Bdry%Top%HS%Opt, Beam%RunType, myThid )
 #ifdef IHOP_THREED
@@ -217,7 +217,7 @@ CONTAINS
 
   ! *** Acoustic grid ***
   ! Step size in meters [m]
-  Beam%deltas = IHOP_step
+  Beam%deltas = BELLI_step
 
   ! Automatic step size option
   IF ( Beam%deltas.EQ.0.0 ) THEN
@@ -227,7 +227,7 @@ CONTAINS
   ! Domain size
   Beam%Box%Z = Bdry%Bot%HS%Depth ! in [m]
   ! Extend beam box by a single step size forward
-  Beam%Box%R = IHOP_rr(nrd)*1000. + Beam%deltas ! in [m]
+  Beam%Box%R = BELLI_rr(nrd)*1000. + Beam%deltas ! in [m]
 
 
   ! *** Beam characteristics ***
@@ -345,7 +345,7 @@ CONTAINS
   Grid%AttenUnit = AttenUnit
 
   ! In adjoint mode we do not write output besides on the first run
-  IF (IHOP_dumpfreq.LT.0) RETURN
+  IF (BELLI_dumpfreq.LT.0) RETURN
 
   ! SSP grid approximation options
   SELECT CASE ( Grid%Type )
@@ -472,11 +472,11 @@ CONTAINS
   CASE ( 'A' )                  ! *** Half-space properties ***
     ! IEsco23: MISSING IF BOTTOM BC CHECK
     zTemp    = HS%Depth
-    alphaR   = IHOP_bcsound
-    betaR    = IHOP_bcsoundshear
+    alphaR   = BELLI_bcsound
+    betaR    = BELLI_bcsoundshear
     rhoR     = IHOP_brho
-    alphaI   = IHOP_bcsoundI
-    betaI    = IHOP_bcsoundshearI
+    alphaI   = BELLI_bcsoundI
+    betaI    = BELLI_bcsoundshearI
 
     ! dummy parameters for a layer with a general power law for attenuation
     ! these are not in play because the AttenUnit for this is not allowed yet

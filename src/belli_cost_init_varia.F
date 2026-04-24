@@ -51,8 +51,8 @@ CEOP
 C Initialize tiled cost fxn contributions.
       DO bj = myByLo(myThid), myByHi(myThid)
         DO bi = myBxLo(myThid), myBxHi(myThid)
-          DO num_file = 1, NFILESMAX_IHOP
-            ihop_dummy(num_file,bi,bj) = 0. _d 0
+          DO num_file = 1, NFILESMAX_BELLI
+            belli_dummy(num_file,bi,bj) = 0. _d 0
 # ifdef ALLOW_GRDCHK
             IF ( obsNo_tiled(num_file,bi,bj).GT.0 .AND.
      &           ihopDoNcOutput ) THEN
@@ -80,16 +80,16 @@ C Sync tiled .equi file so data in buffer is not lost
 C Initialize global cost fxn contributions.
       _BEGIN_MASTER(myThid)
 
-      DO num_file = 1, NFILESMAX_IHOP
-        objf_ihop(num_file) = 0. _d 0
-        num_ihop(num_file)  = 0. _d 0
-        ihop_globaldummy(num_file) = 0. _d 0
+      DO num_file = 1, NFILESMAX_BELLI
+        objf_belli(num_file) = 0. _d 0
+        num_belli(num_file)  = 0. _d 0
+        belli_globaldummy(num_file) = 0. _d 0
       ENDDO !DO num_file
 
       _END_MASTER(myThid)
 
 C# ifdef ALLOW_GRDCHK
-C      DO num_file = 1, NFILESMAX_IHOP
+C      DO num_file = 1, NFILESMAX_BELLI
 C        IF (obsNo(num_file).GT.0 .AND. ihopDoNcOutput) THEN
 CC Sync global .equi file so data in buffer is not lost
 C          err = NF_SYNC( ncidGLOB(num_file) )
@@ -110,7 +110,7 @@ C
 C# endif /* ALLOW_GRDCHK */
 
 CC Initialize global variables for ihop_read_obs.F
-C      ihop_curfile_buff = 0
+C      belli_curfile_buff = 0
 C      DO l = 1, 1000
 C        ihop_data_buff(l) = 0. _d 0
 C        ihop_uncert_buff(l) = 0. _d 0
