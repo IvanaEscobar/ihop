@@ -8,13 +8,13 @@
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
-C !ROUTINE: IHOP_COST
+C !ROUTINE: BELLI_COST
 
 C !INTERFACE:
-      SUBROUTINE IHOP_COST( myTime, myIter, myThid )
+      SUBROUTINE BELLI_COST( myTime, myIter, myThid )
 
 C    !DESCRIPTION:
-C    Computes iHOP data misfit for cost function
+C    Computes pkg/belli data misfit for cost function
 
 C    !USES:
 #if (defined ALLOW_BELLI) && (defined TEST_BELLI_COST)
@@ -199,7 +199,7 @@ C File maintenance
      &           (belliDoNcOutput) ) THEN
 C Sync tiled file so data is not lost in buffer
               err = NF_SYNC( ncidFWD(num_file,bi,bj) )
-              CALL IHOP_COST_NF_ERROR('ihop_cost 1',err,bi,bj,myThid)
+              CALL BELLI_COST_NF_ERROR('cost 1',err,bi,bj,myThid)
 
             ENDIF
 
@@ -221,7 +221,7 @@ C IESCO25: dummy +/- of belli_ssp to get TAF TLM to work
                 belli_modvaltmp = belli_modvaltmp + myssp
                 belli_modvaltmp = belli_modvaltmp - myssp
 
-                CALL ACTIVE_READ_IHOP_TILE( 
+                CALL ACTIVE_READ_BELLI_TILE( 
      I              num_file,
      O              belli_modvaltmp, 
      I              iObs,.false., optimcycle, bi, bj, myThid,
@@ -270,7 +270,7 @@ C Extract model equi
               belli_modval = belli_modval+ihopObs_modval_glob(iObs)
 
 C Write to global netcdf file
-              CALL ACTIVE_WRITE_IHOP_GLOB( 
+              CALL ACTIVE_WRITE_BELLI_GLOB( 
      I             num_file, belli_modval,
      I             iObs, optimcycle, myThid,
      I             belli_globaldummy(num_file) )
@@ -286,8 +286,8 @@ CADJ &     = tapelev_ihop_cost, key = num_file, kind = isbyte
 
 C Sync global obs
           err = NF_SYNC( ncidGLOB(num_file) )
-          CALL IHOP_COST_NF_ERROR(
-     &         'IHOP_COST: NF_SYNC ncidGLOB',err,0,0,myThid )
+          CALL BELLI_COST_NF_ERROR(
+     &         'BELLI_COST: NF_SYNC ncidGLOB',err,0,0,myThid )
 
           DO iObs = 1, NOBSMAX_BELLI
             IF (iObs.LE.bObsNo(num_file)) THEN
@@ -296,7 +296,7 @@ C Sync global obs
               ihop_uncert = zeroRL
 
 C Read model equivalent from global file
-              CALL ACTIVE_READ_IHOP_GLOB( 
+              CALL ACTIVE_READ_BELLI_GLOB( 
      I             num_file,
      O             belli_modval, 
      I             iObs,.false., optimcycle, myThid,
@@ -308,12 +308,12 @@ C Set uncertainty to one
 
 #else /* TEST_BELLI_COST_INLOOP */
 C Read observation and uncertainty
-              CALL IHOP_COST_READ_OBS(
+              CALL BELLI_COST_READ_OBS(
      I             num_file,  1, bObs_ind_glob(num_file,iObs),
      O             ihop_data,
      I             myThid )
 
-              CALL IHOP_COST_READ_OBS(
+              CALL BELLI_COST_READ_OBS(
      I             num_file, -1, bObs_ind_glob(num_file,iObs),
      O             ihop_uncert,
      I             myThid )

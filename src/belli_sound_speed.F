@@ -4,10 +4,10 @@
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
-C !ROUTINE: IHOP_SOUND_SPEED
+C !ROUTINE: BELLI_SOUND_SPEED
 
 C !INTERFACE:
-      SUBROUTINE IHOP_SOUND_SPEED(
+      SUBROUTINE BELLI_SOUND_SPEED(
      I                       myThid )
 
 C     !DESCRIPTION: 
@@ -103,7 +103,7 @@ c     ENDIF
      &     .AND.DIAGNOSTICS_IS_ON( 'SLD     ', myThid) ) THEN
        DO bj=myByLo(myThid),myByHi(myThid)
         DO bi=myBxLo(myThid),myBxHi(myThid)
-         CALL IHOP_CALC_SLD(bi,bj,myThid)
+         CALL BELLI_CALC_SLD(bi,bj,myThid)
 
         ENDDO
        ENDDO

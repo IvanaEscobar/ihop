@@ -34,7 +34,7 @@ MODULE arr_mod
     PUBLIC nArr3D, Arr3D
 #endif /* BELLI_THREED */
 #ifdef ALLOW_USE_MPI
-    PUBLIC free_ihop_arrival, BcastArr
+    PUBLIC free_belli_arrival, BcastArr
 #endif /* ALLOW_USE_MPI */
 !=======================================================================
 
@@ -47,7 +47,7 @@ MODULE arr_mod
 #endif /* BELLI_THREED */
 
 #ifdef ALLOW_USE_MPI
-  INTEGER :: MPI_IHOP_ARRIVAL = MPI_DATATYPE_NULL
+  INTEGER :: MPI_BELLI_ARRIVAL = MPI_DATATYPE_NULL
   LOGICAL :: ARRIVAL_TYPE_COMMITTED = .false.
 #endif /* ALLOW_USE_MPI */
 
@@ -154,7 +154,7 @@ CONTAINS
       'Not enough allocation for Arr; reduce arrStorage'
     CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* BELLI_WRITE_OUT */
-    STOP 'ABNORMAL END: S/R IHOP_MAIN'
+    STOP 'ABNORMAL END: S/R BELLI_MAIN'
   ENDIF
 
 #ifdef ALLOW_USE_MPI
@@ -439,7 +439,7 @@ CONTAINS
 !EOP  
 
 #ifdef ALLOW_USE_MPI
-  IF ( MPI_IHOP_ARRIVAL.EQ.MPI_DATATYPE_NULL ) THEN
+  IF ( MPI_BELLI_ARRIVAL.EQ.MPI_DATATYPE_NULL ) THEN
     CALL ArrivalTypeInit( Arr(1,1,1), Arr(2,1,1) )
   ENDIF
 
@@ -451,7 +451,7 @@ CONTAINS
 
   ! Broadcast MPI Arrival to all ranks, and free storage
   arrSize = SIZE(Arr)
-  CALL MPI_Bcast( Arr, arrSize, MPI_IHOP_ARRIVAL, root, comm, ierr )
+  CALL MPI_Bcast( Arr, arrSize, MPI_BELLI_ARRIVAL, root, comm, ierr )
 #endif /* ALLOW_USE_MPI */
 
   RETURN
@@ -460,22 +460,22 @@ CONTAINS
 #ifdef ALLOW_USE_MPI
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 !BOP
-! !ROUTINE: free_ihop_arrival
+! !ROUTINE: free_belli_arrival
 ! !INTERFACE:
-  SUBROUTINE free_ihop_arrival(myThid)
+  SUBROUTINE free_belli_arrival(myThid)
 ! !DESCRIPTION:
 ! Free arrival datatype
     INTEGER, INTENT( IN ) :: myThid
     INTEGER :: ierr
 
     IF (ARRIVAL_TYPE_COMMITTED) THEN
-      CALL MPI_Type_free(MPI_IHOP_ARRIVAL, ierr)
-      MPI_IHOP_ARRIVAL = MPI_DATATYPE_NULL
+      CALL MPI_Type_free(MPI_BELLI_ARRIVAL, ierr)
+      MPI_BELLI_ARRIVAL = MPI_DATATYPE_NULL
       ARRIVAL_TYPE_COMMITTED = .false.
     ENDIF
 
   RETURN
-  END !SUBROUTINE free_ihop_arrival
+  END !SUBROUTINE free_belli_arrival
 
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 !BOP
@@ -544,8 +544,8 @@ CONTAINS
     CALL MPI_Get_address( nextArrival,a2,ierr )
     extent = a2 - base
     CALL MPI_Type_create_resized( tmptype,0_mpi_address_kind,extent,&
-                                  MPI_IHOP_ARRIVAL,ierr )
-    CALL MPI_Type_commit( MPI_IHOP_ARRIVAL,ierr )
+                                  MPI_BELLI_ARRIVAL,ierr )
+    CALL MPI_Type_commit( MPI_BELLI_ARRIVAL,ierr )
     CALL MPI_Type_free( tmptype,ierr )
     ARRIVAL_TYPE_COMMITTED = .true.
   ENDIF

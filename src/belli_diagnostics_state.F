@@ -3,7 +3,7 @@
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
 C     !INTERFACE:
-      SUBROUTINE IHOP_DIAGNOSTICS_STATE(
+      SUBROUTINE BELLI_DIAGNOSTICS_STATE(
      I             myTime,myIter, myThid )
 
 C     !DESCRIPTION:

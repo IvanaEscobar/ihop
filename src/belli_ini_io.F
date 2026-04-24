@@ -2,10 +2,10 @@
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
-C !ROUTINE: IHOP_INI_IO
+C !ROUTINE: BELLI_INI_IO
 
 C !INTERFACE:
-      SUBROUTINE IHOP_INI_IO( myThid )
+      SUBROUTINE BELLI_INI_IO( myThid )
 
 C     !DESCRIPTION:
 C     Create directory for ihop and ihop_cost output if set at runtime
@@ -57,10 +57,10 @@ C Create directory
         WRITE(namBuf,'(2A)') ' mkdir -p ', bObs_Dir(1:iL)
         pIL = 1 + ILNBLNK( namBuf )
         WRITE(standardMessageUnit,'(3A)')
-     &    '==> SYSTEM CALL (from IHOP_INI_IO): >',namBuf(1:pIL),'<'
+     &    '==> SYSTEM CALL (from BELLI_INI_IO): >',namBuf(1:pIL),'<'
         CALL SYSTEM( namBuf(1:pIL) )
 # else
-        WRITE(msgBuf,'(2A)') '** WARNING ** IHOP_INI_IO: cannot ',
+        WRITE(msgBuf,'(2A)') '** WARNING ** BELLI_INI_IO: cannot ',
      &    'call mkdir -> please create bObs_Dir manually'
         CALL PRINT_MESSAGE( msgBuf, errorMessageUnit,
      &                      SQUEEZE_RIGHT, myThid )

@@ -2,10 +2,10 @@
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
-C !ROUTINE: IHOP_DRIVER
+C !ROUTINE: BELLI_DRIVER
 
 C !INTERFACE:
-      SUBROUTINE IHOP_DRIVER( myTime, myIter, myThid )
+      SUBROUTINE BELLI_DRIVER( myTime, myIter, myThid )
 
 C     !DESCRIPTION:
 C     Calculate ray travel times, tau
@@ -40,7 +40,7 @@ CEOP
       DO t=1,nts
         IF ( IHOP_iter(t).GE.0 ) THEN
           IF ( IHOP_iter(t).EQ.myIter ) THEN
-            CALL IHOP_MAIN( myTime, myIter, myThid )
+            CALL BELLI_MAIN( myTime, myIter, myThid )
           ENDIF
         ENDIF
       ENDDO

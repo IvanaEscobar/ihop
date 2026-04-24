@@ -2,12 +2,12 @@
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
-C !ROUTINE: IHOP_CALC_SLD
+C !ROUTINE: BELLI_CALC_SLD
 C !INTERFACE:
-      SUBROUTINE IHOP_CALC_SLD( bi, bj, myThid )
+      SUBROUTINE BELLI_CALC_SLD( bi, bj, myThid )
 
 C     !DESCRIPTION:
-C     S/R IHOP_CALC_SLD
+C     S/R BELLI_CALC_SLD
 C     o Diagnose the Oceanic Sonic Layer depth
 C     Note: output "hMixLayer" is in "r" unit, i.e., in Pa
 C           when using P-coordinate.

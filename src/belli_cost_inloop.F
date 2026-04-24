@@ -8,10 +8,10 @@
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
-C !ROUTINE: IHOP_COST_INLOOP
+C !ROUTINE: BELLI_COST_INLOOP
 
 C !INTERFACE:
-      SUBROUTINE IHOP_COST_INLOOP( myTime, myIter, myThid )
+      SUBROUTINE BELLI_COST_INLOOP( myTime, myIter, myThid )
 
 C     !DESCRIPTION:
 C     Extract belli model counterparts for cost function data misfit
@@ -101,10 +101,10 @@ CEOP
                   ! ESCO25: 1,1 means we only consider a single receiver
                   ! range and depth. We also do NO time avg, and can
                   ! ignore reading previously recorded values
-                  CALL IHOP_COST_MODVAL( belli_modVal, num_file,
+                  CALL BELLI_COST_MODVAL( belli_modVal, num_file,
      &                 1, 1, myTime, myThid )
 
-                  CALL ACTIVE_WRITE_IHOP_TILE( 
+                  CALL ACTIVE_WRITE_BELLI_TILE( 
      &                 num_file, belli_modVal,
      &                 nObs, optimcycle, bi, bj, myThid,
      &                 belli_dummy(num_file,bi,bj) )
@@ -118,8 +118,8 @@ CEOP
 
 #  ifdef ALLOW_USE_MPI
       IF (myTime.EQ.endTime) THEN
-        CALL free_ihop_ray2d( myThid )
-        CALL free_ihop_arrival( myThid )
+        CALL free_belli_ray2d( myThid )
+        CALL free_belli_arrival( myThid )
       ENDIF
 #  endif 
 

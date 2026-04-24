@@ -7,7 +7,7 @@ MODULE belli_mod
 !   Ivana Escobar
 ! </CONTACT>
 ! !DESCRIPTION:
-! Defines modules used in iHOP
+! Defines F90 scoped variables in pkg/belli
 
 ! !USES:
   IMPLICIT NONE
@@ -56,7 +56,7 @@ MODULE belli_mod
   CHARACTER*(80)     :: Title
 
 #ifdef ALLOW_USE_MPI
-  INTEGER :: MPI_IHOP_RAY2D = MPI_DATATYPE_NULL
+  INTEGER :: MPI_BELLI_RAY2D = MPI_DATATYPE_NULL
   LOGICAL :: RAY2D_TYPE_COMMITTED = .false.
 #endif /* ALLOW_USE_MPI */
 
@@ -119,7 +119,7 @@ CONTAINS
 
 #ifdef ALLOW_USE_MPI
 ! build custom MPI datatype for ray2d
-  IF ( MPI_IHOP_RAY2D.EQ.MPI_DATATYPE_NULL ) THEN
+  IF ( MPI_BELLI_RAY2D.EQ.MPI_DATATYPE_NULL ) THEN
     CALL ray2dPtTypeInit( ray2D(1), ray2D(2) )
   ENDIF
 
@@ -127,7 +127,7 @@ CONTAINS
   CALL MPI_Bcast( Beam%nSteps, 1, MPI_INTEGER, root, comm, ierr )
 
   !CALL MPI_Bcast( ray2d(beam%nsteps)%q(1), 1, MPI_RL, root, comm, ierr)
-  CALL MPI_Bcast( ray2D, nMax, MPI_IHOP_RAY2D, root, comm, ierr )
+  CALL MPI_Bcast( ray2D, nMax, MPI_BELLI_RAY2D, root, comm, ierr )
 #endif /* ALLOW_USE_MPI */
 
   RETURN
@@ -145,8 +145,8 @@ CONTAINS
     INTEGER :: ierr
 
     IF (RAY2D_TYPE_COMMITTED) THEN
-      CALL MPI_Type_free(MPI_IHOP_RAY2D, ierr)
-      MPI_IHOP_RAY2D = MPI_DATATYPE_NULL
+      CALL MPI_Type_free(MPI_BELLI_RAY2D, ierr)
+      MPI_BELLI_RAY2D = MPI_DATATYPE_NULL
       RAY2D_TYPE_COMMITTED = .false.
     ENDIF
 
@@ -207,8 +207,8 @@ CONTAINS
     extent = a2-base
 
     CALL MPI_Type_create_resized( tmpType, 0_MPI_ADDRESS_KIND, extent, &
-                                 MPI_IHOP_RAY2D, ierr )
-    CALL MPI_Type_commit( MPI_IHOP_RAY2D, ierr )
+                                 MPI_BELLI_RAY2D, ierr )
+    CALL MPI_Type_commit( MPI_BELLI_RAY2D, ierr )
     CALL MPI_Type_free( tmpType, ierr )
     RAY2D_TYPE_COMMITTED = .true.
   ENDIF

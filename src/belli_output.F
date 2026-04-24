@@ -2,10 +2,10 @@
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
-C !ROUTINE: IHOP_OUTPUT
+C !ROUTINE: BELLI_OUTPUT
 
 C !INTERFACE:
-      SUBROUTINE IHOP_OUTPUT( myTime, myIter, myThid )
+      SUBROUTINE BELLI_OUTPUT( myTime, myIter, myThid )
 
 C     !DESCRIPTION:
 C     IESCO25: unused

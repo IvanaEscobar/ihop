@@ -1,14 +1,14 @@
 #include "BELLI_OPTIONS.h"
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 !BOP
-!MODULE: IHOP
-MODULE IHOP
+!MODULE: BELLI
+MODULE BELLI
 ! <CONTACT EMAIL="ivana@utexas.edu">
 !   Ivana Escobar
 ! </CONTACT>
 ! !DESCRIPTION:
-!   Written as a module to be used in ihop_*.F parts of the MITgcm package
-!   IHOP Beam tracing for ocean acoustics
+!   Written as a module to be used in belli_*.F parts of the MITgcm package
+!   BELLI Beam tracing for ocean acoustics
 !
 ! This program is free software: you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -48,7 +48,7 @@ MODULE IHOP
 ! !SCOPE: 
   PRIVATE
 !=======================================================================
-  PUBLIC ihop_main
+  PUBLIC belli_main
 !=======================================================================
 
 ! == Module Variables == None
@@ -60,18 +60,18 @@ MODULE IHOP
 
 CONTAINS
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
-! S/R IHOP_MAIN
-! S/R IHOPCore
+! S/R BELLI_MAIN
+! S/R BELLICore
 ! S/R TraceRay2D
 ! S/R Distances2D
 ! S/R Reflect2D
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 !BOP
-! !ROUTINE: IHOP_MAIN
+! !ROUTINE: BELLI_MAIN
 ! !INTERFACE:
-  SUBROUTINE IHOP_MAIN ( myTime, myIter, myThid )
+  SUBROUTINE BELLI_MAIN ( myTime, myIter, myThid )
 ! !DESCRIPTION:
-!   Main routine for IHOP ray tracing
+!   Main routine for belli ray tracing
 
 ! !USES:
   USE belli_init_diag, only: initPRTFile, openOutputFiles, resetMemory
@@ -133,10 +133,10 @@ CONTAINS
   ! set SSP%cMat from gcm SSP: REQUIRED
   CALL setSSP( myThid )
 
-  ! Run IHOP solver on a single processor
+  ! Run BELLI solver on a single processor
   IF ( myProcID.EQ.0 ) THEN
     CALL CPU_TIME( Tstart )
-    CALL IHOPCore( myThid )
+    CALL BELLICore( myThid )
     CALL CPU_TIME( Tstop  )
   ENDIF ! IF ( myProcID.EQ.0 )
 
@@ -172,22 +172,22 @@ CONTAINS
       CLOSE( ARRFile )
       IF ( writeDelay ) CLOSE( DELFile )
     CASE DEFAULT
-      STOP "ABNORMAL END: S/R IHOP_MAIN"
+      STOP "ABNORMAL END: S/R BELLI_MAIN"
     END SELECT
 
   ENDIF ! IF ( myProcID.EQ.0 )
 #endif /* BELLI_WRITE_OUT */
 
   RETURN
-  END !SUBROUTINE IHOP_MAIN
+  END !SUBROUTINE BELLI_MAIN
 
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 !BOP
-! !ROUTINE: IHOPCore
+! !ROUTINE: BELLICore
 ! !INTERFACE:
-  SUBROUTINE IHOPCore( myThid )
+  SUBROUTINE BELLICore( myThid )
 ! !DESCRIPTION:
-!   IHOP core solver.
+!   belli core solver.
 
 ! !USES:
   USE ssp_mod,   only: evalSSP, iSegr  !RG
@@ -241,7 +241,7 @@ CONTAINS
   REAL(KIND=_RL90) :: tmpRaytauR(Angles%nAlpha)
 !EOP
 
-!$TAF init IHOPCore2 = static, Pos%nSZ*Angles%nAlpha
+!$TAF init BELLICore2 = static, Pos%nSZ*Angles%nAlpha
 
   afreq = 2.0 * PI * BELLI_freq
 
@@ -277,7 +277,7 @@ CONTAINS
     ! Trace beams: IESCO25 MPI distribute this loop!
     DeclinationAngle: DO iAlpha = 1, Angles%nAlpha
 
-!!$TAF store ray2d,arr,u = IHOPCore2
+!!$TAF store ray2d,arr,u = BELLICore2
 
       ! take-off declination angle in degrees
       SrcDeclAngle = Angles%adeg( iAlpha )
@@ -298,16 +298,16 @@ CONTAINS
         Amp0 = ( 1 - s ) * SrcBmPat( IBP, 2 ) + s * SrcBmPat( IBP+1, 2 )
         ! IEsco22: When a beam pattern isn't specified, Amp0 = 0
 
-!!$TAF store amp0,beam%runtype,beam%nsteps = IHOPCore2
+!!$TAF store amp0,beam%runtype,beam%nsteps = BELLICore2
 !! IESCO24: Store derived type by data type: Bdry from bdry_mod
 !! Scalar components:
-!!$TAF store bdry%top%hs%cp,bdry%top%hs%cs,bdry%top%hs%rho = IHOPCore2
+!!$TAF store bdry%top%hs%cp,bdry%top%hs%cs,bdry%top%hs%rho = BELLICore2
 !! Fixed arrays:
 !! Allocatable arrays:
 
         ! Lloyd mirror pattern for semi-coherent option
         IF ( Beam%RunType( 1:1 ).EQ.'S' ) &
-!$TAF store amp0,beam%runtype = IHOPCore2
+!$TAF store amp0,beam%runtype = BELLICore2
           Amp0 = Amp0 * SQRT( 2.0 ) * ABS( SIN( afreq / c * xs( 2 ) &
                   * SIN( Angles%arad( iAlpha ) ) ) )
         !!IESCO22: end BEAM stuff !!
@@ -381,7 +381,7 @@ CONTAINS
   ENDDO SourceDepth
 
   RETURN
-  END !SUBROUTINE IHOPCore
+  END !SUBROUTINE BELLICore
 
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 !BOP
@@ -820,7 +820,7 @@ CONTAINS
   COMPLEX (KIND=_RL90) :: ch, a, b, d, sb, delta, ddelta
   TYPE(ReflectionCoef) :: RInt
 
-!$TAF init reflect2d1 = 'IHOPreflectray2d'
+!$TAF init reflect2d1 = 'BELLIreflectray2d'
 
   ! Init default values for local derived type Rint
   Rint%R = 0.0
@@ -1003,7 +1003,7 @@ CONTAINS
     ! In adjoint mode we do not write output besides on the first run
     IF ( BELLI_dumpfreq.GE.0 ) &
       CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
-    WRITE(msgBuf,'(A)') 'IHOP Reflect2D: Unknown boundary condition type'
+    WRITE(msgBuf,'(A)') 'BELLI Reflect2D: Unknown boundary condition type'
     CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* BELLI_WRITE_OUT */
       STOP 'ABNORMAL END: S/R Reflect2D'
@@ -1016,7 +1016,7 @@ CONTAINS
     ray2D( iH+1 )%nBotBnc = ray2D( iH )%nBotBnc + 1
   ELSE
 #ifdef BELLI_WRITE_OUT
-    WRITE(msgBuf,'(2A)') 'IHOP Reflect2D: ', &
+    WRITE(msgBuf,'(2A)') 'BELLI Reflect2D: ', &
       'no reflection bounce, but in reflect2d somehow'
     CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* BELLI_WRITE_OUT */
@@ -1027,4 +1027,4 @@ CONTAINS
   RETURN
   END !SUBROUTINE Reflect2D
 
-END MODULE IHOP
+END MODULE BELLI

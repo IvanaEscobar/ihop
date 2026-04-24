@@ -2,10 +2,10 @@
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
-C !ROUTINE: IHOP_READPARMS
+C !ROUTINE: BELLI_READPARMS
 
 C !INTERFACE:
-      SUBROUTINE IHOP_READPARMS( myThid )
+      SUBROUTINE BELLI_READPARMS( myThid )
 
 C     !DESCRIPTION:
 C     Initialize IHOP variables and constants, read in data.ihop
@@ -46,13 +46,13 @@ C     iUnit  :: Work variable for IO unit number
       INTEGER iUnit, IL, num_file
       INTEGER i, j
 
-      NAMELIST /IHOP_PARM01/
+      NAMELIST /BELLI_PARM01/
      &      BELLI_fileroot,
      &      BELLI_title,
      &      IHOP_dumpFreq,
      &      BELLI_MNC
 
-      NAMELIST /IHOP_PARM02/
+      NAMELIST /BELLI_PARM02/
      &      BELLI_topopt,
      &      BELLI_botopt,
      &      BELLI_runopt,
@@ -79,7 +79,7 @@ C     iUnit  :: Work variable for IO unit number
      &      BELLI_alpha,
      &      BELLI_step
 
-      NAMELIST /IHOP_PARM03/
+      NAMELIST /BELLI_PARM03/
      &      writeDelay,
      &      useSSPFile,
      &      BELLI_interpfile,
@@ -92,7 +92,7 @@ C     iUnit  :: Work variable for IO unit number
      &      belli_ranges
 
 #ifdef ALLOW_COST
-      NAMELIST /IHOP_COST_NML/
+      NAMELIST /BELLI_COST_NML/
      &      ihopdoncoutput,
      &      bObs_Dir,
      &      bObs_Files,
@@ -115,46 +115,46 @@ C     print a (weak) warning if data.belli is found
       _BEGIN_MASTER(myThid)
 
 C     Open and read data.ihop file
-      WRITE(msgBuf,'(A)') 'IHOP_READPARMS: opening data.ihop'
+      WRITE(msgBuf,'(A)') 'BELLI_READPARMS: opening data.ihop'
       CALL PRINT_MESSAGE( msgBuf, standardMessageUnit,
      &                    SQUEEZE_RIGHT , myThid )
       CALL OPEN_COPY_DATA_FILE(
-     I                     'data.ihop', 'IHOP_READPARMS',
+     I                     'data.ihop', 'BELLI_READPARMS',
      O                     iUnit,
      I                     myThid )
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
-C--   Default values for IHOP_PARM01
+C--   Default values for BELLI_PARM01
       BELLI_fileroot = ''
       BELLI_title    = 'ihop'
       BELLI_MNC      = useMNC
       IHOP_dumpFreq = dumpFreq
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
-C     Read parameters from open data file: IHOP_PARM01
-      READ(UNIT=iUnit,NML=IHOP_PARM01)
+C     Read parameters from open data file: BELLI_PARM01
+      READ(UNIT=iUnit,NML=BELLI_PARM01)
       WRITE(msgBuf,'(A)')
-     &    'IHOP_READPARMS: finished reading IHOP_PARM01 in data.ihop'
+     &    'BELLI_READPARMS: finished reading BELLI_PARM01 in data.ihop'
       CALL PRINT_MESSAGE( msgBuf, standardMessageUnit,
      &                    SQUEEZE_RIGHT, myThid )
 
-C     Check paramters of IHOP_PARM01
+C     Check paramters of BELLI_PARM01
       IF ( BELLI_fileroot.EQ.'' ) THEN
-       WRITE(msgBuf, '(2A)') 'S/R IHOP_READPARMS: "BELLI_fileroot" ',
+       WRITE(msgBuf, '(2A)') 'S/R BELLI_READPARMS: "BELLI_fileroot" ',
      &  'Provide fileroot for ihop package'
        CALL PRINT_ERROR( msgBuf, myThid )
-       STOP 'ABNORMAL END: S/R IHOP_READPARMS'
+       STOP 'ABNORMAL END: S/R BELLI_READPARMS'
       ENDIF
       IF ( BELLI_title.EQ.'ihop' ) THEN
        WRITE(msgBuf, '(2A)') 
-     &  '**WARNING** IHOP_READPARMS: "BELLI_title"',
+     &  '**WARNING** BELLI_READPARMS: "BELLI_title"',
      &  ' using default title name'
        CALL PRINT_MESSAGE( msgBuf, errorMessageUnit,
      &                     SQUEEZE_RIGHT, myThid )
       ENDIF
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
-C--   Default values for IHOP_PARM02
+C--   Default values for BELLI_PARM02
       BELLI_topopt   = '      '
       BELLI_botopt   = '  '
       BELLI_runopt   = ' '
@@ -182,14 +182,14 @@ C--   Default values for IHOP_PARM02
       BELLI_bcsoundshear     = 0. _d 0
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
-C     Read parameters from open data file: IHOP_PARM02
-      READ(UNIT=iUnit,NML=IHOP_PARM02)
+C     Read parameters from open data file: BELLI_PARM02
+      READ(UNIT=iUnit,NML=BELLI_PARM02)
       WRITE(msgBuf,'(A)')
-     &    'IHOP_READPARMS: finished reading IHOP_PARM02 in data.ihop'
+     &    'BELLI_READPARMS: finished reading BELLI_PARM02 in data.ihop'
       CALL PRINT_MESSAGE( msgBuf, standardMessageUnit,
      &                    SQUEEZE_RIGHT, myThid )
 
-C     Check paramters of IHOP_PARM02
+C     Check paramters of BELLI_PARM02
       IF ( BELLI_topopt(1:1) .NE. 'N' .AND.
      &     BELLI_topopt(1:1) .NE. 'C' .AND.
      &     BELLI_topopt(1:1) .NE. 'P' .AND.
@@ -198,10 +198,10 @@ C     Check paramters of IHOP_PARM02
      &     BELLI_topopt(1:1) .NE. 'A'      ) THEN
 
        WRITE(msgBuf, '(2A)') 
-     &  'S/R IHOP_READPARMS: "BELLI_topopt(1:1)" ',
+     &  'S/R BELLI_READPARMS: "BELLI_topopt(1:1)" ',
      &  'unknown option for SSP approximation'
        CALL PRINT_ERROR( msgBuf, myThid )
-       STOP 'ABNORMAL END: S/R IHOP_READPARMS'
+       STOP 'ABNORMAL END: S/R BELLI_READPARMS'
       ENDIF
 
       IF ( BELLI_topopt(2:2) .NE. 'V' .AND.
@@ -213,10 +213,10 @@ C     Check paramters of IHOP_PARM02
      &     BELLI_topopt(2:2) .NE. 'P'      ) THEN
 
        WRITE(msgBuf, '(2A)') 
-     &  'S/R IHOP_READPARMS: "BELLI_topopt(2:2)" ',
+     &  'S/R BELLI_READPARMS: "BELLI_topopt(2:2)" ',
      &  'unknown top boundary condition type'
        CALL PRINT_ERROR( msgBuf, myThid )
-       STOP 'ABNORMAL END: S/R IHOP_READPARMS'
+       STOP 'ABNORMAL END: S/R BELLI_READPARMS'
       ENDIF
 
       IF ( BELLI_topopt(3:3) .NE. 'N' .AND.
@@ -227,10 +227,10 @@ C     Check paramters of IHOP_PARM02
      &     BELLI_topopt(3:3) .NE. 'L'      ) THEN
 
        WRITE(msgBuf, '(2A)')
-     &  'S/R IHOP_READPARMS: "BELLI_topopt(3:3)" ',
+     &  'S/R BELLI_READPARMS: "BELLI_topopt(3:3)" ',
      &  'unknown attenuation units'
        CALL PRINT_ERROR( msgBuf, myThid )
-       STOP 'ABNORMAL END: S/R IHOP_READPARMS'
+       STOP 'ABNORMAL END: S/R BELLI_READPARMS'
       ENDIF
 
       IF ( BELLI_botopt(1:1) .NE. 'V' .AND.
@@ -242,10 +242,10 @@ C     Check paramters of IHOP_PARM02
      &     BELLI_botopt(1:1) .NE. 'P'      ) THEN
 
        WRITE(msgBuf, '(2A)') 
-     &  'S/R IHOP_READPARMS: "BELLI_botopt(1:1)" ',
+     &  'S/R BELLI_READPARMS: "BELLI_botopt(1:1)" ',
      &  'unknown bottom boundary condition type'
        CALL PRINT_ERROR( msgBuf, myThid )
-       STOP 'ABNORMAL END: S/R IHOP_READPARMS'
+       STOP 'ABNORMAL END: S/R BELLI_READPARMS'
       ENDIF
 
       IF ( BELLI_botopt(2:2) .NE. ' ' .AND.
@@ -253,14 +253,14 @@ C     Check paramters of IHOP_PARM02
      &     BELLI_botopt(2:2) .NE. '~'      ) THEN
 
        WRITE(msgBuf, '(2A)')
-     &  'S/R IHOP_READPARMS: "BELLI_botopt(2:2)" ',
+     &  'S/R BELLI_READPARMS: "BELLI_botopt(2:2)" ',
      &  'either select or deselect bathymetry file'
        CALL PRINT_ERROR( msgBuf, myThid )
-       STOP 'ABNORMAL END: S/R IHOP_READPARMS'
+       STOP 'ABNORMAL END: S/R BELLI_READPARMS'
       ENDIF
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
-C--   Default values for IHOP_PARM03 some are populated in
+C--   Default values for BELLI_PARM03 some are populated in
 C     ihop_init_fixed.f
       writeDelay        = .TRUE.
       useSSPFile        = .FALSE.
@@ -280,24 +280,24 @@ C     ihop_init_fixed.f
       ENDDO
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
-C     Read parameters from open data file: IHOP_PARM03
-      READ(UNIT=iUnit,NML=IHOP_PARM03)
+C     Read parameters from open data file: BELLI_PARM03
+      READ(UNIT=iUnit,NML=BELLI_PARM03)
       WRITE(msgBuf,'(A)')
-     &    'IHOP_READPARMS: finished reading IHOP_PARM03 in data.ihop'
+     &    'BELLI_READPARMS: finished reading BELLI_PARM03 in data.ihop'
       CALL PRINT_MESSAGE( msgBuf, standardMessageUnit,
      &                    SQUEEZE_RIGHT, myThid )
 
-C     Check paramters of IHOP_PARM03
+C     Check paramters of BELLI_PARM03
       IF ( BELLI_interpfile.EQ.'' ) THEN
-       WRITE(msgBuf, '(2A)') 'S/R IHOP_READPARMS: "BELLI_interpfile" ',
+       WRITE(msgBuf, '(2A)') 'S/R BELLI_READPARMS: "BELLI_interpfile" ',
      &  'Provide interpolation file name for ihop package'
        CALL PRINT_ERROR( msgBuf, myThid )
-       STOP 'ABNORMAL END: S/R IHOP_READPARMS'
+       STOP 'ABNORMAL END: S/R BELLI_READPARMS'
       ENDIF
 
 #ifdef ALLOW_COST
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
-C--   Default values for IHOP_COST_NML
+C--   Default values for BELLI_COST_NML
       ihopdoncoutput = .true.
       bObs_Dir    = ' '
       DO num_file = 1, NFILESMAX_BELLI
@@ -306,24 +306,24 @@ C--   Default values for IHOP_COST_NML
       ENDDO
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
-C     Read parameters from open data file: IHOP_COST_NML
-      READ(UNIT=iUnit,NML=IHOP_COST_NML)
+C     Read parameters from open data file: BELLI_COST_NML
+      READ(UNIT=iUnit,NML=BELLI_COST_NML)
       WRITE(msgBuf,'(A)')
-     & 'IHOP_READPARMS: finished reading IHOP_COST_NML in data.ihop'
+     & 'BELLI_READPARMS: finished reading BELLI_COST_NML in data.ihop'
       CALL PRINT_MESSAGE( msgBuf, standardMessageUnit,
      &                    SQUEEZE_RIGHT, myThid )
 
-C     Check paramters of IHOP_COST_NML
+C     Check paramters of BELLI_COST_NML
       DO num_file=1,NFILESMAX_BELLI
        IF ( bObs_Files(num_file).NE.' ' ) THEN
         IL = ILNBLNK( bObs_Files(num_file) )
         fname = bObs_Files(num_file)(1:IL)//'.nc'
         INQUIRE( FILE=fname, EXIST=exst )
         IF ( .NOT.exst ) THEN
-         WRITE(msgBuf,'(2A)') 'S/R IHOP_READPARMS: "bObs_Files " ',
+         WRITE(msgBuf,'(2A)') 'S/R BELLI_READPARMS: "bObs_Files " ',
      &    'Provide observations file name for ihop package'
          CALL PRINT_ERROR( msgBuf, myThid )
-         STOP 'ABNORMAL END: S/R IHOP_READPARMS'
+         STOP 'ABNORMAL END: S/R BELLI_READPARMS'
         ENDIF
        ENDIF
       ENDDO

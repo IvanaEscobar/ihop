@@ -1,13 +1,13 @@
 #include "BELLI_OPTIONS.h"
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 !BOP
-!MODULE: ihop_init_mod
-MODULE ihop_init_mod
+!MODULE: belli_init_mod
+MODULE belli_init_mod
 ! <CONTACT EMAIL="ivana@utexas.edu">
 !   Ivana Escobar
 ! </CONTACT>
 ! !DESCRIPTION:
-!   Module for initializing IHOP variables
+!   Module for initializing pkg/belli variables
 
 ! !USES:
   IMPLICIT NONE
@@ -192,7 +192,7 @@ CONTAINS
 
 
   ! *** Receiver locations ***
-  Pos%nRR = IHOP_nRR
+  Pos%nRR = BELLI_nRR
   CALL AllocatePos( Pos%nRR, Pos%RR, BELLI_rr, myThid )
   CALL ReadRcvrRanges( myThid )
   ! set dummy for receiver bearing
@@ -267,7 +267,7 @@ CONTAINS
 #ifdef BELLI_WRITE_OUT
       !   Only do I/O if in the main thread
       _BEGIN_MASTER(myThid)
-      WRITE(msgBuf,'(2A)') 'IHOP_INIT_MOD init_fixed_env: ', &
+      WRITE(msgBuf,'(2A)') 'BELLI_INIT_MOD init_fixed_env: ', &
         'Unknown beam type (second letter of Beam%Type)'
       CALL PRINT_ERROR( msgBuf,myThid )
       !   Only do I/O in the main thread
@@ -527,7 +527,7 @@ CONTAINS
     ALLOCATE( x_out(MAX(3, Nx)), STAT=iAllocStat )
     IF ( iAllocStat.NE.0 ) THEN
 #ifdef BELLI_WRITE_OUT
-      WRITE(msgBuf,'(A)') 'IHOP ALLOCATEPOS: failed allocation Pos'
+      WRITE(msgBuf,'(A)') 'BELLI ALLOCATEPOS: failed allocation Pos'
       CALL PRINT_ERROR( msgBuf, myThid )
 #endif /* BELLI_WRITE_OUT */
       STOP 'ABNORMAL END: S/R ALLOCATEPOS'
@@ -624,4 +624,4 @@ CONTAINS
   RETURN
   END !SUBROUTINE ReadRunType
 
-END MODULE ! ihop_init_mod
+END MODULE ! belli_init_mod

@@ -2,10 +2,10 @@
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
-C !ROUTINE: IHOP_TURNOFF_IO
+C !ROUTINE: BELLI_TURNOFF_IO
 
 C !INTERFACE:
-      SUBROUTINE IHOP_TURNOFF_IO( seqFlag, myThid )
+      SUBROUTINE BELLI_TURNOFF_IO( seqFlag, myThid )
 
 C     !DESCRIPTION:
 C     o Turn off some of the ptracers output flags

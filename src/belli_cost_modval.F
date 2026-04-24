@@ -8,10 +8,10 @@
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
-C !ROUTINE: IHOP_COST_MODVAL
+C !ROUTINE: BELLI_COST_MODVAL
 
 C !INTERFACE:
-      SUBROUTINE IHOP_COST_MODVAL(
+      SUBROUTINE BELLI_COST_MODVAL(
      O                         modVal,
      I                         num_file, ri, rj, myIter, myThid )
 
@@ -195,10 +195,10 @@ CC-- global Arr%delay: F90 eigenray travel time END
 ! Are ri and rj contained in nRR AND nRD
       IF ( (ri.GT.nRR).AND.(rj.gt.nRD) ) THEN
         WRITE(msgBuf,'(2A)')
-     &    'IHOP_COST_MODVAL:',
+     &    'BELLI_COST_MODVAL:',
      &    ' receiver range and depth ID larger than nRR and nRD.'
         CALL PRINT_ERROR( msgBuf, myThid )
-        STOP "ABNORMAL END: S/R IHOP_COST_MODVAL"
+        STOP "ABNORMAL END: S/R BELLI_COST_MODVAL"
       ENDIF
 
 ! Calc arrival amplitude with cylindrical spreading to receiver range
@@ -212,7 +212,7 @@ CC-- global Arr%delay: F90 eigenray travel time END
 
       ENDDO !DO ii
 
-!$TAF init belli_modVal = 'ihop_cost_modVal'
+!$TAF init belli_modVal = 'belli_cost_modVal'
 ! Find index of max amplitude for each ri,rj arrival, custom maxloc 
       maxarrVal = arrVal(1)
       maxID = 1

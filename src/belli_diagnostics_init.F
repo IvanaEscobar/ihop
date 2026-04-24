@@ -2,10 +2,10 @@
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
-C !ROUTINE: IHOP_DIAGNOSTICS_INIT
+C !ROUTINE: BELLI_DIAGNOSTICS_INIT
 
 C !INTERFACE:
-      SUBROUTINE IHOP_DIAGNOSTICS_INIT( myThid )
+      SUBROUTINE BELLI_DIAGNOSTICS_INIT( myThid )
 
 C     !DESCRIPTION:
 C     Initialize list of all available diagnostics

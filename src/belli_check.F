@@ -2,10 +2,10 @@
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
-C !ROUTINE: IHOP_CHECK
+C !ROUTINE: BELLI_CHECK
 
 C !INTERFACE:
-      SUBROUTINE IHOP_CHECK( myThid )
+      SUBROUTINE BELLI_CHECK( myThid )
 
 C     !DESCRIPTION:
 C     Check consistency with model configuration
@@ -33,7 +33,7 @@ CEOP
 
       _BEGIN_MASTER(myThid)
 
-       WRITE(msgBuf,'(A)') 'IHOP_CHECK: #define IHOP'
+       WRITE(msgBuf,'(A)') 'BELLI_CHECK: #define BELLI'
        CALL PRINT_MESSAGE( msgBuf, standardMessageUnit,
      &                     SQUEEZE_RIGHT , 1)
 

@@ -2,10 +2,10 @@
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
-C !ROUTINE: IHOP_INIT_VARIA
+C !ROUTINE: BELLI_INIT_VARIA
 
 C !INTERFACE:
-      SUBROUTINE IHOP_INIT_VARIA( myThid )
+      SUBROUTINE BELLI_INIT_VARIA( myThid )
 
 C     !DESCRIPTION:
 C     Initialize IHOP variables
@@ -70,7 +70,7 @@ C- end bi,bj loops
 
       ELSE
 C-    restart from a pickup:
-        CALL IHOP_READ_PICKUP( nIter0, myThid )
+        CALL BELLI_READ_PICKUP( nIter0, myThid )
 
 C-    end start-from-iter-zero if/else block
       ENDIF

@@ -1,8 +1,8 @@
 #include "BELLI_OPTIONS.h"
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 !BOP
-!MODULE: ihop_init_diag
-MODULE IHOP_INIT_DIAG
+!MODULE: BELLI_INIT_DIAG
+MODULE BELLI_INIT_DIAG
 ! <CONTACT EMAIL="ivana@utexas.edu">
 !   Ivana Escobar
 ! </CONTACT>
@@ -256,9 +256,9 @@ CONTAINS
     IF ( iostat.NE.0 ) THEN
       WRITE(*,*) 'ihop: BELLI_fileroot not recognized, ', &
         TRIM(BELLI_fileroot)
-      WRITE(msgBuf,'(A)') 'IHOP_INIT: Unable to recognize file'
+      WRITE(msgBuf,'(A)') 'BELLI_INIT: Unable to recognize file'
       CALL PRINT_ERROR( msgBuf, myThid )
-      STOP 'ABNORMAL END: S/R IHOP_INIT'
+      STOP 'ABNORMAL END: S/R BELLI_INIT'
     ENDIF
 
 # ifdef ALLOW_USE_MPI
@@ -267,18 +267,18 @@ CONTAINS
       WRITE(fNam,'(2A,I10.10,A)') &
         TRIM(BELLI_fileroot),'.',myIter,'.prt'
     ELSE
-      WRITE(msgBuf,'(A,I)') 'IHOP_INIT: myIter is ', myIter
+      WRITE(msgBuf,'(A,I)') 'BELLI_INIT: myIter is ', myIter
       CALL PRINT_ERROR( msgBuf, myThid )
-      STOP 'ABNORMAL END: S/R IHOP_INIT'
+      STOP 'ABNORMAL END: S/R BELLI_INIT'
     ENDIF
 
     OPEN(PRTFile, FILE=fNam, STATUS='UNKNOWN', IOSTAT=iostat )
     IF ( iostat.NE.0 ) THEN
       WRITE(*,*) 'ihop: BELLI_fileroot not recognized, ', &
         TRIM(BELLI_fileroot)
-      WRITE(msgBuf,'(A)') 'IHOP_INIT: Unable to recognize file'
+      WRITE(msgBuf,'(A)') 'BELLI_INIT: Unable to recognize file'
       CALL PRINT_ERROR( msgBuf, myThid )
-      STOP 'ABNORMAL END: S/R IHOP_INIT'
+      STOP 'ABNORMAL END: S/R BELLI_INIT'
     ENDIF
 # endif /* ALLOW_USE_MPI */
 
@@ -298,7 +298,7 @@ CONTAINS
 
     ! *** TITLE ***
 #ifdef BELLI_THREED
-  WRITE(msgBuf,'(2A)') 'IHOP_INIT_DIAG openPRTFile: ', &
+  WRITE(msgBuf,'(2A)') 'BELLI_INIT_DIAG openPRTFile: ', &
     '3D not supported in ihop'
   CALL PRINT_ERROR( msgBuf,myThid )
   STOP 'ABNORMAL END: S/R openPRTFile'
@@ -1176,4 +1176,4 @@ CONTAINS
   RETURN
   END !SUBROUTINE resetMemory
 
-END !MODULE IHOP_INIT_DIAG
+END !MODULE BELLI_INIT_DIAG

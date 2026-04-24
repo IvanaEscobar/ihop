@@ -2,10 +2,10 @@
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
-C !ROUTINE: IHOP_WRITE_PICKUP
+C !ROUTINE: BELLI_WRITE_PICKUP
 
 C !INTERFACE:
-      SUBROUTINE IHOP_WRITE_PICKUP( permPickup,
+      SUBROUTINE BELLI_WRITE_PICKUP( permPickup,
      &                    suff, myTime, myIter, myThid )
 
 C     !DESCRIPTION:
@@ -89,14 +89,14 @@ C
 CC--------------------------
 C        nWrFlds = j
 C        IF ( nWrFlds.GT.listDim ) THEN
-C          WRITE(msgBuf,'(2A,I5,A)') 'IHOP_WRITE_PICKUP: ',
+C          WRITE(msgBuf,'(2A,I5,A)') 'BELLI_WRITE_PICKUP: ',
 C     &     'trying to write ',nWrFlds,' fields'
 C          CALL PRINT_ERROR( msgBuf, myThid )
-C          WRITE(msgBuf,'(2A,I5,A)') 'IHOP_WRITE_PICKUP: ',
+C          WRITE(msgBuf,'(2A,I5,A)') 'BELLI_WRITE_PICKUP: ',
 C     &     'field-list dimension (listDim=',listDim,') too small'
 C          CALL PRINT_ERROR( msgBuf, myThid )
 C          CALL ALL_PROC_DIE( myThid )
-C          STOP 'ABNORMAL END: S/R IHOP_WRITE_PICKUP (list-size Pb)'
+C          STOP 'ABNORMAL END: S/R BELLI_WRITE_PICKUP (list-size Pb)'
 C        ENDIF
 C#ifdef ALLOW_MDSIO
 CC Uses this specific S/R to write only meta files
