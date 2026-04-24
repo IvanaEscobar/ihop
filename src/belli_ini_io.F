@@ -8,7 +8,7 @@ C !INTERFACE:
       SUBROUTINE BELLI_INI_IO( myThid )
 
 C     !DESCRIPTION:
-C     Create directory for ihop and ihop_cost output if set at runtime
+C     Create directory for belli and belli_cost output if set at runtime
 
 C     !USES:
       IMPLICIT NONE

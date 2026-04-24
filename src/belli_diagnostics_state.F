@@ -7,7 +7,7 @@ C     !INTERFACE:
      I             myTime,myIter, myThid )
 
 C     !DESCRIPTION:
-C     Provide the information for iHOP diagnostics
+C     Provide the information for belli diagnostics
 
 C     !USES:
       IMPLICIT NONE

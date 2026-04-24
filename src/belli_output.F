@@ -9,7 +9,7 @@ C !INTERFACE:
 
 C     !DESCRIPTION:
 C     IESCO25: unused
-C     calls subroutine that calculate diagnostic specific to IHOP
+C     calls subroutine that calculate diagnostic specific to belli
 
 C     !USES:
       IMPLICIT NONE
@@ -56,15 +56,15 @@ cccccccccccccccccccccc
         ELSE
           pf(1:1) = 'R'
         ENDIF
-C        CALL MNC_CW_SET_UDIM('ihop', -1, myThid)
-C        CALL MNC_CW_RL_W_S('D','ihop',0,0,'T', myTime, myThid)
-C        CALL MNC_CW_SET_UDIM('ihop', 0, myThid)
-C        CALL MNC_CW_I_W_S('I','ihop',0,0,'iter', myIter, myThid)
-C        CALL MNC_CW_RL_W_S('D','ihop',0,0,'model_time',
+C        CALL MNC_CW_SET_UDIM('belli', -1, myThid)
+C        CALL MNC_CW_RL_W_S('D','belli',0,0,'T', myTime, myThid)
+C        CALL MNC_CW_SET_UDIM('belli', 0, myThid)
+C        CALL MNC_CW_I_W_S('I','belli',0,0,'iter', myIter, myThid)
+C        CALL MNC_CW_RL_W_S('D','belli',0,0,'model_time',
 C     &       myTime,myThid)
 C
-C        CALL MNC_CW_RL_W( pf, 'ihop', 0, 0,
-C     &       'ihop_soundSpeed', belli_ssp, myThid )
+C        CALL MNC_CW_RL_W( pf, 'belli', 0, 0,
+C     &       'belli_soundSpeed', belli_ssp, myThid )
 
        ENDIF ! IF ( BELLI_MNC ) THEN
 # endif /* ALLOW_MNC */

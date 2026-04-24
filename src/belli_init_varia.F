@@ -8,7 +8,7 @@ C !INTERFACE:
       SUBROUTINE BELLI_INIT_VARIA( myThid )
 
 C     !DESCRIPTION:
-C     Initialize IHOP variables
+C     Initialize belli variables
 
 C     !USES:
       USE ssp_mod, only: SSP, Grid

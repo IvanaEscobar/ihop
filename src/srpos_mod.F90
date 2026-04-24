@@ -356,7 +356,7 @@ INTEGER, INTENT( IN ) :: myThid
   CHARACTER*(MAX_LEN_MBUF) :: msgBuf
 !EOP
 
-! IEsco23: 3D NOT SUPPORTED IN ihop
+! IEsco23: 3D NOT SUPPORTED IN belli
   CALL ReadVector( Pos%nTheta, Pos%theta, 'receiver bearings, theta', &
     'degrees', myThid )
 
@@ -620,7 +620,7 @@ INTEGER, INTENT( IN ) :: myThid
   CHARACTER*(MAX_LEN_MBUF) :: msgBuf
 !EOP
 
-! IEsco23: NOT SUPPORTED IN ihop
+! IEsco23: NOT SUPPORTED IN belli
   CALL WriteVector( Pos%nTheta, Pos%theta, 'receiver bearings, theta', &
     'degrees', myThid )
 

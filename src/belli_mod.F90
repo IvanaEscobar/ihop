@@ -28,12 +28,12 @@ MODULE belli_mod
           nMax, nRz_per_range, iStep, afreq, SrcDeclAngle,      &
           Title, Beam, ray2D, ray2DPt, iSmallStepCtr, rxyz
 #ifdef ALLOW_USE_MPI
-    PUBLIC BcastRay, free_ihop_ray2d
+    PUBLIC BcastRay, free_belli_ray2d
 #endif /* ALLOW_USE_MPI */
 !=======================================================================
 
 ! == Module variables ==
-  ! *** fixed parameters useful for ONLY ihop ***
+  ! *** fixed parameters useful for ONLY belli ***
   REAL(KIND=_RL90),     PARAMETER :: rad2deg = 180.D0 / PI
   COMPLEX (KIND=_RL90), PARAMETER :: oneCMPLX = ( 0.0D0, 1.0D0 )
 
@@ -49,7 +49,7 @@ MODULE belli_mod
                         SBPFile = 50, &
                         nMax = 40000
 
-  ! *** varying parameters for ihop ***
+  ! *** varying parameters for belli ***
   INTEGER            :: iSmallStepCtr = 0
   INTEGER            :: nRz_per_range, iStep
   REAL (KIND=_RL90)  :: afreq, SrcDeclAngle, SrcAzimAngle
@@ -136,9 +136,9 @@ CONTAINS
 #ifdef ALLOW_USE_MPI
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 !BOP
-! !ROUTINE: free_ihop_ray2d
+! !ROUTINE: free_belli_ray2d
 ! !INTERFACE:
-  SUBROUTINE free_ihop_ray2d(myThid)
+  SUBROUTINE free_belli_ray2d(myThid)
 ! !DESCRIPTION:
 ! Free ray2d datatype
     INTEGER, INTENT( IN ) :: myThid
@@ -151,7 +151,7 @@ CONTAINS
     ENDIF
 
   RETURN
-  END !SUBROUTINE free_ihop_arrival
+  END !SUBROUTINE free_belli_arrival
 
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 !BOP

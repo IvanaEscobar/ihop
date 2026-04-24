@@ -68,9 +68,9 @@ C Create a netcdf file
         CALL BELLI_COST_NF_ERROR( 'INIT_EQUI: NF_PUT_ATT_INT iOBS',
      &       err,bi,bj,myThid )
 
-! If 'ihop_val' exists in data file, then add info to equi file
+! If 'belli_val' exists in data file, then add info to equi file
         err = NF_INQ_VARID( fID1, belli_nameval, varID0 )
-        CALL BELLI_COST_NF_ERROR( 'INIT_EQUI: NF_INQ_VARID ihop_val',
+        CALL BELLI_COST_NF_ERROR( 'INIT_EQUI: NF_INQ_VARID belli_val',
      &       err,bi,bj,myThid )
 
         IF (err.EQ.NF_NOERR) THEN
@@ -94,7 +94,7 @@ C Create a netcdf file
 
         ELSE
           WRITE(msgBuf,'(2A)')
-     &         'S/R BELLI_COST_INIT_EQUI: no variable ihop_val',
+     &         'S/R BELLI_COST_INIT_EQUI: no variable belli_val',
      &         belli_nameval
           CALL PRINT_MESSAGE( msgBuf,
      &         standardMessageUnit, SQUEEZE_RIGHT, myThid )

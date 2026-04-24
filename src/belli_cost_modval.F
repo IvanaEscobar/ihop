@@ -16,7 +16,7 @@ C !INTERFACE:
      I                         num_file, ri, rj, myIter, myThid )
 
 C     !DESCRIPTION:
-C     Computes ihop predicted datum
+C     Computes belli predicted datum
 
 C     !USES:
 #ifdef ALLOW_BELLI

@@ -117,7 +117,7 @@ CONTAINS
 
 !!$TAF init iRayCen0  = 'influence_iraycen'
 !!$TAF init iRayCen1  = static, (Beam%nSteps-1)*nRz_per_range
-!!$TAF init iRayCen2  = static, (Beam%nSteps-1)*ihop_nRR*nRz_per_range
+!!$TAF init iRayCen2  = static, (Beam%nSteps-1)*belli_nRR*nRz_per_range
 !!$TAF store ray2d = iRayCen0
 ! init local variables
   W = 0
@@ -312,8 +312,8 @@ CONTAINS
   LOGICAL              :: inRcvrRanges
 
 !!$TAF init iiitape1 = static, (Beam%nSteps-1)
-!!$TAF init iiitape2 = static, (Beam%nSteps-1)*ihop_nRR
-!!$TAF init iiitape3 = static, (Beam%nSteps-1)*ihop_nRR*nRz_per_range
+!!$TAF init iiitape2 = static, (Beam%nSteps-1)*belli_nRR
+!!$TAF init iiitape3 = static, (Beam%nSteps-1)*belli_nRR*nRz_per_range
 
   ! init local variables
   q0           = ray2D( 1 )%c / Angles%Dalpha   ! Reference for J = q0 / q
@@ -464,7 +464,7 @@ CONTAINS
 #endif /* BELLI_WRITE_OUT */
                 ! interpolated delay
                 delay    = ray2D( iH-1 )%tau + s*dtauds
-!      !IESCO25: test some parts of influence, send geninfluence to ihop_cost_modval
+!      !IESCO25: test some parts of influence, send geninfluence to belli_cost_modval
 !              geninfluence(iH) = delay
 
                 qtmp = ABS(q)
@@ -570,8 +570,8 @@ CONTAINS
 !EOP
 
 !$TAF init iGauCart1 = static, (Beam%nSteps-1)
-!$TAF init iGauCart2 = static, (Beam%nSteps-1)*ihop_nRR
-!$TAF init iGauCart3 = static, (Beam%nSteps-1)*ihop_nRR*nRz_per_range
+!$TAF init iGauCart2 = static, (Beam%nSteps-1)*belli_nRR
+!$TAF init iGauCart3 = static, (Beam%nSteps-1)*belli_nRR*nRz_per_range
   q0     = ray2D( 1 )%c / Angles%Dalpha   ! Reference for J = q0 / q
   phase  = 0
   qOld   = ray2D( 1 )%q( 1 )       ! used to track KMAH index

@@ -7,7 +7,7 @@ MODULE BELLI_INIT_DIAG
 !   Ivana Escobar
 ! </CONTACT>
 ! !DESCRIPTION: 
-!   Initialization of iHOP diagnostic files.
+!   Initialization of belli diagnostic files.
 
 ! !USES:
   USE bdry_mod,  only: Bdry, HSInfo
@@ -55,7 +55,7 @@ CONTAINS
 ! !INTERFACE:
   SUBROUTINE initPRTFile( myTime, myIter, myThid )
 ! !DESCRIPTION:
-!   Initializes the iHOP print file.
+!   Initializes the belli print file.
 
 ! !USES:
   USE belli_mod,  only: PRTFile, Beam
@@ -81,7 +81,7 @@ CONTAINS
   ! In adjoint mode we do not write output besides on the first run
   IF ( BELLI_dumpfreq.LT.0 ) RETURN
 
-  ! *** ihop info to PRTFile ***
+  ! *** belli info to PRTFile ***
   CALL openPRTFile( myTime, myIter, myThid )
 
 #ifdef BELLI_WRITE_OUT
@@ -212,7 +212,7 @@ CONTAINS
 ! !INTERFACE:
   SUBROUTINE openPRTFile ( myTime, myIter, myThid )
 ! !DESCRIPTION:
-!   Opens the iHOP print file for writing.
+!   Opens the belli print file for writing.
 
 ! !USES:
   USE belli_mod, only: PRTFile, Title
@@ -254,7 +254,7 @@ CONTAINS
     WRITE(fNam,'(4A)') TRIM(BELLI_fileroot),'.',myProcessStr(1:IL),'.prt'
     OPEN( PRTFile, FILE=fNam, STATUS='UNKNOWN', IOSTAT=iostat )
     IF ( iostat.NE.0 ) THEN
-      WRITE(*,*) 'ihop: BELLI_fileroot not recognized, ', &
+      WRITE(*,*) 'belli: BELLI_fileroot not recognized, ', &
         TRIM(BELLI_fileroot)
       WRITE(msgBuf,'(A)') 'BELLI_INIT: Unable to recognize file'
       CALL PRINT_ERROR( msgBuf, myThid )
@@ -274,7 +274,7 @@ CONTAINS
 
     OPEN(PRTFile, FILE=fNam, STATUS='UNKNOWN', IOSTAT=iostat )
     IF ( iostat.NE.0 ) THEN
-      WRITE(*,*) 'ihop: BELLI_fileroot not recognized, ', &
+      WRITE(*,*) 'belli: BELLI_fileroot not recognized, ', &
         TRIM(BELLI_fileroot)
       WRITE(msgBuf,'(A)') 'BELLI_INIT: Unable to recognize file'
       CALL PRINT_ERROR( msgBuf, myThid )
@@ -290,7 +290,7 @@ CONTAINS
   _BEGIN_MASTER(myThid)
 
 #ifdef BELLI_WRITE_OUT
-  WRITE(msgbuf,'(A)') 'iHOP Print File'
+  WRITE(msgbuf,'(A)') 'belli Print File'
   CALL PRINT_MESSAGE( msgBuf, PRTFile, SQUEEZE_RIGHT, myThid )
   WRITE(msgbuf,'(A)')
   CALL PRINT_MESSAGE( msgBuf, PRTFile, SQUEEZE_RIGHT, myThid )
@@ -299,13 +299,13 @@ CONTAINS
     ! *** TITLE ***
 #ifdef BELLI_THREED
   WRITE(msgBuf,'(2A)') 'BELLI_INIT_DIAG openPRTFile: ', &
-    '3D not supported in ihop'
+    '3D not supported in belli'
   CALL PRINT_ERROR( msgBuf,myThid )
   STOP 'ABNORMAL END: S/R openPRTFile'
-  Title( 1 :11 ) = 'iHOP3D - '
+  Title( 1 :11 ) = 'belli3D - '
   Title( 12:80 ) = BELLI_title
 #else /* not BELLI_THREED */
-  Title( 1:9   ) = 'iHOP - '
+  Title( 1:9   ) = 'belli - '
   Title( 10:80 ) = BELLI_title
 #endif /* BELLI_THREED */
 
@@ -347,7 +347,7 @@ CONTAINS
 ! !INTERFACE:
   SUBROUTINE WriteTopOpt( myThid )
 ! !DESCRIPTION:
-!  Write the top options for iHOP model.
+!  Write the top options for belli model.
 
 ! !USES:
   USE belli_mod,  only: PRTFile
@@ -683,7 +683,7 @@ CONTAINS
 ! !INTERFACE:
   SUBROUTINE openOutputFiles( fName, myTime, myIter, myThid )
 ! !DESCRIPTION:
-!   Opens the unique output files for iHOP model.
+!   Opens the unique output files for belli model.
 
 ! !USES:
   USE belli_mod,  only: RAYFile, DELFile, ARRFile, SHDFile, &
@@ -1130,7 +1130,7 @@ CONTAINS
 ! !INTERFACE:
   SUBROUTINE resetMemory()
 ! !DESCRIPTION:
-!   Resets memory of iHOP model to default values for each new time step.
+!   Resets memory of belli model to default values for each new time step.
 
 ! !USES:
   USE ssp_mod,    only: SSP

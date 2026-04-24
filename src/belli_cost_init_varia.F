@@ -109,11 +109,11 @@ C      ENDDO !DO num_file
 C
 C# endif /* ALLOW_GRDCHK */
 
-CC Initialize global variables for ihop_read_obs.F
+CC Initialize global variables for belli_read_obs.F
 C      belli_curfile_buff = 0
 C      DO l = 1, 1000
-C        ihop_data_buff(l) = 0. _d 0
-C        ihop_uncert_buff(l) = 0. _d 0
+C        belli_data_buff(l) = 0. _d 0
+C        belli_uncert_buff(l) = 0. _d 0
 C      ENDDO
 
       _BARRIER

@@ -72,7 +72,7 @@ CONTAINS
 ! !INPUT PARAMETERS:
 ! Depth   :: Water depth at the receiver
 ! TopOpt  :: Options for ray trace
-! RunType :: Type of iHOP run
+! RunType :: Type of belli run
 ! myThid  :: my thread ID
   REAL (KIND=_RL90), INTENT( IN ) :: Depth
   CHARACTER*(6),     INTENT( IN ) :: TopOpt, RunType
@@ -193,7 +193,7 @@ CONTAINS
 
 ! !INPUT PARAMETERS:
 ! TopOpt  :: Options for ray trace
-! RunType :: Type of iHOP run
+! RunType :: Type of belli run
 ! myThid  :: my thread ID
   CHARACTER*(6), INTENT( IN ) :: TopOpt, RunType
   INTEGER,       INTENT( IN ) :: myThid
@@ -206,7 +206,7 @@ CONTAINS
 
 #ifdef BELLI_WRITE_OUT
   WRITE(msgBuf,'(2A)') 'ANGLEMOD ReadBearingElevationAngles:', &
-    '3D rays not supported in ihop'
+    '3D rays not supported in pkg/belli'
   CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* BELLI_WRITE_OUT */
   STOP 'ABNORMAL END: S/R ReadBearingElevationAngles'

@@ -33,7 +33,7 @@ CONTAINS
 ! !INTERFACE:
   SUBROUTINE INIT_FIXED_ENV ( myThid )
 ! !DESCRIPTION:
-!   Initiate fixed variable for ihop time series. Note: NO BELLI_THREED here
+!   Initiate fixed variable for belli time series. Note: NO BELLI_THREED here
 
   ! USES:
   USE bdry_mod,  only: Bdry, HSInfo, initATI, initBTY
@@ -75,10 +75,10 @@ CONTAINS
 !EOP
 
 !IESCO24: some notes
-  ! Use data.ihop, set time series invariant parameters. These are fixed
-  ! parameters that do not depend on which time step you run ihop in.
+  ! Use data.belli, set time series invariant parameters. These are fixed
+  ! parameters that do not depend on which time step you run belli in.
   ! Primarily, the parameters are related to the acoustic grid:
-  ! - From initenvihop.F90:initEnv
+  ! - From initenvbelli.F90:initEnv
   !   - Bdry%Top, Bdry%Bot,
   !     Grid%AttenUnit,Type,nR,nZ,z,Grid%Seg%R,
   !     Pos%SX,SY,nSZ,nRZ,SZ,Rz,Ws,ISZ,Wr,Irz,nRR,Rr,Delta_r,
@@ -134,7 +134,7 @@ CONTAINS
   Angles%iSingle_alpha = 0
   Angles%Dalpha = -1.
 
-  ! Fill pkg/ihop environment variables
+  ! Fill pkg/belli environment variables
   ! *** Top Boundary ***
   Bdry%Top%HS%Opt = BELLI_topopt
   Bdry%Top%HS%Depth = 0 !initiate to dummy value
@@ -416,7 +416,7 @@ CONTAINS
 ! !INTERFACE:
   SUBROUTINE TopBot( AttenUnit, HS, myThid )
 ! !DESCRIPTION:
-!   Set the top and bottom boundary conditions for the IHOP model.
+!   Set the top and bottom boundary conditions for the belli model.
 
 ! !USES:
     USE atten_mod, only: CRCI
@@ -474,7 +474,7 @@ CONTAINS
     zTemp    = HS%Depth
     alphaR   = BELLI_bcsound
     betaR    = BELLI_bcsoundshear
-    rhoR     = IHOP_brho
+    rhoR     = ihop_brho
     alphaI   = BELLI_bcsoundI
     betaI    = BELLI_bcsoundshearI
 
@@ -498,7 +498,7 @@ CONTAINS
 ! !INTERFACE:
   SUBROUTINE AllocatePos( Nx, x_out, x_in, myThid )
 ! !DESCRIPTION:
-!   Allocate and populate Pos structure from data.ihop.
+!   Allocate and populate Pos structure from data.belli.
 
 ! !USES:
 ! == Global Variables ==
@@ -558,7 +558,7 @@ CONTAINS
 #include "EEPARAMS.h"
 
 ! !INPUT PARAMETERS:
-! RunType :: Type of iHOP run
+! RunType :: Type of belli run
 ! PlotType :: Type of plot to be generated
 ! myThid  :: my thread ID
   CHARACTER*(7),  INTENT( INOUT ) :: RunType

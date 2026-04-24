@@ -13,7 +13,7 @@ C !INTERFACE:
      I                      myThid )
 
 C     !DESCRIPTION:
-C     Reads an observation and its uncertainty from a NetCDF ihop
+C     Reads an observation and its uncertainty from a NetCDF belli
 C     input file
 
 C     !USES:
@@ -109,7 +109,7 @@ C Implies that a forward loop is calling
 
         IF (err.NE.NF_NOERR) THEN
           WRITE(errorMessageUnit,'(A)')
-     &      'WARNING in ihop_read_obs: record not found!!'
+     &      'WARNING in belli_read_obs: record not found!!'
         ENDIF
 
         DO v1 = 1, vec_count

@@ -307,17 +307,17 @@ CONTAINS
   Grid%Z    = -999.0
   Grid%rho  = -999.0
 
-  ! set ihop SSP Grid size
+  ! set belli SSP Grid size
   Grid%nZ = Nr+2 ! add z=0 z=Depth layers to GCM Nr
   Grid%nR = IHOP_NPTS_RANGE
   Grid%nPts = Grid%nZ
 
-  ! set Grid%Z from rC, rkSign=-1 used bc ihop uses +ive depths
+  ! set Grid%Z from rC, rkSign=-1 used bc belli uses +ive depths
   Grid%Z( 1 )             = 0.0 _d 0
   Grid%Z( 2:(Grid%nZ-1) ) = rkSign*rC( 1:Nr )
   Grid%Z( Grid%nZ )       = Bdry%Bot%HS%Depth ! rkSign*rF(Nr+1)*1.05
 
-  ! set Grid%Seg%R from data.ihop -> belli_ranges
+  ! set Grid%Seg%R from data.belli -> belli_ranges
   !IF (ALLOCATED(Grid%Seg%R)) DEALLOCATE(Grid%Seg%R)
   ALLOCATE( Grid%Seg%R( Grid%nR ), STAT=iallocstat )
   IF ( iallocstat.NE.0 ) THEN
@@ -959,7 +959,7 @@ USE splinec_mod,  only: splineall
 ! !INTERFACE:
   SUBROUTINE gcmSSP( myThid )
 ! !DESCRIPTION:
-!   Interpolate SSP from GCM grid to iHOP grid using adaptive IDW interpolation.
+!   Interpolate SSP from GCM grid to belli grid using adaptive IDW interpolation.
 
 ! !USES:
   USE atten_mod, only: CRCI
@@ -1003,7 +1003,7 @@ USE splinec_mod,  only: splineall
   REAL (KIND=_RL90)             :: bPower, fT
 #ifdef ALLOW_AUTODIFF_TAMC
   INTEGER tkey, ijkey, hkey, lockey
-!$TAF init loctape_ihop_gcmssp_bibj_ij_iijj_k = STATIC, nSx*nSy*sNx*sNy*BELLI_MAX_RANGE*BELLI_MAX_NC_SIZE*(Nr + 2)
+!$TAF init loctape_belli_gcmssp_bibj_ij_iijj_k = STATIC, nSx*nSy*sNx*sNy*BELLI_MAX_RANGE*BELLI_MAX_NC_SIZE*(Nr + 2)
 #endif
 
   ! IESCO24 fT init
@@ -1039,7 +1039,7 @@ USE splinec_mod,  only: splineall
   ssp1buffer = 0.0 _d 0
   ssp3buffer = 0.0 _d 0
 
-  ! interpolate SSP with adaptive IDW from gcm grid to ihop grid
+  ! interpolate SSP with adaptive IDW from gcm grid to belli grid
   DO bj=myByLo(myThid),myByHi(myThid)
     DO bi=myBxLo(myThid),myBxHi(myThid)
 #ifdef ALLOW_AUTODIFF_TAMC
@@ -1051,13 +1051,13 @@ USE splinec_mod,  only: splineall
       DO i=1,sNx
 #ifdef ALLOW_AUTODIFF_TAMC
         ijkey = i + (j-1)*sNx + (tkey-1)*sNx*sNy
-!$TAF store njj(ii) = comlev1_bibj_ij_ihop, key=ijkey, kind=isbyte
+!$TAF store njj(ii) = comlev1_bibj_ij_belli, key=ijkey, kind=isbyte
 #endif
         DO ii=1,BELLI_npts_range
           interp_finished = .FALSE.
           DO jj=1,BELLI_npts_idw
 #ifdef ALLOW_AUTODIFF_TAMC
-!$TAF STORE interp_finished = comlev1_bibj_ij_ihop, key=ijkey, kind=isbyte
+!$TAF STORE interp_finished = comlev1_bibj_ij_belli, key=ijkey, kind=isbyte
 #endif
             ! Interpolate from GCM grid cell centers
             IF ( ABS(xC(i, j, bi,bj) - belli_xc(ii, jj)).LE.tolerance .AND. &
@@ -1070,7 +1070,7 @@ USE splinec_mod,  only: splineall
                 hkey = jj + (ii-1)*BELLI_npts_idw + (ijkey-1)*sNy*sNx*nSy*nSx
                 lockey = iz + (hkey-1)*(Grid%nZ-1)*BELLI_npts_idw*BELLI_npts_range*sNx*sNy*nSx*nSy
 !                + ((jj-1) + ((ii-1) + (ijkey-1)*BELLI_npts_range)*BELLI_npts_idw)*(Grid%nZ-1)
-!$TAF store njj(ii) = loctape_ihop_gcmssp_bibj_ij_iijj_k, key=lockey, kind=isbyte
+!$TAF store njj(ii) = loctape_belli_gcmssp_bibj_ij_iijj_k, key=lockey, kind=isbyte
 #endif
     IF ( iz.GE.2 ) THEN
       ! On vlayer iz, at an MITgcm cell center? skip interpolate
@@ -1082,7 +1082,7 @@ USE splinec_mod,  only: splineall
     IF ( iz.EQ.1 ) THEN
       ! IESCO25: dummy line for dummy TAF
       ssp1buffer = belli_ssp(i, j, iz, bi,bj)
-      ! Top ihop vlayer: set to z=0
+      ! Top belli vlayer: set to z=0
       ssp1buffer = CHEN_MILLERO(i, j, 0, bi,bj,myThid) * &
         belli_idw_weights(ii, jj) / belli_sumweights(ii, iz)
 
@@ -1111,7 +1111,7 @@ USE splinec_mod,  only: splineall
 
     sspTile(iz, ii, bi,bj) = sspTile(iz, ii, bi,bj) + ssp1buffer
 
-    ! Bottom ihop vlayer or dry point: Extrapolate through bathymetry
+    ! Bottom belli vlayer or dry point: Extrapolate through bathymetry
     IF ( iz.GE.2 ) THEN
     IF (iz.EQ.Grid%nZ-1 .OR. belli_sumweights(ii, iz-1).EQ.0.0) THEN
       k = iz

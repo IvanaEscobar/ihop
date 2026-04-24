@@ -7,7 +7,7 @@ C !INTERFACE:
       SUBROUTINE BELLI_INIT_FIXED( myThid )
 
 C     !DESCRIPTION:
-C     o initialization for netcdf ihop acoustic domain; pass to f90 code
+C     o initialization for netcdf belli acoustic domain; pass to f90 code
 C     started: Ivana Escobar July-2023
 
 C     !USES:
@@ -151,7 +151,7 @@ C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
         END DO
       END DO
 
-C Pass fixed info to f90 ihop domain grid
+C Pass fixed info to f90 belli domain grid
       CALL INIT_FIXED_ENV( myThid )
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 

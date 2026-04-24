@@ -100,13 +100,13 @@ C     bi,bj :: Tile indices
       WRITE(msgBuf,'(A)') ' '
       CALL PRINT_MESSAGE( msgBuf,
      &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(A)') '== ihop_cost: begin =='
+      WRITE(msgBuf,'(A)') '== belli_cost: begin =='
       CALL PRINT_MESSAGE( msgBuf,
      &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
 C Initialise local storage
 #ifdef ALLOW_AUTODIFF_TAMC
-CADJ INIT tapelev_ihop_cost = COMMON, NFILESMAX_BELLI
+CADJ INIT tapelev_belli_cost = COMMON, NFILESMAX_BELLI
 #endif
 
 # ifdef ALLOW_COST
@@ -252,8 +252,8 @@ C Combine MPI processes
 #ifdef ALLOW_AUTODIFF_TAMC
 C     Not really necessary, but cheap (for small NFILESMAX_BELLI)
 C     and avoids some hidden recomputations.
-CADJ STORE ihopObs_modval_glob
-CADJ &     = tapelev_ihop_cost, key = num_file, kind = isbyte
+CADJ STORE belliObs_modval_glob
+CADJ &     = tapelev_belli_cost, key = num_file, kind = isbyte
 #endif
 
         IF (myProcId.EQ.0) THEN
@@ -281,7 +281,7 @@ C Write to global netcdf file
 
 #ifdef ALLOW_AUTODIFF_TAMC
 CADJ STORE belli_globaldummy(num_file)
-CADJ &     = tapelev_ihop_cost, key = num_file, kind = isbyte
+CADJ &     = tapelev_belli_cost, key = num_file, kind = isbyte
 #endif
 
 C Sync global obs
@@ -361,7 +361,7 @@ C Print cost function values
         num_belli_glo = num_belli(num_file)
 
         WRITE(msgBuf,'(A,I2,A,2D12.5)')
-     &    ' ihop_cost(', num_file, ' )= ',
+     &    ' belli_cost(', num_file, ' )= ',
      &    objf_belli_glo, num_belli_glo
 
         IF (num_belli_glo.GT.zeroRL) 
@@ -371,7 +371,7 @@ C Print cost function values
       ENDDO !DO num_file
 # endif /* ALLOW_COST */
 
-      WRITE(msgBuf,'(A)') '== ihop_cost: end   =='
+      WRITE(msgBuf,'(A)') '== belli_cost: end   =='
       CALL PRINT_MESSAGE( msgBuf,
      &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
       WRITE(msgBuf,'(A)') ' '

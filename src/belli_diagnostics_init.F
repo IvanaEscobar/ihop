@@ -37,7 +37,7 @@ CEOP
 
 #ifdef BELLI_3D_STATE
         diagName  = 'SVEL    '
-        diagTitle = 'Sound speed from pkg/ihop'
+        diagTitle = 'Sound speed from pkg/belli'
         diagUnits = 'm/s             '
         diagCode  = 'SMR     MR      '
         CALL DIAGNOSTICS_ADDTOLIST( diagNum,
@@ -45,7 +45,7 @@ CEOP
 #endif /* BELLI_3D_STATE */
 
         diagName  = 'SLD     '
-        diagTitle = 'Sonic layer depth (>0) from pkg/ihop'
+        diagTitle = 'Sonic layer depth (>0) from pkg/belli'
         diagUnits = 'm               '
         diagCode  = 'SM      M1      '
         CALL DIAGNOSTICS_ADDTOLIST( diagNum,

@@ -53,13 +53,13 @@ CEOP
 
 C       IF ( pickupSuff.EQ.' ' ) THEN
 C        IF ( rwSuffixType.EQ.0 ) THEN
-C          WRITE(fn,'(A,I10.10)') 'pickup_ihop.', myIter
+C          WRITE(fn,'(A,I10.10)') 'pickup_belli.', myIter
 C        ELSE
 C          CALL RW_GET_SUFFIX( suff, startTime, myIter, myThid )
-C          WRITE(fn,'(A,A)') 'pickup_ihop.', suff
+C          WRITE(fn,'(A,A)') 'pickup_belli.', suff
 C        ENDIF
 C       ELSE
-C        WRITE(fn,'(A,A10)') 'pickup_ihop.', pickupSuff
+C        WRITE(fn,'(A,A10)') 'pickup_belli.', pickupSuff
 C       ENDIF
 C       fp = precFloat64
 C

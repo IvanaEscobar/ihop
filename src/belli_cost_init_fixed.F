@@ -81,7 +81,7 @@ CBOP
       stop_ihop_cost = 0
 
       WRITE(msgBuf,'(A)') ''// CHAR(10) //
-     & '                    iHOP COST general parameters :'
+     & '                    BELLI COST general parameters :'
       CALL PRINT_MESSAGE( msgBuf,
      &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
@@ -120,7 +120,7 @@ CBOP
         IF (IL.NE.0) THEN
           WRITE(IHOPObs_File,'(A)') bObs_Files(num_file)(1:IL)
           WRITE(msgBuf,'(A,I3,2A)') ''// CHAR(10) //
-     &      '                    ihop file #', num_file,
+     &      '                    belli file #', num_file,
      &      ' is ', IHOPObs_File(1:IL)
           CALL PRINT_MESSAGE( msgBuf,
      &         standardMessageUnit, SQUEEZE_RIGHT, myThid )
@@ -149,9 +149,9 @@ CBOP
           CALL PRINT_MESSAGE( msgBuf,
      &         standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
-          err =       NF_INQ_VARID( ncid, 'ihop_YYYYMMDD', varId1a )
+          err =       NF_INQ_VARID( ncid, 'belli_YYYYMMDD', varId1a )
         CALL BELLI_COST_NF_ERROR('init_fixed 4',err,1,1,myThid)
-          err = err + NF_INQ_VARID( ncid, 'ihop_HHMMSS', varId1b )
+          err = err + NF_INQ_VARID( ncid, 'belli_HHMMSS', varId1b )
         CALL BELLI_COST_NF_ERROR('init_fixed 5',err,1,1,myThid)
           err = err + NF_INQ_VARID( ncid, 'belli_iter', varId2 )
         CALL BELLI_COST_NF_ERROR('init_fixed 6',err,1,1,myThid)
@@ -159,20 +159,20 @@ CBOP
           IF (err.NE.NF_NOERR) THEN
             WRITE(msgBuf,'(4A)')
      &       'BELLI_COST_INIT_FIXED: file ', IHOPObs_File(1:IL),
-     &       '.nc is not in the pkg/ihop cost format: ',
+     &       '.nc is not in the pkg/belli cost format: ',
      &       'check iter,uncert'
             CALL PRINT_ERROR( msgBuf, myThid )
           ENDIF
-! Assume all ihop observations are instantaneous
+! Assume all belli observations are instantaneous
 
-!2 Weight for each ihop obs (if missing, assume equal weights):
+!2 Weight for each belli obs (if missing, assume equal weights):
           weighIhopObs = 1
 
-          err = NF_INQ_VARID( ncid, 'ihop_uncert', varId3 )
+          err = NF_INQ_VARID( ncid, 'belli_uncert', varId3 )
         CALL BELLI_COST_NF_ERROR('init_fixed 7',err,1,1,myThid)
           IF (err.NE.NF_NOERR) THEN
             WRITE(msgBuf,'(2A)')
-     &        '      ihop obs file does not have uncertainties;',
+     &        '      belli obs file does not have uncertainties;',
      &        '      assume all obs datum are weighed evenly '
             CALL PRINT_MESSAGE( msgBuf,
      &           standardMessageUnit, SQUEEZE_RIGHT, myThid )
@@ -181,28 +181,28 @@ CBOP
 
           ENDIF
 
-!3 Read ihop observation positions and values:
-          err =       NF_INQ_VARID( ncid, 'ihop_x', varId4a )
+!3 Read belli observation positions and values:
+          err =       NF_INQ_VARID( ncid, 'belli_x', varId4a )
         CALL BELLI_COST_NF_ERROR('init_fixed 8',err,1,1,myThid)
-          err = err + NF_INQ_VARID( ncid, 'ihop_y', varId4b )
+          err = err + NF_INQ_VARID( ncid, 'belli_y', varId4b )
         CALL BELLI_COST_NF_ERROR('init_fixed 9',err,1,1,myThid)
-          err = err + NF_INQ_VARID( ncid, 'ihop_z', varId4c )
+          err = err + NF_INQ_VARID( ncid, 'belli_z', varId4c )
         CALL BELLI_COST_NF_ERROR('init_fixed10',err,1,1,myThid)
 
           IF (err.NE.NF_NOERR) THEN
             WRITE(msgBuf,'(3A)')
      &        'BELLI_COST_INIT_FIXED: file ', IHOPObs_File(1:IL),
-     &        '.nc is not in the pkg/ihop cost format, check x,y,z'
+     &        '.nc is not in the pkg/belli cost format, check x,y,z'
             CALL PRINT_ERROR( msgBuf, myThid )
           ENDIF
 
-          err =       NF_INQ_VARID( ncid, 'ihop_val', varId5a )
+          err =       NF_INQ_VARID( ncid, 'belli_val', varId5a )
         CALL BELLI_COST_NF_ERROR('init_fixed11',err,1,1,myThid)
 
           IF (err.NE.NF_NOERR) THEN
            WRITE(msgBuf,'(3A)')
      &       'BELLI_COST_INIT_FIXED: file ', IHOPObs_File(1:IL),
-     &       '.nc is not in the pkg/ihop cost format, check ihop_val'
+     &       '.nc is not in the pkg/belli cost format, check belli_val'
            CALL PRINT_ERROR( msgBuf, myThid )
           ENDIF
 
@@ -212,10 +212,10 @@ CBOP
 ! Variable names for model equivalent files
           belli_nameequi = 'mod_val'
           belli_namemask = 'mod_mask'
-          belli_nameval  = 'ihop_val'
-          belli_nameuncert = 'ihop_uncert'
+          belli_nameval  = 'belli_val'
+          belli_nameuncert = 'belli_uncert'
 
-!4 Create global file for ihop model equivalent
+!4 Create global file for belli model equivalent
           IF (myProcId.EQ.0) THEN
             JL  = ILNBLNK( bObs_Dir )
 
@@ -406,7 +406,7 @@ CBOP
                 diffsecs = diffsecs+nIter0*deltaTclock
 
               ELSE
-! If tmphhmmss is out of range then disregard ihop obs
+! If tmphhmmss is out of range then disregard belli obs
                 obsIsInRunTime = 0
                 diffsecs = -deltaTclock
                 obsNo_hh = obsNo_hh+1
@@ -426,8 +426,8 @@ CBOP
 
             ENDIF !IF (obsIsInRunTime.EQ.1)
 
-! Regardless of whether ihop obs is in run time or not,
-! Keep track of ihop obs index position and assign time to ihop obs
+! Regardless of whether belli obs is in run time or not,
+! Keep track of belli obs index position and assign time to belli obs
             tmp_bObs_time(nObs) = diffsecs
 
 ! Check that maximum size was not reached:
@@ -445,19 +445,19 @@ CBOP
 ! Calibrate number of VALID obs datum
           obsNo(num_file) = obsNo_valid
 
-! Output ihop cost init info
+! Output belli cost init info
           WRITE(msgBuf,'(A,I9)')
-     &      '  # of ihop obs with err HHMMSS values =', obsNo_hh
+     &      '  # of belli obs with err HHMMSS values =', obsNo_hh
           CALL PRINT_MESSAGE( msgBuf,
      &         standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
           WRITE(msgBuf,'(A,I9)')
-     &      '  # of ihop obs within time period  =', obsNo(num_file)
+     &      '  # of belli obs within time period  =', obsNo(num_file)
           CALL PRINT_MESSAGE( msgBuf,
      &         standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
 ! ====================================================================
-! Initiate tiled defaults for ihopObs before reading in from netcdf
+! Initiate tiled defaults for belliObs before reading in from netcdf
           DO bj = 1, nSy
             DO bi = 1, nSx
               obsNo_valid = 0
@@ -662,7 +662,7 @@ CBOP
 
               ENDDO !DO nObs
 
-! Number of valid ihop obs in the file
+! Number of valid pkg/belli obs in the file
               obsNo_tiled(num_file,bi,bj) = obsNo_valid
 
               WRITE(msgBuf,'(2(A,I4))')
@@ -672,13 +672,13 @@ CBOP
      &             standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
               WRITE(msgBuf,'(A,I9)')
-     &          '  # of ihop obs within tile and time period  =',
+     &          '  # of belli obs within tile and time period  =',
      &          obsNo_tiled(num_file,bi,bj)
               CALL PRINT_MESSAGE( msgBuf,
      &             standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
 !===========================================================
-! Create files for model counterparts to ihop obs
+! Create files for model counterparts to pkg/belli obs
 !===========================================================
               IF (obsNo_tiled(num_file,bi,bj).GT.0) THEN
 ! Kludge until unstructered tiles
@@ -801,7 +801,7 @@ CBOP
       CALL PRINT_MESSAGE( msgBuf,
      &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
       WRITE(msgBuf,'(A)')
-     & '// ihop cost read obs data file >>> END <<<'
+     & '// belli cost read obs data file >>> END <<<'
       CALL PRINT_MESSAGE( msgBuf,
      &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
       WRITE(msgBuf,'(A)')
