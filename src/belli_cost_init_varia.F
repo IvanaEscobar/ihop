@@ -58,13 +58,13 @@ C Initialize tiled cost fxn contributions.
      &           belliDoNcOutput ) THEN
 C Sync tiled .equi file so data in buffer is not lost
               err = NF_SYNC( ncidFWD(num_file,bi,bj) )
-              CALL BELLI_COST_NF_ERROR(
+              CALL BELLI_NF_ERROR(
      &             'INIT_VARIA: NF_SYNC ncidFWD',
      &             err,1,1,myThid )
 #  ifdef ALLOW_TANGENTLINEAR_RUN
           IF (TANGENT_SIMULATION) THEN
             err = NF_SYNC( ncidTL(num_filei,bi,bj) ) 
-            CALL BELLI_COST_NF_ERROR(
+            CALL BELLI_NF_ERROR(
      &           'INIT_VARIA: NF_SYNC ncidTL',
      &           err,1,1,myThid )
           ENDIF
@@ -93,13 +93,13 @@ C      DO num_file = 1, NFILESMAX_BELLI
 C        IF (obsNo(num_file).GT.0 .AND. belliDoNcOutput) THEN
 CC Sync global .equi file so data in buffer is not lost
 C          err = NF_SYNC( ncidGLOB(num_file) )
-C          CALL BELLI_COST_NF_ERROR(
+C          CALL BELLI_NF_ERROR(
 C     &         'INIT_VARIA: NF_SYNC ncidGLOB',
 C     &         err,1,1,myThid )
 C#  ifdef ALLOW_TANGENTLINEAR_RUN
 C          IF (TANGENT_SIMULATION) THEN
 C            err = NF_SYNC( ncidTLGLOB(num_file) ) 
-C            CALL BELLI_COST_NF_ERROR(
+C            CALL BELLI_NF_ERROR(
 C     &           'INIT_VARIA: NF_SYNC ncidTLGLOB',
 C     &           err,1,1,myThid )
 C          ENDIF

@@ -53,43 +53,43 @@ CEOP
       IF (belliDoNcOutput) THEN
 C Create a netcdf file
         err = NF_CREATE( file2, NF_CLOBBER, fID2 )
-        CALL BELLI_COST_NF_ERROR( 'INIT_EQUI: NF_CREATE fID2',
+        CALL BELLI_NF_ERROR( 'INIT_EQUI: NF_CREATE fID2',
      &       err,bi,bj,myThid )
         err = NF_DEF_DIM( fID2, 'iOBS', length, dimID )
-        CALL BELLI_COST_NF_ERROR( 'INIT_EQUI: NF_DEF_DIM iOBS',
+        CALL BELLI_NF_ERROR( 'INIT_EQUI: NF_DEF_DIM iOBS',
      &       err,bi,bj,myThid )
 
         err = NF_DEF_VAR( fID2, 'B_Obs_ind_glob_tiled',
      &        NF_INT, 1, dimID, varID(1) )
-        CALL BELLI_COST_NF_ERROR( 'INIT_EQUI: NF_DEF_VAR ind_glob',
+        CALL BELLI_NF_ERROR( 'INIT_EQUI: NF_DEF_VAR ind_glob',
      &       err,bi,bj,myThid )
         err = NF_PUT_ATT_INT( fID2, varID(1),
      &        '_FillValue', NF_INT, 1, 0 )
-        CALL BELLI_COST_NF_ERROR( 'INIT_EQUI: NF_PUT_ATT_INT iOBS',
+        CALL BELLI_NF_ERROR( 'INIT_EQUI: NF_PUT_ATT_INT iOBS',
      &       err,bi,bj,myThid )
 
 ! If 'belli_val' exists in data file, then add info to equi file
         err = NF_INQ_VARID( fID1, belli_nameval, varID0 )
-        CALL BELLI_COST_NF_ERROR( 'INIT_EQUI: NF_INQ_VARID belli_val',
+        CALL BELLI_NF_ERROR( 'INIT_EQUI: NF_INQ_VARID belli_val',
      &       err,bi,bj,myThid )
 
         IF (err.EQ.NF_NOERR) THEN
           err = NF_DEF_VAR( fID2, belli_nameequi,
      &          NF_DOUBLE, 1, dimID, varID(2) )
-          CALL BELLI_COST_NF_ERROR( 'INIT_EQUI: NF_DEF_VAR val',
+          CALL BELLI_NF_ERROR( 'INIT_EQUI: NF_DEF_VAR val',
      &         err,bi,bj,myThid )
           err = NF_PUT_ATT_DOUBLE( fID2, varID(2),
      &          '_FillValue', NF_DOUBLE, 1, 0. _d 0 )
-          CALL BELLI_COST_NF_ERROR( 'INIT_EQUI: NF_PUT_ATT_D val',
+          CALL BELLI_NF_ERROR( 'INIT_EQUI: NF_PUT_ATT_D val',
      &         err,bi,bj,myThid )
 
           err = NF_DEF_VAR( fID2, belli_namemask,
      &          NF_DOUBLE, 1, dimID, varID(3) )
-          CALL BELLI_COST_NF_ERROR( 'INIT_EQUI: NF_DEF_VAR mask',
+          CALL BELLI_NF_ERROR( 'INIT_EQUI: NF_DEF_VAR mask',
      &         err,bi,bj,myThid )
           err = NF_PUT_ATT_DOUBLE(fID2,varID(3),
      &          '_FillValue', NF_DOUBLE, 1, 0. _d 0 )
-          CALL BELLI_COST_NF_ERROR( 'INIT_EQUI: NF_PUT_ATT_D mask',
+          CALL BELLI_NF_ERROR( 'INIT_EQUI: NF_PUT_ATT_D mask',
      &         err,bi,bj,myThid )
 
         ELSE
@@ -103,15 +103,15 @@ C Create a netcdf file
 
 ! Transition NetCDF file to data mode
         err = NF_ENDDEF( fID2 )
-        CALL BELLI_COST_NF_ERROR( 'INIT_EQUI: NF_ENDDEF fID2',
+        CALL BELLI_NF_ERROR( 'INIT_EQUI: NF_ENDDEF fID2',
      &       err,bi,bj,myThid )
 
 ! Clear buffer and write data to file
         err = NF_CLOSE( fID2 )
-        CALL BELLI_COST_NF_ERROR( 'INIT_EQUI: NF_CLOSE fID2',
+        CALL BELLI_NF_ERROR( 'INIT_EQUI: NF_CLOSE fID2',
      &       err,bi,bj,myThid )
         err = NF_OPEN( file2, NF_WRITE, fID2 )
-        CALL BELLI_COST_NF_ERROR( 'INIT_EQUI: NF_OPEN'//file2//'',
+        CALL BELLI_NF_ERROR( 'INIT_EQUI: NF_OPEN'//file2//'',
      &       err,bi,bj,myThid )
 
       ELSE !IF (belliDoNcOutput)

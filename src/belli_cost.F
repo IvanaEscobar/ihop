@@ -199,7 +199,7 @@ C File maintenance
      &           (belliDoNcOutput) ) THEN
 C Sync tiled file so data is not lost in buffer
               err = NF_SYNC( ncidFWD(num_file,bi,bj) )
-              CALL BELLI_COST_NF_ERROR('belli_cost 1',err,bi,bj,
+              CALL BELLI_NF_ERROR('cost 1',err,bi,bj,
      & myThid)
 
             ENDIF
@@ -287,8 +287,8 @@ CADJ &     = tapelev_belli_cost, key = num_file, kind = isbyte
 
 C Sync global obs
           err = NF_SYNC( ncidGLOB(num_file) )
-          CALL BELLI_COST_NF_ERROR(
-     &         'BELLI_COST: NF_SYNC ncidGLOB',err,0,0,myThid )
+          CALL BELLI_NF_ERROR(
+     &         'COST: NF_SYNC ncidGLOB',err,0,0,myThid )
 
           DO iObs = 1, NOBSMAX_BELLI
             IF (iObs.LE.ObsNo(num_file)) THEN

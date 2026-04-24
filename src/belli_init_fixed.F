@@ -58,7 +58,7 @@ C Read NetCDF input: setting the acoustic domain
           belli_file = BELLI_interpfile
       END IF
       err = NF_OPEN(belli_file, NF_NOWRITE, ncid)
-      CALL BELLI_COST_NF_ERROR('INIT_FIXED NF_OPEN',err,1,1,myThid)
+      CALL BELLI_NF_ERROR('INIT_FIXED NF_OPEN',err,1,1,myThid)
       IF (err .NE. NF_NOERR) THEN
         WRITE(msgBuf, '(2A)') 'S/R BELLI_INIT_FIXED: ',
      &    'NetCDF BELLI input file NOT found'
@@ -68,14 +68,14 @@ C Read NetCDF input: setting the acoustic domain
 
 C Get dimension IDs and lengths
       err = NF_INQ_DIMID( ncid, 'nrange', dimId1 )
-      CALL BELLI_COST_NF_ERROR('init_fixed 2',err,1,1,myThid)
+      CALL BELLI_NF_ERROR('init_fixed 2',err,1,1,myThid)
       err = NF_INQ_DIMLEN( ncid, dimId1, BELLI_npts_range )
 
-      CALL BELLI_COST_NF_ERROR('init_fixed 3',err,1,1,myThid)
+      CALL BELLI_NF_ERROR('init_fixed 3',err,1,1,myThid)
       err = NF_INQ_DIMID( ncid, 'nidw', dimId2 )
-      CALL BELLI_COST_NF_ERROR('init_fixed 4',err,1,1,myThid)
+      CALL BELLI_NF_ERROR('init_fixed 4',err,1,1,myThid)
       err = NF_INQ_DIMLEN( ncid, dimId2, BELLI_npts_idw )
-      CALL BELLI_COST_NF_ERROR('init_fixed 5',err,1,1,myThid)
+      CALL BELLI_NF_ERROR('init_fixed 5',err,1,1,myThid)
 
       IF ( BELLI_npts_range>BELLI_MAX_RANGE .OR.
      &     BELLI_npts_idw>BELLI_MAX_IDW ) THEN
@@ -87,13 +87,13 @@ C Get dimension IDs and lengths
 
 C Get data variable IDs
       err = NF_INQ_VARID( ncid, 'belli_ranges', varId1 )
-      CALL BELLI_COST_NF_ERROR('init_fixed 6',err,1,1,myThid)
+      CALL BELLI_NF_ERROR('init_fixed 6',err,1,1,myThid)
       err = NF_INQ_VARID( ncid, 'belli_xc', varId2 )
-      CALL BELLI_COST_NF_ERROR('init_fixed 7',err,1,1,myThid)
+      CALL BELLI_NF_ERROR('init_fixed 7',err,1,1,myThid)
       err = NF_INQ_VARID( ncid, 'belli_yc', varId3 )
-      CALL BELLI_COST_NF_ERROR('init_fixed 8',err,1,1,myThid)
+      CALL BELLI_NF_ERROR('init_fixed 8',err,1,1,myThid)
       err = NF_INQ_VARID( ncid, 'belli_idw_weights', varId4 )
-      CALL BELLI_COST_NF_ERROR('init_fixed 9',err,1,1,myThid)
+      CALL BELLI_NF_ERROR('init_fixed 9',err,1,1,myThid)
 
       IF (err .NE. NF_NOERR) THEN
         WRITE(msgBuf, '(2A)') 'S/R BELLI_INIT_FIXED: ',
@@ -104,13 +104,13 @@ C Get data variable IDs
 
 C get data variables
       err = NF_GET_VAR( ncid, varId1, data1vec )
-      CALL BELLI_COST_NF_ERROR('init_fixed10',err,1,1,myThid)
+      CALL BELLI_NF_ERROR('init_fixed10',err,1,1,myThid)
       err = NF_GET_VAR( ncid, varId2, data2vec )
-      CALL BELLI_COST_NF_ERROR('init_fixed11',err,1,1,myThid)
+      CALL BELLI_NF_ERROR('init_fixed11',err,1,1,myThid)
       err = NF_GET_VAR( ncid, varId3, data3vec )
-      CALL BELLI_COST_NF_ERROR('init_fixed12',err,1,1,myThid)
+      CALL BELLI_NF_ERROR('init_fixed12',err,1,1,myThid)
       err = NF_GET_VAR( ncid, varId4, data4vec )
-      CALL BELLI_COST_NF_ERROR('init_fixed13',err,1,1,myThid)
+      CALL BELLI_NF_ERROR('init_fixed13',err,1,1,myThid)
 
       IF (err .NE. NF_NOERR) THEN
         WRITE(msgBuf, '(2A)') 'S/R BELLI_INIT_FIXED: ',
@@ -133,7 +133,7 @@ C 'reshape' data variables to 2D arrays
 
 C Close NetCDF file
       err = NF_CLOSE( ncid )
-      CALL BELLI_COST_NF_ERROR('init_fixed14',err,1,1,myThid)
+      CALL BELLI_NF_ERROR('init_fixed14',err,1,1,myThid)
       IF (err.NE.NF_NOERR) THEN
         WRITE(msgBuf, '(3A)') 'S/R BELLI_INIT_FIXED: ',
      &    'NetCDF ERROR: Cannot close file ', BELLI_interpfile(1:IL)

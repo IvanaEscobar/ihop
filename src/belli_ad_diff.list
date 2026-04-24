@@ -7,6 +7,7 @@ belli_cost_init_varia.f
 belli_cost_inloop.f
 belli_cost_modval.f
 belli_cost.f
+belli_cost_final.f
 chen_millero.f
 
 angle_mod.f90

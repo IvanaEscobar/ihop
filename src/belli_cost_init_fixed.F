@@ -134,14 +134,14 @@ CBOP
           WRITE(fnamedatanc,'(2A)') B_Obs_File(1:IL),'.nc'
           err = NF_OPEN( fnamedatanc, NF_NOWRITE, 
      &          ncidData(num_file) )
-        CALL BELLI_COST_NF_ERROR('init_fixed 1',err,1,1,myThid)
+        CALL BELLI_NF_ERROR('init_fixed 1',err,1,1,myThid)
 
 !1) Read number of observations and available dimensions:
           ncid = ncidData(num_file)
           err = NF_INQ_DIMID( ncid,'iOBS', dimId1 )
-        CALL BELLI_COST_NF_ERROR('init_fixed 2',err,1,1,myThid)
+        CALL BELLI_NF_ERROR('init_fixed 2',err,1,1,myThid)
           err = NF_INQ_DIMLEN( ncid, dimId1, obsNo(num_file) )
-        CALL BELLI_COST_NF_ERROR('init_fixed 3',err,1,1,myThid)
+        CALL BELLI_NF_ERROR('init_fixed 3',err,1,1,myThid)
 
           WRITE(msgBuf,'(A,I9)')
      &      '  # of observations in file                   =',
@@ -150,11 +150,11 @@ CBOP
      &         standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
           err =       NF_INQ_VARID( ncid, 'belli_YYYYMMDD', varId1a )
-        CALL BELLI_COST_NF_ERROR('init_fixed 4',err,1,1,myThid)
+        CALL BELLI_NF_ERROR('init_fixed 4',err,1,1,myThid)
           err = err + NF_INQ_VARID( ncid, 'belli_HHMMSS', varId1b )
-        CALL BELLI_COST_NF_ERROR('init_fixed 5',err,1,1,myThid)
+        CALL BELLI_NF_ERROR('init_fixed 5',err,1,1,myThid)
           err = err + NF_INQ_VARID( ncid, 'belli_iter', varId2 )
-        CALL BELLI_COST_NF_ERROR('init_fixed 6',err,1,1,myThid)
+        CALL BELLI_NF_ERROR('init_fixed 6',err,1,1,myThid)
 
           IF (err.NE.NF_NOERR) THEN
             WRITE(msgBuf,'(4A)')
@@ -169,7 +169,7 @@ CBOP
           weighbelliObs = 1
 
           err = NF_INQ_VARID( ncid, 'belli_uncert', varId3 )
-        CALL BELLI_COST_NF_ERROR('init_fixed 7',err,1,1,myThid)
+        CALL BELLI_NF_ERROR('init_fixed 7',err,1,1,myThid)
           IF (err.NE.NF_NOERR) THEN
             WRITE(msgBuf,'(2A)')
      &        '      belli obs file does not have uncertainties;',
@@ -183,11 +183,11 @@ CBOP
 
 !3 Read belli observation positions and values:
           err =       NF_INQ_VARID( ncid, 'belli_x', varId4a )
-        CALL BELLI_COST_NF_ERROR('init_fixed 8',err,1,1,myThid)
+        CALL BELLI_NF_ERROR('init_fixed 8',err,1,1,myThid)
           err = err + NF_INQ_VARID( ncid, 'belli_y', varId4b )
-        CALL BELLI_COST_NF_ERROR('init_fixed 9',err,1,1,myThid)
+        CALL BELLI_NF_ERROR('init_fixed 9',err,1,1,myThid)
           err = err + NF_INQ_VARID( ncid, 'belli_z', varId4c )
-        CALL BELLI_COST_NF_ERROR('init_fixed10',err,1,1,myThid)
+        CALL BELLI_NF_ERROR('init_fixed10',err,1,1,myThid)
 
           IF (err.NE.NF_NOERR) THEN
             WRITE(msgBuf,'(3A)')
@@ -197,7 +197,7 @@ CBOP
           ENDIF
 
           err =       NF_INQ_VARID( ncid, 'belli_val', varId5a )
-        CALL BELLI_COST_NF_ERROR('init_fixed11',err,1,1,myThid)
+        CALL BELLI_NF_ERROR('init_fixed11',err,1,1,myThid)
 
           IF (err.NE.NF_NOERR) THEN
            WRITE(msgBuf,'(3A)')
@@ -237,43 +237,49 @@ CBOP
 ! Create NetCDF file
               err = NF_CREATE( fnameequincglo(1:JL), NF_CLOBBER,
      &              ncidGLOB(num_file) )
-              CALL BELLI_COST_NF_ERROR('init_fixed12',err,1,1,myThid)
+
+              CALL BELLI_NF_ERROR('init_fixed12',err,1,1,myThid)
               err = NF_DEF_DIM( ncidGLOB(num_file),'iOBS',
      &              obsNo(num_file), dimId1 )
-              CALL BELLI_COST_NF_ERROR('init_fixed13',err,1,1,myThid)
+              CALL BELLI_NF_ERROR('init_fixed13',err,1,1,myThid)
 
               err = NF_DEF_VAR( ncidGLOB(num_file), 'mod_val',
      &              NF_DOUBLE, 1, dimId1, varIdEquiv(1) )
-              CALL BELLI_COST_NF_ERROR('init_fixed14',err,1,1,myThid)
+              CALL BELLI_NF_ERROR('init_fixed14',err,1,1,myThid)
               err = NF_PUT_ATT_DOUBLE( ncidGLOB(num_file),
      &              varIdEquiv(1), '_FillValue',
      &              NF_DOUBLE, 1, -9999. _d 0 )
-              CALL BELLI_COST_NF_ERROR('init_fixed15',err,1,1,myThid)
+              CALL BELLI_NF_ERROR('init_fixed15',err,1,1,myThid)
 
               err = NF_DEF_VAR( ncidGLOB(num_file), 'mod_mask',
      &              NF_DOUBLE, 1, dimId1, varIdEquiv(2) )
-              CALL BELLI_COST_NF_ERROR('init_fixed16',err,1,1,myThid)
+              CALL BELLI_NF_ERROR('init_fixed16',err,1,1,myThid)
               err = NF_PUT_ATT_DOUBLE( ncidGLOB(num_file),
      &              varIdEquiv(2), '_FillValue',
      &              NF_DOUBLE, 1, -9999. _d 0 )
-              CALL BELLI_COST_NF_ERROR('init_fixed17',err,1,1,myThid)
+              CALL BELLI_NF_ERROR('init_fixed17',err,1,1,myThid)
 
 ! Write buffer to file, reopen file with WRITE permissions
               err = NF_ENDDEF( ncidGLOB(num_file) )
-              CALL BELLI_COST_NF_ERROR('init_fixed18',err,1,1,myThid)
+              CALL BELLI_NF_ERROR('init_fixed18',err,1,1,myThid)
               err = NF_CLOSE( ncidGLOB(num_file) )
-              CALL BELLI_COST_NF_ERROR('init_fixed19',err,1,1,myThid)
+              CALL BELLI_NF_ERROR('init_fixed19',err,1,1,myThid)
               err = NF_OPEN( fnameequincglo(1:JL), NF_WRITE, 
      &              ncidGLOB(num_file) )
-              CALL BELLI_COST_NF_ERROR('init_fixed20',err,1,1,myThid)
+              CALL BELLI_NF_ERROR('init_fixed20',err,1,1,myThid)
 
             ELSE
 ! Obtain existing NetCDF file id
               err = NF_OPEN( fnameequincglo(1:JL), NF_WRITE,
      &              ncidGLOB(num_file) )
-              CALL BELLI_COST_NF_ERROR('init_fixed21',err,1,1,myThid)
+
+              CALL BELLI_NF_ERROR('init_fixed21',err,1,1,myThid)
 
             ENDIF
+          WRITE(msgBuf,'(A,I9)')
+     &      'ESCO ncidGLOB  ', ncidGLOB(num_file)
+          CALL PRINT_MESSAGE( msgBuf,
+     &         standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
 # ifdef ALLOW_ADJOINT_RUN
             JL = ILNBLNK( adfnameequincglo )
@@ -282,33 +288,33 @@ CBOP
 ! Create NetCDF AD file
               err = NF_CREATE( adfnameequincglo(1:JL), NF_CLOBBER,
      &              ncidADGLOB(num_file) )
-              CALL BELLI_COST_NF_ERROR('init_fixed22',err,1,1,myThid)
+              CALL BELLI_NF_ERROR('init_fixed22',err,1,1,myThid)
               err = NF_DEF_DIM( ncidADGLOB(num_file), 'iOBS',
      &              obsNo(num_file), dimId1 )
-              CALL BELLI_COST_NF_ERROR('init_fixed23',err,1,1,myThid)
+              CALL BELLI_NF_ERROR('init_fixed23',err,1,1,myThid)
 
               err = NF_DEF_VAR( ncidADGLOB(num_file), 'mod_val',
      &              NF_DOUBLE, 1, dimId1, varIdEquiv(1) )
-              CALL BELLI_COST_NF_ERROR('init_fixed24',err,1,1,myThid)
+              CALL BELLI_NF_ERROR('init_fixed24',err,1,1,myThid)
               err = NF_PUT_ATT_DOUBLE( ncidADGLOB(num_file),
      &              varIdEquiv(1), '_FillValue',
      &              NF_DOUBLE, 1, 0. _d 0 )
-              CALL BELLI_COST_NF_ERROR('init_fixed25',err,1,1,myThid)
+              CALL BELLI_NF_ERROR('init_fixed25',err,1,1,myThid)
 
 ! Write buffer to file, reopen file with WRITE permissions
               err = NF_ENDDEF( ncidADGLOB(num_file) )
-              CALL BELLI_COST_NF_ERROR('init_fixed26',err,1,1,myThid)
+              CALL BELLI_NF_ERROR('init_fixed26',err,1,1,myThid)
               err = NF_CLOSE( ncidADGLOB(num_file) )
-              CALL BELLI_COST_NF_ERROR('init_fixed27',err,1,1,myThid)
+              CALL BELLI_NF_ERROR('init_fixed27',err,1,1,myThid)
               err = NF_OPEN( adfnameequincglo(1:JL), NF_WRITE,
      &              ncidADGLOB(num_file) )
-              CALL BELLI_COST_NF_ERROR('init_fixed28',err,1,1,myThid)
+              CALL BELLI_NF_ERROR('init_fixed28',err,1,1,myThid)
 
             ELSE
 ! Obtain existing AD NetCDF file id
               err = NF_OPEN( adfnameequincglo(1:JL), NF_WRITE,
      &              ncidADGLOB(num_file) )
-              CALL BELLI_COST_NF_ERROR('init_fixed29',err,1,1,myThid)
+              CALL BELLI_NF_ERROR('init_fixed29',err,1,1,myThid)
 
             ENDIF
 
@@ -320,33 +326,33 @@ CBOP
 ! Create NetCDF TL file
               err = NF_CREATE( tlfnameequincglo(1:JL), NF_CLOBBER,
      &              ncidTLGLOB(num_file) )
-              CALL BELLI_COST_NF_ERROR('init_fixed30',err,1,1,myThid)
+              CALL BELLI_NF_ERROR('init_fixed30',err,1,1,myThid)
               err = NF_DEF_DIM( ncidTLGLOB(num_file), 'iOBS',
      &              obsNo(num_file), dimId1 )
-              CALL BELLI_COST_NF_ERROR('init_fixed31',err,1,1,myThid)
+              CALL BELLI_NF_ERROR('init_fixed31',err,1,1,myThid)
 
               err = NF_DEF_VAR( ncidTLGLOB(num_file), 'mod_val',
      &              NF_DOUBLE, 1, dimId1, varIdEquiv(1) )
-              CALL BELLI_COST_NF_ERROR('init_fixed32',err,1,1,myThid)
+              CALL BELLI_NF_ERROR('init_fixed32',err,1,1,myThid)
               err = NF_PUT_ATT_DOUBLE( ncidTLGLOB(num_file),
      &              varIdEquiv(1), '_FillValue',
      &              NF_DOUBLE, 1, 0. _d 0 )
-              CALL BELLI_COST_NF_ERROR('init_fixed33',err,1,1,myThid)
+              CALL BELLI_NF_ERROR('init_fixed33',err,1,1,myThid)
 
 ! Write buffer to file, reopen file with WRITE permissions
               err = NF_ENDDEF( ncidTLGLOB(num_file) )
-              CALL BELLI_COST_NF_ERROR('init_fixed34',err,1,1,myThid)
+              CALL BELLI_NF_ERROR('init_fixed34',err,1,1,myThid)
               err = NF_CLOSE( ncidTLGLOB(num_file) )
-              CALL BELLI_COST_NF_ERROR('init_fixed35',err,1,1,myThid)
+              CALL BELLI_NF_ERROR('init_fixed35',err,1,1,myThid)
               err = NF_OPEN( tlfnameequincglo(1:JL), NF_WRITE,
      &              ncidTLGLOB(num_file) )
-              CALL BELLI_COST_NF_ERROR('init_fixed36',err,1,1,myThid)
+              CALL BELLI_NF_ERROR('init_fixed36',err,1,1,myThid)
 
             ELSE
 ! Obtain existing TL NetCDF file id
               err = NF_OPEN( tlfnameequincglo(1:JL), NF_WRITE,
      &              ncidTLGLOB(num_file) )
-              CALL BELLI_COST_NF_ERROR('init_fixed37',err,1,1,myThid)
+              CALL BELLI_NF_ERROR('init_fixed37',err,1,1,myThid)
 
             ENDIF
 # endif
@@ -368,10 +374,10 @@ CBOP
 ! Read time
           err = NF_GET_VARA_DOUBLE( ncid, varId1a, 
      &          1, obsNo(num_file), tmpyymmdd )
-          CALL BELLI_COST_NF_ERROR('init_fixed38',err,1,1,myThid)
+          CALL BELLI_NF_ERROR('init_fixed38',err,1,1,myThid)
           err = NF_GET_VARA_DOUBLE(ncid,varId1b,
      &          1, obsNo(num_file), tmphhmmss )
-          CALL BELLI_COST_NF_ERROR('init_fixed39',err,1,1,myThid)
+          CALL BELLI_NF_ERROR('init_fixed39',err,1,1,myThid)
 
           IF ( err.NE.NF_NOERR ) THEN
             WRITE(msgBuf,'(3A)')
@@ -476,21 +482,21 @@ CBOP
               IF (weighbelliObs.EQ.1) THEN
                 err = NF_GET_VARA_DOUBLE( ncid, varId3,
      &                1, obsNo_tiled(num_file,bi,bj), tmp_uncert2 )
-                CALL BELLI_COST_NF_ERROR('init_fixed40',err,bi,bj,
+                CALL BELLI_NF_ERROR('init_fixed40',err,bi,bj,
      & myThid)
               ENDIF
 
               err = NF_GET_VARA_DOUBLE( ncid, varId4a,
      &              1, obsNo_tiled(num_file,bi,bj), tmp_lon2 )
-              CALL BELLI_COST_NF_ERROR('init_fixed40',err,bi,bj,
+              CALL BELLI_NF_ERROR('init_fixed40',err,bi,bj,
      & myThid)
               err = NF_GET_VARA_DOUBLE( ncid, varId4b,
      &              1, obsNo_tiled(num_file,bi,bj), tmp_lat2 )
-              CALL BELLI_COST_NF_ERROR('init_fixed41',err,bi,bj,
+              CALL BELLI_NF_ERROR('init_fixed41',err,bi,bj,
      & myThid)
               err = NF_GET_VARA_DOUBLE( ncid, varId4c,
      &              1, obsNo_tiled(num_file,bi,bj), tmp_depth2 )
-              CALL BELLI_COST_NF_ERROR('init_fixed42',err,bi,bj,
+              CALL BELLI_NF_ERROR('init_fixed42',err,bi,bj,
      & myThid)
 
               IF (err.NE.NF_NOERR) THEN
@@ -719,7 +725,7 @@ CBOP
 ! Obtain existing NetCDF file id
                     err = NF_OPEN( fnameequinc(1:JL), NF_WRITE,
      &                    ncidFWD(num_file,bi,bj) )
-                    CALL BELLI_COST_NF_ERROR('init_fixed43',err,bi,bj,
+                    CALL BELLI_NF_ERROR('init_fixed43',err,bi,bj,
      &                myThid)
                   ENDIF
 
@@ -736,7 +742,7 @@ CBOP
 ! Obtain existing AD NetCDF file id
                     err = NF_OPEN( adfnameequinc(1:JL), NF_WRITE,
      &                    ncidAD(num_file,bi,bj) )
-                    CALL BELLI_COST_NF_ERROR('init_fixed44',err,bi,bj,
+                    CALL BELLI_NF_ERROR('init_fixed44',err,bi,bj,
      &                myThid)
                   ENDIF
 
@@ -754,7 +760,7 @@ CBOP
 ! Obtain existing TL NetCDF file id
                     err = NF_OPEN( tlfnameequinc(1:JL), NF_WRITE,
      &                    ncidTL(num_file,bi,bj) )
-                    CALL BELLI_COST_NF_ERROR('init_fixed45',err,bi,bj,
+                    CALL BELLI_NF_ERROR('init_fixed45',err,bi,bj,
      &                myThid)
                   ENDIF
 # endif /* ALLOW_TANGENTLINEAR_RUN */

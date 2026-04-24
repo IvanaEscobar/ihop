@@ -3,10 +3,10 @@
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
-C !ROUTINE: BELLI_COST_NF_ERROR
+C !ROUTINE: BELLI_NF_ERROR
 
 C !INTERFACE:
-      SUBROUTINE BELLI_COST_NF_ERROR( message, STATUS, bi, bj, myThid )
+      SUBROUTINE BELLI_NF_ERROR( message, STATUS, bi, bj, myThid )
 
 C     !DESCRIPTION:
 C     Print NetCDF error message
@@ -45,10 +45,10 @@ CEOP
         IL = ILNBLNK(message)
         IF ( IL .GT. 0 ) THEN
           WRITE(msgBuf,'(2A,2I3,1X,A)')
-     &      'NF: BELLI_COST_', message(1:IL),
+     &      'NF: BELLI_', message(1:IL),
      &      bi, bj, NF_STRERROR(STATUS)
         ELSE
-          WRITE(msgBuf,'(A,2I3,1X,A)') 'NF: BELLI_COST_',
+          WRITE(msgBuf,'(A,2I3,1X,A)') 'NF: BELLI_',
      &      bi, bj, NF_STRERROR(STATUS)
         ENDIF
         CALL PRINT_MESSAGE( msgBuf, standardMessageUnit,
@@ -130,7 +130,7 @@ C Forward equivalent (.equi) file
                   WRITE(msgBuf,'(A,2I8)')
      &              'NC_CLOSE: NF_CLOSE fwd unit',
      &              ncidFWD(numFile,bi,bj), myprocid
-                  CALL BELLI_COST_NF_ERROR( msgBuf, STATUS,
+                  CALL BELLI_NF_ERROR( msgBuf, STATUS,
      &                 bi, bj, myThid )
 # ifdef ALLOW_ADJOINT_RUN
 C Adjoint equivalent (.equi) file
@@ -138,7 +138,7 @@ C Adjoint equivalent (.equi) file
                   WRITE(msgBuf,'(A,I3,I8)')
      &              'NC_CLOSE: NF_CLOSE adj unit',
      &              numFile, ncidAD(numFile,bi,bj)
-                  CALL BELLI_COST_NF_ERROR( msgBuf, STATUS,
+                  CALL BELLI_NF_ERROR( msgBuf, STATUS,
      &                 bi, bj, myThid )
 # endif
 # ifdef ALLOW_TANGENTLINEAR_RUN
@@ -147,7 +147,7 @@ C Tangent linear equivalent (.equi) file
                   WRITE(msgBuf,'(A,I3,I8)')
      &              'NC_CLOSE: NF_CLOSE tlm unit',
      &              numFile, ncidTL(numFile,bi,bj)
-                  CALL BELLI_COST_NF_ERROR( msgBuf, STATUS,
+                  CALL BELLI_NF_ERROR( msgBuf, STATUS,
      &                 bi, bj, myThid )
 # endif
                 ENDIF !(IL.NE.0)
@@ -176,7 +176,7 @@ C Data file
               WRITE(msgBuf,'(A,I3,I8)')
      &          'NC_CLOSE: NF_CLOSE data unit',
      &          numFile, ncidData(numFile)
-              CALL BELLI_COST_NF_ERROR( msgBuf, STATUS,
+              CALL BELLI_NF_ERROR( msgBuf, STATUS,
      &             1, 1, myThid )
 
 C Forward equivalent (.equi) file
@@ -184,7 +184,7 @@ C Forward equivalent (.equi) file
               WRITE(msgBuf,'(A,2I8)')
      &          'NC_CLOSE: NF_CLOSE ncidGLOB ',
      &          ncidGLOB(numFile), myprocid
-              CALL BELLI_COST_NF_ERROR( msgBuf, STATUS,
+              CALL BELLI_NF_ERROR( msgBuf, STATUS,
      &             1, 1, myThid )
 # ifdef ALLOW_ADJOINT_RUN
 C Adjoint equivalent (.equi) file
@@ -192,7 +192,7 @@ C Adjoint equivalent (.equi) file
               WRITE(msgBuf,'(A,I3,I8)')
      &          'NC_CLOSE: NF_CLOSE adj unit',
      &          numFile, ncidADGLOB(numFile)
-              CALL BELLI_COST_NF_ERROR( msgBuf, STATUS,
+              CALL BELLI_NF_ERROR( msgBuf, STATUS,
      &             1, 1, myThid )
 # endif
 # ifdef ALLOW_TANGENTLINEAR_RUN
@@ -201,7 +201,7 @@ C Tangent linear equivalent (.equi) file
               WRITE(msgBuf,'(A,I3,I8)')
      &          'NC_CLOSE: NF_CLOSE tlm unit',
      &          numFile, ncidTLGLOB(numFile)
-              CALL BELLI_COST_NF_ERROR( msgBuf, STATUS,
+              CALL BELLI_NF_ERROR( msgBuf, STATUS,
      &             1, 1, myThid )
 # endif
             ENDIF !(IL.NE.0)

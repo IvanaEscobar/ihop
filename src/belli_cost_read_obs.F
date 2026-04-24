@@ -58,9 +58,9 @@ CEOP
      &     (irec.GT.belli_maxind_buff) .OR.
      &     (belli_curfile_buff.NE.fNb) ) THEN
         err = NF_INQ_DIMID( ncidData(fNb), 'iOBS', varId1 )
-        CALL BELLI_COST_NF_ERROR('read_obs 1',err,1,1,myThid)
+        CALL BELLI_NF_ERROR('read_obs 1',err,1,1,myThid)
         err = NF_INQ_DIMLEN( ncidData(fNb), varId1, tmpObsNo )
-        CALL BELLI_COST_NF_ERROR('read_obs 2',err,1,1,myThid)
+        CALL BELLI_NF_ERROR('read_obs 2',err,1,1,myThid)
 
         IF (belli_curfile_buff.NE.fNb) THEN
 C No asumption on whether a forward or a backward loop is calling
@@ -95,17 +95,17 @@ C Implies that a forward loop is calling
 
         err = NF_INQ_VARID( ncidData(fNb), belli_nameval,
      &        varId1 )
-        CALL BELLI_COST_NF_ERROR('read_obs 3',err,1,1,myThid)
+        CALL BELLI_NF_ERROR('read_obs 3',err,1,1,myThid)
         err = NF_GET_VARA_DOUBLE(ncidData(fNb), varId1,
      &        vec_start, vec_count, vec_tmp1 )
-        CALL BELLI_COST_NF_ERROR('read_obs 4',err,1,1,myThid)
+        CALL BELLI_NF_ERROR('read_obs 4',err,1,1,myThid)
 
         err = NF_INQ_VARID( ncidData(fNb), belli_nameuncert,
      &        varId1 )
-        CALL BELLI_COST_NF_ERROR('read_obs 5',err,1,1,myThid)
+        CALL BELLI_NF_ERROR('read_obs 5',err,1,1,myThid)
         err = NF_GET_VARA_DOUBLE(ncidData(fNb), varId1,
      &        vec_start, vec_count, vec_tmp2 )
-        CALL BELLI_COST_NF_ERROR('read_obs 6',err,1,1,myThid)
+        CALL BELLI_NF_ERROR('read_obs 6',err,1,1,myThid)
 
         IF (err.NE.NF_NOERR) THEN
           WRITE(errorMessageUnit,'(A)')
