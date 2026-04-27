@@ -49,7 +49,7 @@ C     !LOCAL VARIABLES:
 #if (defined ALLOW_BELLI) && (defined ALLOW_COST)
 C tmpObsNo :: number of obs in the file
       CHARACTER*(MAX_LEN_MBUF) msgBuf
-      INTEGER v1, err, varId1, tmpbObsNo
+      INTEGER v1, err, varId1, tmpObsNo
       INTEGER vec_start, vec_count
       _RL     vec_tmp1(1000), vec_tmp2(1000)
 CEOP
@@ -65,7 +65,7 @@ CEOP
         IF (belli_curfile_buff.NE.fNb) THEN
 C No asumption on whether a forward or a backward loop is calling
           belli_minind_buff = MAX(1,irec-500+1)
-          belli_maxind_buff = MIN(tmpbObsNo,irec+500)
+          belli_maxind_buff = MIN(tmpObsNo,irec+500)
 
         ELSEIF (irec.LT.belli_minind_buff) THEN
 C Implies that a backward loop is calling
@@ -75,7 +75,7 @@ C Implies that a backward loop is calling
         ELSE
 C Implies that a forward loop is calling
           belli_minind_buff = irec
-          belli_maxind_buff = MIN(tmpbObsNo,irec+999)
+          belli_maxind_buff = MIN(tmpObsNo,irec+999)
 
        ENDIF !IF (belli_curfile_buff.NE.fNb)
 
@@ -84,7 +84,7 @@ C Implies that a forward loop is calling
           WRITE(msgBuf,'(A,5I9)')
      &      'buffer readobsfile ',
      &      belli_minind_buff, belli_maxind_buff,
-     &      irec, bObsNo(fNb), tmpbObsNo
+     &      irec, belliObsNo(fNb), tmpObsNo
           CALL PRINT_MESSAGE( msgBuf,
      &      standardmessageunit, SQUEEZE_RIGHT, myThid )
         ENDIF
@@ -113,8 +113,8 @@ C Implies that a forward loop is calling
         ENDIF
 
         DO v1 = 1, vec_count
-          ihop_data_buff(v1) = vec_tmp1(v1)
-          ihop_uncert_buff(v1) = vec_tmp2(v1)
+          belli_data_buff(v1) = vec_tmp1(v1)
+          belli_uncert_buff(v1) = vec_tmp2(v1)
         ENDDO
 
         belli_curfile_buff = fNb
@@ -122,10 +122,10 @@ C Implies that a forward loop is calling
 
 C Get vec_loc from the buffer
       IF (vNb.LT.0) THEN
-        vec_loc = ihop_uncert_buff(irec-belli_minind_buff+1)
+        vec_loc = belli_uncert_buff(irec-belli_minind_buff+1)
 
       ELSE
-        vec_loc = ihop_data_buff(irec-belli_minind_buff+1)
+        vec_loc = belli_data_buff(irec-belli_minind_buff+1)
 
       ENDIF
 

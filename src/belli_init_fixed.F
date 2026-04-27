@@ -53,7 +53,7 @@ C Only do I/O if in the main thread
 C Read NetCDF input: setting the acoustic domain
       IL  = ILNBLNK( BELLI_interpfile )
       IF (IL.NE.0) THEN
-          WRITE(b_file,'(2A)') ihop_interpfile(1:IL),'.nc'
+          WRITE(b_file,'(2A)') BELLI_interpfile(1:IL),'.nc'
       ELSE
           b_file = BELLI_interpfile
       END IF

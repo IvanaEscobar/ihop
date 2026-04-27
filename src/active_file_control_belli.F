@@ -264,7 +264,7 @@ C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
      &          vec_start, vec_count, active_var )
           CALL BELLI_COST_NF_ERROR('act_file_c 7',err,bi,bj,myThid)
 
-          err = NF_INQ_VARID( fid, 'bObs_ind_glob_tiled', varId2 )
+          err = NF_INQ_VARID( fid, 'belliObs_ind_glob_tiled', varId2 )
           CALL BELLI_COST_NF_ERROR('act_file_c 8',err,bi,bj,myThid)
           err = NF_PUT_VAR1_INT( fid, varId2, vec_start, irecglob )
           CALL BELLI_COST_NF_ERROR('act_file_c 9',err,bi,bj,myThid)

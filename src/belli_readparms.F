@@ -93,9 +93,9 @@ C     iUnit  :: Work variable for IO unit number
 
 #ifdef ALLOW_COST
       NAMELIST /BELLI_COST_NML/
-     &      ihopdoncoutput,
-     &      bObs_Dir,
-     &      bObs_Files,
+     &      belliDoDcOutput,
+     &      belliObs_Dir,
+     &      belliObs_Files,
      &      mult_belli
 #endif
 CEOP
@@ -299,9 +299,9 @@ C     Check paramters of BELLI_PARM03
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 C--   Default values for BELLI_COST_NML
       bellidoncoutput = .true.
-      bObs_Dir    = ' '
+      belliObs_Dir    = ' '
       DO num_file = 1, NFILESMAX_BELLI
-       bObs_Files(num_file)     = ' '
+       belliObs_Files(num_file)     = ' '
        mult_belli(num_file)         = 1. _d 0
       ENDDO
 
@@ -315,12 +315,12 @@ C     Read parameters from open data file: BELLI_COST_NML
 
 C     Check paramters of BELLI_COST_NML
       DO num_file=1,NFILESMAX_BELLI
-       IF ( bObs_Files(num_file).NE.' ' ) THEN
-        IL = ILNBLNK( bObs_Files(num_file) )
-        fname = bObs_Files(num_file)(1:IL)//'.nc'
+       IF ( belliObs_Files(num_file).NE.' ' ) THEN
+        IL = ILNBLNK( belliObs_Files(num_file) )
+        fname = belliObs_Files(num_file)(1:IL)//'.nc'
         INQUIRE( FILE=fname, EXIST=exst )
         IF ( .NOT.exst ) THEN
-         WRITE(msgBuf,'(2A)') 'S/R BELLI_READPARMS: "bObs_Files " ',
+         WRITE(msgBuf,'(2A)') 'S/R BELLI_READPARMS: "belliObs_Files " ',
      &    'Provide observations file name for belli package'
          CALL PRINT_ERROR( msgBuf, myThid )
          STOP 'ABNORMAL END: S/R BELLI_READPARMS'

@@ -339,9 +339,9 @@ CONTAINS
   CHARACTER*(MAX_LEN_MBUF) :: msgBuf
 !EOP
 
-  Grid%Type = IHOP_TopOpt( 1:1 )
-  BC        = IHOP_TopOpt( 2:2 )
-  AttenUnit = IHOP_TopOpt( 3:4 )
+  Grid%Type = BELLI_TopOpt( 1:1 )
+  BC        = BELLI_TopOpt( 2:2 )
+  AttenUnit = BELLI_TopOpt( 3:4 )
   Grid%AttenUnit = AttenUnit
 
   ! In adjoint mode we do not write output besides on the first run
@@ -383,7 +383,7 @@ CONTAINS
     STOP 'ABNORMAL END: S/R ReadTopOpt'
   END SELECT
 
-  SELECT CASE ( IHOP_TopOpt( 5:5 ) )
+  SELECT CASE ( BELLI_TopOpt( 5:5 ) )
   CASE ( '~', '*' )
   CASE ( '-', '_', ' ' )
   CASE DEFAULT
@@ -395,7 +395,7 @@ CONTAINS
     STOP 'ABNORMAL END: S/R ReadTopOpt'
   END SELECT
 
-  SELECT CASE ( IHOP_TopOpt( 6:6 ) )
+  SELECT CASE ( BELLI_TopOpt( 6:6 ) )
   CASE ( 'I' )
   CASE ( ' ' )
   CASE DEFAULT
@@ -474,7 +474,7 @@ CONTAINS
     zTemp    = HS%Depth
     alphaR   = BELLI_bcsound
     betaR    = BELLI_bcsoundshear
-    rhoR     = ihop_brho
+    rhoR     = BELLI_brho
     alphaI   = BELLI_bcsoundI
     betaI    = BELLI_bcsoundshearI
 

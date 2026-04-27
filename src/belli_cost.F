@@ -141,7 +141,7 @@ C     &       ig.GE.20 .AND. ig.LE.25 ) THEN
 CC         IF (jg.GE.25 .AND. jg.LE.45 .AND. 
 CC     &       ig.GE.10 .AND. ig.LE.30 ) THEN
 C           objf_b_tloc(bi,bj) = objf_b_tloc(bi,bj)
-C     &      + ihop_ssp(i,j,k,bi,bj)*ihop_ssp(i,j,k,bi,bj)
+C     &      + belli_ssp(i,j,k,bi,bj)*belli_ssp(i,j,k,bi,bj)
 C         ENDIF
 C
 C        ENDDO !DO i
@@ -194,7 +194,7 @@ C       CALL GLOBAL_SUM_TILE_RL( objf_b_tloc,objf_b_gloc,myThid )
 C File maintenance
         DO bj = 1, nSy
           DO bi = 1, nSx
-            IF ( (bObsNo_tiled(num_file,bi,bj).GT.0) .AND.
+            IF ( (belliObsNo_tiled(num_file,bi,bj).GT.0) .AND.
      &           (belliDoNcOutput) ) THEN
 C Sync tiled file so data is not lost in buffer
               err = NF_SYNC( ncidFWD(num_file,bi,bj) )
@@ -213,7 +213,7 @@ C Sync tiled file so data is not lost in buffer
           DO bi = 1, nSx
 C Open tiled files and read to buffer
             DO iObs = 1, NOBSMAX_BELLI
-              IF (iObs.LE.bObsNo_tiled(num_file,bi,bj)) THEN
+              IF (iObs.LE.belliObsNo_tiled(num_file,bi,bj)) THEN
                 belli_modvaltmp = zeroRL
 C IESCO25: dummy +/- of belli_ssp to get TAF TLM to work
                 myssp = belli_ssp(1,1,1,bi,bj)
@@ -228,13 +228,13 @@ C IESCO25: dummy +/- of belli_ssp to get TAF TLM to work
 
 C Save tiled model equi from buffer, see PROFILES_READVECTOR
 C Combine all threads to global
-                irec = bObs_ind_glob_tiled(num_file,iObs,bi,bj)
+                irec = belliObs_ind_glob_tiled(num_file,iObs,bi,bj)
 C IESCO25: ANOTHER dummy +/- of belli_ssp to get TAF TLM to work
                 bObs_buff(irec)=bObs_buff(irec)+belli_modvaltmp
      &            + myssp
                 bObs_buff(irec)=bObs_buff(irec)
      &            - myssp
-              ENDIF !IF (iObs.LE.bbObsNo_tiled(num_file,bi,bj))
+              ENDIF !IF (iObs.LE.bbelliObsNo_tiled(num_file,bi,bj))
             ENDDO !DO iObs
 
           ENDDO !DO bj
@@ -261,7 +261,7 @@ C Loop over global obs
 CC TAF active var init
 C            belli_globaldummy(num_file) = 0
 C
-            IF (iObs.LE.bObsNo(num_file)) THEN
+            IF (iObs.LE.belliObsNo(num_file)) THEN
               belli_modval = zeroRL
 C ESCO Future dev: add time and space averaging here ... see pkg/obsfit
 
@@ -274,7 +274,7 @@ C Write to global netcdf file
      I             iObs, optimcycle, myThid,
      I             belli_globaldummy(num_file) )
 
-            ENDIF !IF (iObs.LE.bObsNo(num_file))
+            ENDIF !IF (iObs.LE.belliObsNo(num_file))
 
           ENDDO !DO iObs
 
@@ -289,7 +289,7 @@ C Sync global obs
      &         'BELLI_COST: NF_SYNC ncidGLOB',err,0,0,myThid )
 
           DO iObs = 1, NOBSMAX_BELLI
-            IF (iObs.LE.bObsNo(num_file)) THEN
+            IF (iObs.LE.belliObsNo(num_file)) THEN
               belli_modval = zeroRL
               b_data   = zeroRL
               b_uncert = zeroRL
@@ -308,12 +308,12 @@ C Set uncertainty to one
 #else /* TEST_BELLI_COST_INLOOP */
 C Read observation and uncertainty
               CALL BELLI_COST_READ_OBS(
-     I             num_file,  1, ihopObs_ind_glob(num_file,iObs),
+     I             num_file,  1, belliObs_ind_glob(num_file,iObs),
      O             b_data,
      I             myThid )
 
               CALL BELLI_COST_READ_OBS(
-     I             num_file, -1, ihopObs_ind_glob(num_file,iObs),
+     I             num_file, -1, belliObs_ind_glob(num_file,iObs),
      O             b_uncert,
      I             myThid )
 #endif /* TEST_BELLI_COST_INLOOP */
@@ -324,7 +324,7 @@ C Calc misfit or QoI
               IF (b_uncert.GT.zeroRL) THEN
                 b_weight = 1. _d 0 / (b_uncert*b_uncert)
 
-                objf_ihop(num_file) = objf_ihop(num_file) +
+                objf_belli(num_file) = objf_belli(num_file) +
      &                                b_weight
      &                                *(belli_modval-b_data)
 #ifndef TEST_BELLI_COST_INLOOP
@@ -341,7 +341,7 @@ C write(unit=standardmessageunit,fmt='(a,1x,E30.17,1x,a,i0)') 'ESCOBAR dJ_TL(t)=
 
               ENDIF
 
-            ENDIF !IF (iObs.LE.bObsNo(num_file))
+            ENDIF !IF (iObs.LE.belliObsNo(num_file))
           ENDDO !DO iObs
 
         ENDIF !IF (myProcId.EQ.0)
@@ -355,9 +355,9 @@ C write(unit=standardmessageunit,fmt='(a,1x,E30.17,1x,a,i0)') 'ESCOBAR dJ_TL(t)=
 # ifdef ALLOW_COST
 C Print cost function values
       DO num_file = 1, NFILESMAX_BELLI
-        objf_b_glo = objf_ihop(num_file)
+        objf_b_glo = objf_belli(num_file)
 
-        num_b_glo = num_ihop(num_file)
+        num_b_glo = num_belli(num_file)
 
         WRITE(msgBuf,'(A,I2,A,2D12.5)')
      &    ' belli_cost(', num_file, ' )= ',

@@ -88,10 +88,10 @@ CEOP
         DO bi = 1, nSx
           DO num_file = 1, NFILESMAX_BELLI
             DO nObs = 1, NOBSMAX_BELLI
-              IF ( nObs.LE.ObsNo_tiled(num_file,bi,bj) ) THEN
-                IF ( (ihopObs_time(num_file,nObs,bi,bj).GE.
+              IF ( nObs.LE.belliObsNo_tiled(num_file,bi,bj) ) THEN
+                IF ( (belliObs_time(num_file,nObs,bi,bj).GE.
      &                myTime) .AND.
-     &               (bObs_time(num_file,nObs,bi,bj).LT.
+     &               (belliObs_time(num_file,nObs,bi,bj).LT.
      &                (myTime+deltaTclock)) ) THEN
 #  ifdef ALLOW_AUTODIFF_TAMC
 !!$TAF STORE belli_modVal  = comlev1_bibj, key=itdkey, byte=isbyte
@@ -109,8 +109,8 @@ CEOP
      &                 nObs, optimcycle, bi, bj, myThid,
      &                 belli_dummy(num_file,bi,bj) )
 
-                ENDIF !IF ( (bObs_time
-              ENDIF !IF (bbObsNo_tiled(num_file,bi,bj).NE.0)
+                ENDIF !IF ( (belliObs_time
+              ENDIF !IF (belliObsNo_tiled(num_file,bi,bj).NE.0)
             ENDDO !DO nObs
           ENDDO !DO num_file
         ENDDO !DO bi

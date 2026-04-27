@@ -38,8 +38,8 @@ CEOP
 
 #ifdef ALLOW_BELLI
       DO t=1,nts
-        IF ( IHOP_iter(t).GE.0 ) THEN
-          IF ( IHOP_iter(t).EQ.myIter ) THEN
+        IF ( BELLI_iter(t).GE.0 ) THEN
+          IF ( BELLI_iter(t).EQ.myIter ) THEN
             CALL BELLI_MAIN( myTime, myIter, myThid )
           ENDIF
         ENDIF

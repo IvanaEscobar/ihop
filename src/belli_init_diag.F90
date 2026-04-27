@@ -366,7 +366,7 @@ CONTAINS
   CHARACTER*(1) :: BC
 !EOP
 
-  BC = IHOP_TopOpt( 2:2 )
+  BC = BELLI_TopOpt( 2:2 )
 
   ! In adjoint mode we do not write output besides on the first run
   IF (BELLI_dumpfreq.LT.0) RETURN
@@ -460,7 +460,7 @@ CONTAINS
   CASE DEFAULT
   END SELECT
 
-  SELECT CASE ( IHOP_TopOpt( 5:5 ) )
+  SELECT CASE ( BELLI_TopOpt( 5:5 ) )
   CASE ( '~', '*' )
     WRITE(msgBuf,'(A)') '    Altimetry file selected'
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
@@ -468,7 +468,7 @@ CONTAINS
   CASE DEFAULT
   END SELECT
 
-  SELECT CASE ( IHOP_TopOpt( 6:6 ) )
+  SELECT CASE ( BELLI_TopOpt( 6:6 ) )
   CASE ( 'I' )
     WRITE(msgBuf,'(A)') '    Development options enabled'
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )

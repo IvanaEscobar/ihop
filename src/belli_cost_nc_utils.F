@@ -114,12 +114,12 @@ CEOP
             DO numFile = 1, NFILESMAX_BELLI
 
               IF (obsNo_tiled(numFile,bi,bj).GT.0) THEN
-                IL = ILNBLNK( ihopObs_Files(numFile) )
+                IL = ILNBLNK( belliObs_Files(numFile) )
 
                 IF (IL.NE.0) THEN
                   WRITE(msgBuf,'(A,A,5(1X,I8))')
      &              'S/R BELLI_COST_NC_CLOSE:',
-     &              ' Closing '//ihopObs_Files(numFile)(1:IL), numFile,
+     &              ' Closing '//belliObs_Files(numFile)(1:IL), numFile,
      &             ncidFWD(numFile,bi,bj),
      &             ncidAD(numFile,bi,bj), ncidTL(numFile,bi,bj)
                   CALL PRINT_MESSAGE( msgBuf, standardMessageUnit,
@@ -161,12 +161,12 @@ C Tangent linear equivalent (.equi) file
 ! Close global files
         DO numFile = 1, NFILESMAX_BELLI
           IF (myProcId.EQ.0) THEN 
-            IL = ILNBLNK( ihopObs_Files(numFile) )
+            IL = ILNBLNK( belliObs_Files(numFile) )
 
             IF (IL.NE.0) THEN
               WRITE(msgBuf,'(A,A,5(1X,I8))')
      &          'S/R BELLI_COST_NC_CLOSE:',
-     &          ' Closing '//ihopObs_Files(numFile)(1:IL), numFile,
+     &          ' Closing '//belliObs_Files(numFile)(1:IL), numFile,
      &         ncidData(numFile), ncidGLOB(numFile),
      &         ncidADGLOB(numFile), ncidTLGLOB(numFile)
               CALL PRINT_MESSAGE( msgBuf, standardMessageUnit,

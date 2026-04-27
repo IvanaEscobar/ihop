@@ -69,7 +69,7 @@ CEOP
      &     ncidAD(active_num_file,bi,bj),
      &     active_num_file,
      &     adactive_var, lAdInit, irec,
-     &     bObs_ind_glob_tiled(active_num_file,irec,bi,bj),
+     &     belliObs_ind_glob_tiled(active_num_file,irec,bi,bj),
      &     REVERSE_SIMULATION, myIter, bi, bj, myThid )
 
 #endif
@@ -131,7 +131,7 @@ CEOP
      &     ncidAD(active_num_file,bi,bj),
      &     active_num_file,
      &     adactive_var, irec,
-     &     bObs_ind_glob_tiled(active_num_file,irec,bi,bj),
+     &     belliObs_ind_glob_tiled(active_num_file,irec,bi,bj),
      &     REVERSE_SIMULATION, myIter, bi, bj, myThid )
 
 #endif
@@ -191,7 +191,7 @@ CEOP
      &     ncidADGLOB(active_num_file),
      &     active_num_file,
      &     adactive_var, lAdInit, irec,
-     &     bObs_ind_glob(active_num_file,irec),
+     &     belliObs_ind_glob(active_num_file,irec),
      &     REVERSE_SIMULATION, myIter, myThid )
 
 #endif
@@ -249,7 +249,7 @@ CEOP
      &     ncidADGLOB(active_num_file),
      &     active_num_file,
      &     adactive_var, irec,
-     &     bObs_ind_glob(active_num_file,irec),
+     &     belliObs_ind_glob(active_num_file,irec),
      &     REVERSE_SIMULATION, myIter, myThid )
 
 #endif

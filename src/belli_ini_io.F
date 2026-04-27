@@ -44,17 +44,17 @@ CEOP
 
       _BEGIN_MASTER( myThid )
 
-      IF (bObs_Dir.NE.' ') THEN
-        iL = ILNBLNK( bObs_Dir )
+      IF (belliObs_Dir.NE.' ') THEN
+        iL = ILNBLNK( belliObs_Dir )
 C Append "/", if necessary
-        IF (iL.LT.MAX_LEN_FNAM .AND. bObs_Dir(iL:iL).NE.'/') THEN
-          namBuf(1:iL) = bObs_Dir(1:iL)
-          WRITE(bObs_Dir(1:iL+1),'(2A)') namBuf(1:iL),'/'
+        IF (iL.LT.MAX_LEN_FNAM .AND. belliObs_Dir(iL:iL).NE.'/') THEN
+          namBuf(1:iL) = belliObs_Dir(1:iL)
+          WRITE(belliObs_Dir(1:iL+1),'(2A)') namBuf(1:iL),'/'
         ENDIF
 # ifdef HAVE_SYSTEM
 C Create directory
-        iL = ILNBLNK( bObs_Dir ) - 1
-        WRITE(namBuf,'(2A)') ' mkdir -p ', bObs_Dir(1:iL)
+        iL = ILNBLNK( belliObs_Dir ) - 1
+        WRITE(namBuf,'(2A)') ' mkdir -p ', belliObs_Dir(1:iL)
         pIL = 1 + ILNBLNK( namBuf )
         WRITE(standardMessageUnit,'(3A)')
      &    '==> SYSTEM CALL (from BELLI_INI_IO): >',namBuf(1:pIL),'<'

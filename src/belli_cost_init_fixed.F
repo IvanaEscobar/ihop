@@ -85,11 +85,11 @@ CBOP
       CALL PRINT_MESSAGE( msgBuf,
      &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
-      JL = ILNBLNK( bObs_Dir )
+      JL = ILNBLNK( belliObs_Dir )
       IF (JL.NE.0) THEN
-        WRITE(msgBuf,'(2A)') '  bObs_Dir ',bObs_Dir(1:JL)
+        WRITE(msgBuf,'(2A)') '  belliObs_Dir ',belliObs_Dir(1:JL)
       ELSE
-        WRITE(msgBuf,'(2A)') '  bObs_Dir ','./'
+        WRITE(msgBuf,'(2A)') '  belliObs_Dir ','./'
       ENDIF
       CALL PRINT_MESSAGE( msgBuf,
      &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
@@ -116,9 +116,9 @@ CBOP
         obsNo_hh = 0
 
         bObs_File=' '
-        IL = ILNBLNK( IHOPObs_Files(num_file) )
+        IL = ILNBLNK( belliObs_Files(num_file) )
         IF (IL.NE.0) THEN
-          WRITE(bObs_File,'(A)') IHOPObs_Files(num_file)(1:IL)
+          WRITE(bObs_File,'(A)') belliObs_Files(num_file)(1:IL)
           WRITE(msgBuf,'(A,I3,2A)') ''// CHAR(10) //
      &      '                    belli file #', num_file,
      &      ' is ', bObs_File(1:IL)
@@ -210,24 +210,24 @@ CBOP
 !       SET BELLI GLOBAL EQUIV NETCDF VARIABLES
 !===========================================================
 ! Variable names for model equivalent files
-          ihop_nameequi = 'mod_val'
-          ihop_namemask = 'mod_mask'
-          ihop_nameval  = 'belli_val'
-          ihop_nameuncert = 'belli_uncert'
+          belli_nameequi = 'mod_val'
+          belli_namemask = 'mod_mask'
+          belli_nameval  = 'belli_val'
+          belli_nameuncert = 'belli_uncert'
 
 !4 Create global file for belli model equivalent
           IF (myProcId.EQ.0) THEN
-            JL  = ILNBLNK( bObs_Dir )
+            JL  = ILNBLNK( belliObs_Dir )
 
-            WRITE(fnameequincglo,'(3A)') IHOPObs_Dir(1:JL),
+            WRITE(fnameequincglo,'(3A)') belliObs_Dir(1:JL),
      &        bObs_File(1:IL),'.equi.nc'
 
 # ifdef ALLOW_ADJOINT_RUN
-            WRITE(adfnameequincglo,'(4A)') IHOPObs_Dir(1:JL),'ad',
+            WRITE(adfnameequincglo,'(4A)') belliObs_Dir(1:JL),'ad',
      &        bObs_File(1:IL),'.equi.nc'
 # endif
 # ifdef ALLOW_TANGENTLINEAR_RUN
-            WRITE(tlfnameequincglo,'(4A)') IHOPObs_Dir(1:JL),'tl',
+            WRITE(tlfnameequincglo,'(4A)') belliObs_Dir(1:JL),'tl',
      &        bObs_File(1:IL),'.equi.nc'
 # endif
 
@@ -361,7 +361,7 @@ CBOP
 
 ! Default values
           DO nObs = 1, NOBSMAX_BELLI
-            ihopObs_ind_glob(num_file,nObs) = 0
+            belliObs_ind_glob(num_file,nObs) = 0
           ENDDO
           obsNo_valid = 0
 
@@ -422,7 +422,7 @@ CBOP
             IF (obsIsInRunTime.EQ.1) THEN
 ! If yes then store obs index position:
               obsNo_valid = obsNo_valid+1
-              bObs_ind_glob(num_file,obsNo_valid) = nObs
+              belliObs_ind_glob(num_file,obsNo_valid) = nObs
 
             ENDIF !IF (obsIsInRunTime.EQ.1)
 
@@ -464,12 +464,12 @@ CBOP
               obsNo_tiled(num_file,bi,bj) = obsNo(num_file)
 
               DO nObs = 1, NOBSMAX_BELLI
-                ihopObs_time(num_file,nObs,bi,bj) =     -999. _d 0
-                ihopObs_lon(num_file,nObs,bi,bj) =      -999. _d 0
-                ihopObs_lat(num_file,nObs,bi,bj) =      -999. _d 0
-                ihopObs_depth(num_file,nObs,bi,bj) =    -999. _d 0
-                ihopObs_uncert(num_file,nObs,bi,bj) =      1. _d 0
-                ihopObs_ind_glob_tiled(num_file,nObs,bi,bj) =    0
+                belliObs_time(num_file,nObs,bi,bj) =     -999. _d 0
+                belliObs_lon(num_file,nObs,bi,bj) =      -999. _d 0
+                belliObs_lat(num_file,nObs,bi,bj) =      -999. _d 0
+                belliObs_depth(num_file,nObs,bi,bj) =    -999. _d 0
+                belliObs_uncert(num_file,nObs,bi,bj) =      1. _d 0
+                belliObs_ind_glob_tiled(num_file,nObs,bi,bj) =    0
               ENDDO !DO nObs
 
 ! Read ALL info using respective varid and save to tmp, NO CHUNKS!
@@ -624,27 +624,27 @@ CBOP
 ! 'Reshape' observed datum to tiled structures
                   IF (obsInTile.EQ.1) THEN
                     obsNo_valid = obsNo_valid+1
-                    bObs_ind_glob_tiled(num_file,
+                    belliObs_ind_glob_tiled(num_file,
      &               obsNo_valid,bi,bj) = nObs
 
-                    ihopObs_time(num_file,obsNo_valid,bi,bj) =
+                    belliObs_time(num_file,obsNo_valid,bi,bj) =
      &               tmp_obs_time(nObs)
 
                     IF (weighObs.EQ.1) THEN
-                      ihopObs_uncert(num_file,obsNo_valid,bi,bj) =
+                      belliObs_uncert(num_file,obsNo_valid,bi,bj) =
      &                 tmp_uncert2(nObs)
                     ENDIF
 
-                    bObs_lon(num_file,obsNo_valid,bi,bj) = lon_cur
-                    bObs_lat(num_file,obsNo_valid,bi,bj) = lat_cur
-                    bObs_depth(num_file,obsNo_valid,bi,bj) =
+                    belliObs_lon(num_file,obsNo_valid,bi,bj) = lon_cur
+                    belliObs_lat(num_file,obsNo_valid,bi,bj) = lat_cur
+                    belliObs_depth(num_file,obsNo_valid,bi,bj) =
      &               depth_cur
 
-                    ihopObs_i_tiled(num_file,obsNo_valid,bi,bj) = 
+                    belliObs_i_tiled(num_file,obsNo_valid,bi,bj) = 
      &               obs_i
-                    ihopObs_j_tiled(num_file,obsNo_valid,bi,bj) =
+                    belliObs_j_tiled(num_file,obsNo_valid,bi,bj) =
      &               obs_j
-                    ihopObs_k_tiled(num_file,obsNo_valid,bi,bj) =
+                    belliObs_k_tiled(num_file,obsNo_valid,bi,bj) =
      &               obs_k1
 
                   ENDIF !IF (obsInTile.EQ.1) 3rd time
@@ -685,20 +685,20 @@ CBOP
                 iG=bi+(myXGlobalLo-1)/sNx
                 jG=bj+(myYGlobalLo-1)/sNy
 
-                JL = ILNBLNK( bObs_Dir )
+                JL = ILNBLNK( belliObs_Dir )
 ! ALWAYS Write to nc file
                 IF (belliDoNcOutput) THEN
                   WRITE(fnameequinc,'(3A,2(I3.3,A))')
-     &              IHOPObs_Dir(1:JL),bObs_File(1:IL),
+     &              belliObs_Dir(1:JL),bObs_File(1:IL),
      &              '.',iG,'.',jG,'.equi.nc'
 # ifdef ALLOW_ADJOINT_RUN
                   WRITE(adfnameequinc,'(4A,2(I3.3,A))')
-     &              IHOPObs_Dir(1:JL),'ad',bObs_File(1:IL),
+     &              belliObs_Dir(1:JL),'ad',bObs_File(1:IL),
      &              '.',iG,'.',jG,'.equi.nc'
 # endif
 # ifdef ALLOW_TANGENTLINEAR_RUN
                   WRITE(tlfnameequinc,'(4A,2(I3.3,A))')
-     &              IHOPObs_Dir(1:JL),'ad',bObs_File(1:IL),
+     &              belliObs_Dir(1:JL),'ad',bObs_File(1:IL),
      &              '.',iG,'.',jG,'.equi.nc'
 # endif
 
@@ -771,11 +771,11 @@ CBOP
               obsNo_tiled(num_file,bi,bj) = 0
 
               DO nObs = 1, NOBSMAX_BELLI
-                ihopObs_lon(num_file,nObs,bi,bj) =      -999. _d 0
-                ihopObs_lat(num_file,nObs,bi,bj) =      -999. _d 0
-                ihopObs_depth(num_file,nObs,bi,bj) =    -999. _d 0
-                ihopObs_uncert(num_file,nObs,bi,bj) =      1. _d 0
-                ihopObs_ind_glob_tiled(num_file,nObs,bi,bj) =    0
+                belliObs_lon(num_file,nObs,bi,bj) =      -999. _d 0
+                belliObs_lat(num_file,nObs,bi,bj) =      -999. _d 0
+                belliObs_depth(num_file,nObs,bi,bj) =    -999. _d 0
+                belliObs_uncert(num_file,nObs,bi,bj) =      1. _d 0
+                belliObs_ind_glob_tiled(num_file,nObs,bi,bj) =    0
               ENDDO
 
             ENDDO !DO bi
