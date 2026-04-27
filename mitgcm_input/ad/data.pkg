@@ -1,7 +1,8 @@
 # Packages (lines beginning "#" are comments)
  &PACKAGES
+ useBELLI=.true.,
+#
  useMNC=.false.,
- useIHOP=.true.,
  useDiagnostics=.true.,
  useCal=.true.,
 # AD packages
