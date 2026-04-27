@@ -113,7 +113,7 @@ CEOP
           DO bi = myBxLo(myThid), myBxHi(myThid)
             DO numFile = 1, NFILESMAX_BELLI
 
-              IF (obsNo_tiled(numFile,bi,bj).GT.0) THEN
+              IF (belliObsNo_tiled(numFile,bi,bj).GT.0) THEN
                 IL = ILNBLNK( belliObs_Files(numFile) )
 
                 IF (IL.NE.0) THEN
@@ -152,7 +152,7 @@ C Tangent linear equivalent (.equi) file
 # endif
                 ENDIF !(IL.NE.0)
 
-              ENDIF !(obsNo_tiled.GT.0)
+              ENDIF !(belliObsNo_tiled.GT.0)
 
             ENDDO !DO numFile
           ENDDO !DO bi 

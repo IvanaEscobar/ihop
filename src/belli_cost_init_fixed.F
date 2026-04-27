@@ -140,12 +140,12 @@ CBOP
           ncid = ncidData(num_file)
           err = NF_INQ_DIMID( ncid,'iOBS', dimId1 )
         CALL BELLI_COST_NF_ERROR('init_fixed 2',err,1,1,myThid)
-          err = NF_INQ_DIMLEN( ncid, dimId1, obsNo(num_file) )
+          err = NF_INQ_DIMLEN( ncid, dimId1, belliObsNo(num_file) )
         CALL BELLI_COST_NF_ERROR('init_fixed 3',err,1,1,myThid)
 
           WRITE(msgBuf,'(A,I9)')
      &      '  # of observations in file                   =',
-     &      obsNo(num_file)
+     &      belliObsNo(num_file)
           CALL PRINT_MESSAGE( msgBuf,
      &         standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
@@ -239,7 +239,7 @@ CBOP
      &              ncidGLOB(num_file) )
               CALL BELLI_COST_NF_ERROR('init_fixed12',err,1,1,myThid)
               err = NF_DEF_DIM( ncidGLOB(num_file),'iOBS',
-     &              obsNo(num_file), dimId1 )
+     &              belliObsNo(num_file), dimId1 )
               CALL BELLI_COST_NF_ERROR('init_fixed13',err,1,1,myThid)
 
               err = NF_DEF_VAR( ncidGLOB(num_file), 'mod_val',
@@ -284,7 +284,7 @@ CBOP
      &              ncidADGLOB(num_file) )
               CALL BELLI_COST_NF_ERROR('init_fixed22',err,1,1,myThid)
               err = NF_DEF_DIM( ncidADGLOB(num_file), 'iOBS',
-     &              obsNo(num_file), dimId1 )
+     &              belliObsNo(num_file), dimId1 )
               CALL BELLI_COST_NF_ERROR('init_fixed23',err,1,1,myThid)
 
               err = NF_DEF_VAR( ncidADGLOB(num_file), 'mod_val',
@@ -322,7 +322,7 @@ CBOP
      &              ncidTLGLOB(num_file) )
               CALL BELLI_COST_NF_ERROR('init_fixed30',err,1,1,myThid)
               err = NF_DEF_DIM( ncidTLGLOB(num_file), 'iOBS',
-     &              obsNo(num_file), dimId1 )
+     &              belliObsNo(num_file), dimId1 )
               CALL BELLI_COST_NF_ERROR('init_fixed31',err,1,1,myThid)
 
               err = NF_DEF_VAR( ncidTLGLOB(num_file), 'mod_val',
@@ -367,10 +367,10 @@ CBOP
 
 ! Read time
           err = NF_GET_VARA_DOUBLE( ncid, varId1a, 
-     &          1, obsNo(num_file), tmpyymmdd )
+     &          1, belliObsNo(num_file), tmpyymmdd )
           CALL BELLI_COST_NF_ERROR('init_fixed38',err,1,1,myThid)
           err = NF_GET_VARA_DOUBLE(ncid,varId1b,
-     &          1, obsNo(num_file), tmphhmmss )
+     &          1, belliObsNo(num_file), tmphhmmss )
           CALL BELLI_COST_NF_ERROR('init_fixed39',err,1,1,myThid)
 
           IF ( err.NE.NF_NOERR ) THEN
@@ -381,7 +381,7 @@ CBOP
           ENDIF
 
 ! Loop through number of observations, in obsfit this is a 'chunk'
-          DO nObs = 1, obsNo(num_file)
+          DO nObs = 1, belliObsNo(num_file)
 !AV If obs starts before model run, will be ignored even if 
 !AV it ends after model starts - ok for now
             IF (( (tmpyymmdd(nObs).GT.yymmddMin).OR.
@@ -431,7 +431,7 @@ CBOP
             tmp_obs_time(nObs) = diffsecs
 
 ! Check that maximum size was not reached:
-            IF (obsNo(num_file).GT.NOBSMAX_BELLI) THEN
+            IF (belliObsNo(num_file).GT.NOBSMAX_BELLI) THEN
               WRITE(msgBuf,'(3A)')
      &          'BELLI_COST_INIT_FIXED: file ', bObs_File(1:IL),
      &          '.nc was not read properly: increase NOBSMAX_BELLI.'
@@ -443,7 +443,7 @@ CBOP
           ENDDO !DO nObs
 
 ! Calibrate number of VALID obs datum
-          obsNo(num_file) = obsNo_valid
+          belliObsNo(num_file) = obsNo_valid
 
 ! Output belli cost init info
           WRITE(msgBuf,'(A,I9)')
@@ -452,7 +452,8 @@ CBOP
      &         standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
           WRITE(msgBuf,'(A,I9)')
-     &      '  # of belli obs within time period  =', obsNo(num_file)
+     &      '  # of belli obs within time period  =', 
+     &      belliObsNo(num_file)
           CALL PRINT_MESSAGE( msgBuf,
      &         standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
@@ -461,7 +462,7 @@ CBOP
           DO bj = 1, nSy
             DO bi = 1, nSx
               obsNo_valid = 0
-              obsNo_tiled(num_file,bi,bj) = obsNo(num_file)
+              belliObsNo_tiled(num_file,bi,bj) = belliObsNo(num_file)
 
               DO nObs = 1, NOBSMAX_BELLI
                 belliObs_time(num_file,nObs,bi,bj) =     -999. _d 0
@@ -475,18 +476,19 @@ CBOP
 ! Read ALL info using respective varid and save to tmp, NO CHUNKS!
               IF (weighObs.EQ.1) THEN
                 err = NF_GET_VARA_DOUBLE( ncid, varId3,
-     &                1, obsNo_tiled(num_file,bi,bj), tmp_uncert2 )
-                CALL BELLI_COST_NF_ERROR('init_fixed40',err,bi,bj,myThid)
+     &                1, belliObsNo_tiled(num_file,bi,bj), tmp_uncert2 )
+                CALL BELLI_COST_NF_ERROR(
+     &            'init_fixed40',err,bi,bj,myThid)
               ENDIF
 
               err = NF_GET_VARA_DOUBLE( ncid, varId4a,
-     &              1, obsNo_tiled(num_file,bi,bj), tmp_lon2 )
+     &              1, belliObsNo_tiled(num_file,bi,bj), tmp_lon2 )
               CALL BELLI_COST_NF_ERROR('init_fixed40',err,bi,bj,myThid)
               err = NF_GET_VARA_DOUBLE( ncid, varId4b,
-     &              1, obsNo_tiled(num_file,bi,bj), tmp_lat2 )
+     &              1, belliObsNo_tiled(num_file,bi,bj), tmp_lat2 )
               CALL BELLI_COST_NF_ERROR('init_fixed41',err,bi,bj,myThid)
               err = NF_GET_VARA_DOUBLE( ncid, varId4c,
-     &              1, obsNo_tiled(num_file,bi,bj), tmp_depth2 )
+     &              1, belliObsNo_tiled(num_file,bi,bj), tmp_depth2 )
               CALL BELLI_COST_NF_ERROR('init_fixed42',err,bi,bj,myThid)
 
               IF (err.NE.NF_NOERR) THEN
@@ -498,7 +500,7 @@ CBOP
 
 ! Find obs datum in MITgcm spatial grid
 ! Loop through observations, NOTE: in obsfit this is a 'chunk'
-              DO nObs = 1, obsNo_tiled(num_file,bi,bj)
+              DO nObs = 1, belliObsNo_tiled(num_file,bi,bj)
                 obsInTile = 1
 
 ! In a valid time?
@@ -663,7 +665,7 @@ CBOP
               ENDDO !DO nObs
 
 ! Number of valid pkg/belli obs in the file
-              obsNo_tiled(num_file,bi,bj) = obsNo_valid
+              belliObsNo_tiled(num_file,bi,bj) = obsNo_valid
 
               WRITE(msgBuf,'(2(A,I4))')
      &          '  current tile is bi,bj                      =',
@@ -673,14 +675,14 @@ CBOP
 
               WRITE(msgBuf,'(A,I9)')
      &          '  # of belli obs within tile and time period  =',
-     &          obsNo_tiled(num_file,bi,bj)
+     &          belliObsNo_tiled(num_file,bi,bj)
               CALL PRINT_MESSAGE( msgBuf,
      &             standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
 !===========================================================
 ! Create files for model counterparts to pkg/belli obs
 !===========================================================
-              IF (obsNo_tiled(num_file,bi,bj).GT.0) THEN
+              IF (belliObsNo_tiled(num_file,bi,bj).GT.0) THEN
 ! Kludge until unstructered tiles
                 iG=bi+(myXGlobalLo-1)/sNx
                 jG=bj+(myYGlobalLo-1)/sNy
@@ -708,7 +710,7 @@ CBOP
                     CALL BELLI_COST_INIT_EQUI( num_file,
      &                   ncidData(num_file), fnameequinc(1:JL),
      &                   ncidFWD(num_file,bi,bj),
-     &                   obsNo_tiled(num_file,bi,bj),
+     &                   belliObsNo_tiled(num_file,bi,bj),
      &                   bi, bj, myThid )
 
                   ELSE
@@ -726,7 +728,7 @@ CBOP
                     CALL BELLI_COST_INIT_EQUI( num_file,
      &                   ncidData(num_file), adfnameequinc(1:JL), 
      &                   ncidAD(num_file,bi,bj),
-     &                   obsNo_tiled(num_file,bi,bj),
+     &                   belliObsNo_tiled(num_file,bi,bj),
      &                   bi, bj, myThid )
                   ELSE
 ! Obtain existing AD NetCDF file id
@@ -744,7 +746,7 @@ CBOP
                     CALL BELLI_COST_INIT_EQUI( num_file,
      &                   ncidData(num_file),tlfnameequinc(1:JL),
      &                   ncidTL(num_file,bi,bj),
-     &                   obsNo_tiled(num_file,bi,bj),
+     &                   belliObsNo_tiled(num_file,bi,bj),
      &                   bi, bj, myThid )
                   ELSE
 ! Obtain existing TL NetCDF file id
@@ -759,7 +761,7 @@ CBOP
 ! Write to binary files... UNSUPPORTED
                 ENDIF !IF (belliDoNcOutput)
 
-              ENDIF !IF (obsNo_tiled(num_file,bi,bj).GT.0)
+              ENDIF !IF (belliObsNo_tiled(num_file,bi,bj).GT.0)
 
             ENDDO !DO bi
           ENDDO !DO bj
@@ -767,8 +769,8 @@ CBOP
         ELSE !IF (IL.NE.0)
           DO bj = 1, nSy
             DO bi = 1, nSx
-              obsNo(num_file) = 0
-              obsNo_tiled(num_file,bi,bj) = 0
+              belliObsNo(num_file) = 0
+              belliObsNo_tiled(num_file,bi,bj) = 0
 
               DO nObs = 1, NOBSMAX_BELLI
                 belliObs_lon(num_file,nObs,bi,bj) =      -999. _d 0

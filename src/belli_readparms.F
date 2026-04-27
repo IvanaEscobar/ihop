@@ -93,7 +93,7 @@ C     iUnit  :: Work variable for IO unit number
 
 #ifdef ALLOW_COST
       NAMELIST /BELLI_COST_NML/
-     &      belliDoDcOutput,
+     &      belliDoNcOutput,
      &      belliObs_Dir,
      &      belliObs_Files,
      &      mult_belli
