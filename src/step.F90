@@ -1,4 +1,4 @@
-#include "IHOP_OPTIONS.h"
+#include "BELLI_OPTIONS.h"
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 !BOP
 !MODULE: step
@@ -10,7 +10,7 @@ MODULE step
 !   This module implements 2D step along a single ray.
 
 ! !USES:
-  USE ihop_mod, only: Beam, ray2DPt
+  USE belli_mod, only: Beam, ray2DPt
   USE ssp_mod,  only: Grid, evalSSP, iSegz, iSegr
   IMPLICIT NONE
 ! == Global variables ==
@@ -18,8 +18,8 @@ MODULE step
 #include "GRID.h"
 #include "EEPARAMS.h"
 #include "PARAMS.h"
-#include "IHOP_SIZE.h"
-#include "IHOP.h"
+#include "BELLI_SIZE.h"
+#include "BELLI.h"
 #ifdef ALLOW_CTRL
 # include "CTRL_FIELDS.h"
 #endif
@@ -199,7 +199,7 @@ CONTAINS
 !   environment leaves water, or on the top or bottom boundary.
 
 ! !USES:
-  USE ihop_mod, only: iSmallStepCtr
+  USE belli_mod, only: iSmallStepCtr
   USE bdry_mod, only: rTopSeg, rBotSeg
 
 ! !INPUT PARAMETERS:

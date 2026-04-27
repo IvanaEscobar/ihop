@@ -1,11 +1,11 @@
-#include "IHOP_OPTIONS.h"
+#include "BELLI_OPTIONS.h"
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
-C !ROUTINE: IHOP_DIAGNOSTICS_INIT
+C !ROUTINE: BELLI_DIAGNOSTICS_INIT
 
 C !INTERFACE:
-      SUBROUTINE IHOP_DIAGNOSTICS_INIT( myThid )
+      SUBROUTINE BELLI_DIAGNOSTICS_INIT( myThid )
 
 C     !DESCRIPTION:
 C     Initialize list of all available diagnostics
@@ -35,17 +35,17 @@ C     diagTitle :: local string (80c): description of field in diag
       CHARACTER*(80) diagTitle
 CEOP
 
-#ifdef IHOP_3D_STATE
+#ifdef BELLI_3D_STATE
         diagName  = 'SVEL    '
-        diagTitle = 'Sound speed from pkg/ihop'
+        diagTitle = 'Sound speed from pkg/belli'
         diagUnits = 'm/s             '
         diagCode  = 'SMR     MR      '
         CALL DIAGNOSTICS_ADDTOLIST( diagNum,
      I          diagName, diagCode, diagUnits, diagTitle, 0, myThid )
-#endif /* IHOP_3D_STATE */
+#endif /* BELLI_3D_STATE */
 
         diagName  = 'SLD     '
-        diagTitle = 'Sonic layer depth (>0) from pkg/ihop'
+        diagTitle = 'Sonic layer depth (>0) from pkg/belli'
         diagUnits = 'm               '
         diagCode  = 'SM      M1      '
         CALL DIAGNOSTICS_ADDTOLIST( diagNum,

@@ -1,13 +1,13 @@
-#include "IHOP_OPTIONS.h"
+#include "BELLI_OPTIONS.h"
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
 C     !INTERFACE:
-      SUBROUTINE IHOP_DIAGNOSTICS_STATE(
+      SUBROUTINE BELLI_DIAGNOSTICS_STATE(
      I             myTime,myIter, myThid )
 
 C     !DESCRIPTION:
-C     Provide the information for iHOP diagnostics
+C     Provide the information for belli diagnostics
 
 C     !USES:
       IMPLICIT NONE
@@ -15,9 +15,9 @@ C     == Global variables ===
 #include "SIZE.h"
 #include "EEPARAMS.h"
 #include "PARAMS.h"
-#ifdef ALLOW_IHOP
-# include "IHOP_SIZE.h"
-# include "IHOP.h"
+#ifdef ALLOW_BELLI
+# include "BELLI_SIZE.h"
+# include "BELLI.h"
 #endif
 
 C     !INPUT PARAMETERS:
@@ -27,25 +27,25 @@ C     myThid   :: my Thread Id number
       _RL     myTime
       INTEGER myIter, myThid
 
-#ifdef ALLOW_IHOP
+#ifdef ALLOW_BELLI
 C     !LOCAL VARIABLES:
 CEOP
 
 #ifdef ALLOW_DIAGNOSTICS
       IF ( useDiagnostics ) THEN
 
-#ifdef IHOP_3D_STATE
+#ifdef BELLI_3D_STATE
 C sound speed [m/s]
        CALL DIAGNOSTICS_FILL( ihop_ssp,'SVEL    ',
      &                        0, Nr, 0, 1, 1, myThid )
-#endif /* IHOP_3D_STATE */
+#endif /* BELLI_3D_STATE */
 C sonic layer depth [m]
        CALL DIAGNOSTICS_FILL( ihop_sld,'SLD     ',
      &                        0, 1, 1, 1, 1, myThid )
       ENDIF
 #endif /* ALLOW_DIAGNOSTICS */
 
-#endif /* ALLOW_IHOP */
+#endif /* ALLOW_BELLI */
 
       RETURN
       END

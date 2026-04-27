@@ -1,14 +1,14 @@
-#include "IHOP_OPTIONS.h"
+#include "BELLI_OPTIONS.h"
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
-C !ROUTINE: IHOP_INI_IO
+C !ROUTINE: BELLI_INI_IO
 
 C !INTERFACE:
-      SUBROUTINE IHOP_INI_IO( myThid )
+      SUBROUTINE BELLI_INI_IO( myThid )
 
 C     !DESCRIPTION:
-C     Create directory for ihop and ihop_cost output if set at runtime
+C     Create directory for belli and belli_cost output if set at runtime
 
 C     !USES:
       IMPLICIT NONE
@@ -17,10 +17,10 @@ C     == Global variables ===
 #include "EEPARAMS.h"
 #include "EESUPPORT.h"
 #include "PARAMS.h"
-#include "IHOP_SIZE.h"
-#include "IHOP.h"
+#include "BELLI_SIZE.h"
+#include "BELLI.h"
 #ifdef ALLOW_COST
-# include "IHOP_COST.h"
+# include "BELLI_COST.h"
 #endif
 
 
@@ -34,7 +34,7 @@ C     !FUNCTIONS:
       EXTERNAL ILNBLNK
 
 C     !LOCAL VARIABLES:
-#if (defined ALLOW_IHOP) && (defined ALLOW_COST)
+#if (defined ALLOW_BELLI) && (defined ALLOW_COST)
 # ifndef HAVE_SYSTEM
       CHARACTER*(MAX_LEN_MBUF) msgBuf
 # endif
@@ -57,10 +57,10 @@ C Create directory
         WRITE(namBuf,'(2A)') ' mkdir -p ', IHOPObs_Dir(1:iL)
         pIL = 1 + ILNBLNK( namBuf )
         WRITE(standardMessageUnit,'(3A)')
-     &    '==> SYSTEM CALL (from IHOP_INI_IO): >',namBuf(1:pIL),'<'
+     &    '==> SYSTEM CALL (from BELLI_INI_IO): >',namBuf(1:pIL),'<'
         CALL SYSTEM( namBuf(1:pIL) )
 # else
-        WRITE(msgBuf,'(2A)') '** WARNING ** IHOP_INI_IO: cannot ',
+        WRITE(msgBuf,'(2A)') '** WARNING ** BELLI_INI_IO: cannot ',
      &    'call mkdir -> please create IHOPObs_Dir manually'
         CALL PRINT_MESSAGE( msgBuf, errorMessageUnit,
      &                      SQUEEZE_RIGHT, myThid )
@@ -69,7 +69,7 @@ C Create directory
 
       _END_MASTER( myThid )
 
-#endif /* ALLOW_IHOP && ALLOW_COST */
+#endif /* ALLOW_BELLI && ALLOW_COST */
 
       RETURN
       END

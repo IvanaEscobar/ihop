@@ -1,4 +1,4 @@
-#include "IHOP_OPTIONS.h"
+#include "BELLI_OPTIONS.h"
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 !BOP
 !MODULE: subTab_mod
@@ -7,7 +7,7 @@ MODULE subTab_mod
 !   Ivana Escobar
 ! </CONTACT>
 ! !DESCRIPTION:
-!   Module for organizing ihop output
+!   Module for organizing belli output
 
 ! If x(3) = -999.9 then subtabulation is performed
 ! i.e., a vector is generated with Nx points in [ x(1), x(2) ]

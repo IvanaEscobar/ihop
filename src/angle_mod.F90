@@ -1,4 +1,4 @@
-#include "IHOP_OPTIONS.h"
+#include "BELLI_OPTIONS.h"
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 !BOP
 !MODULE: angle_mod
@@ -18,24 +18,24 @@ MODULE angle_mod
 #include "SIZE.h"
 #include "EEPARAMS.h"
 #include "PARAMS.h"
-#include "IHOP_SIZE.h"
-#include "IHOP.h"
+#include "BELLI_SIZE.h"
+#include "BELLI.h"
 
 ! !SCOPE: 
   PRIVATE
 !=======================================================================
   PUBLIC ReadRayElevationAngles, Angles, ialpha
-#ifdef IHOP_THREED
+#ifdef BELLI_THREED
   PUBLIC ReadRayBearingAngles
-#endif /* IHOP_THREED */
+#endif /* BELLI_THREED */
 !=======================================================================
 
 ! == Module variables ==
   INTEGER, PARAMETER :: Number_to_Echo = 10
   INTEGER            :: ialpha
-#ifdef IHOP_THREED
+#ifdef BELLI_THREED
   INTEGER            :: ibeta
-#endif /* IHOP_THREED */
+#endif /* BELLI_THREED */
   INTEGER, PRIVATE   :: iAllocStat
   REAL (KIND=_RL90), PRIVATE, PARAMETER :: c0 = 1500.0
 
@@ -45,11 +45,11 @@ MODULE angle_mod
     REAL (KIND=_RL90)              :: Dalpha
     REAL (KIND=_RL90), ALLOCATABLE :: aDeg( : )
     REAL (KIND=_RL90), ALLOCATABLE :: aRad( : )
-#ifdef IHOP_THREED
+#ifdef BELLI_THREED
     INTEGER                        :: Nbeta = 1, iSingle_beta = 0
     REAL (KIND=_RL90)              :: Dbeta
     REAL (KIND=_RL90), ALLOCATABLE :: beta( : )
-#endif /* IHOP_THREED */
+#endif /* BELLI_THREED */
   END TYPE AnglesStructure
 
   TYPE( AnglesStructure ) :: Angles
@@ -113,11 +113,11 @@ CONTAINS
   ALLOCATE( Angles%arad( MAX( 3, Angles%Nalpha ) ), &
             Angles%adeg( MAX( 3, Angles%Nalpha ) ), STAT=iAllocStat )
   IF ( iAllocStat.NE.0 ) THEN
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
     WRITE(msgBuf,'(2A)') 'ANGLEMOD ReadRayElevationAngles:', &
       'Insufficient memory to store beam angles'
     CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
     STOP 'ABNORMAL END: S/R ReadRayElevationAngles'
   ENDIF ! IF ( iAllocStat.NE.0 )
 
@@ -139,22 +139,22 @@ CONTAINS
 
   IF ( Angles%Nalpha.GT.1 &
      .AND. Angles%adeg(Angles%Nalpha).EQ.Angles%adeg(1) ) THEN
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
     WRITE(msgBuf,'(2A)') 'ANGLEMOD ReadRayElevationAngles:', &
       'First and last beam take-off angle are identical'
     CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
     STOP 'ABNORMAL END: S/R ReadRayElevationAngles'
   ENDIF ! IF ( Angles%Nalpha>1 &
 
   IF ( TopOpt( 6:6 ).EQ.'I' ) THEN
     IF ( Angles%iSingle_alpha.LT.1 &
        .OR. Angles%iSingle_alpha.GT.Angles%Nalpha ) THEN
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
       WRITE(msgBuf,'(2A)') 'ANGLEMOD ReadRayElevationAngles:', &
       'Selected beam, iSingl not in [ 1, Angles%Nalpha ]'
       CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
       STOP 'ABNORMAL END: S/R ReadRayElevationAngles'
     ENDIF
   ENDIF ! IF ( TopOpt( 6:6 ).EQ.'I' )
@@ -168,11 +168,11 @@ CONTAINS
                     / ( Angles%Nalpha - 1 )  ! angular spacing between beams
   ELSE
     Angles%Dalpha = 0.0
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
     WRITE(msgBuf,'(2A)') 'ANGLEMOD ReadRayElevationAngles: ', &
       'Required: Nalpha>1, else add iSingle_alpha'
     CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
     STOP 'ABNORMAL END: S/R ReadRayElevationAngles'
   ENDIF ! IF ( Angles%Nalpha.GT.1 )
 
@@ -180,7 +180,7 @@ CONTAINS
   END !SUBROUTINE ReadRayElevationAngles
 
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
-#ifdef IHOP_THREED
+#ifdef BELLI_THREED
 !BOP
 ! !ROUTINE: ReadRayBearingAngles
 ! !INTERFACE:
@@ -189,7 +189,7 @@ CONTAINS
 ! Read ray bearing angles from the environment file.
 
 ! !USES:
-  USE ihop_mod,     only: PRTFile
+  USE belli_mod,     only: PRTFile
 
 ! !INPUT PARAMETERS:
 ! TopOpt  :: Options for ray trace
@@ -204,11 +204,11 @@ CONTAINS
   CHARACTER*(MAX_LEN_MBUF) :: msgBuf
 !EOP
 
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
   WRITE(msgBuf,'(2A)') 'ANGLEMOD ReadBearingElevationAngles:', &
     '3D rays not supported in ihop'
   CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
   STOP 'ABNORMAL END: S/R ReadBearingElevationAngles'
 
   IF ( TopOpt( 6:6 ).EQ.'I' ) THEN
@@ -229,11 +229,11 @@ CONTAINS
 
   ALLOCATE( Angles%beta( MAX( 3, Angles%Nbeta ) ), STAT=iAllocStat )
   IF ( iAllocStat.NE.0 ) THEN
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
     WRITE(msgBuf,'(2A)') 'ANGLEMOD ReadBearingElevationAngles:', &
       'Insufficient memory to store beam angles'
     CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
     STOP 'ABNORMAL END: S/R ReadBearingElevationAngles'
   ENDIF ! IF ( iAllocStat.NE.0 )
 
@@ -250,7 +250,7 @@ CONTAINS
 
   ! Nx2D CASE: beams must lie on rcvr radials--- replace beta with theta
   IF ( RunType( 6:6 ).EQ.'2' .AND. RunType( 1:1 ).NE.'R' ) THEN
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
     WRITE(msgBuf,'(A)')
     ! In adjoint mode we do not write output besides on the first run
     IF (IHOP_dumpfreq.GE.0) &
@@ -260,17 +260,17 @@ CONTAINS
     ! In adjoint mode we do not write output besides on the first run
     IF (IHOP_dumpfreq.GE.0) &
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
     DEALLOCATE( Angles%beta )
 
     Angles%Nbeta = Pos%nTheta
     ALLOCATE( Angles%beta( MAX( 3, Angles%Nbeta ) ), STAT=iAllocStat )
     IF ( iAllocStat.NE.0 ) THEN
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
       WRITE(msgBuf,'(2A)') 'ANGLEMOD ReadBearingElevationAngles:', &
         'Insufficient memory to store beam angles'
       CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
       STOP 'ABNORMAL END: S/R ReadBearingElevationAngles'
     ENDIF ! IF ( iAllocStat.NE.0 )
 
@@ -278,7 +278,7 @@ CONTAINS
     Angles%beta( 1 : Angles%Nbeta ) = Pos%theta( 1 : Pos%nTheta )
   ENDIF ! IF ( RunType( 6:6 ).EQ.'2' .AND. RunType( 1:1 ).NE.'R' )
 
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
   ! In adjoint mode we do not write output besides on the first run
   IF (IHOP_dumpfreq.GE.0) THEN
     WRITE(msgBuf,'(A)')
@@ -307,26 +307,26 @@ CONTAINS
     ENDIF
 
   ENDIF ! IF (IHOP_dumpfreq.GE.0)
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
 
   IF ( Angles%Nbeta.GT.1 &
      .AND. Angles%beta( Angles%Nbeta ).EQ.Angles%beta(1) ) THEN
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
     WRITE(msgBuf,'(2A)') 'ANGLEMOD ReadBearingElevationAngles:', &
       'First and last beam take-off angle are identical'
     CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
     STOP 'ABNORMAL END: S/R ReadBearingElevationAngles'
   ENDIF ! IF ( Angles%Nbeta.GT.1 &
 
   IF ( TopOpt( 6:6 ).EQ.'I' ) THEN
     IF ( Angles%iSingle_beta.LT.1 &
        .OR. Angles%iSingle_beta.GT.Angles%Nbeta ) THEN
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
       WRITE(msgBuf,'(2A)') 'ANGLEMOD ReadBearingElevationAngles:', &
         'Selected beam, iSingle not in [ 1, Angles%Nbeta ]'
       CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
       STOP 'ABNORMAL END: S/R ReadBearingElevationAngles'
     ENDIF
   ENDIF ! IF ( TopOpt( 6:6 ).EQ.'I' )
@@ -340,6 +340,6 @@ CONTAINS
 
   RETURN
   END !SUBROUTINE ReadRayBearingAngles
-#endif /* IHOP_THREED */
+#endif /* BELLI_THREED */
 
 END !MODULE angle_mod

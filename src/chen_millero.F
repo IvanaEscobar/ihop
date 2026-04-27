@@ -43,7 +43,7 @@ C     myThid :: my thread ID
 C     !OUTPUT PARAMETERS:
 C     CHEN_MILLERO :: Speed of sound in seawater
 
-#ifdef ALLOW_IHOP
+#ifdef ALLOW_BELLI
 C     !FUNCTIONS:
       _RL SW_TEMP
       EXTERNAL SW_TEMP
@@ -115,7 +115,7 @@ C convert pressure to bar for Chen and Millero algorithm
       d    = 1.727 _d -3             - 7.9836 _d -6*pres
       
       CHEN_MILLERO  = cw + a*sal + b*sal**(3./2.) + d*sal**2
-#endif /* ALLOW_IHOP */
+#endif /* ALLOW_BELLI */
 
       RETURN
       END

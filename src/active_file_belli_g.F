@@ -1,25 +1,25 @@
-#include "IHOP_OPTIONS.h"
+#include "BELLI_OPTIONS.h"
 
 C   ==================================================================
-C   active_file_ihop_g.F: Routines that handle I/O of
+C   active_file_belli_g.F: Routines that handle I/O of
 C                         tiled and global active 
 C                         variables for adjoint/tangent
 C                         linear calculations, related to 
-C                         NetCDF iHOP cost data files
+C                         NetCDF belli cost data files
 C
 C   Routines:
-C   o g_active_read_ihop_tile  - Read a TL active 1D record from file
-C   o g_active_write_ihop_tile - Write a TL active 1D record to file
-C   o g_active_read_ihop_glob  - Read a TL active 1D record from file
-C   o g_active_write_ihop_glob - Write a TL active 1D record to file
+C   o g_active_read_belli_tile  - Read a TL active 1D record from file
+C   o g_active_write_belli_tile - Write a TL active 1D record to file
+C   o g_active_read_belli_glob  - Read a TL active 1D record from file
+C   o g_active_write_belli_glob - Write a TL active 1D record to file
 C   ==================================================================
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
-C !ROUTINE: G_ACTIVE_READ_IHOP_TILE
+C !ROUTINE: G_ACTIVE_READ_BELLI_TILE
 
 C !INTERFACE:
-      SUBROUTINE G_ACTIVE_READ_IHOP_TILE(
+      SUBROUTINE G_ACTIVE_READ_BELLI_TILE(
      I                              active_num_file,
      O                              active_var,
      I                              g_active_var,
@@ -32,8 +32,8 @@ C !INTERFACE:
      I                              dummy )
 
 C     !DESCRIPTION:
-C     Tangent linear of active_read_ihop_tile
-C     Read an active record and its TL from iHOP .equi tiled NetCDF or
+C     Tangent linear of active_read_belli_tile
+C     Read an active record and its TL from belli .equi tiled NetCDF or
 C     Binary files
 
 C     !USES:
@@ -41,10 +41,10 @@ C     !USES:
 C     == Global variables ===
 #include "EEPARAMS.h"
 #include "SIZE.h"
-#ifdef ALLOW_IHOP
-# include "IHOP_SIZE.h"
+#ifdef ALLOW_BELLI
+# include "BELLI_SIZE.h"
 # ifdef ALLOW_COST
-#  include "IHOP_COST.h"
+#  include "BELLI_COST.h"
 # endif
 #endif
 
@@ -68,20 +68,20 @@ C     active_var      :: active variable array
       _RL     active_var
 CEOP
 
-#if (defined ALLOW_IHOP) && (defined ALLOW_COST)
+#if (defined ALLOW_BELLI) && (defined ALLOW_COST)
 
-      CALL ACTIVE_READ_IHOP_TILE_RL(
+      CALL ACTIVE_READ_BELLI_TILE_RL(
      &     ncidFWD(active_num_file,bi,bj),
      &     active_num_file,
      &     active_var, lAdInit, irec,
-     &     ihopObs_ind_glob_tiled(active_num_file,irec,bi,bj),
+     &     bObs_ind_glob_tiled(active_num_file,irec,bi,bj),
      &     FORWARD_SIMULATION, myOptimIter, bi, bj, myThid )
 
-      CALL ACTIVE_READ_IHOP_TILE_RL(
+      CALL ACTIVE_READ_BELLI_TILE_RL(
      &     ncidTL(active_num_file,bi,bj),
      &     active_num_file,
      &     g_active_var, lAdInit, irec,
-     &     ihopObs_ind_glob_tiled(active_num_file,irec,bi,bj),
+     &     bObs_ind_glob_tiled(active_num_file,irec,bi,bj),
      &     TANGENT_SIMULATION, myOptimIter, bi, bj, myThid )
 #endif
 
@@ -90,10 +90,10 @@ CEOP
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
-C !ROUTINE: G_ACTIVE_WRITE_IHOP_TILE
+C !ROUTINE: G_ACTIVE_WRITE_BELLI_TILE
 
 C !INTERFACE:
-      SUBROUTINE G_ACTIVE_WRITE_IHOP_TILE(
+      SUBROUTINE G_ACTIVE_WRITE_BELLI_TILE(
      I                              active_num_file,
      I                              active_var,
      I                              g_active_var,
@@ -106,8 +106,8 @@ C !INTERFACE:
      O                              g_dummy )
 
 C     !DESCRIPTION:
-C     Tangent linear of active_write_ihop_tile
-C     Write an active record and its TL from iHOP .equi tiled NetCDF
+C     Tangent linear of active_write_belli_tile
+C     Write an active record and its TL from belli .equi tiled NetCDF
 C     or Binary files
 
 C     !USES:
@@ -115,10 +115,10 @@ C     !USES:
 C     == Global variables ===
 #include "EEPARAMS.h"
 #include "SIZE.h"
-#ifdef ALLOW_IHOP
-# include "IHOP_SIZE.h"
+#ifdef ALLOW_BELLI
+# include "BELLI_SIZE.h"
 # ifdef ALLOW_COST
-#  include "IHOP_COST.h"
+#  include "BELLI_COST.h"
 # endif
 #endif
 
@@ -140,20 +140,20 @@ C     !OUTPUT PARAMETERS:
       _RL     g_dummy
 CEOP
 
-#if (defined ALLOW_IHOP) && (defined ALLOW_COST)
+#if (defined ALLOW_BELLI) && (defined ALLOW_COST)
 
-      CALL ACTIVE_WRITE_IHOP_TILE_RL(
+      CALL ACTIVE_WRITE_BELLI_TILE_RL(
      &     ncidFWD(active_num_file,bi,bj),
      &     active_num_file,
      &     active_var, irec,
-     &     ihopObs_ind_glob_tiled(active_num_file,irec,bi,bj),
+     &     bObs_ind_glob_tiled(active_num_file,irec,bi,bj),
      &     FORWARD_SIMULATION, myOptimIter, bi, bj, myThid )
 
-      CALL ACTIVE_WRITE_IHOP_TILE_RL(
+      CALL ACTIVE_WRITE_BELLI_TILE_RL(
      &     ncidTL(active_num_file,bi,bj),
      &     active_num_file,
      &     g_active_var, irec, 
-     &     ihopObs_ind_glob_tiled(active_num_file,irec,bi,bj),
+     &     bObs_ind_glob_tiled(active_num_file,irec,bi,bj),
      &     TANGENT_SIMULATION, myOptimIter, bi, bj, myThid )
 
 #endif
@@ -163,10 +163,10 @@ CEOP
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
-C !ROUTINE: G_ACTIVE_READ_IHOP_GLOB
+C !ROUTINE: G_ACTIVE_READ_BELLI_GLOB
 
 C !INTERFACE:
-      SUBROUTINE G_ACTIVE_READ_IHOP_GLOB(
+      SUBROUTINE G_ACTIVE_READ_BELLI_GLOB(
      I                              active_num_file,
      O                              active_var,
      I                              g_active_var,
@@ -177,18 +177,18 @@ C !INTERFACE:
      I                              dummy )
 
 C     !DESCRIPTION:
-C     Tangent linear of active_read_ihop_glob
-C     Read an active record and its TL from iHOP .equi global NetCDF
+C     Tangent linear of active_read_belli_glob
+C     Read an active record and its TL from belli .equi global NetCDF
 
 C     !USES:
       IMPLICIT NONE
 C     == Global variables ===
 #include "EEPARAMS.h"
 #include "SIZE.h"
-#ifdef ALLOW_IHOP
-# include "IHOP_SIZE.h"
+#ifdef ALLOW_BELLI
+# include "BELLI_SIZE.h"
 # ifdef ALLOW_COST
-#  include "IHOP_COST.h"
+#  include "BELLI_COST.h"
 # endif
 #endif
 
@@ -212,20 +212,20 @@ C     !OUTPUT PARAMETERS:
       _RL     active_var
 CEOP
 
-#if (defined ALLOW_IHOP) && (defined ALLOW_COST)
+#if (defined ALLOW_BELLI) && (defined ALLOW_COST)
 
-      CALL ACTIVE_READ_IHOP_GLOB_RL(
+      CALL ACTIVE_READ_BELLI_GLOB_RL(
      &     ncidGLOB(active_num_file),
      &     active_num_file,
      &     active_var, lAdInit, irec, 
-     &     ihopObs_ind_glob(active_num_file,irec),
+     &     bObs_ind_glob(active_num_file,irec),
      &     FORWARD_SIMULATION, myOptimIter, myThid )
 
-      CALL ACTIVE_READ_IHOP_GLOB_RL(
+      CALL ACTIVE_READ_BELLI_GLOB_RL(
      &     ncidTLGLOB(active_num_file),
      &     active_num_file,
      &     g_active_var, lAdInit, irec, 
-     &     ihopObs_ind_glob(active_num_file,irec),
+     &     bObs_ind_glob(active_num_file,irec),
      &     TANGENT_SIMULATION, myOptimIter, myThid )
 
 #endif
@@ -235,10 +235,10 @@ CEOP
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
-C !ROUTINE: G_ACTIVE_WRITE_IHOP_GLOB
+C !ROUTINE: G_ACTIVE_WRITE_BELLI_GLOB
 
 C !INTERFACE:
-      SUBROUTINE G_ACTIVE_WRITE_IHOP_GLOB(
+      SUBROUTINE G_ACTIVE_WRITE_BELLI_GLOB(
      I                           active_num_file,
      I                           active_var,
      I                           g_active_var,
@@ -249,18 +249,18 @@ C !INTERFACE:
      O                           g_dummy )
 
 C     !DESCRIPTION:
-C     Tangent linear of active_write_ihop_glob
-C     Write an active record and its TL from iHOP .equi global NetCDF
+C     Tangent linear of active_write_belli_glob
+C     Write an active record and its TL from belli .equi global NetCDF
 
 C     !USES:
       IMPLICIT NONE
 C     == Global variables ===
 #include "EEPARAMS.h"
 #include "SIZE.h"
-#ifdef ALLOW_IHOP
-# include "IHOP_SIZE.h"
+#ifdef ALLOW_BELLI
+# include "BELLI_SIZE.h"
 # ifdef ALLOW_COST
-#  include "IHOP_COST.h"
+#  include "BELLI_COST.h"
 # endif
 #endif
 
@@ -282,20 +282,20 @@ C     !OUTPUT PARAMETERS:
       _RL     g_dummy
 CEOP
 
-#if (defined ALLOW_IHOP) && (defined ALLOW_COST)
+#if (defined ALLOW_BELLI) && (defined ALLOW_COST)
 
-      CALL ACTIVE_WRITE_IHOP_GLOB_RL(
+      CALL ACTIVE_WRITE_BELLI_GLOB_RL(
      &     ncidGLOB(active_num_file),
      &     active_num_file,
      &     active_var, irec, 
-     &     ihopObs_ind_glob(active_num_file,irec),
+     &     bObs_ind_glob(active_num_file,irec),
      &     FORWARD_SIMULATION, myOptimIter, myThid )
 
-      CALL ACTIVE_WRITE_IHOP_GLOB_RL(
+      CALL ACTIVE_WRITE_BELLI_GLOB_RL(
      &     ncidTLGLOB(active_num_file),
      &     active_num_file,
      &     g_active_var, irec, 
-     &     ihopObs_ind_glob(active_num_file,irec),
+     &     bObs_ind_glob(active_num_file,irec),
      &     TANGENT_SIMULATION, myOptimIter, myThid )
 
 #endif

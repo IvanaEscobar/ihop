@@ -1,13 +1,13 @@
 #include "PACKAGES_CONFIG.h"
 #include "CPP_OPTIONS.h"
-#include "IHOP_OPTIONS.h"
+#include "BELLI_OPTIONS.h"
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
-C !ROUTINE: IHOP_SOUND_SPEED
+C !ROUTINE: BELLI_SOUND_SPEED
 
 C !INTERFACE:
-      SUBROUTINE IHOP_SOUND_SPEED(
+      SUBROUTINE BELLI_SOUND_SPEED(
      I                       myThid )
 
 C     !DESCRIPTION: 
@@ -19,8 +19,8 @@ C       the model setup specific EOS.
 C     
 C     *==========================================================*
 C     | o Reference:
-C     | C. Chen and F. J. Millero, "Speed of sound in seawater at
-C     | high pressures,"
+C     | C. Chen and F. J. Millero, Speed of sound in seawater at
+C     | high pressures,
 C     | J. Acoust. Soc. Am. 672.5, 1129-1135 (1977).
 C     *==========================================================*
 
@@ -33,8 +33,8 @@ C     == Global variables ==
 #include "GRID.h"
 #include "DYNVARS.h"
 #include "EOS.h"
-#include "IHOP_SIZE.h"
-#include "IHOP.h"
+#include "BELLI_SIZE.h"
+#include "BELLI.h"
 
 C     !INPUT PARAMETERS:
 C     myThid :: Thread number for this instance of the routine.
@@ -42,7 +42,7 @@ C     myThid :: Thread number for this instance of the routine.
 C     !OUTPUT PARAMETERS: None
 
 C     !FUNCTIONS:
-#ifdef ALLOW_IHOP
+#ifdef ALLOW_BELLI
 
       _RL CHEN_MILLERO
       EXTERNAL CHEN_MILLERO
@@ -103,14 +103,14 @@ c     ENDIF
      &     .AND.DIAGNOSTICS_IS_ON( 'SLD     ', myThid) ) THEN
        DO bj=myByLo(myThid),myByHi(myThid)
         DO bi=myBxLo(myThid),myBxHi(myThid)
-         CALL IHOP_CALC_SLD(bi,bj,myThid)
+         CALL BELLI_CALC_SLD(bi,bj,myThid)
 
         ENDDO
        ENDDO
       ENDIF
 #endif /* ALLOW_DIAGNOSTICS */
 
-#endif /* ALLOW_IHOP */
+#endif /* ALLOW_BELLI */
 
       RETURN
       END

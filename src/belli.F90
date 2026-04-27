@@ -1,14 +1,14 @@
-#include "IHOP_OPTIONS.h"
+#include "BELLI_OPTIONS.h"
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 !BOP
-!MODULE: IHOP
-MODULE IHOP
+!MODULE: BELLI
+MODULE BELLI
 ! <CONTACT EMAIL="ivana@utexas.edu">
 !   Ivana Escobar
 ! </CONTACT>
 ! !DESCRIPTION:
-!   Written as a module to be used in ihop_*.F parts of the MITgcm package
-!   IHOP Beam tracing for ocean acoustics
+!   Written as a module to be used in belli_*.F parts of the MITgcm package
+!   belli Beam tracing for ocean acoustics
 !
 ! This program is free software: you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ MODULE IHOP
 ! Systems Center
 
 ! !USES:
-  USE ihop_mod, only: oneCMPLX, PRTFile, SHDFile, ARRFile, RAYFile, DELFile
+  USE belli_mod, only: oneCMPLX, PRTFile, SHDFile, ARRFile, RAYFile, DELFile
   IMPLICIT NONE
 ! == Global variables ==
 #include "SIZE.h"
@@ -39,8 +39,8 @@ MODULE IHOP
 # include "EESUPPORT.h"
 !#endif
 #include "PARAMS.h"
-#include "IHOP_SIZE.h"
-#include "IHOP.h"
+#include "BELLI_SIZE.h"
+#include "BELLI.h"
 #ifdef ALLOW_CTRL
 # include "CTRL_FIELDS.h"
 #endif
@@ -48,7 +48,7 @@ MODULE IHOP
 ! !SCOPE: 
   PRIVATE
 !=======================================================================
-  PUBLIC ihop_main
+  PUBLIC belli_main
 !=======================================================================
 
 ! == Module Variables == None
@@ -60,28 +60,28 @@ MODULE IHOP
 
 CONTAINS
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
-! S/R IHOP_MAIN
-! S/R IHOPCore
+! S/R BELLI_MAIN
+! S/R BELLICore
 ! S/R TraceRay2D
 ! S/R Distances2D
 ! S/R Reflect2D
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 !BOP
-! !ROUTINE: IHOP_MAIN
+! !ROUTINE: BELLI_MAIN
 ! !INTERFACE:
-  SUBROUTINE IHOP_MAIN ( myTime, myIter, myThid )
+  SUBROUTINE BELLI_MAIN ( myTime, myIter, myThid )
 ! !DESCRIPTION:
-!   Main routine for IHOP ray tracing
+!   Main routine for belli ray tracing
 
 ! !USES:
-  USE ihop_init_diag, only: initPRTFile, openOutputFiles, resetMemory
+  USE belli_init_diag, only: initPRTFile, openOutputFiles, resetMemory
   USE bdry_mod,       only: Bdry, writeBdry
   USE ssp_mod,        only: setSSP
   USE refCoef,        only: writeRefCoef 
   USE beampat,        only: writePat
-  USE ihop_mod,       only: Beam, ray2d
+  USE belli_mod,       only: Beam, ray2d
 #ifdef ALLOW_USE_MPI
-  USE ihop_mod,       only: BcastRay
+  USE belli_mod,       only: BcastRay
   USE arr_mod,        only: BcastArr
 #endif
 
@@ -133,10 +133,10 @@ CONTAINS
   ! set SSP%cMat from gcm SSP: REQUIRED
   CALL setSSP( myThid )
 
-  ! Run IHOP solver on a single processor
+  ! Run BELLI solver on a single processor
   IF ( myProcID.EQ.0 ) THEN
     CALL CPU_TIME( Tstart )
-    CALL IHOPCore( myThid )
+    CALL BELLICore( myThid )
     CALL CPU_TIME( Tstop  )
   ENDIF ! IF ( myProcID.EQ.0 )
 
@@ -150,7 +150,7 @@ CONTAINS
 #endif
 !  PRINT *, "ESCOBAR myproc, q(1) ", myprocid, Beam%nsteps, ray2d(Beam%nsteps)%q(1)
 
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
   IF ( myProcID.EQ.0 .AND. IHOP_dumpfreq.GE.0 ) THEN
     WRITE(msgBuf, '(A)' )
     CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
@@ -172,22 +172,22 @@ CONTAINS
       CLOSE( ARRFile )
       IF ( writeDelay ) CLOSE( DELFile )
     CASE DEFAULT
-      STOP "ABNORMAL END: S/R IHOP_MAIN"
+      STOP "ABNORMAL END: S/R BELLI_MAIN"
     END SELECT
 
   ENDIF ! IF ( myProcID.EQ.0 )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
 
   RETURN
-  END !SUBROUTINE IHOP_MAIN
+  END !SUBROUTINE BELLI_MAIN
 
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 !BOP
-! !ROUTINE: IHOPCore
+! !ROUTINE: BELLICore
 ! !INTERFACE:
-  SUBROUTINE IHOPCore( myThid )
+  SUBROUTINE BELLICore( myThid )
 ! !DESCRIPTION:
-!   IHOP core solver.
+!   BELLI core solver.
 
 ! !USES:
   USE ssp_mod,   only: evalSSP, iSegr  !RG
@@ -197,7 +197,7 @@ CONTAINS
   USE writeRay,  only: WriteRayOutput
   USE influence, only: calculateInfluence, ScalePressure
   USE beampat,   only: NSBPPts, SrcBmPat
-  USE ihop_mod,  only: Beam, ray2D, rad2deg, SrcDeclAngle, afreq, &
+  USE belli_mod,  only: Beam, ray2D, rad2deg, SrcDeclAngle, afreq, &
                        nRz_per_range, RAYFile, DELFile, nMax
 ! IESCO25: FOR TAF -RG
 !  USE influence,  only: ratio1, rB
@@ -241,7 +241,7 @@ CONTAINS
   REAL(KIND=_RL90) :: tmpRaytauR(Angles%nAlpha)
 !EOP
 
-!$TAF init IHOPCore2 = static, Pos%nSZ*Angles%nAlpha
+!$TAF init BELLICore2 = static, Pos%nSZ*Angles%nAlpha
 
   afreq = 2.0 * PI * IHOP_freq
 
@@ -262,7 +262,7 @@ CONTAINS
       DalphaOpt = SQRT( c / ( 6.0 * IHOP_freq * Pos%RR( Pos%nRR ) ) )
       nAlphaOpt = 2 + INT( ( Angles%arad( Angles%nAlpha ) &
                             - Angles%arad( 1 ) ) / DalphaOpt )
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
       IF ( Angles%nAlpha .LT. nAlphaOpt ) THEN
         WRITE( msgBuf, '(A,/,A,I10.4)' ) 'WARNING: Too few beams', &
           'nAlpha should be at least = ', nAlphaOpt
@@ -270,14 +270,14 @@ CONTAINS
         IF (IHOP_dumpfreq.GE.0) &
           CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
       ENDIF
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
     ENDIF ! IF ( Beam%RunType( 1:1 ).EQ.'C' )
     !!IESCO22: end BEAM stuff !!
 
     ! Trace beams: IESCO25 MPI distribute this loop!
     DeclinationAngle: DO iAlpha = 1, Angles%nAlpha
 
-!!$TAF store ray2d,arr,u = IHOPCore2
+!!$TAF store ray2d,arr,u = BELLICore2
 
       ! take-off declination angle in degrees
       SrcDeclAngle = Angles%adeg( iAlpha )
@@ -298,21 +298,21 @@ CONTAINS
         Amp0 = ( 1 - s ) * SrcBmPat( IBP, 2 ) + s * SrcBmPat( IBP+1, 2 )
         ! IEsco22: When a beam pattern isn't specified, Amp0 = 0
 
-!!$TAF store amp0,beam%runtype,beam%nsteps = IHOPCore2
+!!$TAF store amp0,beam%runtype,beam%nsteps = BELLICore2
 !! IESCO24: Store derived type by data type: Bdry from bdry_mod
 !! Scalar components:
-!!$TAF store bdry%top%hs%cp,bdry%top%hs%cs,bdry%top%hs%rho = IHOPCore2
+!!$TAF store bdry%top%hs%cp,bdry%top%hs%cs,bdry%top%hs%rho = BELLICore2
 !! Fixed arrays:
 !! Allocatable arrays:
 
         ! Lloyd mirror pattern for semi-coherent option
         IF ( Beam%RunType( 1:1 ).EQ.'S' ) &
-!$TAF store amp0,beam%runtype = IHOPCore2
+!$TAF store amp0,beam%runtype = BELLICore2
           Amp0 = Amp0 * SQRT( 2.0 ) * ABS( SIN( afreq / c * xs( 2 ) &
                   * SIN( Angles%arad( iAlpha ) ) ) )
         !!IESCO22: end BEAM stuff !!
 
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
           ! report progress in PRTFile (skipping some angles)
           IF ( MOD( iAlpha-1, MAX( Angles%nAlpha/50, 1 ) ).EQ.0 ) THEN
             WRITE(msgBuf,'(A,I7,F10.2)') 'Tracing ray ', &
@@ -324,7 +324,7 @@ CONTAINS
             ENDIF
 
           ENDIF
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
 
           ! Trace a ray, update ray2D structure
           CALL TraceRay2D( xs, Angles%arad( iAlpha ), Amp0, myThid )
@@ -381,7 +381,7 @@ CONTAINS
   ENDDO SourceDepth
 
   RETURN
-  END !SUBROUTINE IHOPCore
+  END !SUBROUTINE BELLICore
 
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 !BOP
@@ -393,12 +393,12 @@ CONTAINS
 !   angle alpha [rad]. Stores ray path parameters in ray2D
 
 ! !USES:
-  USE ihop_mod, only: nMax, istep
+  USE belli_mod, only: nMax, istep
   USE bdry_mod, only: GetTopSeg, GetBotSeg, atiType, btyType, Bdry, &
                       iSegTop, iSegBot, rTopSeg, rBotSeg, Top, Bot
   USE refCoef,  only: RTop, RBot, NBotPts, NTopPts
   USE step,     only: Step2D
-  USE ihop_mod, only: Beam, ray2D, iSmallStepCtr
+  USE belli_mod, only: Beam, ray2D, iSmallStepCtr
 ! IESCO25: FOR TAF -RG
   USE ssp_mod,  only: evalSSP, iSegr
 
@@ -505,13 +505,13 @@ CONTAINS
 ! Source MUST be within the domain
   IF ( DistBegTop.LE.0 .OR. DistBegBot.LE.0 ) THEN
     Beam%nSteps = 1
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
     WRITE(msgBuf,'(A)') &
       'WARNING: TraceRay2D: The source is outside the domain boundaries'
     ! In adjoint mode we do not write output besides on the first run
     IF (IHOP_dumpfreq.GE.0) &
       CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
   ELSE
     ! Trace the beam (Reflect2D increments the step index, iH)
     iH = 0
@@ -683,12 +683,12 @@ CONTAINS
           endRay=.FALSE.
         ENDIF
 
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
         IF ( endRay ) THEN
           IF ( IHOP_dumpfreq.GE.0 ) &
             CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
         ENDIF
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
 
         IF (INDEX(msgBuf, 'TraceRay2D').EQ.1) THEN
           Beam%nSteps = iH+1
@@ -764,7 +764,7 @@ CONTAINS
   USE ssp_mod,  only: evalSSP
   USE bdry_mod, only: HSInfo
   USE refCoef,  only: ReflectionCoef, InterpolateReflectionCoefficient
-  USE ihop_mod, only: Beam, ray2D, rad2deg, afreq
+  USE belli_mod, only: Beam, ray2D, rad2deg, afreq
 
 ! !INPUT PARAMETERS:
 ! iH     :: Step index of the ray to be reflected
@@ -820,7 +820,7 @@ CONTAINS
   COMPLEX (KIND=_RL90) :: ch, a, b, d, sb, delta, ddelta
   TYPE(ReflectionCoef) :: RInt
 
-!$TAF init reflect2d1 = 'IHOPreflectray2d'
+!$TAF init reflect2d1 = 'BELLIreflectray2d'
 
   ! Init default values for local derived type Rint
   Rint%R = 0.0
@@ -998,14 +998,14 @@ CONTAINS
     ENDIF ! IF ( ABS( Refl ).LT.1.0E-5 )
 
   CASE DEFAULT
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
     WRITE(msgBuf,'(2A)') 'HS%BC = ', HS%BC
     ! In adjoint mode we do not write output besides on the first run
     IF ( IHOP_dumpfreq.GE.0 ) &
       CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
-    WRITE(msgBuf,'(A)') 'IHOP Reflect2D: Unknown boundary condition type'
+    WRITE(msgBuf,'(A)') 'BELLI Reflect2D: Unknown boundary condition type'
     CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
       STOP 'ABNORMAL END: S/R Reflect2D'
   END SELECT !CASE ( Beam%Type( 3:3 ) )
 
@@ -1015,11 +1015,11 @@ CONTAINS
   ELSEIF ( BotTop.EQ.'BOT' ) THEN
     ray2D( iH+1 )%nBotBnc = ray2D( iH )%nBotBnc + 1
   ELSE
-#ifdef IHOP_WRITE_OUT
-    WRITE(msgBuf,'(2A)') 'IHOP Reflect2D: ', &
+#ifdef BELLI_WRITE_OUT
+    WRITE(msgBuf,'(2A)') 'BELLI Reflect2D: ', &
       'no reflection bounce, but in reflect2d somehow'
     CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
     STOP 'ABNORMAL END: S/R Reflect2D'
     
   ENDIF
@@ -1027,4 +1027,4 @@ CONTAINS
   RETURN
   END !SUBROUTINE Reflect2D
 
-END MODULE IHOP
+END MODULE BELLI

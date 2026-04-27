@@ -1,4 +1,4 @@
-#include "IHOP_OPTIONS.h"
+#include "BELLI_OPTIONS.h"
 #ifdef ALLOW_CTRL
 # include "CTRL_OPTIONS.h"
 #endif
@@ -8,16 +8,16 @@
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
-C !ROUTINE: IHOP_COST
+C !ROUTINE: BELLI_COST
 
 C !INTERFACE:
-      SUBROUTINE IHOP_COST( myTime, myIter, myThid )
+      SUBROUTINE BELLI_COST( myTime, myIter, myThid )
 
 C    !DESCRIPTION:
-C    Computes iHOP data misfit for cost function
+C    Computes belli data misfit for cost function
 
 C    !USES:
-#if (defined ALLOW_IHOP) && (defined TEST_IHOP_COST)
+#if (defined ALLOW_BELLI) && (defined TEST_BELLI_COST)
 C     For Grid%nR,nZ, SSP%cMat
       USE ssp_mod, only: Grid, SSP
 
@@ -32,12 +32,12 @@ C == Global variables ===
 #ifdef ALLOW_CAL
 # include "cal.h"
 #endif
-#ifdef ALLOW_IHOP
-# include "IHOP_SIZE.h"
-# include "IHOP.h"
+#ifdef ALLOW_BELLI
+# include "BELLI_SIZE.h"
+# include "BELLI.h"
 # include "netcdf.inc"
 # ifdef ALLOW_COST
-#  include "IHOP_COST.h"
+#  include "BELLI_COST.h"
 # endif
 #endif
 #ifdef ALLOW_CTRL
@@ -58,7 +58,7 @@ C     myThid :: my thread ID
 C     !OUTPUT PARAMETERS:
 CEOP
 
-#ifdef ALLOW_IHOP
+#ifdef ALLOW_BELLI
 C     !FUNCTIONS:
       INTEGER  ILNBLNK
       EXTERNAL ILNBLNK
@@ -67,30 +67,29 @@ C     !LOCAL VARIABLES:
 C     bi,bj :: Tile indices
       INTEGER bi,bj
       INTEGER num_file, iObs
-      _RL ihop_modval, ihop_modvaltmp, myssp
-      _RL ihop_data, ihop_uncert, ihop_weight
+      _RL belli_modval, belli_modvaltmp, myssp
+      _RL b_data, b_uncert, b_weight
 # ifndef ALLOW_CTRL
       INTEGER optimcycle
 # endif
       CHARACTER*(MAX_LEN_MBUF) msgBuf
-      CHARACTER*(MAX_LEN_FNAM) IHOPObs_File
       INTEGER IL, err
       INTEGER irec
       LOGICAL exst
-      _RL  objf_ihop_glo
-      _RL  num_ihop_glo
+      _RL  objf_b_glo
+      _RL  num_b_glo
       _RL  tmpgs
 # ifdef ALLOW_COST
-      _RL  ihopObs_buff(NOBSMAX_IHOP)
-      _RL  ihopObs_modval_glob(NOBSMAX_IHOP)
+      _RL  bObs_buff(NOBSMAX_BELLI)
+      _RL  bObs_modval_glob(NOBSMAX_BELLI)
 # endif
-# ifdef TEST_IHOP_COST
+# ifdef TEST_BELLI_COST
       INTEGER ig, jg
       INTEGER itlo,ithi
       INTEGER jtlo,jthi
       INTEGER i,j,k
-      _RL objf_ihop_tloc(nSx,nSy)
-      _RL objf_ihop_gloc
+      _RL objf_b_tloc(nSx,nSy)
+      _RL objf_b_gloc
 # endif
 
 # ifndef ALLOW_CTRL
@@ -100,32 +99,32 @@ C     bi,bj :: Tile indices
       WRITE(msgBuf,'(A)') ' '
       CALL PRINT_MESSAGE( msgBuf,
      &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
-      WRITE(msgBuf,'(A)') '== ihop_cost: begin =='
+      WRITE(msgBuf,'(A)') '== belli_cost: begin =='
       CALL PRINT_MESSAGE( msgBuf,
      &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
 C Initialise local storage
 #ifdef ALLOW_AUTODIFF_TAMC
-CADJ INIT tapelev_ihop_cost = COMMON, NFILESMAX_IHOP
+CADJ INIT tapelev_belli_cost = COMMON, NFILESMAX_BELLI
 #endif
 
 # ifdef ALLOW_COST
-#  ifdef TEST_IHOP_COST
+#  ifdef TEST_BELLI_COST
       jtlo = mybylo(mythid)
       jthi = mybyhi(mythid)
       itlo = mybxlo(mythid)
       ithi = mybxhi(mythid)
 
-      DO num_file=1,NFILESMAX_IHOP
+      DO num_file=1,NFILESMAX_BELLI
 C-- Reset local variables
        DO bj = jtlo,jthi
        DO bi = itlo,ithi
-         objf_ihop_tloc(bi,bj) = 0.
+         objf_b_tloc(bi,bj) = 0.
 
        ENDDO !DO bi
        ENDDO !DO bj
 
-       objf_ihop_gloc = 0.
+       objf_b_gloc = 0.
 
        DO bj = jtlo,jthi
        DO bi = itlo,ithi
@@ -141,7 +140,7 @@ C         IF (jg.GE.35 .AND. jg.LE.40 .AND.
 C     &       ig.GE.20 .AND. ig.LE.25 ) THEN
 CC         IF (jg.GE.25 .AND. jg.LE.45 .AND. 
 CC     &       ig.GE.10 .AND. ig.LE.30 ) THEN
-C           objf_ihop_tloc(bi,bj) = objf_ihop_tloc(bi,bj)
+C           objf_b_tloc(bi,bj) = objf_b_tloc(bi,bj)
 C     &      + ihop_ssp(i,j,k,bi,bj)*ihop_ssp(i,j,k,bi,bj)
 C         ENDIF
 C
@@ -151,7 +150,7 @@ C        ENDDO !DO k
 CC-- tile-wise summation: F77 Sound Speed END
 
         WRITE(msgBuf,'(A,E22.17)') 'QoI sum(C) tiled: ',
-     &                      objf_ihop_tloc(bi,bj)
+     &                      objf_b_tloc(bi,bj)
         CALL PRINT_MESSAGE( msgBuf,
      &      standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
@@ -163,7 +162,7 @@ C-- global summation: F90 Sound Speed
        DO j = 1,Grid%nR
        DO k = 1,Grid%nZ
 C- sum of the squares
-         objf_ihop_gloc = objf_ihop_gloc 
+         objf_b_gloc = objf_b_gloc 
      &    + SSP%cMat(k,j)*SSP%cMat(k,j)
 
        ENDDO !DO j
@@ -171,13 +170,13 @@ C- sum of the squares
 C-- global summation: F90 Sound Speed END
 
 Cc--   Do global summation, if using tile-wise summation
-C       IF ( objf_ihop_tloc(1,1).NE.0 ) THEN
-C         CALL GLOBAL_SUM_TILE_RL( objf_ihop_tloc,objf_ihop_gloc,myThid )
+C       IF ( objf_b_tloc(1,1).NE.0 ) THEN
+C         CALL GLOBAL_SUM_TILE_RL( objf_b_tloc,objf_b_gloc,myThid )
 C       ENDIF
-C       CALL GLOBAL_SUM_TILE_RL( objf_ihop_tloc,objf_ihop_gloc,myThid )
+C       CALL GLOBAL_SUM_TILE_RL( objf_b_tloc,objf_b_gloc,myThid )
 
        _BEGIN_MASTER( myThid )
-       objf_ihop(num_file) = objf_ihop(num_file) + objf_ihop_gloc
+       objf_ihop(num_file) = objf_ihop(num_file) + objf_b_gloc
        _END_MASTER( myThid )
 
        WRITE(msgBuf,'(A,E22.17)') 'QoI sum(C2) global: ', 
@@ -187,10 +186,10 @@ C       CALL GLOBAL_SUM_TILE_RL( objf_ihop_tloc,objf_ihop_gloc,myThid )
 
       ENDDO !DO num_file
 
-#  else /* TEST_IHOP_COST */
+#  else /* TEST_BELLI_COST */
       _BEGIN_MASTER( myThid )
 
-      DO num_file = 1, NFILESMAX_IHOP
+      DO num_file = 1, NFILESMAX_BELLI
 
 C File maintenance
         DO bj = 1, nSy
@@ -199,31 +198,31 @@ C File maintenance
      &           (ihopDoNcOutput) ) THEN
 C Sync tiled file so data is not lost in buffer
               err = NF_SYNC( ncidFWD(num_file,bi,bj) )
-              CALL IHOP_COST_NF_ERROR('ihop_cost 1',err,bi,bj,myThid)
+              CALL BELLI_COST_NF_ERROR('belli_cost 1',err,bi,bj,myThid)
 
             ENDIF
 
           ENDDO !DO bi
         ENDDO !DO bj
 
-        DO iObs = 1, NOBSMAX_IHOP
-          ihopObs_buff(iObs) = zeroRL
+        DO iObs = 1, NOBSMAX_BELLI
+          bObs_buff(iObs) = zeroRL
         ENDDO
 
         DO bj = 1, nSy
           DO bi = 1, nSx
 C Open tiled files and read to buffer
-            DO iObs = 1, NOBSMAX_IHOP
+            DO iObs = 1, NOBSMAX_BELLI
               IF (iObs.LE.ObsNo_tiled(num_file,bi,bj)) THEN
-                ihop_modvaltmp = zeroRL
-C IESCO25: dummy +/- of ihop_ssp to get TAF TLM to work
+                belli_modvaltmp = zeroRL
+C IESCO25: dummy +/- of belli_ssp to get TAF TLM to work
                 myssp = ihop_ssp(1,1,1,bi,bj)
-                ihop_modvaltmp = ihop_modvaltmp + myssp
-                ihop_modvaltmp = ihop_modvaltmp - myssp
+                belli_modvaltmp = belli_modvaltmp + myssp
+                belli_modvaltmp = belli_modvaltmp - myssp
 
-                CALL ACTIVE_READ_IHOP_TILE( 
+                CALL ACTIVE_READ_BELLI_TILE( 
      I              num_file,
-     O              ihop_modvaltmp, 
+     O              belli_modvaltmp, 
      I              iObs,.false., optimcycle, bi, bj, myThid,
      I              ihop_dummy(num_file,bi,bj) )
 
@@ -231,9 +230,9 @@ C Save tiled model equi from buffer, see PROFILES_READVECTOR
 C Combine all threads to global
                 irec = ihopObs_ind_glob_tiled(num_file,iObs,bi,bj)
 C IESCO25: ANOTHER dummy +/- of ihop_ssp to get TAF TLM to work
-                ihopObs_buff(irec)=ihopObs_buff(irec)+ihop_modvaltmp
+                bObs_buff(irec)=bObs_buff(irec)+belli_modvaltmp
      &            + myssp
-                ihopObs_buff(irec)=ihopObs_buff(irec)
+                bObs_buff(irec)=bObs_buff(irec)
      &            - myssp
               ENDIF !IF (iObs.LE.ObsNo_tiled(num_file,bi,bj))
             ENDDO !DO iObs
@@ -242,36 +241,36 @@ C IESCO25: ANOTHER dummy +/- of ihop_ssp to get TAF TLM to work
         ENDDO !DO bi
 
 C Combine MPI processes
-        DO iObs = 1, NOBSMAX_IHOP
-          tmpgs = ihopObs_buff(iObs)
+        DO iObs = 1, NOBSMAX_BELLI
+          tmpgs = bObs_buff(iObs)
           _GLOBAL_SUM_RL(tmpgs, myThid)
-          ihopObs_modval_glob(iObs) = tmpgs
+          bObs_modval_glob(iObs) = tmpgs
 
         ENDDO !DO iObs
 
 #ifdef ALLOW_AUTODIFF_TAMC
-C     Not really necessary, but cheap (for small NFILESMAX_IHOP)
+C     Not really necessary, but cheap (for small NFILESMAX_BELLI)
 C     and avoids some hidden recomputations.
-CADJ STORE ihopObs_modval_glob
-CADJ &     = tapelev_ihop_cost, key = num_file, kind = isbyte
+CADJ STORE bObs_modval_glob
+CADJ &     = tapelev_belli_cost, key = num_file, kind = isbyte
 #endif
 
         IF (myProcId.EQ.0) THEN
 C Loop over global obs
-          DO iObs = 1, NOBSMAX_IHOP
+          DO iObs = 1, NOBSMAX_BELLI
 CC TAF active var init
 C            ihop_globaldummy(num_file) = 0
 C
             IF (iObs.LE.ObsNo(num_file)) THEN
-              ihop_modval = zeroRL
+              belli_modval = zeroRL
 C ESCO Future dev: add time and space averaging here ... see pkg/obsfit
 
 C Extract model equi
-              ihop_modval = ihop_modval+ihopObs_modval_glob(iObs)
+              belli_modval = belli_modval+bObs_modval_glob(iObs)
 
 C Write to global netcdf file
-              CALL ACTIVE_WRITE_IHOP_GLOB( 
-     I             num_file, ihop_modval,
+              CALL ACTIVE_WRITE_BELLI_GLOB( 
+     I             num_file, belli_modval,
      I             iObs, optimcycle, myThid,
      I             ihop_globaldummy(num_file) )
 
@@ -281,56 +280,56 @@ C Write to global netcdf file
 
 #ifdef ALLOW_AUTODIFF_TAMC
 CADJ STORE ihop_globaldummy(num_file)
-CADJ &     = tapelev_ihop_cost, key = num_file, kind = isbyte
+CADJ &     = tapelev_belli_cost, key = num_file, kind = isbyte
 #endif
 
 C Sync global obs
           err = NF_SYNC( ncidGLOB(num_file) )
-          CALL IHOP_COST_NF_ERROR(
-     &         'IHOP_COST: NF_SYNC ncidGLOB',err,0,0,myThid )
+          CALL BELLI_COST_NF_ERROR(
+     &         'BELLI_COST: NF_SYNC ncidGLOB',err,0,0,myThid )
 
-          DO iObs = 1, NOBSMAX_IHOP
+          DO iObs = 1, NOBSMAX_BELLI
             IF (iObs.LE.ObsNo(num_file)) THEN
-              ihop_modval = zeroRL
-              ihop_data   = zeroRL
-              ihop_uncert = zeroRL
+              belli_modval = zeroRL
+              b_data   = zeroRL
+              b_uncert = zeroRL
 
 C Read model equivalent from global file
-              CALL ACTIVE_READ_IHOP_GLOB( 
+              CALL ACTIVE_READ_BELLI_GLOB( 
      I             num_file,
-     O             ihop_modval, 
+     O             belli_modval, 
      I             iObs,.false., optimcycle, myThid,
      I             ihop_globaldummy(num_file) )
 
-#ifdef TEST_IHOP_COST_INLOOP
+#ifdef TEST_BELLI_COST_INLOOP
 C Set uncertainty to one
-              ihop_uncert = 1. _d 0
+              b_uncert = 1. _d 0
 
-#else /* TEST_IHOP_COST_INLOOP */
+#else /* TEST_BELLI_COST_INLOOP */
 C Read observation and uncertainty
-              CALL IHOP_COST_READ_OBS(
+              CALL BELLI_COST_READ_OBS(
      I             num_file,  1, ihopObs_ind_glob(num_file,iObs),
-     O             ihop_data,
+     O             b_data,
      I             myThid )
 
-              CALL IHOP_COST_READ_OBS(
+              CALL BELLI_COST_READ_OBS(
      I             num_file, -1, ihopObs_ind_glob(num_file,iObs),
-     O             ihop_uncert,
+     O             b_uncert,
      I             myThid )
-#endif /* TEST_IHOP_COST_INLOOP */
+#endif /* TEST_BELLI_COST_INLOOP */
 
-              IF (ihop_data.EQ.-9999) ihop_uncert = zeroRL
+              IF (b_data.EQ.-9999) b_uncert = zeroRL
 
 C Calc misfit or QoI
-              IF (ihop_uncert.GT.zeroRL) THEN
-                ihop_weight = 1. _d 0 / (ihop_uncert*ihop_uncert)
+              IF (b_uncert.GT.zeroRL) THEN
+                b_weight = 1. _d 0 / (b_uncert*b_uncert)
 
                 objf_ihop(num_file) = objf_ihop(num_file) +
-     &                                ihop_weight
-     &                                *(ihop_modval-ihop_data)
-#ifndef TEST_IHOP_COST_INLOOP
-     &                                *(ihop_modval-ihop_data)
-#endif /* TEST_IHOP_COST_INLOOP */
+     &                                b_weight
+     &                                *(belli_modval-b_data)
+#ifndef TEST_BELLI_COST_INLOOP
+     &                                *(belli_modval-b_data)
+#endif /* TEST_BELLI_COST_INLOOP */
 
       write(unit=standardmessageunit,fmt='(A,1x,E30.17,1x,A,I0)') 
      &'ESCOBAR J=|m-d|^2(t)= ', objf_ihop(num_file), 
@@ -350,34 +349,34 @@ C write(unit=standardmessageunit,fmt='(a,1x,E30.17,1x,a,i0)') 'ESCOBAR dJ_TL(t)=
       ENDDO !DO num_file
 
       _END_MASTER( myThid )
-#  endif /* TEST_IHOP_COST */
+#  endif /* TEST_BELLI_COST */
 # endif /* ALLOW_COST */
 
 # ifdef ALLOW_COST
 C Print cost function values
-      DO num_file = 1, NFILESMAX_IHOP
-        objf_ihop_glo = objf_ihop(num_file)
+      DO num_file = 1, NFILESMAX_BELLI
+        objf_b_glo = objf_ihop(num_file)
 
-        num_ihop_glo = num_ihop(num_file)
+        num_b_glo = num_ihop(num_file)
 
         WRITE(msgBuf,'(A,I2,A,2D12.5)')
-     &    ' ihop_cost(', num_file, ' )= ',
-     &    objf_ihop_glo, num_ihop_glo
+     &    ' belli_cost(', num_file, ' )= ',
+     &    objf_b_glo, num_b_glo
 
-        IF (num_ihop_glo.GT.zeroRL) 
+        IF (num_b_glo.GT.zeroRL) 
      &    CALL PRINT_MESSAGE( msgBuf,
      &         standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
       ENDDO !DO num_file
 # endif /* ALLOW_COST */
 
-      WRITE(msgBuf,'(A)') '== ihop_cost: end   =='
+      WRITE(msgBuf,'(A)') '== belli_cost: end   =='
       CALL PRINT_MESSAGE( msgBuf,
      &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
       WRITE(msgBuf,'(A)') ' '
       CALL PRINT_MESSAGE( msgBuf,
      &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
-#endif /* ALLOW_IHOP */
+#endif /* ALLOW_BELLI */
 
       RETURN
       END

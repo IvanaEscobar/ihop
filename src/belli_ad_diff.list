@@ -17,7 +17,7 @@ beampat.f90
 ihop.f90
 ihop_init_diag.f90
 ihop_init_mod.f90
-ihop_mod.f90
+belli_mod.f90
 influence.f90
 monotonic_mod.f90
 pchip_mod.f90

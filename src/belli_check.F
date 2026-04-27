@@ -1,11 +1,11 @@
-#include "IHOP_OPTIONS.h"
+#include "BELLI_OPTIONS.h"
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
-C !ROUTINE: IHOP_CHECK
+C !ROUTINE: BELLI_CHECK
 
 C !INTERFACE:
-      SUBROUTINE IHOP_CHECK( myThid )
+      SUBROUTINE BELLI_CHECK( myThid )
 
 C     !DESCRIPTION:
 C     Check consistency with model configuration
@@ -16,15 +16,15 @@ C     !USES:
 #include "GRID.h"
 #include "EEPARAMS.h"
 #include "PARAMS.h"
-#include "IHOP_SIZE.h"
-#include "IHOP.h"
+#include "BELLI_SIZE.h"
+#include "BELLI.h"
 
 C     !INPUT PARAMETERS:
 C     myThid   :: my Thread Id number
       INTEGER myThid
 CEOP
 
-#ifdef ALLOW_IHOP
+#ifdef ALLOW_BELLI
 C     !LOCAL VARIABLES:
 C     msgBuf   :: Informational/error message buffer
       CHARACTER*(MAX_LEN_MBUF) msgBuf
@@ -33,7 +33,7 @@ CEOP
 
       _BEGIN_MASTER(myThid)
 
-       WRITE(msgBuf,'(A)') 'IHOP_CHECK: #define IHOP'
+       WRITE(msgBuf,'(A)') 'BELLI_CHECK: #define BELLI'
        CALL PRINT_MESSAGE( msgBuf, standardMessageUnit,
      &                     SQUEEZE_RIGHT , 1)
 
@@ -44,7 +44,7 @@ C- print out some key parameters :
 
       _END_MASTER(myThid)
 
-#endif /* ALLOW_IHOP */
+#endif /* ALLOW_BELLI */
 
       RETURN
       END

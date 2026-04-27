@@ -1,11 +1,11 @@
-#include "IHOP_OPTIONS.h"
+#include "BELLI_OPTIONS.h"
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
-C !ROUTINE: IHOP_COST_READ_OBS
+C !ROUTINE: BELLI_COST_READ_OBS
 
 C !INTERFACE:
-      SUBROUTINE IHOP_COST_READ_OBS(
+      SUBROUTINE BELLI_COST_READ_OBS(
      I                      fNb,
      I                      vNb,
      I                      irec,
@@ -13,7 +13,7 @@ C !INTERFACE:
      I                      myThid )
 
 C     !DESCRIPTION:
-C     Reads an observation and its uncertainty from a NetCDF ihop
+C     Reads an observation and its uncertainty from a NetCDF belli
 C     input file
 
 C     !USES:
@@ -24,12 +24,12 @@ C == Global variables ===
 #include "PARAMS.h"
 #include "GRID.h"
 #include "DYNVARS.h"
-#ifdef ALLOW_IHOP
+#ifdef ALLOW_BELLI
 # include "netcdf.inc"
-# include "IHOP_SIZE.h"
-# include "IHOP.h"
+# include "BELLI_SIZE.h"
+# include "BELLI.h"
 # ifdef ALLOW_COST
-#  include "IHOP_COST.h"
+#  include "BELLI_COST.h"
 # endif
 #endif
 
@@ -46,7 +46,7 @@ C     vec_loc   ::
       _RL     vec_loc
 
 C     !LOCAL VARIABLES:
-#if (defined ALLOW_IHOP) && (defined ALLOW_COST)
+#if (defined ALLOW_BELLI) && (defined ALLOW_COST)
 C tmpObsNo :: number of obs in the file
       CHARACTER*(MAX_LEN_MBUF) msgBuf
       INTEGER v1, err, varId1, tmpObsNo
@@ -58,9 +58,9 @@ CEOP
      &     (irec.GT.ihop_maxind_buff) .OR.
      &     (ihop_curfile_buff.NE.fNb) ) THEN
         err = NF_INQ_DIMID( ncidData(fNb), 'iOBS', varId1 )
-        CALL IHOP_COST_NF_ERROR('read_obs 1',err,1,1,myThid)
+        CALL BELLI_COST_NF_ERROR('read_obs 1',err,1,1,myThid)
         err = NF_INQ_DIMLEN( ncidData(fNb), varId1, tmpObsNo )
-        CALL IHOP_COST_NF_ERROR('read_obs 2',err,1,1,myThid)
+        CALL BELLI_COST_NF_ERROR('read_obs 2',err,1,1,myThid)
 
         IF (ihop_curfile_buff.NE.fNb) THEN
 C No asumption on whether a forward or a backward loop is calling
@@ -95,21 +95,21 @@ C Implies that a forward loop is calling
 
         err = NF_INQ_VARID( ncidData(fNb), ihop_nameval,
      &        varId1 )
-        CALL IHOP_COST_NF_ERROR('read_obs 3',err,1,1,myThid)
+        CALL BELLI_COST_NF_ERROR('read_obs 3',err,1,1,myThid)
         err = NF_GET_VARA_DOUBLE(ncidData(fNb), varId1,
      &        vec_start, vec_count, vec_tmp1 )
-        CALL IHOP_COST_NF_ERROR('read_obs 4',err,1,1,myThid)
+        CALL BELLI_COST_NF_ERROR('read_obs 4',err,1,1,myThid)
 
         err = NF_INQ_VARID( ncidData(fNb), ihop_nameuncert,
      &        varId1 )
-        CALL IHOP_COST_NF_ERROR('read_obs 5',err,1,1,myThid)
+        CALL BELLI_COST_NF_ERROR('read_obs 5',err,1,1,myThid)
         err = NF_GET_VARA_DOUBLE(ncidData(fNb), varId1,
      &        vec_start, vec_count, vec_tmp2 )
-        CALL IHOP_COST_NF_ERROR('read_obs 6',err,1,1,myThid)
+        CALL BELLI_COST_NF_ERROR('read_obs 6',err,1,1,myThid)
 
         IF (err.NE.NF_NOERR) THEN
           WRITE(errorMessageUnit,'(A)')
-     &      'WARNING in ihop_read_obs: record not found!!'
+     &      'WARNING in belli_read_obs: record not found!!'
         ENDIF
 
         DO v1 = 1, vec_count
@@ -129,7 +129,7 @@ C Get vec_loc from the buffer
 
       ENDIF
 
-#endif /* ALLOW_IHOP */
+#endif /* ALLOW_BELLI */
 
       RETURN
       END

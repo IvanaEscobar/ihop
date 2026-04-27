@@ -1,4 +1,4 @@
-#include "IHOP_OPTIONS.h"
+#include "BELLI_OPTIONS.h"
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 !BOP
 !MODULE: srpos_mod
@@ -15,15 +15,15 @@ MODULE srpos_mod
   USE sort_mod,         only: Sort
   USE subTab_mod,       only: SubTab
   USE monotonic_mod,    only: monotonic
-  USE ihop_mod,         only: PRTFile
+  USE belli_mod,         only: PRTFile
   IMPLICIT NONE
 !  == Global variables ==
 #include "SIZE.h"
 #include "GRID.h"
 #include "EEPARAMS.h"
 #include "PARAMS.h"
-#include "IHOP_SIZE.h"
-#include "IHOP.h"
+#include "BELLI_SIZE.h"
+#include "BELLI.h"
 
 ! !SCOPE: 
   PRIVATE
@@ -31,9 +31,9 @@ MODULE srpos_mod
   PUBLIC Pos, Nfreq, freqVec, &
         ReadSxSy,  ReadSzRz,  ReadRcvrRanges,  ReadFreqVec, &
         WriteSxSy, WriteSzRz, WriteRcvrRanges, WriteFreqVec
-#ifdef IHOP_THREED
+#ifdef BELLI_THREED
   PUBLIC ReadRcvrBearings, WriteRcvrBearings
-#endif /* IHOP_THREED */
+#endif /* BELLI_THREED */
 !=======================================================================
 
 ! == Module variables ==
@@ -102,11 +102,11 @@ CONTAINS
     ! Broadband run?
     IF ( BroadbandOption.EQ.'B' ) THEN
       IF ( Nfreq.LE.0 ) THEN
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
         WRITE(msgBuf,'(2A)') 'SRPOSITIONS ReadfreqVec: ', &
           'Number of frequencies must be positive'
         CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
         STOP 'ABNORMAL END: S/R ReadfreqVec'
       ENDIF
     ENDIF
@@ -115,11 +115,11 @@ CONTAINS
   IF ( ALLOCATED( freqVec ) ) DEALLOCATE( freqVec )
   ALLOCATE( freqVec( MAX( 3, Nfreq ) ), Stat=IAllocStat )
   IF ( IAllocStat.NE.0 ) THEN
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
     WRITE(msgBuf,'(2A)') 'SRPOSITIONS ReadfreqVec: ', &
       'Number of frequencies too large'
     CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
     STOP 'ABNORMAL END: S/R ReadfreqVec'
   ENDIF
 
@@ -159,25 +159,25 @@ CONTAINS
   CHARACTER*(MAX_LEN_MBUF):: msgBuf
 !EOP
 
-#ifdef IHOP_THREED
+#ifdef BELLI_THREED
   CALL ReadVector( Pos%nSX, Pos%SX, 'source   x-coordinates, Sx', 'km', &
                   myThid )
   CALL ReadVector( Pos%nSY, Pos%SY, 'source   y-coordinates, Sy', 'km', &
                   myThid )
 
-#else /* IHOP_THREED */
+#else /* BELLI_THREED */
   ALLOCATE( Pos%SX( 1 ), Pos%SY( 1 ), Stat=IAllocStat )
   IF ( IAllocStat.NE.0 ) THEN
-# ifdef IHOP_WRITE_OUT
+# ifdef BELLI_WRITE_OUT
     WRITE(msgBuf, *) 'allocation failed', IAllocStat
     CALL PRINT_ERROR( msgBuf,myThid )
-# endif /* IHOP_WRITE_OUT */
+# endif /* BELLI_WRITE_OUT */
     STOP 'ABNORMAL END: S/R ReadSxSy'
   ENDIF
 
   Pos%SX( 1 ) = 0.
   Pos%SY( 1 ) = 0.
-#endif /* IHOP_THREED */
+#endif /* BELLI_THREED */
 
   RETURN
   END !SUBROUTINE ReadSxSy
@@ -236,7 +236,7 @@ CONTAINS
     posShift = 4
   ENDIF
 
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
   ! In adjoint mode we do not write output besides on the first run
   IF ( IHOP_dumpfreq.GE.0 ) THEN
     IF ( posShift.EQ.1 ) THEN
@@ -264,25 +264,25 @@ CONTAINS
     ENDIF
 
   ENDIF
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
 
   IF ( ALLOCATED( Pos%ws ) ) DEALLOCATE( Pos%ws, Pos%iSz )
   ALLOCATE( Pos%ws( Pos%nSZ ), Pos%iSz( Pos%nSZ ), Stat=IAllocStat )
   IF ( IAllocStat.NE.0 ) THEN
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
     WRITE(msgBuf,'(A)') 'SRPOSITIONS ReadSzRz: Too many sources'
     CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
     STOP 'ABNORMAL END: S/R ReadSzRz'
   ENDIF
 
   IF ( ALLOCATED( Pos%wr ) ) DEALLOCATE( Pos%wr, Pos%iRz )
   ALLOCATE( Pos%wr( Pos%nRZ ), Pos%iRz( Pos%nRZ ), Stat=IAllocStat )
   IF ( IAllocStat.NE.0 ) THEN
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
       WRITE(msgBuf,'(A)') 'SRPOSITIONS ReadSzRz: Too many receivers'
       CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
       STOP 'ABNORMAL END: S/R ReadSzRz'
   ENDIF
 
@@ -324,18 +324,18 @@ CONTAINS
   IF ( Pos%nRR.NE.1 ) Pos%delta_r = Pos%RR( Pos%nRR ) - Pos%RR( Pos%nRR-1 )
 
   IF ( .NOT.monotonic( Pos%RR, Pos%nRR ) ) THEN
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
     WRITE(msgBuf,'(2A)') 'SRPOSITIONS ReadRcvrRanges: ', &
       'Receiver ranges are not monotonically increasing'
     CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
     STOP 'ABNORMAL END: S/R ReadRcvrRanges'
   ENDIF
 
   RETURN
   END !SUBROUTINE ReadRcvrRanges
 
-#ifdef IHOP_THREED
+#ifdef BELLI_THREED
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 !BOP
 ! !ROUTINE: ReadRcvrBearings
@@ -373,18 +373,18 @@ INTEGER, INTENT( IN ) :: myThid
                                           - Pos%theta( Pos%nTheta-1 )
 
   IF ( .NOT.monotonic( Pos%theta, Pos%nTheta ) ) THEN
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
     WRITE(msgBuf,'(2A)') 'SRPOSITIONS ReadRcvrBearings: ', &
       'Receiver bearings are not monotonically increasing'
     CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
     STOP 'ABNORMAL END: S/R ReadRcvrBearings'
   ENDIF
 
   RETURN
   END !SUBROUTINE ReadRcvrBearings
 
-#endif /* IHOP_THREED */
+#endif /* BELLI_THREED */
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 !BOP
 ! !ROUTINE: ReadVector
@@ -417,22 +417,22 @@ INTEGER, INTENT( IN ) :: myThid
 !EOP
 
   IF ( Nx.LE.0 ) THEN
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
     WRITE(msgBuf,'(2A)') 'SRPOS_MOD ReadVector: ', &
       'Number of ' // Description // 'must be positive'
     CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
     STOP 'ABNORMAL END: S/R ReadVector'
   ENDIF
 
   IF ( .NOT.ALLOCATED( x ) ) THEN
     ALLOCATE( x( MAX( 3, Nx ) ), Stat=IAllocStat )
     IF ( IAllocStat.NE.0 ) THEN
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
       WRITE(msgBuf,'(2A)') 'SRPOS_MOD ReadVector: ', &
         'Too many ' // Description
       CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
       STOP 'ABNORMAL END: S/R ReadVector'
     ENDIF
   ENDIF
@@ -472,7 +472,7 @@ INTEGER, INTENT( IN ) :: myThid
   INTEGER :: ifreq
 !EOP
 
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
   ! In adjoint mode we do not write output besides on the first run
   IF ( IHOP_dumpfreq.GE.0 ) THEN
     ! Broadband run?
@@ -501,7 +501,7 @@ INTEGER, INTENT( IN ) :: myThid
     ENDIF ! Broadband run
     
   ENDIF ! adjoint run?
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
 
   RETURN
   END !SUBROUTINE writeFreqVec
@@ -526,14 +526,14 @@ INTEGER, INTENT( IN ) :: myThid
   CHARACTER*(MAX_LEN_MBUF) :: msgBuf
 !EOP
 
-#ifdef IHOP_THREED
-# ifdef IHOP_WRITE_OUT
+#ifdef BELLI_THREED
+# ifdef BELLI_WRITE_OUT
   CALL WriteVector( Pos%nSX, Pos%SX, 'source   x-coordinates, Sx', 'km', &
                   myThid )
   CALL WriteVector( Pos%nSY, Pos%SY, 'source   y-coordinates, Sy', 'km', &
                   myThid )
-# endif /* IHOP_WRITE_OUT */
-#endif /* IHOP_THREED */
+# endif /* BELLI_WRITE_OUT */
+#endif /* BELLI_THREED */
 
   RETURN
   END !SUBROUTINE WriteSxSy
@@ -558,12 +558,12 @@ INTEGER, INTENT( IN ) :: myThid
   CHARACTER*(MAX_LEN_MBUF):: msgBuf
 !EOP
 
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
   CALL WriteVector( Pos%nSZ, Pos%SZ, 'Source depths,   Sz', 'm', &
                   myThid )
   CALL WriteVector( Pos%nRZ, Pos%RZ, 'Receiver depths, Rz', 'm', &
                   myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
 
   RETURN
   END !SUBROUTINE WriteSzRz
@@ -591,7 +591,7 @@ INTEGER, INTENT( IN ) :: myThid
 !EOP
 
   x = Pos%RR / 1000.0
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
   ! IESCO22: assuming receiver positions are equally spaced
   CALL WriteVector( Pos%nRR, x, 'Receiver ranges, Rr', 'km', myThid )
 #endif
@@ -599,7 +599,7 @@ INTEGER, INTENT( IN ) :: myThid
   RETURN
   END !SUBROUTINE WriteRcvrRanges
 
-#ifdef IHOP_THREED
+#ifdef BELLI_THREED
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 !BOP
 ! !ROUTINE: WriteRcvrBearings
@@ -627,7 +627,7 @@ INTEGER, INTENT( IN ) :: myThid
   RETURN
   END !SUBROUTINE WriteRcvrBearings
 
-#endif /* IHOP_THREED */
+#endif /* BELLI_THREED */
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 !BOP
 ! !ROUTINE: WriteVector
@@ -658,7 +658,7 @@ INTEGER, INTENT( IN ) :: myThid
     INTEGER :: ix
 !EOP
 
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
   ! In adjoint mode we do not write output besides on the first run
   IF (IHOP_dumpfreq.GE.0) THEN
     WRITE(msgBuf,'(A)')
@@ -685,7 +685,7 @@ INTEGER, INTENT( IN ) :: myThid
     WRITE(msgBuf,'(A)')
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
   ENDIF
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
 
   RETURN
   END !SUBROUTINE WriteVector

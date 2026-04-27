@@ -1,4 +1,4 @@
-#include "IHOP_OPTIONS.h"
+#include "BELLI_OPTIONS.h"
 #ifdef ALLOW_CTRL
 # include "CTRL_OPTIONS.h"
 #endif
@@ -8,18 +8,18 @@
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
-C !ROUTINE: IHOP_COST_INLOOP
+C !ROUTINE: BELLI_COST_INLOOP
 
 C !INTERFACE:
-      SUBROUTINE IHOP_COST_INLOOP( myTime, myIter, myThid )
+      SUBROUTINE BELLI_COST_INLOOP( myTime, myIter, myThid )
 
 C     !DESCRIPTION:
-C     Extract ihop model counterparts for cost function data misfit
+C     Extract belli model counterparts for cost function data misfit
 
 C     !USES:
 #ifdef ALLOW_USE_MPI
-      USE ihop_mod, only: free_ihop_ray2d
-      USE arr_mod,  only: free_ihop_arrival
+      USE belli_mod, only: free_belli_ray2d
+      USE arr_mod,  only: free_belli_arrival
 #endif
 
       IMPLICIT NONE
@@ -35,11 +35,11 @@ C == Global variables ===
 #ifdef ALLOW_CTRL
 # include "OPTIMCYCLE.h"
 #endif
-#ifdef ALLOW_IHOP
-# include "IHOP_SIZE.h"
+#ifdef ALLOW_BELLI
+# include "BELLI_SIZE.h"
 # include "netcdf.inc"
 # ifdef ALLOW_COST
-#  include "IHOP_COST.h"
+#  include "BELLI_COST.h"
 # endif
 #endif
 #ifdef ALLOW_AUTODIFF
@@ -56,11 +56,11 @@ C     myThid :: my thread ID
 C     !OUTPUT PARAMETERS:
 
 C    !LOCAL VARIABLES:
-#ifdef ALLOW_IHOP
+#ifdef ALLOW_BELLI
       INTEGER bi,bj
       INTEGER num_file, nObs
       INTEGER maxindex(nRR, nRD)
-      _RL     ihop_modVal
+      _RL     belli_modVal
 # ifndef ALLOW_CTRL
       INTEGER optimcycle
 # endif
@@ -86,26 +86,26 @@ CEOP
 
       DO bj = 1, nSy
         DO bi = 1, nSx
-          DO num_file = 1, NFILESMAX_IHOP
-            DO nObs = 1, NOBSMAX_IHOP
+          DO num_file = 1, NFILESMAX_BELLI
+            DO nObs = 1, NOBSMAX_BELLI
               IF ( nObs.LE.ObsNo_tiled(num_file,bi,bj) ) THEN
                 IF ( (ihopObs_time(num_file,nObs,bi,bj).GE.
      &                myTime) .AND.
      &               (ihopObs_time(num_file,nObs,bi,bj).LT.
      &                (myTime+deltaTclock)) ) THEN
 #  ifdef ALLOW_AUTODIFF_TAMC
-!!$TAF STORE ihop_modVal  = comlev1_bibj, key=itdkey, byte=isbyte
+!!$TAF STORE belli_modVal  = comlev1_bibj, key=itdkey, byte=isbyte
 #  endif
-                  ihop_modVal = 0
+                  belli_modVal = 0
 
                   ! ESCO25: 1,1 means we only consider a single receiver
                   ! range and depth. We also do NO time avg, and can
                   ! ignore reading previously recorded values
-                  CALL IHOP_COST_MODVAL( ihop_modVal, num_file,
+                  CALL BELLI_COST_MODVAL( belli_modVal, num_file,
      &                 1, 1, myTime, myThid )
 
-                  CALL ACTIVE_WRITE_IHOP_TILE( 
-     &                 num_file, ihop_modVal,
+                  CALL ACTIVE_WRITE_BELLI_TILE( 
+     &                 num_file, belli_modVal,
      &                 nObs, optimcycle, bi, bj, myThid,
      &                 ihop_dummy(num_file,bi,bj) )
 
@@ -118,15 +118,15 @@ CEOP
 
 #  ifdef ALLOW_USE_MPI
       IF (myTime.EQ.endTime) THEN
-        CALL free_ihop_ray2d( myThid )
-        CALL free_ihop_arrival( myThid )
+        CALL free_belli_ray2d( myThid )
+        CALL free_belli_arrival( myThid )
       ENDIF
 #  endif 
 
       _END_MASTER( myThid )
 
 # endif /* ALLOW_COST */
-#endif /* ALLOW_IHOP */
+#endif /* ALLOW_BELLI */
 
       RETURN
       END

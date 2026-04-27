@@ -1,12 +1,12 @@
-#include "IHOP_OPTIONS.h"
+#include "BELLI_OPTIONS.h"
 #include "AD_CONFIG.h"
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
-C !ROUTINE: IHOP_COST_NF_ERROR
+C !ROUTINE: BELLI_COST_NF_ERROR
 
 C !INTERFACE:
-      SUBROUTINE IHOP_COST_NF_ERROR( message, STATUS, bi, bj, myThid )
+      SUBROUTINE BELLI_COST_NF_ERROR( message, STATUS, bi, bj, myThid )
 
 C     !DESCRIPTION:
 C     Print NetCDF error message
@@ -14,7 +14,7 @@ C     Print NetCDF error message
 C     !USES:
       IMPLICIT NONE
 C     == Global variables ===
-#ifdef ALLOW_IHOP
+#ifdef ALLOW_BELLI
 # include "SIZE.h"
 # include "EEPARAMS.h"
 # include "PARAMS.h"
@@ -36,7 +36,7 @@ C     !FUNCTIONS:
       EXTERNAL ILNBLNK
 
 C     !LOCAL VARIABLES:
-#ifdef ALLOW_IHOP
+#ifdef ALLOW_BELLI
       INTEGER IL
       CHARACTER*(MAX_LEN_MBUF) msgBuf
 CEOP
@@ -45,10 +45,10 @@ CEOP
         IL = ILNBLNK(message)
         IF ( IL .GT. 0 ) THEN
           WRITE(msgBuf,'(2A,2I3,1X,A)')
-     &      'NF: IHOP_COST_', message(1:IL),
+     &      'NF: BELLI_COST_', message(1:IL),
      &      bi, bj, NF_STRERROR(STATUS)
         ELSE
-          WRITE(msgBuf,'(A,2I3,1X,A)') 'NF: IHOP_COST_',
+          WRITE(msgBuf,'(A,2I3,1X,A)') 'NF: BELLI_COST_',
      &      bi, bj, NF_STRERROR(STATUS)
         ENDIF
         CALL PRINT_MESSAGE( msgBuf, standardMessageUnit,
@@ -58,21 +58,21 @@ CEOP
 ! Print if there are no errors
 !      IF (STATUS.EQ.NF_NOERR .AND. ILNBLNK(message).GT.0 ) THEN
 !        IL = ILNBLNK(message)
-!        WRITE(msgBuf,'(2A)') "NF IHOP NOERR: ", message(1:IL)
+!        WRITE(msgBuf,'(2A)') "NF BELLI NOERR: ", message(1:IL)
 !        CALL PRINT_MESSAGE( msgBuf, standardMessageUnit,
 !     &       SQUEEZE_RIGHT, myThid )
 !      ENDIF
-#endif /* ALLOW_IHOP */
+#endif /* ALLOW_BELLI */
 
       RETURN
       END
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
-C !ROUTINE: IHOP_COST_NC_CLOSE
+C !ROUTINE: BELLI_COST_NC_CLOSE
 
 C !INTERFACE:
-      SUBROUTINE IHOP_COST_NC_CLOSE( myThid )
+      SUBROUTINE BELLI_COST_NC_CLOSE( myThid )
 
 C     !DESCRIPTION:
 C     Close NetCDF files
@@ -80,11 +80,11 @@ C     Close NetCDF files
 C     !USES:
       IMPLICIT NONE
 C     == Global variables ===
-#ifdef ALLOW_IHOP
+#ifdef ALLOW_BELLI
 # include "SIZE.h"
 # include "EEPARAMS.h"
-# include "IHOP_SIZE.h"
-# include "IHOP_COST.h"
+# include "BELLI_SIZE.h"
+# include "BELLI_COST.h"
 # include "netcdf.inc"
 #endif
 
@@ -99,7 +99,7 @@ C     !FUNCTIONS:
       EXTERNAL ILNBLNK
 
 C     !LOCAL VARIABLES:
-#ifdef ALLOW_IHOP
+#ifdef ALLOW_BELLI
 C     bi,bj :: Tile indices
       INTEGER bi, bj
       INTEGER IL, numFile
@@ -111,14 +111,14 @@ CEOP
 ! Close tiled files
         DO bj = myByLo(myThid), myByHi(myThid)
           DO bi = myBxLo(myThid), myBxHi(myThid)
-            DO numFile = 1, NFILESMAX_IHOP
+            DO numFile = 1, NFILESMAX_BELLI
 
               IF (obsNo_tiled(numFile,bi,bj).GT.0) THEN
                 IL = ILNBLNK( ihopObs_Files(numFile) )
 
                 IF (IL.NE.0) THEN
                   WRITE(msgBuf,'(A,A,5(1X,I8))')
-     &              'S/R IHOP_COST_NC_CLOSE:',
+     &              'S/R BELLI_COST_NC_CLOSE:',
      &              ' Closing '//ihopObs_Files(numFile)(1:IL), numFile,
      &             ncidFWD(numFile,bi,bj),
      &             ncidAD(numFile,bi,bj), ncidTL(numFile,bi,bj)
@@ -130,7 +130,7 @@ C Forward equivalent (.equi) file
                   WRITE(msgBuf,'(A,2I8)')
      &              'NC_CLOSE: NF_CLOSE fwd unit',
      &              ncidFWD(numFile,bi,bj), myprocid
-                  CALL IHOP_COST_NF_ERROR( msgBuf, STATUS,
+                  CALL BELLI_COST_NF_ERROR( msgBuf, STATUS,
      &                 bi, bj, myThid )
 # ifdef ALLOW_ADJOINT_RUN
 C Adjoint equivalent (.equi) file
@@ -138,7 +138,7 @@ C Adjoint equivalent (.equi) file
                   WRITE(msgBuf,'(A,I3,I8)')
      &              'NC_CLOSE: NF_CLOSE adj unit',
      &              numFile, ncidAD(numFile,bi,bj)
-                  CALL IHOP_COST_NF_ERROR( msgBuf, STATUS,
+                  CALL BELLI_COST_NF_ERROR( msgBuf, STATUS,
      &                 bi, bj, myThid )
 # endif
 # ifdef ALLOW_TANGENTLINEAR_RUN
@@ -147,7 +147,7 @@ C Tangent linear equivalent (.equi) file
                   WRITE(msgBuf,'(A,I3,I8)')
      &              'NC_CLOSE: NF_CLOSE tlm unit',
      &              numFile, ncidTL(numFile,bi,bj)
-                  CALL IHOP_COST_NF_ERROR( msgBuf, STATUS,
+                  CALL BELLI_COST_NF_ERROR( msgBuf, STATUS,
      &                 bi, bj, myThid )
 # endif
                 ENDIF !(IL.NE.0)
@@ -159,13 +159,13 @@ C Tangent linear equivalent (.equi) file
         ENDDO !DO bj
 
 ! Close global files
-        DO numFile = 1, NFILESMAX_IHOP
+        DO numFile = 1, NFILESMAX_BELLI
           IF (myProcId.EQ.0) THEN 
             IL = ILNBLNK( ihopObs_Files(numFile) )
 
             IF (IL.NE.0) THEN
               WRITE(msgBuf,'(A,A,5(1X,I8))')
-     &          'S/R IHOP_COST_NC_CLOSE:',
+     &          'S/R BELLI_COST_NC_CLOSE:',
      &          ' Closing '//ihopObs_Files(numFile)(1:IL), numFile,
      &         ncidData(numFile), ncidGLOB(numFile),
      &         ncidADGLOB(numFile), ncidTLGLOB(numFile)
@@ -176,7 +176,7 @@ C Data file
               WRITE(msgBuf,'(A,I3,I8)')
      &          'NC_CLOSE: NF_CLOSE data unit',
      &          numFile, ncidData(numFile)
-              CALL IHOP_COST_NF_ERROR( msgBuf, STATUS,
+              CALL BELLI_COST_NF_ERROR( msgBuf, STATUS,
      &             1, 1, myThid )
 
 C Forward equivalent (.equi) file
@@ -184,7 +184,7 @@ C Forward equivalent (.equi) file
               WRITE(msgBuf,'(A,2I8)')
      &          'NC_CLOSE: NF_CLOSE ncidGLOB ',
      &          ncidGLOB(numFile), myprocid
-              CALL IHOP_COST_NF_ERROR( msgBuf, STATUS,
+              CALL BELLI_COST_NF_ERROR( msgBuf, STATUS,
      &             1, 1, myThid )
 # ifdef ALLOW_ADJOINT_RUN
 C Adjoint equivalent (.equi) file
@@ -192,7 +192,7 @@ C Adjoint equivalent (.equi) file
               WRITE(msgBuf,'(A,I3,I8)')
      &          'NC_CLOSE: NF_CLOSE adj unit',
      &          numFile, ncidADGLOB(numFile)
-              CALL IHOP_COST_NF_ERROR( msgBuf, STATUS,
+              CALL BELLI_COST_NF_ERROR( msgBuf, STATUS,
      &             1, 1, myThid )
 # endif
 # ifdef ALLOW_TANGENTLINEAR_RUN
@@ -201,7 +201,7 @@ C Tangent linear equivalent (.equi) file
               WRITE(msgBuf,'(A,I3,I8)')
      &          'NC_CLOSE: NF_CLOSE tlm unit',
      &          numFile, ncidTLGLOB(numFile)
-              CALL IHOP_COST_NF_ERROR( msgBuf, STATUS,
+              CALL BELLI_COST_NF_ERROR( msgBuf, STATUS,
      &             1, 1, myThid )
 # endif
             ENDIF !(IL.NE.0)
@@ -211,7 +211,7 @@ C Tangent linear equivalent (.equi) file
         ENDDO !DO numFile
 
       ENDIF !IF (ihopDoNcOutput)
-#endif /* ALLOW_IHOP */
+#endif /* ALLOW_BELLI */
 
       RETURN
       END

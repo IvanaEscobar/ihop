@@ -3,7 +3,7 @@
 !     *==========================================================*
 !$TAF SUBROUTINE writeray::writerayoutput INPUT   = 1, 2, 3, 4, 5, 6
 !$TAF SUBROUTINE writeray::writerayoutput OUTPUT  =
-!$TAF SUBROUTINE writeray::writerayoutput MODULE ihop_mod INPUT = rad2deg, srcdeclangle
+!$TAF SUBROUTINE writeray::writerayoutput MODULE belli_mod INPUT = rad2deg, srcdeclangle
 !$TAF SUBROUTINE writeray::writerayoutput MODULE bdry_mod INPUT = bdry
 
 !     *==========================================================*
@@ -17,12 +17,12 @@
 !$TAF SUBROUTINE arr_mod::writearrivalsbinary INPUT   = 1, 2, 3, 4
 !$TAF SUBROUTINE arr_mod::writearrivalsbinary OUTPUT  =
 
-!$TAF SUBROUTINE ihop_init_diag::initprtfile INPUT   = 1, 2, 3
-!$TAF SUBROUTINE ihop_init_diag::initprtfile OUTPUT  =
-!$TAF SUBROUTINE ihop_init_diag::openPRTfile INPUT   = 1, 2, 3
-!$TAF SUBROUTINE ihop_init_diag::openPRTfile OUTPUT  =
-!$TAF SUBROUTINE ihop_init_diag::openOutputFiles INPUT   = 1, 2, 3, 4
-!$TAF SUBROUTINE ihop_init_diag::openOutputFiles OUTPUT  =
+!$TAF SUBROUTINE belli_init_diag::initprtfile INPUT   = 1, 2, 3
+!$TAF SUBROUTINE belli_init_diag::initprtfile OUTPUT  =
+!$TAF SUBROUTINE belli_init_diag::openPRTfile INPUT   = 1, 2, 3
+!$TAF SUBROUTINE belli_init_diag::openPRTfile OUTPUT  =
+!$TAF SUBROUTINE belli_init_diag::openOutputFiles INPUT   = 1, 2, 3, 4
+!$TAF SUBROUTINE belli_init_diag::openOutputFiles OUTPUT  =
 
 !     *==========================================================*
 !     | SUBROUTINE READSSP  is passive                           |
@@ -34,7 +34,7 @@
 
 !$TAF SUBROUTINE ssp_mod::writessp INPUT   = 1
 !$TAF SUBROUTINE ssp_mod::writessp OUTPUT  =
-!$TAF SUBROUTINE ssp_mod::writessp MODULE ihop_mod INPUT = PRTFile
+!$TAF SUBROUTINE ssp_mod::writessp MODULE belli_mod INPUT = PRTFile
 !$TAF SUBROUTINE ssp_mod::writessp MODULE ssp_mod INPUT = SSP
 
 !     *==========================================================*
@@ -104,51 +104,51 @@
 !================================================================*
 
 !     *==========================================================*
-!     | SUBROUTINE IHOP_COST_READ_OBS  is passive                |
+!     | SUBROUTINE BELLI_COST_READ_OBS  is passive                |
 !     *==========================================================*
-!$TAF SUBROUTINE  ihop_cost_read_obs   INPUT  =  1,2,3, 5
-!$TAF SUBROUTINE  ihop_cost_read_obs   DEPEND =  1,2,3
-!$TAF SUBROUTINE  ihop_cost_read_obs   OUTPUT =        4
+!$TAF SUBROUTINE  belli_cost_read_obs   INPUT  =  1,2,3, 5
+!$TAF SUBROUTINE  belli_cost_read_obs   DEPEND =  1,2,3
+!$TAF SUBROUTINE  belli_cost_read_obs   OUTPUT =        4
 
 !     *==========================================================*
-!     | SUBROUTINE ACTIVE_READ_IHOP_TILE is passive              |
+!     | SUBROUTINE ACTIVE_READ_BELLI_TILE is passive              |
 !     *==========================================================*
-!$TAF SUBROUTINE active_read_ihop_tile FTLNAME = g_active_read_ihop_tile
-!$TAF SUBROUTINE active_read_ihop_tile ADNAME  = adactive_read_ihop_tile
-!$TAF SUBROUTINE active_read_ihop_tile INPUT   = 1, 3,4,5,6,7,8,9
-!$TAF SUBROUTINE active_read_ihop_tile OUTPUT  =   2
-!$TAF SUBROUTINE active_read_ihop_tile ACTIVE  =   2
-!$TAF SUBROUTINE active_read_ihop_tile DEPEND  = 1, 3,4,5,6,7,8
+!$TAF SUBROUTINE active_read_belli_tile FTLNAME = g_active_read_belli_tile
+!$TAF SUBROUTINE active_read_belli_tile ADNAME  = adactive_read_belli_tile
+!$TAF SUBROUTINE active_read_belli_tile INPUT   = 1, 3,4,5,6,7,8,9
+!$TAF SUBROUTINE active_read_belli_tile OUTPUT  =   2
+!$TAF SUBROUTINE active_read_belli_tile ACTIVE  =   2
+!$TAF SUBROUTINE active_read_belli_tile DEPEND  = 1, 3,4,5,6,7,8
 
 !     *==========================================================*
-!     | SUBROUTINE ACTIVE_WRITE_IHOP_TILE is passive             |
+!     | SUBROUTINE ACTIVE_WRITE_BELLI_TILE is passive             |
 !     *==========================================================*
-!$TAF SUBROUTINE active_write_ihop_tile FTLNAME = g_active_write_ihop_tile
-!$TAF SUBROUTINE active_write_ihop_tile ADNAME  = adactive_write_ihop_tile
-!$TAF SUBROUTINE active_write_ihop_tile INPUT   = 1,2,3,4,5,6,7,8
-!$TAF SUBROUTINE active_write_ihop_tile OUTPUT  =               8
-!$TAF SUBROUTINE active_write_ihop_tile ACTIVE  =   2,          8
-!$TAF SUBROUTINE active_write_ihop_tile DEPEND  = 1,  3,4,5,6,7
+!$TAF SUBROUTINE active_write_belli_tile FTLNAME = g_active_write_belli_tile
+!$TAF SUBROUTINE active_write_belli_tile ADNAME  = adactive_write_belli_tile
+!$TAF SUBROUTINE active_write_belli_tile INPUT   = 1,2,3,4,5,6,7,8
+!$TAF SUBROUTINE active_write_belli_tile OUTPUT  =               8
+!$TAF SUBROUTINE active_write_belli_tile ACTIVE  =   2,          8
+!$TAF SUBROUTINE active_write_belli_tile DEPEND  = 1,  3,4,5,6,7
 
 !     *==========================================================*
-!     | SUBROUTINE ACTIVE_READ_IHOP_GLOB is passive              |
+!     | SUBROUTINE ACTIVE_READ_BELLI_GLOB is passive              |
 !     *==========================================================*
-!$TAF SUBROUTINE active_read_ihop_glob FTLNAME = g_active_read_ihop_glob
-!$TAF SUBROUTINE active_read_ihop_glob ADNAME  = adactive_read_ihop_glob
-!$TAF SUBROUTINE active_read_ihop_glob INPUT   = 1, 3,4,5,6,7
-!$TAF SUBROUTINE active_read_ihop_glob OUTPUT  =   2
-!$TAF SUBROUTINE active_read_ihop_glob ACTIVE  =   2
-!$TAF SUBROUTINE active_read_ihop_glob DEPEND  = 1, 3,4,5,6
+!$TAF SUBROUTINE active_read_belli_glob FTLNAME = g_active_read_belli_glob
+!$TAF SUBROUTINE active_read_belli_glob ADNAME  = adactive_read_belli_glob
+!$TAF SUBROUTINE active_read_belli_glob INPUT   = 1, 3,4,5,6,7
+!$TAF SUBROUTINE active_read_belli_glob OUTPUT  =   2
+!$TAF SUBROUTINE active_read_belli_glob ACTIVE  =   2
+!$TAF SUBROUTINE active_read_belli_glob DEPEND  = 1, 3,4,5,6
 
 !     *==========================================================*
-!     | SUBROUTINE ACTIVE_WRITE_IHOP_GLOB is passive             |
+!     | SUBROUTINE ACTIVE_WRITE_BELLI_GLOB is passive             |
 !     *==========================================================*
-!$TAF SUBROUTINE active_write_ihop_glob FTLNAME = g_active_write_ihop_glob
-!$TAF SUBROUTINE active_write_ihop_glob ADNAME  = adactive_write_ihop_glob
-!$TAF SUBROUTINE active_write_ihop_glob INPUT   = 1,2,3,4,5,6
-!$TAF SUBROUTINE active_write_ihop_glob OUTPUT  =           6
-!$TAF SUBROUTINE active_write_ihop_glob ACTIVE  =   2,      6
-!$TAF SUBROUTINE active_write_ihop_glob DEPEND  = 1,  3,4,5
+!$TAF SUBROUTINE active_write_belli_glob FTLNAME = g_active_write_belli_glob
+!$TAF SUBROUTINE active_write_belli_glob ADNAME  = adactive_write_belli_glob
+!$TAF SUBROUTINE active_write_belli_glob INPUT   = 1,2,3,4,5,6
+!$TAF SUBROUTINE active_write_belli_glob OUTPUT  =           6
+!$TAF SUBROUTINE active_write_belli_glob ACTIVE  =   2,      6
+!$TAF SUBROUTINE active_write_belli_glob DEPEND  = 1,  3,4,5
 
 !     *==========================================================*
 !     | NetCDF functions that are passive                        |
@@ -159,8 +159,8 @@
 !$TAF FUNCTION NF_STRERROR            INPUT = 1
 !$TAF FUNCTION NF_INQ_VARID           INPUT = 1,2,3
 !$TAF FUNCTION NF_PUT_VARA_DOUBLE     INPUT = 1,2,3,4,5
-!$TAF SUBROUTINE IHOP_COST_NF_ERROR   INPUT = 1,2,3,4,5
-!$TAF SUBROUTINE IHOP_COST_NC_CLOSE   INPUT = 1
+!$TAF SUBROUTINE BELLI_COST_NF_ERROR   INPUT = 1,2,3,4,5
+!$TAF SUBROUTINE BELLI_COST_NC_CLOSE   INPUT = 1
 
 !     *==========================================================*
 !     | MPI functions that are passive                           |
@@ -204,9 +204,9 @@
 !!!$TAF FUNCTION MPI_Type_create_struct       ACTIVE  =         5
 !!!$TAF FUNCTION MPI_Type_create_struct       DEPEND  = 1,2,3,4,  6
 
-!!$TAF SUBROUTINE ihop_mod::ray2dpttypeinit    FTLNAME = ray2dptytypeinit
-!!$TAF SUBROUTINE ihop_mod::ray2dpttypeinit    ADNAME  = ray2dptytypeinit
-!!$TAF SUBROUTINE ihop_mod::ray2dpttypeinit    INPUT   = 1,2,3,4
-!!$TAF SUBROUTINE ihop_mod::ray2dpttypeinit    OUTPUT  =     3,4
-!!$TAF SUBROUTINE ihop_mod::ray2dpttypeinit    ACTIVE  = 1,2,3,4
-!!$TAF SUBROUTINE ihop_mod::ray2dpttypeinit    DEPEND  = 1,2
+!!$TAF SUBROUTINE belli_mod::ray2dpttypeinit    FTLNAME = ray2dptytypeinit
+!!$TAF SUBROUTINE belli_mod::ray2dpttypeinit    ADNAME  = ray2dptytypeinit
+!!$TAF SUBROUTINE belli_mod::ray2dpttypeinit    INPUT   = 1,2,3,4
+!!$TAF SUBROUTINE belli_mod::ray2dpttypeinit    OUTPUT  =     3,4
+!!$TAF SUBROUTINE belli_mod::ray2dpttypeinit    ACTIVE  = 1,2,3,4
+!!$TAF SUBROUTINE belli_mod::ray2dpttypeinit    DEPEND  = 1,2

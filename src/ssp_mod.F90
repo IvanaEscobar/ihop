@@ -1,4 +1,4 @@
-#include "IHOP_OPTIONS.h"
+#include "BELLI_OPTIONS.h"
 #ifdef ALLOW_AUTODIFF
 # include "AUTODIFF_OPTIONS.h"
 #endif
@@ -14,7 +14,7 @@ MODULE ssp_mod
 ! SSP (Sound Speed Profile) data.
 
 ! !USES:
-  USE ihop_mod, only: PRTFile
+  USE belli_mod, only: PRTFile
   IMPLICIT NONE
 ! == Global variables ==
 #include "SIZE.h"
@@ -22,8 +22,8 @@ MODULE ssp_mod
 # include "EESUPPORT.h"
 #include "PARAMS.h"
 #include "GRID.h"
-#include "IHOP_SIZE.h"
-#include "IHOP.h"
+#include "BELLI_SIZE.h"
+#include "BELLI.h"
 
 ! !SCOPE: 
   PRIVATE
@@ -41,10 +41,10 @@ MODULE ssp_mod
   INTEGER, PARAMETER     :: MaxSSP = 201
   INTEGER                :: iSegr = 1, iSegz = 1
   LOGICAL                :: foundr, foundz
-#ifdef IHOP_THREED
+#ifdef BELLI_THREED
   INTEGER                :: iSegx = 1, iSegy = 1
   LOGICAL                :: foundx, foundy
-#endif /* IHOP_THREED */
+#endif /* BELLI_THREED */
   INTEGER                :: iostat, iallocstat
   INTEGER,           PRIVATE :: iz
   REAL (KIND=_RL90), PRIVATE :: Depth, W
@@ -58,7 +58,7 @@ MODULE ssp_mod
 ! == Derived types ==
   TYPE rxyz_vector
     REAL (KIND=_RL90), ALLOCATABLE :: r(:)
-#ifdef IHOP_THREED
+#ifdef BELLI_THREED
     REAL (KIND=_RL90), ALLOCATABLE :: x(:), y(:), z(:)
 #endif
   END TYPE rxyz_vector
@@ -74,9 +74,9 @@ MODULE ssp_mod
   TYPE SSPVariable
     COMPLEX (KIND=_RL90)              :: c( MaxSSP ), cz( MaxSSP )
     REAL    (KIND=_RL90), ALLOCATABLE :: cMat( :,: ), czMat( :,: )
-#ifdef IHOP_THREED
+#ifdef BELLI_THREED
     REAL    (KIND=_RL90), ALLOCATABLE :: cMat3( :,:,: ), czMat3( :,:,: )
-#endif /* IHOP_THREED */
+#endif /* BELLI_THREED */
   END TYPE SSPVariable
 
   TYPE( SSPGrid )     :: Grid
@@ -136,7 +136,7 @@ CONTAINS
 
 ! !USES:
   USE atten_mod, only: CRCI
-  USE ihop_mod,  only: SSPFile
+  USE belli_mod,  only: SSPFile
   USE bdry_mod,  only: Bdry
 ! IESCO24
 ! fT = 1000 ONLY for acousto-elastic halfspaces, I will have to pass this
@@ -170,10 +170,10 @@ CONTAINS
   OPEN ( FILE=TRIM(IHOP_fileroot) // '.ssp', UNIT=SSPFile, &
     FORM='FORMATTED', STATUS='OLD', IOSTAT=iostat )
   IF ( IOSTAT.NE.0 ) THEN   ! successful open?
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
     WRITE(msgBuf,'(A)') 'SSP_MOD::ReadSSP: Unable to open the SSP file'
     CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
     STOP 'ABNORMAL END: S/R ReadSSP'
   ENDIF
 
@@ -184,11 +184,11 @@ CONTAINS
             Grid%Seg%R( Grid%nR ), &
             STAT=iallocstat )
   IF ( iallocstat.NE.0 ) THEN
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
     WRITE(msgBuf,'(2A)') 'SSP_MOD::ReadSSP: ', &
       'Insufficient memory to store SSP'
     CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
     STOP 'ABNORMAL END: S/R ReadSSP'
   ENDIF
 
@@ -219,11 +219,11 @@ CONTAINS
     ! verify depths are monotone increasing
     IF ( iz.GT.1 ) THEN
       IF ( Grid%Z( iz ).LE.Grid%Z( iz-1 ) ) THEN
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
         WRITE(msgBuf,'(2A,F10.2)') 'SSP_MOD::ReadSSP: ', &
           'The depths in the SSP must be monotone increasing', Grid%Z(iz)
         CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
         STOP 'ABNORMAL END: S/R ReadSSP'
       ENDIF
     ENDIF
@@ -235,11 +235,11 @@ CONTAINS
     ! Did we read the last point?
     IF ( ABS( Grid%Z( iz ) - Depth ).LT.100.*EPSILON( 1.0e0 ) ) THEN
       IF ( Grid%nPts.EQ.1 ) THEN
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
         WRITE(msgBuf,'(2A)') 'SSP_MOD::ReadSSP: ', &
           'The SSP must have at least 2 points'
         CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
             STOP 'ABNORMAL END: S/R ReadSSP'
       ENDIF
 
@@ -252,11 +252,11 @@ CONTAINS
   ENDDO ! DO iz = 1, Grid%nZ
 
   ! Fall through means too many points in the profile
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
   WRITE(msgBuf,'(2A)') 'SSP_MOD::ReadSSP: ', &
     'Number of SSP points exceeds limit'
   CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
   STOP 'ABNORMAL END: S/R ReadSSP'
 
   ! I/O on main thread only
@@ -293,7 +293,7 @@ CONTAINS
   LOGICAL :: skip_range
   INTEGER :: iallocstat
   INTEGER :: bi,bj, i,j,k, ii,jj
-  INTEGER :: nii(IHOP_NPTS_RANGE), njj(IHOP_NPTS_RANGE)
+  INTEGER :: nii(BELLI_NPTS_RANGE), njj(BELLI_NPTS_RANGE)
   REAL (KIND=_RL90) :: tolerance
 
   ! init local vars
@@ -309,7 +309,7 @@ CONTAINS
 
   ! set ihop SSP Grid size
   Grid%nZ = Nr+2 ! add z=0 z=Depth layers to GCM Nr
-  Grid%nR = IHOP_NPTS_RANGE
+  Grid%nR = BELLI_NPTS_RANGE
   Grid%nPts = Grid%nZ
 
   ! set Grid%Z from rC, rkSign=-1 used bc ihop uses +ive depths
@@ -321,11 +321,11 @@ CONTAINS
   !IF (ALLOCATED(Grid%Seg%R)) DEALLOCATE(Grid%Seg%R)
   ALLOCATE( Grid%Seg%R( Grid%nR ), STAT=iallocstat )
   IF ( iallocstat.NE.0 ) THEN
-# ifdef IHOP_WRITE_OUT
+# ifdef BELLI_WRITE_OUT
     WRITE(msgBuf,'(2A)') 'SSP_MOD::init_fixed_Grid: ', &
       'Insufficient memory to store Grid%Seg%R'
     CALL PRINT_ERROR( msgBuf,myThid )
-# endif /* IHOP_WRITE_OUT */
+# endif /* BELLI_WRITE_OUT */
       STOP 'ABNORMAL END: S/R init_fixed_Grid'
   ENDIF
 
@@ -477,10 +477,10 @@ CONTAINS
     END DO
 
   CASE DEFAULT
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
     WRITE(msgBuf,'(A)') 'SSP_MOD::setSSP: Invalid SSP profile option'
     CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
     STOP 'ABNORMAL END: S/R setSSP'
   END SELECT
 
@@ -528,14 +528,14 @@ CONTAINS
   CASE ( 'Q' )
     CALL Quad(     x, c, cimag, gradc, crr, crz, czz, rho, myThid )
   CASE DEFAULT
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
     WRITE(msgBuf,'(2A)') 'Profile option: ', Grid%Type
     ! In adjoint mode we do not write output besides on the first run
     IF ( IHOP_dumpfreq.GE.0 ) &
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
     WRITE(msgBuf,'(A)') 'SSP_MOD::evalSSP: Invalid SSP profile option'
     CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
     STOP 'ABNORMAL END: S/R evalSSP'
     c = 0.         !RG
     cimag = 0.     !RG
@@ -869,7 +869,7 @@ USE splinec_mod,  only: splineall
 
   ! Check that x is in SSP box range
   IF ( x(1).LT.Grid%Seg%R( 1 ) .OR. x(1).GT.Grid%Seg%R( Grid%nR ) ) THEN
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
     ! In adjoint mode we do not write output besides on the first run
     IF (IHOP_dumpfreq.GE.0) THEN
       WRITE(msgBuf,'(2A)') 'ray is outside the box where ocean ',&
@@ -881,7 +881,7 @@ USE splinec_mod,  only: splineall
         'ray is outside the box where the soundspeed is defined'
       CALL PRINT_ERROR( msgBuf,myThid )
     ENDIF
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
     STOP 'ABNORMAL END: S/R Quad'
   ENDIF ! IF ( x(1).LT.Grid%Seg%R( 1 ) .OR. x(1).GT.Grid%Seg%R( Grid%nR ) )
 
@@ -903,13 +903,13 @@ USE splinec_mod,  only: splineall
   s2      = x(2)              - Grid%Z( iSegz )
   delta_z = Grid%Z( iSegz+1 ) - Grid%Z( iSegz )
   IF ( delta_z.LE.0 .OR. s2.GT.delta_z ) THEN
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
     WRITE(msgBuf, *) delta_z, s2, iSegz, Grid%Z(iSegz)
     CALL PRINT_ERROR( msgBuf,myThid )
     WRITE(msgBuf,'(2A)') 'SSP_MOD::Quad: ', &
       'depth is not monotonically increasing in Grid%Z'
     CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
     STOP 'ABNORMAL END: S/R Quad'
   ENDIF ! IF ( delta_z.LE.0 .OR. s2.GT.delta_z )
 
@@ -991,7 +991,7 @@ USE splinec_mod,  only: splineall
   LOGICAL :: interp_finished
   INTEGER :: iallocstat
   INTEGER :: bi,bj, i,j,k, ii,jj
-  INTEGER :: njj(IHOP_NPTS_RANGE)
+  INTEGER :: njj(BELLI_NPTS_RANGE)
   INTEGER :: nZnR_size
   REAL (KIND=_RL90)             :: dcdz, tolerance
   REAL (KIND=_RL90), ALLOCATABLE:: sspTile(:,:,:,:), sspGlob(:)
@@ -1025,11 +1025,11 @@ USE splinec_mod,  only: splineall
             sspGlob(nZnR_size), & 
             ssp3buffer(nSx,nSy,nZnR_size), STAT=iallocstat )
   IF ( iallocstat.NE.0 ) THEN
-# ifdef IHOP_WRITE_OUT
+# ifdef BELLI_WRITE_OUT
     WRITE(msgBuf,'(2A)') 'SSP_MOD::gcmSSP: ', &
       'Insufficient memory to store sspTile and/or sspGlob'
     CALL PRINT_ERROR( msgBuf,myThid )
-# endif /* IHOP_WRITE_OUT */
+# endif /* BELLI_WRITE_OUT */
       STOP 'ABNORMAL END: S/R gcmSSP'
   ENDIF
 
@@ -1193,11 +1193,11 @@ USE splinec_mod,  only: splineall
 
       IF ( iz.GT.1 ) THEN
         IF ( Grid%Z( iz ).LE.Grid%Z( iz-1 ) ) THEN
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
           WRITE( msgBuf,'(2A)' ) 'SSP_MOD::gcmSSP: ', &
             'The depths in the SSP must be monotone increasing'
           CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
           STOP 'ABNORMAL END: S/R gcmSSP'
         ENDIF
       ENDIF
@@ -1222,7 +1222,7 @@ END !SUBROUTINE gcmSSP
 !   Write the sound speed profile (SSP) to the output file.
 
 ! !USES:
-  USE ihop_mod, only: PRTFile
+  USE belli_mod, only: PRTFile
 
 ! !INPUT PARAMETERS:
 ! myThid :: my thread ID
@@ -1248,7 +1248,7 @@ END !SUBROUTINE gcmSSP
   ! I/O on main thread only
   _BEGIN_MASTER(myThid)
 
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
   ! Write relevant diagnostics
   WRITE(msgBuf,'(A)') &
     '___________________________________________________________'
@@ -1335,7 +1335,7 @@ END !SUBROUTINE gcmSSP
   CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
   WRITE(msgBuf,'(A)')
   CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
 
   ! I/O on main thread only
   _END_MASTER(myThid)

@@ -1,13 +1,13 @@
-#include "IHOP_OPTIONS.h"
+#include "BELLI_OPTIONS.h"
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 !BOP
-!MODULE: ihop_init_diag
-MODULE IHOP_INIT_DIAG
+!MODULE: BELLI_INIT_DIAG
+MODULE BELLI_INIT_DIAG
 ! <CONTACT EMAIL="ivana@utexas.edu">
 !   Ivana Escobar
 ! </CONTACT>
 ! !DESCRIPTION: 
-!   Initialization of iHOP diagnostic files.
+!   Initialization of belli diagnostic files.
 
 ! !USES:
   USE bdry_mod,  only: Bdry, HSInfo
@@ -19,8 +19,8 @@ MODULE IHOP_INIT_DIAG
 #include "EEPARAMS.h"
 #include "EESUPPORT.h"
 #include "PARAMS.h"
-#include "IHOP_SIZE.h"
-#include "IHOP.h"
+#include "BELLI_SIZE.h"
+#include "BELLI.h"
 #ifdef ALLOW_CAL
 #include "cal.h"
 #endif /* ALLOW_CAL */
@@ -55,10 +55,10 @@ CONTAINS
 ! !INTERFACE:
   SUBROUTINE initPRTFile( myTime, myIter, myThid )
 ! !DESCRIPTION:
-!   Initializes the iHOP print file.
+!   Initializes the belli print file.
 
 ! !USES:
-  USE ihop_mod,  only: PRTFile, Beam
+  USE belli_mod,  only: PRTFile, Beam
   USE angle_mod, only: Angles
   USE srpos_mod, only: WriteSxSy, WriteSzRz, WriteRcvrRanges, WriteFreqVec
 
@@ -81,10 +81,10 @@ CONTAINS
   ! In adjoint mode we do not write output besides on the first run
   IF ( IHOP_dumpfreq.LT.0 ) RETURN
 
-  ! *** ihop info to PRTFile ***
+  ! *** belli info to PRTFile ***
   CALL openPRTFile( myTime, myIter, myThid )
 
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
   !   Only do I/O in the main thread
   _BEGIN_MASTER(myThid)
 
@@ -121,7 +121,7 @@ CONTAINS
   CALL WriteSxSy( myThid )
   CALL WriteSzRz( myThid )
   CALL WriteRcvrRanges( myThid )
-# ifdef IHOP_THREED
+# ifdef BELLI_THREED
   CALL WriteRcvrBearings( myThid )
 # endif
   CALL WriteFreqVec( Bdry%Top%HS%Opt( 6:6 ), myThid )
@@ -168,7 +168,7 @@ CONTAINS
   WRITE(msgBuf,'(A)')
   CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 
-# ifdef IHOP_THREED
+# ifdef BELLI_THREED
   WRITE(msgBuf,'(A,G11.6,A)') &
     ' Maximum ray x-range, Box%X = ', Beam%Box%X,' m'
   CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
@@ -178,7 +178,7 @@ CONTAINS
   WRITE(msgBuf,'(A,G11.6,A)') &
     ' Maximum ray z-range, Box%Z = ', Beam%Box%Z,' m'
   CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-# else /* not IHOP_THREED */
+# else /* not BELLI_THREED */
   ranges = Beam%Box%R / 1000.0
   WRITE(msgBuf,'(A,G11.6,A)') &
     ' Maximum ray range, Box%R = ', ranges,' km'
@@ -186,7 +186,7 @@ CONTAINS
   WRITE(msgBuf,'(A,G11.6,A)') &
     ' Maximum ray depth, Box%Z = ', Beam%Box%Z,' m'
   CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-# endif /* not IHOP_THREED */
+# endif /* not BELLI_THREED */
 
   SELECT CASE ( Beam%Type( 4:4 ) )
   CASE ( 'S' )
@@ -201,7 +201,7 @@ CONTAINS
 
   !   Only do I/O in the main thread
   _END_MASTER(myThid)
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
 
   RETURN
   END !SUBROUTINE initPRTFile
@@ -212,10 +212,10 @@ CONTAINS
 ! !INTERFACE:
   SUBROUTINE openPRTFile ( myTime, myIter, myThid )
 ! !DESCRIPTION:
-!   Opens the iHOP print file for writing.
+!   Opens the belli print file for writing.
 
 ! !USES:
-  USE ihop_mod, only: PRTFile, Title
+  USE belli_mod, only: PRTFile, Title
 
 ! !INPUT PARAMETERS:
 ! myTime :: Current time in simulation
@@ -247,18 +247,18 @@ CONTAINS
   IF ( IHOP_dumpfreq.LT.0 ) RETURN
 
   ! Open the print file: template from eeboot_minimal.F
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
   IF ( .NOT.usingMPI ) THEN
     WRITE(myProcessStr, '(I10.10)') myIter
     IL=ILNBLNK( myProcessStr )
     WRITE(fNam,'(4A)') TRIM(IHOP_fileroot),'.',myProcessStr(1:IL),'.prt'
     OPEN( PRTFile, FILE=fNam, STATUS='UNKNOWN', IOSTAT=iostat )
     IF ( iostat.NE.0 ) THEN
-      WRITE(*,*) 'ihop: IHOP_fileroot not recognized, ', &
+      WRITE(*,*) 'belli: IHOP_fileroot not recognized, ', &
         TRIM(IHOP_fileroot)
-      WRITE(msgBuf,'(A)') 'IHOP_INIT: Unable to recognize file'
+      WRITE(msgBuf,'(A)') 'BELLI_INIT: Unable to recognize file'
       CALL PRINT_ERROR( msgBuf, myThid )
-      STOP 'ABNORMAL END: S/R IHOP_INIT'
+      STOP 'ABNORMAL END: S/R BELLI_INIT'
     ENDIF
 
 # ifdef ALLOW_USE_MPI
@@ -267,49 +267,49 @@ CONTAINS
       WRITE(fNam,'(2A,I10.10,A)') &
         TRIM(IHOP_fileroot),'.',myIter,'.prt'
     ELSE
-      WRITE(msgBuf,'(A,I)') 'IHOP_INIT: myIter is ', myIter
+      WRITE(msgBuf,'(A,I)') 'BELLI_INIT: myIter is ', myIter
       CALL PRINT_ERROR( msgBuf, myThid )
-      STOP 'ABNORMAL END: S/R IHOP_INIT'
+      STOP 'ABNORMAL END: S/R BELLI_INIT'
     ENDIF
 
     OPEN(PRTFile, FILE=fNam, STATUS='UNKNOWN', IOSTAT=iostat )
     IF ( iostat.NE.0 ) THEN
-      WRITE(*,*) 'ihop: IHOP_fileroot not recognized, ', &
+      WRITE(*,*) 'belli: IHOP_fileroot not recognized, ', &
         TRIM(IHOP_fileroot)
-      WRITE(msgBuf,'(A)') 'IHOP_INIT: Unable to recognize file'
+      WRITE(msgBuf,'(A)') 'BELLI_INIT: Unable to recognize file'
       CALL PRINT_ERROR( msgBuf, myThid )
-      STOP 'ABNORMAL END: S/R IHOP_INIT'
+      STOP 'ABNORMAL END: S/R BELLI_INIT'
     ENDIF
 # endif /* ALLOW_USE_MPI */
 
   ENDIF ! IF ( .NOT.usingMPI )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
 
   !   Only do I/O in the main thread
   _BARRIER
   _BEGIN_MASTER(myThid)
 
-#ifdef IHOP_WRITE_OUT
-  WRITE(msgbuf,'(A)') 'iHOP Print File'
+#ifdef BELLI_WRITE_OUT
+  WRITE(msgbuf,'(A)') 'belli Print File'
   CALL PRINT_MESSAGE( msgBuf, PRTFile, SQUEEZE_RIGHT, myThid )
   WRITE(msgbuf,'(A)')
   CALL PRINT_MESSAGE( msgBuf, PRTFile, SQUEEZE_RIGHT, myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
 
     ! *** TITLE ***
-#ifdef IHOP_THREED
-  WRITE(msgBuf,'(2A)') 'IHOP_INIT_DIAG openPRTFile: ', &
-    '3D not supported in ihop'
+#ifdef BELLI_THREED
+  WRITE(msgBuf,'(2A)') 'BELLI_INIT_DIAG openPRTFile: ', &
+    '3D not supported in belli'
   CALL PRINT_ERROR( msgBuf,myThid )
   STOP 'ABNORMAL END: S/R openPRTFile'
-  Title( 1 :11 ) = 'iHOP3D - '
+  Title( 1 :11 ) = 'belli3D - '
   Title( 12:80 ) = IHOP_title
-#else /* not IHOP_THREED */
-  Title( 1:9   ) = 'iHOP - '
+#else /* not BELLI_THREED */
+  Title( 1:9   ) = 'belli - '
   Title( 10:80 ) = IHOP_title
-#endif /* IHOP_THREED */
+#endif /* BELLI_THREED */
 
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
   WRITE(msgbuf,'(A)') TRIM(Title) ! , ACHAR(10)
   CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
   WRITE(msgBuf,'(A)') &
@@ -333,7 +333,7 @@ CONTAINS
   WRITE(msgBuf,'(A)') &
   '___________________________________________________________'
   CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
 
   !   Only do I/O in the main thread
   _END_MASTER(myThid)
@@ -347,10 +347,10 @@ CONTAINS
 ! !INTERFACE:
   SUBROUTINE WriteTopOpt( myThid )
 ! !DESCRIPTION:
-!  Write the top options for iHOP model.
+!  Write the top options for belli model.
 
 ! !USES:
-  USE ihop_mod,  only: PRTFile
+  USE belli_mod,  only: PRTFile
   USE ssp_mod,   only: Grid
   USE atten_mod, only: T, Salinity, pH, z_bar, iBio, NBioLayers, bio
 
@@ -371,7 +371,7 @@ CONTAINS
   ! In adjoint mode we do not write output besides on the first run
   IF (IHOP_dumpfreq.LT.0) RETURN
 
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
   WRITE(msgBuf,'(A)')
   CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
   WRITE(msgBuf,'(A)') 'Interior options: '
@@ -475,7 +475,7 @@ CONTAINS
   CASE ( ' ' )
   CASE DEFAULT
   END SELECT
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
 
   RETURN
   END !SUBROUTINE WriteTopOpt
@@ -489,7 +489,7 @@ CONTAINS
 ! Write the RunType variable to .prt file
 
 ! !USES:
-  USE ihop_mod, only: PRTFile
+  USE belli_mod, only: PRTFile
 
 ! !INPUT PARAMETERS:
 ! RunType :: String describing the run type
@@ -506,7 +506,7 @@ CONTAINS
   ! In adjoint mode we do not write output besides on the first run
   IF (IHOP_dumpfreq.LT.0) RETURN
 
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
   WRITE(msgBuf,'(A)')
   CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 
@@ -596,7 +596,7 @@ CONTAINS
   WRITE(msgBuf,'(A)') &
     '___________________________________________________________'
   CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
 
   RETURN
   END !SUBROUTINE WriteRunType
@@ -610,7 +610,7 @@ CONTAINS
 !   Writes the boundary condition information to the print file.
 
 ! !USES:
-  USE ihop_mod,only: PRTFile
+  USE belli_mod,only: PRTFile
   USE ssp_mod, only: rhoR, alphaR, betaR, alphaI, betaI
 
 ! !INPUT PARAMETERS:
@@ -630,7 +630,7 @@ CONTAINS
   ! In adjoint mode we do not write output besides on the first run
   IF (IHOP_dumpfreq.LT.0) RETURN
 
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
   ! Echo to PRTFile user's choice of boundary condition
   SELECT CASE ( HS%BC )
   CASE ( 'V' )
@@ -672,7 +672,7 @@ CONTAINS
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
   CASE DEFAULT
   END SELECT
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
 
   RETURN
   END !SUBROUTINE writeBdry
@@ -683,10 +683,10 @@ CONTAINS
 ! !INTERFACE:
   SUBROUTINE openOutputFiles( fName, myTime, myIter, myThid )
 ! !DESCRIPTION:
-!   Opens the unique output files for iHOP model.
+!   Opens the unique output files for belli model.
 
 ! !USES:
-  USE ihop_mod,  only: RAYFile, DELFile, ARRFile, SHDFile, &
+  USE belli_mod,  only: RAYFile, DELFile, ARRFile, SHDFile, &
                        Title, Beam
   USE angle_mod, only: Angles
   USE srPos_mod, only: Pos
@@ -729,7 +729,7 @@ CONTAINS
 
   SELECT CASE ( Beam%RunType( 1:1 ) )
   CASE ( 'R', 'E' )   ! Ray trace or Eigenrays
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
     INQUIRE(UNIT=RAYFile, OPENED=isOpen)
     IF (isOpen) CLOSE(RAYFile)
     OPEN ( FILE=TRIM( fullName ) // '.ray', UNIT=RAYFile, &
@@ -740,15 +740,15 @@ CONTAINS
     WRITE( RAYFile, '(I5)'    ) Angles%nAlpha
     WRITE( RAYFile, '(F10.4)' ) Bdry%Top%HS%Depth
     WRITE( RAYFile, '(F10.4)' ) Bdry%Bot%HS%Depth
-#ifdef IHOP_THREED
+#ifdef BELLI_THREED
     WRITE( RAYFile, '(2I5)' ) Angles%nAlpha, Angles%nBeta
     WRITE( RAYFile, '(A)'   ) '''xyz'''
-#else /* IHOP_THREED */
+#else /* BELLI_THREED */
     WRITE( RAYFile, '(A)'  ) '''rz'''
-#endif /* IHOP_THREED */
+#endif /* BELLI_THREED */
 
     FLUSH( RAYFile )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
 
     IF (writeDelay) THEN
       INQUIRE(UNIT=DELFile, OPENED=isOpen)
@@ -761,52 +761,52 @@ CONTAINS
       WRITE( DELFile, '(I5)'    ) Angles%nAlpha
       WRITE( DELFile, '(F10.4)' ) Bdry%Top%HS%Depth
       WRITE( DELFile, '(F10.4)' ) Bdry%Bot%HS%Depth
-#ifdef IHOP_THREED
+#ifdef BELLI_THREED
       WRITE( DELFile, '(2I5)' ) Angles%nAlpha, Angles%nBeta
       WRITE( DELFile, '(A)'   ) '''xyz'''
-# else /* IHOP_THREED */
+# else /* BELLI_THREED */
       WRITE( DELFile, '(A)'  ) '''rz'''
-# endif /* IHOP_THREED */
+# endif /* BELLI_THREED */
 
       FLUSH( DELFile )
 
     ENDIF ! IF (writeDelay)
 
   CASE ( 'e' ) ! eigenrays + arrival file in ascii format
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
     INQUIRE(UNIT=ARRFile, OPENED=isOpen)
     IF (isOpen) CLOSE(ARRFile)
     OPEN ( FILE=TRIM( fullName ) // '.arr', UNIT=ARRFile, &
           FORM='FORMATTED' )
-# ifdef IHOP_THREED
+# ifdef BELLI_THREED
     WRITE( ARRFile, '(A)' ) '''3D'''
-# else /* IHOP_THREED */
+# else /* BELLI_THREED */
     WRITE( ARRFile, '(A)' ) '''2D'''
-# endif /* IHOP_THREED */
+# endif /* BELLI_THREED */
     WRITE( ARRFile, '(F10.4)' ) IHOP_freq
 
     ! write source locations
-# ifdef IHOP_THREED
+# ifdef BELLI_THREED
     WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSX, 'G16.10)'
     WRITE( ARRFile, fmtstr    ) Pos%nSX, Pos%SX( 1:Pos%nSX )
     WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSY, 'G16.10)'
     WRITE( ARRFile, fmtstr    ) Pos%nSY, Pos%SY( 1:Pos%nSY )
     WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSZ, 'G16.10)'
     WRITE( ARRFile, fmtstr    ) Pos%nSZ, Pos%SZ( 1:Pos%nSZ )
-# else /* IHOP_THREED */
+# else /* BELLI_THREED */
     WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSZ, 'G16.10)'
     WRITE( ARRFile, fmtstr    ) Pos%nSZ, Pos%SZ( 1:Pos%nSZ )
-# endif /* IHOP_THREED */
+# endif /* BELLI_THREED */
 
     ! write receiver locations
     WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nRZ, 'G16.10)'
     WRITE( ARRFile, fmtstr    ) Pos%nRZ, Pos%RZ( 1:Pos%nRZ )
     WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nRR, 'G16.10)'
     WRITE( ARRFile, fmtstr    ) Pos%nRR, Pos%RR( 1:Pos%nRR )
-# ifdef IHOP_THREED
+# ifdef BELLI_THREED
     WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nTheta, 'G16.10)'
     WRITE( ARRFile, fmtstr    ) Pos%nTheta, Pos%theta( 1:Pos%nTheta )
-# endif /* IHOP_THREED */
+# endif /* BELLI_THREED */
 
     FLUSH( ARRFile )
 
@@ -821,12 +821,12 @@ CONTAINS
     WRITE( RAYFile, '(I5)'    ) Angles%nAlpha
     WRITE( RAYFile, '(F10.4)' ) Bdry%Top%HS%Depth
     WRITE( RAYFile, '(F10.4)' ) Bdry%Bot%HS%Depth
-# ifdef IHOP_THREED
+# ifdef BELLI_THREED
     WRITE( RAYFile, '(2I5)' ) Angles%nAlpha, Angles%nBeta
     WRITE( RAYFile, '(A)'   ) '''xyz'''
-# else /* IHOP_THREED */
+# else /* BELLI_THREED */
     WRITE( RAYFile, '(A)'  ) '''rz'''
-# endif /* IHOP_THREED */
+# endif /* BELLI_THREED */
 
     FLUSH( RAYFile )
 
@@ -841,97 +841,97 @@ CONTAINS
       WRITE( DELFile, '(I5)'    ) Angles%nAlpha
       WRITE( DELFile, '(F10.4)' ) Bdry%Top%HS%Depth
       WRITE( DELFile, '(F10.4)' ) Bdry%Bot%HS%Depth
-#ifdef IHOP_THREED
+#ifdef BELLI_THREED
       WRITE( DELFile, '(2I5)' ) Angles%nAlpha, Angles%nBeta
       WRITE( DELFile, '(A)'   ) '''xyz'''
-# else /* IHOP_THREED */
+# else /* BELLI_THREED */
       WRITE( DELFile, '(A)'  ) '''rz'''
-# endif /* IHOP_THREED */
+# endif /* BELLI_THREED */
 
       FLUSH( DELFile )
 
     ENDIF ! IF (writeDelay)
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
 
   CASE ( 'A' )        ! arrival file in ascii format
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
     INQUIRE(UNIT=ARRFile, OPENED=isOpen)
     IF (isOpen) CLOSE(ARRFile)
     OPEN ( FILE=TRIM( fullName ) // '.arr', UNIT=ARRFile, &
           FORM='FORMATTED' )
 
-# ifdef IHOP_THREED
+# ifdef BELLI_THREED
     WRITE( ARRFile, '(A)' ) '''3D'''
-# else /* IHOP_THREED */
+# else /* BELLI_THREED */
     WRITE( ARRFile, '(A)' ) '''2D'''
-# endif /* IHOP_THREED */
+# endif /* BELLI_THREED */
     WRITE( ARRFile, '(F10.4)' ) IHOP_freq
 
       ! write source locations
-# ifdef IHOP_THREED
+# ifdef BELLI_THREED
     WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSX, 'G16.10)'
     WRITE( ARRFile, fmtstr    ) Pos%nSX, Pos%SX( 1:Pos%nSX )
     WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSY, 'G16.10)'
     WRITE( ARRFile, fmtstr    ) Pos%nSY, Pos%SY( 1:Pos%nSY )
     WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSZ, 'G16.10)'
     WRITE( ARRFile, fmtstr    ) Pos%nSZ, Pos%SZ( 1:Pos%nSZ )
-# else /* IHOP_THREED */
+# else /* BELLI_THREED */
     WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSZ, 'G16.10)'
     WRITE( ARRFile, fmtstr    ) Pos%nSZ, Pos%SZ( 1:Pos%nSZ )
-# endif /* IHOP_THREED */
+# endif /* BELLI_THREED */
 
     ! write receiver locations
     WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nRZ, 'G16.10)'
     WRITE( ARRFile, fmtstr    ) Pos%nRZ, Pos%RZ( 1:Pos%nRZ )
     WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nRR, 'G16.10)'
     WRITE( ARRFile, fmtstr    ) Pos%nRR, Pos%RR( 1:Pos%nRR )
-# ifdef IHOP_THREED
+# ifdef BELLI_THREED
     WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nTheta, 'G16.10)'
     WRITE( ARRFile, fmtstr    ) Pos%nTheta, Pos%theta( 1:Pos%nTheta )
-# endif /* IHOP_THREED */
+# endif /* BELLI_THREED */
 
     FLUSH( ARRFile )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
 
   CASE ( 'a' )        ! arrival file in binary format
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
     INQUIRE(UNIT=ARRFile, OPENED=isOpen)
     IF (isOpen) CLOSE(ARRFile)
     OPEN ( FILE=TRIM( fullName ) // '.arr', UNIT=ARRFile, &
           FORM='UNFORMATTED' )
 
-# ifdef IHOP_THREED
+# ifdef BELLI_THREED
     WRITE( ARRFile, '(A)' ) '''3D'''
-# else /* IHOP_THREED */
+# else /* BELLI_THREED */
     WRITE( ARRFile, '(A)' ) '''2D'''
-# endif /* IHOP_THREED */
+# endif /* BELLI_THREED */
     WRITE( ARRFile, '(F10.4)' ) IHOP_freq
 
     ! write source locations
-# ifdef IHOP_THREED
+# ifdef BELLI_THREED
     WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSX, 'G16.10)'
     WRITE( ARRFile, fmtstr    ) Pos%nSX, Pos%SX( 1:Pos%nSX )
     WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSY, 'G16.10)'
     WRITE( ARRFile, fmtstr    ) Pos%nSY, Pos%SY( 1:Pos%nSY )
     WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSZ, 'G16.10)'
     WRITE( ARRFile, fmtstr    ) Pos%nSZ, Pos%SZ( 1:Pos%nSZ )
-# else /* IHOP_THREED */
+# else /* BELLI_THREED */
     WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nSZ, 'G16.10)'
     WRITE( ARRFile, fmtstr    ) Pos%nSZ, Pos%SZ( 1:Pos%nSZ )
-# endif /* IHOP_THREED */
+# endif /* BELLI_THREED */
 
     ! write receiver locations
     WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nRZ, 'G16.10)'
     WRITE( ARRFile, fmtstr    ) Pos%nRZ, Pos%RZ( 1:Pos%nRZ )
     WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nRR, 'G16.10)'
     WRITE( ARRFile, fmtstr    ) Pos%nRR, Pos%RR( 1:Pos%nRR )
-# ifdef IHOP_THREED
+# ifdef BELLI_THREED
     WRITE( fmtstr, '(A,I0,A)' ) '(I4,', Pos%nTheta, 'G16.10)'
     WRITE( ARRFile, fmtstr    ) Pos%nTheta, Pos%theta( 1:Pos%nTheta )
-# endif /* IHOP_THREED */
+# endif /* BELLI_THREED */
 
     FLUSH( ARRFile )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
 
   CASE DEFAULT
     atten = 0.0
@@ -965,7 +965,7 @@ CONTAINS
 
 ! !USES:
   USE srPos_mod,  only: Pos, Nfreq, freqVec
-  USE ihop_mod,   only: SHDFile
+  USE belli_mod,   only: SHDFile
 
 ! !INPUT PARAMETERS:
 ! FileName :: Name of the SHD file to write
@@ -1061,7 +1061,7 @@ CONTAINS
 !   Writes the pressure field to the SHD file.
 
 ! !USES:
-  USE ihop_mod, only: SHDFile
+  USE belli_mod, only: SHDFile
     
 ! !INPUT PARAMETERS:
 ! P     :: Pressure field to write
@@ -1130,12 +1130,12 @@ CONTAINS
 ! !INTERFACE:
   SUBROUTINE resetMemory()
 ! !DESCRIPTION:
-!   Resets memory of iHOP model to default values for each new time step.
+!   Resets memory of belli model to default values for each new time step.
 
 ! !USES:
   USE ssp_mod,    only: SSP
   USE arr_mod,    only: nArrival, Arr, U
-  USE ihop_mod,   only: ray2D, nMax, iStep
+  USE belli_mod,   only: ray2D, nMax, iStep
 
   ! From arr_mod.f90
   U                         = 0.
@@ -1155,13 +1155,13 @@ CONTAINS
   ELSE
     SSP%cmat   = -99.0
     SSP%czmat  = -99.0
-#ifdef IHOP_THREED
+#ifdef BELLI_THREED
     SSP%cmat3  = -99.0
     SSP%czmat3 = -99.0
-#endif /* IHOP_THREED */
+#endif /* BELLI_THREED */
   ENDIF ! IF (useSSPFile)
 
-  ! From ihop_mod.f90
+  ! From belli_mod.f90
   DO iStep = 1,nMax
     ray2D(iStep)%x = [zeroRL, zeroRL]
     ray2D(iStep)%t = [zeroRL, zeroRL]
@@ -1176,4 +1176,4 @@ CONTAINS
   RETURN
   END !SUBROUTINE resetMemory
 
-END !MODULE IHOP_INIT_DIAG
+END !MODULE BELLI_INIT_DIAG

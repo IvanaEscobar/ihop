@@ -1,4 +1,4 @@
-#include "IHOP_OPTIONS.h"
+#include "BELLI_OPTIONS.h"
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 !BOP
 !MODULE: atten_mod
@@ -11,16 +11,16 @@ MODULE atten_mod
 !  Includes a formula for volume attenuation
 
 ! !USES:
-#ifdef IHOP_WRITE_OUT
-  USE ihop_mod, only: PRTFile
+#ifdef BELLI_WRITE_OUT
+  USE belli_mod, only: PRTFile
 #endif
   IMPLICIT NONE
 ! == Global variables ==
 #include "SIZE.h"
 #include "EEPARAMS.h"
 #include "PARAMS.h"
-#include "IHOP_SIZE.h"
-#include "IHOP.h"
+#include "BELLI_SIZE.h"
+#include "BELLI.h"
 
 ! !SCOPE: 
   PRIVATE
@@ -176,7 +176,7 @@ CONTAINS
   CRCI   = CMPLX( c, alphaT, KIND=_RL90 )
 
   IF ( alphaT.GT.c ) THEN
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
     ! In adjoint mode we do not write output besides on the first run
     IF (IHOP_dumpfreq.LT.0) THEN
       WRITE( PRTFile, * ) 'Complex sound speed: ', CRCI
@@ -186,7 +186,7 @@ CONTAINS
 
     WRITE(errorMessageUnit,'(2A)') 'ATTENMOD CRCI: complex sound speed',&
       'has an imaginary part > real part'
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
     STOP 'ABNORMAL END: S/R CRCI'
   ENDIF ! IF ( alphaT.GT.c )
 

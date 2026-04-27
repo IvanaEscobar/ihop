@@ -1,13 +1,13 @@
-#include "IHOP_OPTIONS.h"
+#include "BELLI_OPTIONS.h"
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 CBOP
-C !ROUTINE: IHOP_CALC_SLD
+C !ROUTINE: BELLI_CALC_SLD
 C !INTERFACE:
-      SUBROUTINE IHOP_CALC_SLD( bi, bj, myThid )
+      SUBROUTINE BELLI_CALC_SLD( bi, bj, myThid )
 
 C     !DESCRIPTION:
-C     S/R IHOP_CALC_SLD
+C     S/R BELLI_CALC_SLD
 C     o Diagnose the Oceanic Sonic Layer depth
 C     Note: output "hMixLayer" is in "r" unit, i.e., in Pa
 C           when using P-coordinate.
@@ -23,9 +23,9 @@ C     == Global variables ==
 #ifdef ALLOW_GMREDI
 # include "GMREDI.h"
 #endif
-#ifdef ALLOW_IHOP
-# include "IHOP_SIZE.h"
-# include "IHOP.h"
+#ifdef ALLOW_BELLI
+# include "BELLI_SIZE.h"
+# include "BELLI.h"
 #endif
 
 C     !INPUT PARAMETERS:
@@ -50,8 +50,8 @@ C     kU, kL    :: loop ranges, Up and Low
       INTEGER kDir, deltaK
       INTEGER kU, kL
       INTEGER kMin, kMax
-      INTEGER ihop_kMin(1-OLx:sNx+OLx,1-OLy:sNy+OLy)
-      INTEGER ihop_kMax(1-OLx:sNx+OLx,1-OLy:sNy+OLy)
+      INTEGER b_kMin(1-OLx:sNx+OLx,1-OLy:sNy+OLy)
+      INTEGER b_kMax(1-OLx:sNx+OLx,1-OLy:sNy+OLy)
       LOGICAL calcSonicLayerDepth
       _RL     min_val, max_val
 CEOP
@@ -100,7 +100,7 @@ C step 1: determine depth of global minimum
                kMin = k
            ENDIF
           ENDDO
-          ihop_kMin (i,j) = kMin
+          b_kMin (i,j) = kMin
 
          ENDDO
         ENDDO
@@ -110,7 +110,7 @@ C step 2: find vertical level of the truncated global maximum
          DO i=1-OLx,sNx+OLx
           max_val = -9999.9
           kMax = -1*kDir
-          kMin = ihop_kMin(i,j)
+          kMin = b_kMin(i,j)
 
           DO k=kU,kMin,kDir
            IF (ihop_ssp(i,j,k,bi,bj).GT.max_val ) THEN
@@ -118,7 +118,7 @@ C step 2: find vertical level of the truncated global maximum
                kMax = k
            ENDIF
           ENDDO
-          ihop_kMax (i,j) = kMax
+          b_kMax (i,j) = kMax
 
          ENDDO
         ENDDO
@@ -132,7 +132,7 @@ C b) line search max ssp UP/DOWN
 C c) store depth of max ssp
         DO j=1-OLy,sNy+OLy
          DO i=1-OLx,sNx+OLx
-          kMax = ihop_kMax(i,j)
+          kMax = b_kMax(i,j)
           ihop_sld(i,j,bi,bj) = gravitySign * rC(kMax) 
      &                          * maskC(i,j,kMax,bi,bj)
 
