@@ -50,7 +50,7 @@ C     !LOCAL VARIABLES:
       _RL tmp_vec(2)
 CEOP
 
-      IF (ihopDoNcOutput) THEN
+      IF (belliDoNcOutput) THEN
 C Create a netcdf file
         err = NF_CREATE( file2, NF_CLOBBER, fID2 )
         CALL BELLI_COST_NF_ERROR( 'INIT_EQUI: NF_CREATE fID2',
@@ -59,7 +59,7 @@ C Create a netcdf file
         CALL BELLI_COST_NF_ERROR( 'INIT_EQUI: NF_DEF_DIM iOBS',
      &       err,bi,bj,myThid )
 
-        err = NF_DEF_VAR( fID2, 'ihopObs_ind_glob_tiled',
+        err = NF_DEF_VAR( fID2, 'bObs_ind_glob_tiled',
      &        NF_INT, 1, dimID, varID(1) )
         CALL BELLI_COST_NF_ERROR( 'INIT_EQUI: NF_DEF_VAR ind_glob',
      &       err,bi,bj,myThid )
@@ -68,13 +68,19 @@ C Create a netcdf file
         CALL BELLI_COST_NF_ERROR( 'INIT_EQUI: NF_PUT_ATT_INT iOBS',
      &       err,bi,bj,myThid )
 
+<<<<<<< HEAD
 ! If 'ihop_val' exists in data file, then add info to equi file
         err = NF_INQ_VARID( fID1, ihop_nameval, varID0 )
         CALL BELLI_COST_NF_ERROR( 'INIT_EQUI: NF_INQ_VARID ihop_val',
+=======
+! If 'belli_val' exists in data file, then add info to equi file
+        err = NF_INQ_VARID( fID1, belli_nameval, varID0 )
+        CALL BELLI_COST_NF_ERROR( 'INIT_EQUI: NF_INQ_VARID belli_val',
+>>>>>>> 9109fa67eb1e236615c35ed5a9bc59c95cdc54e1
      &       err,bi,bj,myThid )
 
         IF (err.EQ.NF_NOERR) THEN
-          err = NF_DEF_VAR( fID2, ihop_nameequi,
+          err = NF_DEF_VAR( fID2, belli_nameequi,
      &          NF_DOUBLE, 1, dimID, varID(2) )
           CALL BELLI_COST_NF_ERROR( 'INIT_EQUI: NF_DEF_VAR val',
      &         err,bi,bj,myThid )
@@ -83,7 +89,7 @@ C Create a netcdf file
           CALL BELLI_COST_NF_ERROR( 'INIT_EQUI: NF_PUT_ATT_D val',
      &         err,bi,bj,myThid )
 
-          err = NF_DEF_VAR( fID2, ihop_namemask,
+          err = NF_DEF_VAR( fID2, belli_namemask,
      &          NF_DOUBLE, 1, dimID, varID(3) )
           CALL BELLI_COST_NF_ERROR( 'INIT_EQUI: NF_DEF_VAR mask',
      &         err,bi,bj,myThid )
@@ -94,8 +100,13 @@ C Create a netcdf file
 
         ELSE
           WRITE(msgBuf,'(2A)')
+<<<<<<< HEAD
      &         'S/R BELLI_COST_INIT_EQUI: no variable ihop_val',
      &         ihop_nameval
+=======
+     &         'S/R BELLI_COST_INIT_EQUI: no variable belli_val',
+     &         belli_nameval
+>>>>>>> 9109fa67eb1e236615c35ed5a9bc59c95cdc54e1
           CALL PRINT_MESSAGE( msgBuf,
      &         standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
@@ -114,7 +125,11 @@ C Create a netcdf file
         CALL BELLI_COST_NF_ERROR( 'INIT_EQUI: NF_OPEN'//file2//'',
      &       err,bi,bj,myThid )
 
+<<<<<<< HEAD
       ELSE !IF (ihopDoNcOutput)
+=======
+      ELSE !IF (belliDoNcOutput)
+>>>>>>> 9109fa67eb1e236615c35ed5a9bc59c95cdc54e1
         WRITE(msgBuf,'(2A)') "**ERROR** BELLI COST doesn't support ",
      &    "binary model equivalents est.2024"
         CALL PRINT_MESSAGE( msgBuf,
@@ -137,7 +152,11 @@ C Create a netcdf file
           WRITE(fID2, REC = (irec*2)) tmp_vec
         ENDDO
 
+<<<<<<< HEAD
       ENDIF !IF (ihopDoNcOutput)
+=======
+      ENDIF !IF (belliDoNcOutput)
+>>>>>>> 9109fa67eb1e236615c35ed5a9bc59c95cdc54e1
 #endif /* ALLOW_BELLI && ALLOW_COST */
 
       RETURN

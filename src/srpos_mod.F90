@@ -79,7 +79,7 @@ CONTAINS
 !   Reads a vector of source frequencies for a broadband run
 !   If the broadband option is not selected, then the input freq (a scalar)
 !   is stored in the frequency vector
-!   IHOP_freq is source frequency
+!   BELLI_freq is source frequency
 
 ! !USES: None
 
@@ -98,7 +98,7 @@ CONTAINS
 !EOP
 
   ! In adjoint mode we do not write output besides on the first run
-  IF ( IHOP_dumpfreq.GE.0 ) THEN
+  IF ( BELLI_dumpfreq.GE.0 ) THEN
     ! Broadband run?
     IF ( BroadbandOption.EQ.'B' ) THEN
       IF ( Nfreq.LE.0 ) THEN
@@ -132,7 +132,7 @@ CONTAINS
     CALL SubTab( freqVec, Nfreq )
 
   ELSE
-    freqVec(1) = IHOP_freq
+    freqVec(1) = BELLI_freq
 
   ENDIF
 
@@ -238,7 +238,7 @@ CONTAINS
 
 #ifdef BELLI_WRITE_OUT
   ! In adjoint mode we do not write output besides on the first run
-  IF ( IHOP_dumpfreq.GE.0 ) THEN
+  IF ( BELLI_dumpfreq.GE.0 ) THEN
     IF ( posShift.EQ.1 ) THEN
       WRITE(msgBuf,'(2A)') 'Warning in WriteSzRz : Source above or too ',&
         'near the top bdry has been moved down'
@@ -356,7 +356,7 @@ INTEGER, INTENT( IN ) :: myThid
   CHARACTER*(MAX_LEN_MBUF) :: msgBuf
 !EOP
 
-! IEsco23: 3D NOT SUPPORTED IN ihop
+! IEsco23: 3D NOT SUPPORTED IN belli
   CALL ReadVector( Pos%nTheta, Pos%theta, 'receiver bearings, theta', &
     'degrees', myThid )
 
@@ -474,7 +474,7 @@ INTEGER, INTENT( IN ) :: myThid
 
 #ifdef BELLI_WRITE_OUT
   ! In adjoint mode we do not write output besides on the first run
-  IF ( IHOP_dumpfreq.GE.0 ) THEN
+  IF ( BELLI_dumpfreq.GE.0 ) THEN
     ! Broadband run?
     IF ( BroadbandOption.EQ.'B' ) THEN
       WRITE(msgBuf,'(A)') &
@@ -620,7 +620,7 @@ INTEGER, INTENT( IN ) :: myThid
   CHARACTER*(MAX_LEN_MBUF) :: msgBuf
 !EOP
 
-! IEsco23: NOT SUPPORTED IN ihop
+! IEsco23: NOT SUPPORTED IN belli
   CALL WriteVector( Pos%nTheta, Pos%theta, 'receiver bearings, theta', &
     'degrees', myThid )
 
@@ -660,7 +660,7 @@ INTEGER, INTENT( IN ) :: myThid
 
 #ifdef BELLI_WRITE_OUT
   ! In adjoint mode we do not write output besides on the first run
-  IF (IHOP_dumpfreq.GE.0) THEN
+  IF (BELLI_dumpfreq.GE.0) THEN
     WRITE(msgBuf,'(A)')
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
     WRITE(msgBuf,'(A)') &

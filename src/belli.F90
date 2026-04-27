@@ -112,7 +112,7 @@ CONTAINS
   CALL resetMemory()
 
   ! Only do IO and computation on a single process!
-  IF ( myProcID.EQ.0 .AND. IHOP_dumpfreq.GE.0 ) THEN
+  IF ( myProcID.EQ.0 .AND. BELLI_dumpfreq.GE.0 ) THEN
     ! open PRTFile
     CALL initPRTFile( myTime, myIter, myThid )
 
@@ -126,7 +126,7 @@ CONTAINS
     CALL writePat( myThid )
 
     ! Open output files
-    CALL OpenOutputFiles( IHOP_fileroot, myTime, myIter, myThid )
+    CALL OpenOutputFiles( BELLI_fileroot, myTime, myIter, myThid )
 
   ENDIF ! IF ( .NOT.usingMPI )
 
@@ -151,7 +151,7 @@ CONTAINS
 !  PRINT *, "ESCOBAR myproc, q(1) ", myprocid, Beam%nsteps, ray2d(Beam%nsteps)%q(1)
 
 #ifdef BELLI_WRITE_OUT
-  IF ( myProcID.EQ.0 .AND. IHOP_dumpfreq.GE.0 ) THEN
+  IF ( myProcID.EQ.0 .AND. BELLI_dumpfreq.GE.0 ) THEN
     WRITE(msgBuf, '(A)' )
     CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
     WRITE(msgBuf, '(A,G15.3,A)' ) 'CPU Time = ', Tstop-Tstart, 's'
@@ -187,7 +187,7 @@ CONTAINS
 ! !INTERFACE:
   SUBROUTINE BELLICore( myThid )
 ! !DESCRIPTION:
-!   BELLI core solver.
+!   belli core solver.
 
 ! !USES:
   USE ssp_mod,   only: evalSSP, iSegr  !RG
@@ -243,7 +243,7 @@ CONTAINS
 
 !$TAF init BELLICore2 = static, Pos%nSZ*Angles%nAlpha
 
-  afreq = 2.0 * PI * IHOP_freq
+  afreq = 2.0 * PI * BELLI_freq
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !         begin solve         !
@@ -256,10 +256,10 @@ CONTAINS
     CALL evalSSP(  xs, c, cimag, gradc, crr, crz, czz, rho, myThid  )
 
     !!IESCO22: BEAM stuff !!
-    RadMax = 5 * c / IHOP_freq  ! 5 wavelength max radius IEsco22: unused
+    RadMax = 5 * c / BELLI_freq  ! 5 wavelength max radius IEsco22: unused
     IF ( Beam%RunType( 1:1 ).EQ.'C' ) THEN ! for Coherent TL Run
       ! Are there enough rays?
-      DalphaOpt = SQRT( c / ( 6.0 * IHOP_freq * Pos%RR( Pos%nRR ) ) )
+      DalphaOpt = SQRT( c / ( 6.0 * BELLI_freq * Pos%RR( Pos%nRR ) ) )
       nAlphaOpt = 2 + INT( ( Angles%arad( Angles%nAlpha ) &
                             - Angles%arad( 1 ) ) / DalphaOpt )
 #ifdef BELLI_WRITE_OUT
@@ -267,7 +267,7 @@ CONTAINS
         WRITE( msgBuf, '(A,/,A,I10.4)' ) 'WARNING: Too few beams', &
           'nAlpha should be at least = ', nAlphaOpt
         ! In adjoint mode we do not write output besides on the first run
-        IF (IHOP_dumpfreq.GE.0) &
+        IF (BELLI_dumpfreq.GE.0) &
           CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
       ENDIF
 #endif /* BELLI_WRITE_OUT */
@@ -318,7 +318,7 @@ CONTAINS
             WRITE(msgBuf,'(A,I7,F10.2)') 'Tracing ray ', &
               iAlpha, SrcDeclAngle
             ! In adjoint mode we do not write output besides on the first run
-            IF (IHOP_dumpfreq.GE.0) THEN
+            IF (BELLI_dumpfreq.GE.0) THEN
               CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
               FLUSH( PRTFile )
             ENDIF
@@ -509,7 +509,7 @@ CONTAINS
     WRITE(msgBuf,'(A)') &
       'WARNING: TraceRay2D: The source is outside the domain boundaries'
     ! In adjoint mode we do not write output besides on the first run
-    IF (IHOP_dumpfreq.GE.0) &
+    IF (BELLI_dumpfreq.GE.0) &
       CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
 #endif /* BELLI_WRITE_OUT */
   ELSE
@@ -685,7 +685,7 @@ CONTAINS
 
 #ifdef BELLI_WRITE_OUT
         IF ( endRay ) THEN
-          IF ( IHOP_dumpfreq.GE.0 ) &
+          IF ( BELLI_dumpfreq.GE.0 ) &
             CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
         ENDIF
 #endif /* BELLI_WRITE_OUT */
@@ -1001,7 +1001,7 @@ CONTAINS
 #ifdef BELLI_WRITE_OUT
     WRITE(msgBuf,'(2A)') 'HS%BC = ', HS%BC
     ! In adjoint mode we do not write output besides on the first run
-    IF ( IHOP_dumpfreq.GE.0 ) &
+    IF ( BELLI_dumpfreq.GE.0 ) &
       CALL PRINT_MESSAGE(msgBuf, PRTFile, SQUEEZE_RIGHT, myThid)
     WRITE(msgBuf,'(A)') 'BELLI Reflect2D: Unknown boundary condition type'
     CALL PRINT_ERROR( msgBuf,myThid )

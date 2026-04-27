@@ -65,12 +65,12 @@ SUBROUTINE ReadPat( myThid )
   IF (ALLOCATED(SrcBmPat)) DEALLOCATE(SrcBmPat)
 
   IF ( SBPFlag=='*' ) THEN
-    OPEN( UNIT=SBPFile, FILE=TRIM( IHOP_fileroot ) // '.sbp', &
+    OPEN( UNIT=SBPFile, FILE=TRIM( BELLI_fileroot ) // '.sbp', &
           STATUS='OLD', IOSTAT=IOStat, ACTION='READ' )
     IF ( IOStat.NE.0 ) THEN
 #ifdef BELLI_WRITE_OUT
       ! In adjoint mode we do not write output besides on the first run
-      IF (IHOP_dumpfreq.GE.0) &
+      IF (BELLI_dumpfreq.GE.0) &
         WRITE(msgBuf,'(2A)') 'BEAMPATTERN ReadPat: ', &
           'Unable to open source beampattern file'
       CALL PRINT_ERROR( msgBuf,myThid )

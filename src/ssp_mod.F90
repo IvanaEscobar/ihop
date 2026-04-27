@@ -48,7 +48,7 @@ MODULE ssp_mod
   INTEGER                :: iostat, iallocstat
   INTEGER,           PRIVATE :: iz
   REAL (KIND=_RL90), PRIVATE :: Depth, W
-  ! DEFAULT values, IHOP only modifies alphaR
+  ! DEFAULT values, belli only modifies alphaR
   REAL (KIND=_RL90)      :: alphaR = 1500, betaR = 0, alphaI = 0, &
                             betaI = 0, rhoR = 1
   ! SSP interpolation parameters, only used in ssp_mod
@@ -141,7 +141,7 @@ CONTAINS
 ! IESCO24
 ! fT = 1000 ONLY for acousto-elastic halfspaces, I will have to pass this
 ! parameter in a different way after ssp_mod is split btwn fixed and varia
-! USE initenvihop, only: fT
+! USE initenvbelli, only: fT
 
 ! !INPUT PARAMETERS:
 ! myThid :: my thread ID
@@ -167,7 +167,7 @@ CONTAINS
   _BEGIN_MASTER(myThid)
 
   ! OPEN SSPFile to read
-  OPEN ( FILE=TRIM(IHOP_fileroot) // '.ssp', UNIT=SSPFile, &
+  OPEN ( FILE=TRIM(BELLI_fileroot) // '.ssp', UNIT=SSPFile, &
     FORM='FORMATTED', STATUS='OLD', IOSTAT=iostat )
   IF ( IOSTAT.NE.0 ) THEN   ! successful open?
 #ifdef BELLI_WRITE_OUT
@@ -272,7 +272,7 @@ CONTAINS
   SUBROUTINE init_fixed_Grid( myThid )
 ! !DESCRIPTION:
 !   Initialize SSP Grid parameters that do not change within a time series.
-! Sets Grid%nR,nZ,Seg%R, and ihop_sumweights
+! Sets Grid%nR,nZ,Seg%R, and belli_sumweights
 
 ! !USES:
   USE bdry_mod, only: Bdry
@@ -307,17 +307,17 @@ CONTAINS
   Grid%Z    = -999.0
   Grid%rho  = -999.0
 
-  ! set ihop SSP Grid size
+  ! set belli SSP Grid size
   Grid%nZ = Nr+2 ! add z=0 z=Depth layers to GCM Nr
   Grid%nR = BELLI_NPTS_RANGE
   Grid%nPts = Grid%nZ
 
-  ! set Grid%Z from rC, rkSign=-1 used bc ihop uses +ive depths
+  ! set Grid%Z from rC, rkSign=-1 used bc belli uses +ive depths
   Grid%Z( 1 )             = 0.0 _d 0
   Grid%Z( 2:(Grid%nZ-1) ) = rkSign*rC( 1:Nr )
   Grid%Z( Grid%nZ )       = Bdry%Bot%HS%Depth ! rkSign*rF(Nr+1)*1.05
 
-  ! set Grid%Seg%R from data.ihop -> ihop_ranges
+  ! set Grid%Seg%R from data.belli -> belli_ranges
   !IF (ALLOCATED(Grid%Seg%R)) DEALLOCATE(Grid%Seg%R)
   ALLOCATE( Grid%Seg%R( Grid%nR ), STAT=iallocstat )
   IF ( iallocstat.NE.0 ) THEN
@@ -329,7 +329,7 @@ CONTAINS
       STOP 'ABNORMAL END: S/R init_fixed_Grid'
   ENDIF
 
-  Grid%Seg%R( 1:Grid%nR ) = ihop_ranges( 1:Grid%nR )
+  Grid%Seg%R( 1:Grid%nR ) = belli_ranges( 1:Grid%nR )
   ! Modify from [m] to [km]
   Grid%Seg%R = 1000.0 * Grid%Seg%R
 
@@ -338,7 +338,7 @@ CONTAINS
   !==================================================
   ! Sum IDW weights
   DO ii = 1, Grid%nR
-    ihop_sumweights(ii,:) = SUM(ihop_idw_weights(ii,:))
+    belli_sumweights(ii,:) = SUM(belli_idw_weights(ii,:))
   ENDDO
 
   ! Adapt IDW interpolation by bathymetry
@@ -349,9 +349,9 @@ CONTAINS
           DO ii=1, Grid%nR
             skip_range = .FALSE.
 
-            DO jj=1,IHOP_npts_idw
-              IF ( ABS(xC(i, j, bi, bj) - ihop_xc(ii, jj)).LE.tolerance .AND. &
-                   ABS(yC(i, j, bi, bj) - ihop_yc(ii, jj)).LE.tolerance ) THEN
+            DO jj=1,BELLI_npts_idw
+              IF ( ABS(xC(i, j, bi, bj) - belli_xc(ii, jj)).LE.tolerance .AND. &
+                   ABS(yC(i, j, bi, bj) - belli_yc(ii, jj)).LE.tolerance ) THEN
                 DO k=1,Nr
     ! No IDW interpolation on xc, yc centered ranges
     IF ( nii(ii).EQ.1 .AND. k.GT.njj(ii) ) THEN
@@ -360,12 +360,12 @@ CONTAINS
 
     IF ( .NOT.skip_range ) THEN
       IF ( hFacC(i, j, k, bi, bj).EQ.0. ) THEN
-        ihop_sumweights(ii, k) = &
-          ihop_sumweights(ii, k) - ihop_idw_weights(ii, jj)
+        belli_sumweights(ii, k) = &
+          belli_sumweights(ii, k) - belli_idw_weights(ii, jj)
 
         ! No interpolation on xc, yc centered ranges
-        IF ( ihop_idw_weights(ii, jj).EQ.0. ) THEN
-          ihop_sumweights(ii, k:Nr) = 0.0
+        IF ( belli_idw_weights(ii, jj).EQ.0. ) THEN
+          belli_sumweights(ii, k:Nr) = 0.0
           nii(ii) = 1
           njj(ii) = k
         ENDIF
@@ -373,7 +373,7 @@ CONTAINS
       ENDIF ! IF ( hFacC(i, j, k, bi, bj).EQ.0. )
 
       ! Set TINY and negative values to 0.0
-      IF (ihop_sumweights(ii, k).LT.1D-13) ihop_sumweights(ii, k) = 0.0
+      IF (belli_sumweights(ii, k).LT.1D-13) belli_sumweights(ii, k) = 0.0
 
     ENDIF ! IF ( .NOT.skip_range )
                 ENDDO !k
@@ -531,7 +531,7 @@ CONTAINS
 #ifdef BELLI_WRITE_OUT
     WRITE(msgBuf,'(2A)') 'Profile option: ', Grid%Type
     ! In adjoint mode we do not write output besides on the first run
-    IF ( IHOP_dumpfreq.GE.0 ) &
+    IF ( BELLI_dumpfreq.GE.0 ) &
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
     WRITE(msgBuf,'(A)') 'SSP_MOD::evalSSP: Invalid SSP profile option'
     CALL PRINT_ERROR( msgBuf,myThid )
@@ -871,7 +871,7 @@ USE splinec_mod,  only: splineall
   IF ( x(1).LT.Grid%Seg%R( 1 ) .OR. x(1).GT.Grid%Seg%R( Grid%nR ) ) THEN
 #ifdef BELLI_WRITE_OUT
     ! In adjoint mode we do not write output besides on the first run
-    IF (IHOP_dumpfreq.GE.0) THEN
+    IF (BELLI_dumpfreq.GE.0) THEN
       WRITE(msgBuf,'(2A)') 'ray is outside the box where ocean ',&
         'soundspeed is defined'
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
@@ -959,7 +959,7 @@ USE splinec_mod,  only: splineall
 ! !INTERFACE:
   SUBROUTINE gcmSSP( myThid )
 ! !DESCRIPTION:
-!   Interpolate SSP from GCM grid to iHOP grid using adaptive IDW interpolation.
+!   Interpolate SSP from GCM grid to belli grid using adaptive IDW interpolation.
 
 ! !USES:
   USE atten_mod, only: CRCI
@@ -1003,7 +1003,7 @@ USE splinec_mod,  only: splineall
   REAL (KIND=_RL90)             :: bPower, fT
 #ifdef ALLOW_AUTODIFF_TAMC
   INTEGER tkey, ijkey, hkey, lockey
-!$TAF init loctape_ihop_gcmssp_bibj_ij_iijj_k = STATIC, nSx*nSy*sNx*sNy*IHOP_MAX_RANGE*IHOP_MAX_NC_SIZE*(Nr + 2)
+!$TAF init loctape_belli_gcmssp_bibj_ij_iijj_k = STATIC, nSx*nSy*sNx*sNy*BELLI_MAX_RANGE*BELLI_MAX_NC_SIZE*(Nr + 2)
 #endif
 
   ! IESCO24 fT init
@@ -1039,7 +1039,7 @@ USE splinec_mod,  only: splineall
   ssp1buffer = 0.0 _d 0
   ssp3buffer = 0.0 _d 0
 
-  ! interpolate SSP with adaptive IDW from gcm grid to ihop grid
+  ! interpolate SSP with adaptive IDW from gcm grid to belli grid
   DO bj=myByLo(myThid),myByHi(myThid)
     DO bi=myBxLo(myThid),myBxHi(myThid)
 #ifdef ALLOW_AUTODIFF_TAMC
@@ -1051,74 +1051,74 @@ USE splinec_mod,  only: splineall
       DO i=1,sNx
 #ifdef ALLOW_AUTODIFF_TAMC
         ijkey = i + (j-1)*sNx + (tkey-1)*sNx*sNy
-!$TAF store njj(ii) = comlev1_bibj_ij_ihop, key=ijkey, kind=isbyte
+!$TAF store njj(ii) = comlev1_bibj_ij_belli, key=ijkey, kind=isbyte
 #endif
-        DO ii=1,IHOP_npts_range
+        DO ii=1,BELLI_npts_range
           interp_finished = .FALSE.
-          DO jj=1,IHOP_npts_idw
+          DO jj=1,BELLI_npts_idw
 #ifdef ALLOW_AUTODIFF_TAMC
-!$TAF STORE interp_finished = comlev1_bibj_ij_ihop, key=ijkey, kind=isbyte
+!$TAF STORE interp_finished = comlev1_bibj_ij_belli, key=ijkey, kind=isbyte
 #endif
             ! Interpolate from GCM grid cell centers
-            IF ( ABS(xC(i, j, bi,bj) - ihop_xc(ii, jj)).LE.tolerance .AND. &
-                 ABS(yC(i, j, bi,bj) - ihop_yc(ii, jj)).LE.tolerance .AND. &
+            IF ( ABS(xC(i, j, bi,bj) - belli_xc(ii, jj)).LE.tolerance .AND. &
+                 ABS(yC(i, j, bi,bj) - belli_yc(ii, jj)).LE.tolerance .AND. &
                 .NOT.interp_finished ) THEN
               njj(ii) = njj(ii) + 1
 
               DO iz = 1, Grid%nZ-1
 #ifdef ALLOW_AUTODIFF_TAMC
-                hkey = jj + (ii-1)*IHOP_npts_idw + (ijkey-1)*sNy*sNx*nSy*nSx
-                lockey = iz + (hkey-1)*(Grid%nZ-1)*IHOP_npts_idw*IHOP_npts_range*sNx*sNy*nSx*nSy
-!                + ((jj-1) + ((ii-1) + (ijkey-1)*IHOP_npts_range)*IHOP_npts_idw)*(Grid%nZ-1)
-!$TAF store njj(ii) = loctape_ihop_gcmssp_bibj_ij_iijj_k, key=lockey, kind=isbyte
+                hkey = jj + (ii-1)*BELLI_npts_idw + (ijkey-1)*sNy*sNx*nSy*nSx
+                lockey = iz + (hkey-1)*(Grid%nZ-1)*BELLI_npts_idw*BELLI_npts_range*sNx*sNy*nSx*nSy
+!                + ((jj-1) + ((ii-1) + (ijkey-1)*BELLI_npts_range)*BELLI_npts_idw)*(Grid%nZ-1)
+!$TAF store njj(ii) = loctape_belli_gcmssp_bibj_ij_iijj_k, key=lockey, kind=isbyte
 #endif
     IF ( iz.GE.2 ) THEN
       ! On vlayer iz, at an MITgcm cell center? skip interpolate
-      IF ( (ihop_sumweights(ii, iz-1).GT.0) .AND. &
-           (ihop_idw_weights(ii, jj).EQ.0) ) njj(ii) = IHOP_npts_idw+1
+      IF ( (belli_sumweights(ii, iz-1).GT.0) .AND. &
+           (belli_idw_weights(ii, jj).EQ.0) ) njj(ii) = BELLI_npts_idw+1
 
     ENDIF ! IF ( iz.GE.2 )
 
     IF ( iz.EQ.1 ) THEN
       ! IESCO25: dummy line for dummy TAF
-      ssp1buffer = ihop_ssp(i, j, iz, bi,bj)
-      ! Top ihop vlayer: set to z=0
+      ssp1buffer = belli_ssp(i, j, iz, bi,bj)
+      ! Top belli vlayer: set to z=0
       ssp1buffer = CHEN_MILLERO(i, j, 0, bi,bj,myThid) * &
-        ihop_idw_weights(ii, jj) / ihop_sumweights(ii, iz)
+        belli_idw_weights(ii, jj) / belli_sumweights(ii, iz)
 
     ELSE ! 2,Grid%nZ-1: use MITgcm vlayers
-      ssp1buffer = ihop_ssp(i, j, iz-1, bi,bj)
+      ssp1buffer = belli_ssp(i, j, iz-1, bi,bj)
 
       ! Middle depth layers, only when not already underground
-      IF ( ihop_sumweights(ii, iz-1).GT.0. _d 0 ) THEN
+      IF ( belli_sumweights(ii, iz-1).GT.0. _d 0 ) THEN
         ! Exactly on a cell center, ignore interpolation
-        IF ( ihop_idw_weights(ii, jj).EQ.0. _d 0 ) THEN
+        IF ( belli_idw_weights(ii, jj).EQ.0. _d 0 ) THEN
           ssp1buffer = ssp1buffer - sspTile(iz, ii, bi,bj) 
 
         ! Apply IDW interpolation
-        ELSEIF ( njj(ii).LE.IHOP_npts_idw ) THEN
+        ELSEIF ( njj(ii).LE.BELLI_npts_idw ) THEN
           ssp1buffer = ssp1buffer * &
-            ihop_idw_weights(ii, jj) / ihop_sumweights(ii, iz-1)
+            belli_idw_weights(ii, jj) / belli_sumweights(ii, iz-1)
 
         ELSE
           ! do nothing TAF NEEDS THIS LINE
           ssp1buffer = 0. _d 0
 
-        ENDIF ! IF ( ihop_idw_weights(ii, jj).EQ.0. )
-      ENDIF ! IF ( ihop_sumweights(ii, iz-1).GT.0. )
+        ENDIF ! IF ( belli_idw_weights(ii, jj).EQ.0. )
+      ENDIF ! IF ( belli_sumweights(ii, iz-1).GT.0. )
 
     ENDIF ! IF ( iz.EQ.1 )
 
     sspTile(iz, ii, bi,bj) = sspTile(iz, ii, bi,bj) + ssp1buffer
 
-    ! Bottom ihop vlayer or dry point: Extrapolate through bathymetry
+    ! Bottom belli vlayer or dry point: Extrapolate through bathymetry
     IF ( iz.GE.2 ) THEN
-    IF (iz.EQ.Grid%nZ-1 .OR. ihop_sumweights(ii, iz-1).EQ.0.0) THEN
+    IF (iz.EQ.Grid%nZ-1 .OR. belli_sumweights(ii, iz-1).EQ.0.0) THEN
       k = iz
 
-      IF ( njj(ii).GE.IHOP_npts_idw ) THEN
+      IF ( njj(ii).GE.BELLI_npts_idw ) THEN
         ! Determine if you are at the last vlevel
-        IF ( iz.EQ.Grid%nZ-1 .AND. ihop_sumweights(ii, iz-1).NE.0. ) &
+        IF ( iz.EQ.Grid%nZ-1 .AND. belli_sumweights(ii, iz-1).NE.0. ) &
           k = k + 1
 
         ! Calc depth gradient
@@ -1133,15 +1133,15 @@ USE splinec_mod,  only: splineall
       ELSE
         interp_finished = .FALSE.
 
-      ENDIF ! IF ( njj(ii).GE.IHOP_npts_idw )
+      ENDIF ! IF ( njj(ii).GE.BELLI_npts_idw )
 
-    ENDIF ! IF ( iz.EQ.Grid%nZ-1 .OR. ihop_sumweights(ii, iz-1).EQ.0.0 )
+    ENDIF ! IF ( iz.EQ.Grid%nZ-1 .OR. belli_sumweights(ii, iz-1).EQ.0.0 )
     ENDIF ! IF (iz.GE.2)
 
 
               ENDDO !iz
-            ENDIF ! IF ( ABS(xC(i, j, bi, bj) - ihop_xc(ii, jj)).LE.tolerance .AND. &
-                 ! ABS(yC(i, j, bi, bj) - ihop_yc(ii, jj)).LE.tolerance .AND. &
+            ENDIF ! IF ( ABS(xC(i, j, bi, bj) - belli_xc(ii, jj)).LE.tolerance .AND. &
+                 ! ABS(yC(i, j, bi, bj) - belli_yc(ii, jj)).LE.tolerance .AND. &
                  ! .NOT.interp_finished )
           ENDDO !jj
         ENDDO !ii
@@ -1240,7 +1240,7 @@ END !SUBROUTINE gcmSSP
   INTEGER           :: iz
 
   ! In adjoint mode we do not write output besides on the first run
-  IF ( IHOP_dumpfreq.LT.0 ) RETURN
+  IF ( BELLI_dumpfreq.LT.0 ) RETURN
 
   ! init local vars
   ssptmp = 0.0

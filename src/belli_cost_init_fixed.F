@@ -85,16 +85,16 @@ CBOP
       CALL PRINT_MESSAGE( msgBuf,
      &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
-      JL = ILNBLNK( IHOPObs_Dir )
+      JL = ILNBLNK( bObs_Dir )
       IF (JL.NE.0) THEN
-        WRITE(msgBuf,'(2A)') '  IHOPObs_Dir ',IHOPObs_Dir(1:JL)
+        WRITE(msgBuf,'(2A)') '  bObs_Dir ',bObs_Dir(1:JL)
       ELSE
-        WRITE(msgBuf,'(2A)') '  IHOPObs_Dir ','./'
+        WRITE(msgBuf,'(2A)') '  bObs_Dir ','./'
       ENDIF
       CALL PRINT_MESSAGE( msgBuf,
      &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
-      WRITE(msgBuf,'(A,L5)') '  ihopDoNcOutput ', ihopDoNcOutput
+      WRITE(msgBuf,'(A,L5)') '  belliDoNcOutput ', belliDoNcOutput
       CALL PRINT_MESSAGE( msgBuf,
      &     standardMessageUnit, SQUEEZE_RIGHT, myThid )
       WRITE(msgBuf,'(A)') ' '
@@ -168,7 +168,7 @@ CBOP
 !2 Weight for each belli obs (if missing, assume equal weights):
           weighObs = 1
 
-          err = NF_INQ_VARID( ncid, 'ihop_uncert', varId3 )
+          err = NF_INQ_VARID( ncid, 'belli_uncert', varId3 )
         CALL BELLI_COST_NF_ERROR('init_fixed 7',err,1,1,myThid)
           IF (err.NE.NF_NOERR) THEN
             WRITE(msgBuf,'(2A)')
@@ -217,7 +217,7 @@ CBOP
 
 !4 Create global file for belli model equivalent
           IF (myProcId.EQ.0) THEN
-            JL  = ILNBLNK( IHOPObs_Dir )
+            JL  = ILNBLNK( bObs_Dir )
 
             WRITE(fnameequincglo,'(3A)') IHOPObs_Dir(1:JL),
      &        bObs_File(1:IL),'.equi.nc'
@@ -422,7 +422,7 @@ CBOP
             IF (obsIsInRunTime.EQ.1) THEN
 ! If yes then store obs index position:
               obsNo_valid = obsNo_valid+1
-              ihopObs_ind_glob(num_file,obsNo_valid) = nObs
+              bObs_ind_glob(num_file,obsNo_valid) = nObs
 
             ENDIF !IF (obsIsInRunTime.EQ.1)
 
@@ -457,7 +457,7 @@ CBOP
      &         standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
 ! ====================================================================
-! Initiate tiled defaults for bObs before reading in from netcdf
+! Initiate tiled defaults for belliObs before reading in from netcdf
           DO bj = 1, nSy
             DO bi = 1, nSx
               obsNo_valid = 0
@@ -624,7 +624,7 @@ CBOP
 ! 'Reshape' observed datum to tiled structures
                   IF (obsInTile.EQ.1) THEN
                     obsNo_valid = obsNo_valid+1
-                    ihopObs_ind_glob_tiled(num_file,
+                    bObs_ind_glob_tiled(num_file,
      &               obsNo_valid,bi,bj) = nObs
 
                     ihopObs_time(num_file,obsNo_valid,bi,bj) =
@@ -635,9 +635,9 @@ CBOP
      &                 tmp_uncert2(nObs)
                     ENDIF
 
-                    ihopObs_lon(num_file,obsNo_valid,bi,bj) = lon_cur
-                    ihopObs_lat(num_file,obsNo_valid,bi,bj) = lat_cur
-                    ihopObs_depth(num_file,obsNo_valid,bi,bj) =
+                    bObs_lon(num_file,obsNo_valid,bi,bj) = lon_cur
+                    bObs_lat(num_file,obsNo_valid,bi,bj) = lat_cur
+                    bObs_depth(num_file,obsNo_valid,bi,bj) =
      &               depth_cur
 
                     ihopObs_i_tiled(num_file,obsNo_valid,bi,bj) = 
@@ -662,7 +662,7 @@ CBOP
 
               ENDDO !DO nObs
 
-! Number of valid belli obs in the file
+! Number of valid pkg/belli obs in the file
               obsNo_tiled(num_file,bi,bj) = obsNo_valid
 
               WRITE(msgBuf,'(2(A,I4))')
@@ -678,16 +678,16 @@ CBOP
      &             standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
 !===========================================================
-! Create files for model counterparts to belli obs
+! Create files for model counterparts to pkg/belli obs
 !===========================================================
               IF (obsNo_tiled(num_file,bi,bj).GT.0) THEN
 ! Kludge until unstructered tiles
                 iG=bi+(myXGlobalLo-1)/sNx
                 jG=bj+(myYGlobalLo-1)/sNy
 
-                JL = ILNBLNK( IHOPObs_Dir )
+                JL = ILNBLNK( bObs_Dir )
 ! ALWAYS Write to nc file
-                IF (ihopDoNcOutput) THEN
+                IF (belliDoNcOutput) THEN
                   WRITE(fnameequinc,'(3A,2(I3.3,A))')
      &              IHOPObs_Dir(1:JL),bObs_File(1:IL),
      &              '.',iG,'.',jG,'.equi.nc'
@@ -757,7 +757,7 @@ CBOP
 
                 ELSE
 ! Write to binary files... UNSUPPORTED
-                ENDIF !IF (ihopDoNcOutput)
+                ENDIF !IF (belliDoNcOutput)
 
               ENDIF !IF (obsNo_tiled(num_file,bi,bj).GT.0)
 

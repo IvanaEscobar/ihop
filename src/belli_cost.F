@@ -14,7 +14,7 @@ C !INTERFACE:
       SUBROUTINE BELLI_COST( myTime, myIter, myThid )
 
 C    !DESCRIPTION:
-C    Computes belli data misfit for cost function
+C    Computes pkg/belli data misfit for cost function
 
 C    !USES:
 #if (defined ALLOW_BELLI) && (defined TEST_BELLI_COST)
@@ -176,11 +176,11 @@ C       ENDIF
 C       CALL GLOBAL_SUM_TILE_RL( objf_b_tloc,objf_b_gloc,myThid )
 
        _BEGIN_MASTER( myThid )
-       objf_ihop(num_file) = objf_ihop(num_file) + objf_b_gloc
+       objf_belli(num_file) = objf_belli(num_file) + objf_b_gloc
        _END_MASTER( myThid )
 
        WRITE(msgBuf,'(A,E22.17)') 'QoI sum(C2) global: ', 
-     &                      objf_ihop(num_file)
+     &                      objf_belli(num_file)
        CALL PRINT_MESSAGE( msgBuf,
      &      standardMessageUnit, SQUEEZE_RIGHT, myThid )
 
@@ -194,11 +194,11 @@ C       CALL GLOBAL_SUM_TILE_RL( objf_b_tloc,objf_b_gloc,myThid )
 C File maintenance
         DO bj = 1, nSy
           DO bi = 1, nSx
-            IF ( (ObsNo_tiled(num_file,bi,bj).GT.0) .AND.
-     &           (ihopDoNcOutput) ) THEN
+            IF ( (bObsNo_tiled(num_file,bi,bj).GT.0) .AND.
+     &           (belliDoNcOutput) ) THEN
 C Sync tiled file so data is not lost in buffer
               err = NF_SYNC( ncidFWD(num_file,bi,bj) )
-              CALL BELLI_COST_NF_ERROR('belli_cost 1',err,bi,bj,myThid)
+              CALL BELLI_COST_NF_ERROR('cost 1',err,bi,bj,myThid)
 
             ENDIF
 
@@ -213,10 +213,10 @@ C Sync tiled file so data is not lost in buffer
           DO bi = 1, nSx
 C Open tiled files and read to buffer
             DO iObs = 1, NOBSMAX_BELLI
-              IF (iObs.LE.ObsNo_tiled(num_file,bi,bj)) THEN
+              IF (iObs.LE.bObsNo_tiled(num_file,bi,bj)) THEN
                 belli_modvaltmp = zeroRL
 C IESCO25: dummy +/- of belli_ssp to get TAF TLM to work
-                myssp = ihop_ssp(1,1,1,bi,bj)
+                myssp = belli_ssp(1,1,1,bi,bj)
                 belli_modvaltmp = belli_modvaltmp + myssp
                 belli_modvaltmp = belli_modvaltmp - myssp
 
@@ -224,17 +224,17 @@ C IESCO25: dummy +/- of belli_ssp to get TAF TLM to work
      I              num_file,
      O              belli_modvaltmp, 
      I              iObs,.false., optimcycle, bi, bj, myThid,
-     I              ihop_dummy(num_file,bi,bj) )
+     I              belli_dummy(num_file,bi,bj) )
 
 C Save tiled model equi from buffer, see PROFILES_READVECTOR
 C Combine all threads to global
-                irec = ihopObs_ind_glob_tiled(num_file,iObs,bi,bj)
-C IESCO25: ANOTHER dummy +/- of ihop_ssp to get TAF TLM to work
+                irec = bObs_ind_glob_tiled(num_file,iObs,bi,bj)
+C IESCO25: ANOTHER dummy +/- of belli_ssp to get TAF TLM to work
                 bObs_buff(irec)=bObs_buff(irec)+belli_modvaltmp
      &            + myssp
                 bObs_buff(irec)=bObs_buff(irec)
      &            - myssp
-              ENDIF !IF (iObs.LE.ObsNo_tiled(num_file,bi,bj))
+              ENDIF !IF (iObs.LE.bbObsNo_tiled(num_file,bi,bj))
             ENDDO !DO iObs
 
           ENDDO !DO bj
@@ -249,7 +249,7 @@ C Combine MPI processes
         ENDDO !DO iObs
 
 #ifdef ALLOW_AUTODIFF_TAMC
-C     Not really necessary, but cheap (for small NFILESMAX_BELLI)
+C     Not necessary, but cheap (for small NFILESMAX_BELLI)
 C     and avoids some hidden recomputations.
 CADJ STORE bObs_modval_glob
 CADJ &     = tapelev_belli_cost, key = num_file, kind = isbyte
@@ -259,9 +259,9 @@ CADJ &     = tapelev_belli_cost, key = num_file, kind = isbyte
 C Loop over global obs
           DO iObs = 1, NOBSMAX_BELLI
 CC TAF active var init
-C            ihop_globaldummy(num_file) = 0
+C            belli_globaldummy(num_file) = 0
 C
-            IF (iObs.LE.ObsNo(num_file)) THEN
+            IF (iObs.LE.bObsNo(num_file)) THEN
               belli_modval = zeroRL
 C ESCO Future dev: add time and space averaging here ... see pkg/obsfit
 
@@ -272,14 +272,14 @@ C Write to global netcdf file
               CALL ACTIVE_WRITE_BELLI_GLOB( 
      I             num_file, belli_modval,
      I             iObs, optimcycle, myThid,
-     I             ihop_globaldummy(num_file) )
+     I             belli_globaldummy(num_file) )
 
-            ENDIF !IF (iObs.LE.ObsNo(num_file))
+            ENDIF !IF (iObs.LE.bObsNo(num_file))
 
           ENDDO !DO iObs
 
 #ifdef ALLOW_AUTODIFF_TAMC
-CADJ STORE ihop_globaldummy(num_file)
+CADJ STORE belli_globaldummy(num_file)
 CADJ &     = tapelev_belli_cost, key = num_file, kind = isbyte
 #endif
 
@@ -289,7 +289,7 @@ C Sync global obs
      &         'BELLI_COST: NF_SYNC ncidGLOB',err,0,0,myThid )
 
           DO iObs = 1, NOBSMAX_BELLI
-            IF (iObs.LE.ObsNo(num_file)) THEN
+            IF (iObs.LE.bObsNo(num_file)) THEN
               belli_modval = zeroRL
               b_data   = zeroRL
               b_uncert = zeroRL
@@ -299,7 +299,7 @@ C Read model equivalent from global file
      I             num_file,
      O             belli_modval, 
      I             iObs,.false., optimcycle, myThid,
-     I             ihop_globaldummy(num_file) )
+     I             belli_globaldummy(num_file) )
 
 #ifdef TEST_BELLI_COST_INLOOP
 C Set uncertainty to one
@@ -332,16 +332,16 @@ C Calc misfit or QoI
 #endif /* TEST_BELLI_COST_INLOOP */
 
       write(unit=standardmessageunit,fmt='(A,1x,E30.17,1x,A,I0)') 
-     &'ESCOBAR J=|m-d|^2(t)= ', objf_ihop(num_file), 
-     & 'Obs#', num_ihop(num_file)
-C write(unit=standardmessageunit,fmt='(a,1x,E30.17,1x,a,i0)') 'ESCOBAR dJ_TL(t)=', objf_ihop_tl(num_file), 'Obs#', num_ihop(num_file)
+     &'ESCOBAR J=|m-d|^2(t)= ', objf_belli(num_file), 
+     & 'Obs#', num_belli(num_file)
+C write(unit=standardmessageunit,fmt='(a,1x,E30.17,1x,a,i0)') 'ESCOBAR dJ_TL(t)=', objf_belli_tl(num_file), 'Obs#', num_belli(num_file)
 
 
-                num_ihop(num_file) = num_ihop(num_file) + 1
+                num_belli(num_file) = num_belli(num_file) + 1
 
               ENDIF
 
-            ENDIF !IF (iObs.LE.ObsNo(num_file))
+            ENDIF !IF (iObs.LE.bObsNo(num_file))
           ENDDO !DO iObs
 
         ENDIF !IF (myProcId.EQ.0)

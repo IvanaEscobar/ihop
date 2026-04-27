@@ -40,7 +40,7 @@ C     3-dim.
           DO k=1,Nr
             DO j=1-OLy,sNy+OLy
               DO i=1-OLx,sNx+OLx
-                ihop_ssp(i,j,k,bi,bj) = 0. _d 0
+                belli_ssp(i,j,k,bi,bj) = 0. _d 0
               ENDDO
             ENDDO
           ENDDO
@@ -51,7 +51,7 @@ C     2-dim.
 #ifdef BELLI_2D_STATE
           DO j=1-OLy,sNy+OLy
             DO i=1-OLx,sNx+OLx
-              ihop_sld(i,j,bi,bj) = 0. _d 0
+              belli_sld(i,j,bi,bj) = 0. _d 0
             ENDDO
           ENDDO
 #endif /* BELLI_2D_STATE */

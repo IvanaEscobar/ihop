@@ -79,7 +79,7 @@ CONTAINS
   REAL (KIND=_RL90)  :: ranges
 
   ! In adjoint mode we do not write output besides on the first run
-  IF ( IHOP_dumpfreq.LT.0 ) RETURN
+  IF ( BELLI_dumpfreq.LT.0 ) RETURN
 
   ! *** belli info to PRTFile ***
   CALL openPRTFile( myTime, myIter, myThid )
@@ -244,18 +244,18 @@ CONTAINS
 #endif
 
   ! In adjoint mode we do not write output besides on the first run
-  IF ( IHOP_dumpfreq.LT.0 ) RETURN
+  IF ( BELLI_dumpfreq.LT.0 ) RETURN
 
   ! Open the print file: template from eeboot_minimal.F
 #ifdef BELLI_WRITE_OUT
   IF ( .NOT.usingMPI ) THEN
     WRITE(myProcessStr, '(I10.10)') myIter
     IL=ILNBLNK( myProcessStr )
-    WRITE(fNam,'(4A)') TRIM(IHOP_fileroot),'.',myProcessStr(1:IL),'.prt'
+    WRITE(fNam,'(4A)') TRIM(BELLI_fileroot),'.',myProcessStr(1:IL),'.prt'
     OPEN( PRTFile, FILE=fNam, STATUS='UNKNOWN', IOSTAT=iostat )
     IF ( iostat.NE.0 ) THEN
-      WRITE(*,*) 'belli: IHOP_fileroot not recognized, ', &
-        TRIM(IHOP_fileroot)
+      WRITE(*,*) 'belli: BELLI_fileroot not recognized, ', &
+        TRIM(BELLI_fileroot)
       WRITE(msgBuf,'(A)') 'BELLI_INIT: Unable to recognize file'
       CALL PRINT_ERROR( msgBuf, myThid )
       STOP 'ABNORMAL END: S/R BELLI_INIT'
@@ -265,7 +265,7 @@ CONTAINS
   ELSE ! using MPI
     IF ( myIter.GE.0 ) THEN
       WRITE(fNam,'(2A,I10.10,A)') &
-        TRIM(IHOP_fileroot),'.',myIter,'.prt'
+        TRIM(BELLI_fileroot),'.',myIter,'.prt'
     ELSE
       WRITE(msgBuf,'(A,I)') 'BELLI_INIT: myIter is ', myIter
       CALL PRINT_ERROR( msgBuf, myThid )
@@ -274,8 +274,8 @@ CONTAINS
 
     OPEN(PRTFile, FILE=fNam, STATUS='UNKNOWN', IOSTAT=iostat )
     IF ( iostat.NE.0 ) THEN
-      WRITE(*,*) 'belli: IHOP_fileroot not recognized, ', &
-        TRIM(IHOP_fileroot)
+      WRITE(*,*) 'belli: BELLI_fileroot not recognized, ', &
+        TRIM(BELLI_fileroot)
       WRITE(msgBuf,'(A)') 'BELLI_INIT: Unable to recognize file'
       CALL PRINT_ERROR( msgBuf, myThid )
       STOP 'ABNORMAL END: S/R BELLI_INIT'
@@ -303,10 +303,10 @@ CONTAINS
   CALL PRINT_ERROR( msgBuf,myThid )
   STOP 'ABNORMAL END: S/R openPRTFile'
   Title( 1 :11 ) = 'belli3D - '
-  Title( 12:80 ) = IHOP_title
+  Title( 12:80 ) = BELLI_title
 #else /* not BELLI_THREED */
   Title( 1:9   ) = 'belli - '
-  Title( 10:80 ) = IHOP_title
+  Title( 10:80 ) = BELLI_title
 #endif /* BELLI_THREED */
 
 #ifdef BELLI_WRITE_OUT
@@ -328,7 +328,7 @@ CONTAINS
 # endif /* ALLOW_CAL */
   WRITE(msgbuf,'(A)')
   CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
-  WRITE( msgBuf, '(A,F11.4,A)' ) 'Frequency ', IHOP_freq, ' [Hz]'
+  WRITE( msgBuf, '(A,F11.4,A)' ) 'Frequency ', BELLI_freq, ' [Hz]'
   CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
   WRITE(msgBuf,'(A)') &
   '___________________________________________________________'
@@ -369,7 +369,7 @@ CONTAINS
   BC = IHOP_TopOpt( 2:2 )
 
   ! In adjoint mode we do not write output besides on the first run
-  IF (IHOP_dumpfreq.LT.0) RETURN
+  IF (BELLI_dumpfreq.LT.0) RETURN
 
 #ifdef BELLI_WRITE_OUT
   WRITE(msgBuf,'(A)')
@@ -504,7 +504,7 @@ CONTAINS
 !EOP
 
   ! In adjoint mode we do not write output besides on the first run
-  IF (IHOP_dumpfreq.LT.0) RETURN
+  IF (BELLI_dumpfreq.LT.0) RETURN
 
 #ifdef BELLI_WRITE_OUT
   WRITE(msgBuf,'(A)')
@@ -628,7 +628,7 @@ CONTAINS
 !EOP
 
   ! In adjoint mode we do not write output besides on the first run
-  IF (IHOP_dumpfreq.LT.0) RETURN
+  IF (BELLI_dumpfreq.LT.0) RETURN
 
 #ifdef BELLI_WRITE_OUT
   ! Echo to PRTFile user's choice of boundary condition
@@ -717,7 +717,7 @@ CONTAINS
 !EOP
 
   ! In adjoint mode we do not write output besides on the first run
-  IF (IHOP_dumpfreq.LT.0) RETURN
+  IF (BELLI_dumpfreq.LT.0) RETURN
 
   IF (myIter.GE.0) THEN
     ! add time step to filename
@@ -735,7 +735,7 @@ CONTAINS
     OPEN ( FILE=TRIM( fullName ) // '.ray', UNIT=RAYFile, &
           FORM='FORMATTED' )
     WRITE( RAYFile, '(3A)'    ) '''', Title( 1:50 ), ''''
-    WRITE( RAYFile, '(F10.3)' ) IHOP_freq
+    WRITE( RAYFile, '(F10.3)' ) BELLI_freq
     WRITE( RAYFile, '(3I6)'   ) Pos%nSX, Pos%nSY, Pos%nSZ
     WRITE( RAYFile, '(I5)'    ) Angles%nAlpha
     WRITE( RAYFile, '(F10.4)' ) Bdry%Top%HS%Depth
@@ -756,7 +756,7 @@ CONTAINS
       OPEN ( FILE=TRIM( fullName ) // '.delay', UNIT=DELFile, &
             FORM='FORMATTED' )
       WRITE( DELFile, '(3A)'    ) '''', Title( 1:50 ), ''''
-      WRITE( DELFile, '(F10.3)' ) IHOP_freq
+      WRITE( DELFile, '(F10.3)' ) BELLI_freq
       WRITE( DELFile, '(3I6)'   ) Pos%nSX, Pos%nSY, Pos%nSZ
       WRITE( DELFile, '(I5)'    ) Angles%nAlpha
       WRITE( DELFile, '(F10.4)' ) Bdry%Top%HS%Depth
@@ -783,7 +783,7 @@ CONTAINS
 # else /* BELLI_THREED */
     WRITE( ARRFile, '(A)' ) '''2D'''
 # endif /* BELLI_THREED */
-    WRITE( ARRFile, '(F10.4)' ) IHOP_freq
+    WRITE( ARRFile, '(F10.4)' ) BELLI_freq
 
     ! write source locations
 # ifdef BELLI_THREED
@@ -816,7 +816,7 @@ CONTAINS
     OPEN ( FILE=TRIM( fullName ) // '.ray', UNIT=RAYFile, &
           FORM='FORMATTED' )
     WRITE( RAYFile, '(3A)'    ) '''', Title( 1:50 ), ''''
-    WRITE( RAYFile, '(F10.3)' ) IHOP_freq
+    WRITE( RAYFile, '(F10.3)' ) BELLI_freq
     WRITE( RAYFile, '(3I6)'   ) Pos%nSX, Pos%nSY, Pos%nSZ
     WRITE( RAYFile, '(I5)'    ) Angles%nAlpha
     WRITE( RAYFile, '(F10.4)' ) Bdry%Top%HS%Depth
@@ -836,7 +836,7 @@ CONTAINS
       OPEN ( FILE=TRIM( fullName ) // '.delay', UNIT=DELFile, &
             FORM='FORMATTED' )
       WRITE( DELFile, '(3A)'    ) '''', Title( 1:50 ), ''''
-      WRITE( DELFile, '(F10.3)' ) IHOP_freq
+      WRITE( DELFile, '(F10.3)' ) BELLI_freq
       WRITE( DELFile, '(3I6)'   ) Pos%nSX, Pos%nSY, Pos%nSZ
       WRITE( DELFile, '(I5)'    ) Angles%nAlpha
       WRITE( DELFile, '(F10.4)' ) Bdry%Top%HS%Depth
@@ -865,7 +865,7 @@ CONTAINS
 # else /* BELLI_THREED */
     WRITE( ARRFile, '(A)' ) '''2D'''
 # endif /* BELLI_THREED */
-    WRITE( ARRFile, '(F10.4)' ) IHOP_freq
+    WRITE( ARRFile, '(F10.4)' ) BELLI_freq
 
       ! write source locations
 # ifdef BELLI_THREED
@@ -905,7 +905,7 @@ CONTAINS
 # else /* BELLI_THREED */
     WRITE( ARRFile, '(A)' ) '''2D'''
 # endif /* BELLI_THREED */
-    WRITE( ARRFile, '(F10.4)' ) IHOP_freq
+    WRITE( ARRFile, '(F10.4)' ) BELLI_freq
 
     ! write source locations
 # ifdef BELLI_THREED
@@ -948,7 +948,7 @@ CONTAINS
     END SELECT
 
     CALL WriteSHDHeader( TRIM( fullName ) // '.shd', Title, &
-                        REAL( IHOP_freq ), atten, PlotType )
+                        REAL( BELLI_freq ), atten, PlotType )
 
     END SELECT
 

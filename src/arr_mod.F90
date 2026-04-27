@@ -375,7 +375,7 @@ CONTAINS
 !EOP  
 
   ! In adjoint mode we do not write output besides on the first run
-  IF (IHOP_dumpfreq.LT.0) RETURN
+  IF (BELLI_dumpfreq.LT.0) RETURN
 
 #ifdef BELLI_WRITE_OUT
   WRITE( ARRFile, '(I0)' ) MAXVAL( nArrival( 1:nRR, 1:Nrz ) )

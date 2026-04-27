@@ -41,7 +41,7 @@ C     !LOCAL VARIABLES:
 #endif /* ALLOW_MNC */
 CEOP
 
-      IF ( DIFFERENT_MULTIPLE(IHOP_dumpFreq,myTime,deltaTClock)
+      IF ( DIFFERENT_MULTIPLE(BELLI_dumpFreq,myTime,deltaTClock)
      &  .OR. dumpInitAndLast.AND.( myTime.EQ.endTime .OR.
      &                             myTime.EQ.startTime  )
      &     ) THEN
@@ -76,7 +76,7 @@ C     &       'belli_soundSpeed', belli_ssp, myThid )
           CALL RW_GET_SUFFIX( suff, myTime, myIter, myThid )
         ENDIF
 
-        CALL WRITE_FLD_XYZ_RL('SVEL.',suff,ihop_ssp,myIter,myThid)
+        CALL WRITE_FLD_XYZ_RL('SVEL.',suff,belli_ssp,myIter,myThid)
 
        ENDIF ! IF ( BELLI_MDSIO ) THEN
 

@@ -7,11 +7,11 @@ C !INTERFACE:
       SUBROUTINE BELLI_INIT_FIXED( myThid )
 
 C     !DESCRIPTION:
-C     o initialization for netcdf ihop acoustic domain; pass to f90 code
+C     o initialization for netcdf belli acoustic domain; pass to f90 code
 C     started: Ivana Escobar July-2023
 
 C     !USES:
-      USE ihop_init_mod, only: INIT_FIXED_ENV
+      USE belli_init_mod, only: INIT_FIXED_ENV
       IMPLICIT NONE
 C == Global Variables ==
 #include "EEPARAMS.h"
@@ -44,20 +44,20 @@ C     !LOCAL VARIABLES:
       _RS :: data2vec( BELLI_MAX_NC_SIZE*BELLI_MAX_NC_SIZE )
       _RS :: data3vec( BELLI_MAX_NC_SIZE*BELLI_MAX_NC_SIZE )
       _RL :: data4vec( BELLI_MAX_NC_SIZE*BELLI_MAX_NC_SIZE )
-      CHARACTER*(MAX_LEN_FNAM) :: ihop_file
+      CHARACTER*(MAX_LEN_FNAM) :: b_file
 CEOP
 
 C Only do I/O if in the main thread
        _BEGIN_MASTER( myThid )
 
 C Read NetCDF input: setting the acoustic domain
-      IL  = ILNBLNK( IHOP_interpfile )
+      IL  = ILNBLNK( BELLI_interpfile )
       IF (IL.NE.0) THEN
-          WRITE(ihop_file,'(2A)') ihop_interpfile(1:IL),'.nc'
+          WRITE(b_file,'(2A)') ihop_interpfile(1:IL),'.nc'
       ELSE
-          ihop_file = IHOP_interpfile
+          b_file = BELLI_interpfile
       END IF
-      err = NF_OPEN(ihop_file, NF_NOWRITE, ncid)
+      err = NF_OPEN(b_file, NF_NOWRITE, ncid)
       CALL BELLI_COST_NF_ERROR('INIT_FIXED NF_OPEN',err,1,1,myThid)
       IF (err .NE. NF_NOERR) THEN
         WRITE(msgBuf, '(2A)') 'S/R BELLI_INIT_FIXED: ',
@@ -69,16 +69,16 @@ C Read NetCDF input: setting the acoustic domain
 C Get dimension IDs and lengths
       err = NF_INQ_DIMID( ncid, 'nrange', dimId1 )
       CALL BELLI_COST_NF_ERROR('init_fixed 2',err,1,1,myThid)
-      err = NF_INQ_DIMLEN( ncid, dimId1, IHOP_npts_range )
+      err = NF_INQ_DIMLEN( ncid, dimId1, BELLI_npts_range )
 
       CALL BELLI_COST_NF_ERROR('init_fixed 3',err,1,1,myThid)
       err = NF_INQ_DIMID( ncid, 'nidw', dimId2 )
       CALL BELLI_COST_NF_ERROR('init_fixed 4',err,1,1,myThid)
-      err = NF_INQ_DIMLEN( ncid, dimId2, IHOP_npts_idw )
+      err = NF_INQ_DIMLEN( ncid, dimId2, BELLI_npts_idw )
       CALL BELLI_COST_NF_ERROR('init_fixed 5',err,1,1,myThid)
 
-      IF ( IHOP_npts_range>BELLI_MAX_RANGE .OR.
-     &     IHOP_npts_idw>BELLI_MAX_IDW ) THEN
+      IF ( BELLI_npts_range>BELLI_MAX_RANGE .OR.
+     &     BELLI_npts_idw>BELLI_MAX_IDW ) THEN
         WRITE(msgBuf, '(2A)') 'S/R BELLI_INIT_FIXED: reading dims ',
      &    'NetCDF Dimensions exceed maximum allowable size'
         CALL PRINT_ERROR( msgBuf, myThid )
@@ -86,13 +86,13 @@ C Get dimension IDs and lengths
       ENDIF
 
 C Get data variable IDs
-      err = NF_INQ_VARID( ncid, 'ihop_ranges', varId1 )
+      err = NF_INQ_VARID( ncid, 'belli_ranges', varId1 )
       CALL BELLI_COST_NF_ERROR('init_fixed 6',err,1,1,myThid)
-      err = NF_INQ_VARID( ncid, 'ihop_xc', varId2 )
+      err = NF_INQ_VARID( ncid, 'belli_xc', varId2 )
       CALL BELLI_COST_NF_ERROR('init_fixed 7',err,1,1,myThid)
-      err = NF_INQ_VARID( ncid, 'ihop_yc', varId3 )
+      err = NF_INQ_VARID( ncid, 'belli_yc', varId3 )
       CALL BELLI_COST_NF_ERROR('init_fixed 8',err,1,1,myThid)
-      err = NF_INQ_VARID( ncid, 'ihop_idw_weights', varId4 )
+      err = NF_INQ_VARID( ncid, 'belli_idw_weights', varId4 )
       CALL BELLI_COST_NF_ERROR('init_fixed 9',err,1,1,myThid)
 
       IF (err .NE. NF_NOERR) THEN
@@ -121,12 +121,12 @@ C get data variables
 
 C 'reshape' data variables to 2D arrays
       k=1
-      DO i=1,IHOP_npts_range
-        ihop_ranges(i) = data1vec(i)
-        DO j=1,IHOP_npts_idw
-          ihop_xc(i,j) = data2vec(k)
-          ihop_yc(i,j) = data3vec(k)
-          ihop_idw_weights(i,j) = data4vec(k)
+      DO i=1,BELLI_npts_range
+        belli_ranges(i) = data1vec(i)
+        DO j=1,BELLI_npts_idw
+          belli_xc(i,j) = data2vec(k)
+          belli_yc(i,j) = data3vec(k)
+          belli_idw_weights(i,j) = data4vec(k)
           k = k+1
         END DO
       END DO
@@ -136,7 +136,7 @@ C Close NetCDF file
       CALL BELLI_COST_NF_ERROR('init_fixed14',err,1,1,myThid)
       IF (err.NE.NF_NOERR) THEN
         WRITE(msgBuf, '(3A)') 'S/R BELLI_INIT_FIXED: ',
-     &    'NetCDF ERROR: Cannot close file ', IHOP_interpfile(1:IL)
+     &    'NetCDF ERROR: Cannot close file ', BELLI_interpfile(1:IL)
         CALL PRINT_ERROR( msgBuf, myThid )
         STOP 'ABNORMAL END: S/R BELLI_INIT_FIXED'
       ENDIF
@@ -147,11 +147,11 @@ C Only do I/O if in the main thread
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
       DO k = 1,BELLI_MAX_NC_SIZE !Nr
         DO i=1,BELLI_MAX_RANGE !BELLI_npts_range
-          ihop_sumweights(i,k) = -1.0
+          belli_sumweights(i,k) = -1.0
         END DO
       END DO
 
-C Pass fixed info to f90 ihop domain grid
+C Pass fixed info to f90 belli domain grid
       CALL INIT_FIXED_ENV( myThid )
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 

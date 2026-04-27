@@ -52,10 +52,10 @@ C Initialize tiled cost fxn contributions.
       DO bj = myByLo(myThid), myByHi(myThid)
         DO bi = myBxLo(myThid), myBxHi(myThid)
           DO num_file = 1, NFILESMAX_BELLI
-            ihop_dummy(num_file,bi,bj) = 0. _d 0
+            belli_dummy(num_file,bi,bj) = 0. _d 0
 # ifdef ALLOW_GRDCHK
             IF ( obsNo_tiled(num_file,bi,bj).GT.0 .AND.
-     &           ihopDoNcOutput ) THEN
+     &           belliDoNcOutput ) THEN
 C Sync tiled .equi file so data in buffer is not lost
               err = NF_SYNC( ncidFWD(num_file,bi,bj) )
               CALL BELLI_COST_NF_ERROR(
@@ -81,9 +81,9 @@ C Initialize global cost fxn contributions.
       _BEGIN_MASTER(myThid)
 
       DO num_file = 1, NFILESMAX_BELLI
-        objf_ihop(num_file) = 0. _d 0
-        num_ihop(num_file)  = 0. _d 0
-        ihop_globaldummy(num_file) = 0. _d 0
+        objf_belli(num_file) = 0. _d 0
+        num_belli(num_file)  = 0. _d 0
+        belli_globaldummy(num_file) = 0. _d 0
       ENDDO !DO num_file
 
       _END_MASTER(myThid)

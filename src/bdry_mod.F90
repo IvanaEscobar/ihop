@@ -132,14 +132,14 @@ CONTAINS
   ! Either read from an ATIFile or set +/- infty
   SELECT CASE ( TopATI )
   CASE ( '~', '*' )
-    OPEN( UNIT=ATIFile, FILE=TRIM(IHOP_fileroot) // '.ati', &
+    OPEN( UNIT=ATIFile, FILE=TRIM(BELLI_fileroot) // '.ati', &
           STATUS='OLD', IOSTAT=IOStat, ACTION='READ' )
     IF ( IOSTAT.NE.0 ) THEN
 #ifdef BELLI_WRITE_OUT
       WRITE(msgBuf,'(2A)') 'BDRYMOD initATI', &
         'Unable to open altimetry file'
       ! In adjoint mode we do not write output besides on the first run
-      IF (IHOP_dumpfreq.GE.0) CALL PRINT_ERROR( msgBuf,myThid )
+      IF (BELLI_dumpfreq.GE.0) CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* BELLI_WRITE_OUT */
       STOP 'ABNORMAL END: S/R initATI'
     ENDIF ! IF ( IOSTAT.NE.0 )
@@ -153,7 +153,7 @@ CONTAINS
       WRITE(msgBuf,'(2A)') 'BDRYMOD initATI', &
         'Unknown option for selecting altimetry interpolation'
       ! In adjoint mode we do not write output besides on the first run
-      IF (IHOP_dumpfreq.GE.0) CALL PRINT_ERROR( msgBuf,myThid )
+      IF (BELLI_dumpfreq.GE.0) CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* BELLI_WRITE_OUT */
       STOP 'ABNORMAL END: S/R initATI'
     END SELECT ! atiType( 1:1 )
@@ -168,7 +168,7 @@ CONTAINS
       WRITE(msgBuf,'(2A)') 'BDRYMOD initATI', &
         'Insufficient memory for altimetry data: reduce # ati points'
       ! In adjoint mode we do not write output besides on the first run
-      IF (IHOP_dumpfreq.GE.0) CALL PRINT_ERROR( msgBuf,myThid )
+      IF (BELLI_dumpfreq.GE.0) CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* BELLI_WRITE_OUT */
       STOP 'ABNORMAL END: S/R initATI'
     ENDIF ! IF ( IAllocStat.NE.0 )
@@ -196,7 +196,7 @@ CONTAINS
         WRITE(msgBuf,'(2A)') 'BDRYMOD initATI', &
           'Unknown option for selecting altimetry option'
         ! In adjoint mode we do not write output besides on the first run
-        IF (IHOP_dumpfreq.GE.0) CALL PRINT_ERROR( msgBuf,myThid )
+        IF (BELLI_dumpfreq.GE.0) CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* BELLI_WRITE_OUT */
         STOP 'ABNORMAL END: S/R initATI'
       END SELECT ! atiType( 2:2 )
@@ -206,7 +206,7 @@ CONTAINS
         WRITE(msgBuf,'(2A)') 'BDRYMOD initATI', &
           'Altimetry rises above highest point in the sound speed profile'
         ! In adjoint mode we do not write output besides on the first run
-        IF (IHOP_dumpfreq.GE.0) CALL PRINT_ERROR( msgBuf,myThid )
+        IF (BELLI_dumpfreq.GE.0) CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* BELLI_WRITE_OUT */
         STOP 'ABNORMAL END: S/R initATI'
       ENDIF ! IF ( Top( ii )%x( 2 ) < DepthT )
@@ -224,7 +224,7 @@ CONTAINS
       WRITE(msgBuf,'(2A)') 'BDRYMOD initATI', &
         'Insufficient memory for altimetry data'
       ! In adjoint mode we do not write output besides on the first run
-      IF (IHOP_dumpfreq.GE.0) CALL PRINT_ERROR( msgBuf,myThid )
+      IF (BELLI_dumpfreq.GE.0) CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* BELLI_WRITE_OUT */
       STOP 'ABNORMAL END: S/R initATI'
     ENDIF ! IF ( IAllocStat.NE.0 )
@@ -255,7 +255,7 @@ CONTAINS
     WRITE(msgBuf,'(2A)') 'BDRYMOD initATI', &
       'Altimetry ranges are not monotonically increasing'
     ! In adjoint mode we do not write output besides on the first run
-    IF (IHOP_dumpfreq.GE.0) CALL PRINT_ERROR( msgBuf,myThid )
+    IF (BELLI_dumpfreq.GE.0) CALL PRINT_ERROR( msgBuf,myThid )
 #endif /* BELLI_WRITE_OUT */
     STOP 'ABNORMAL END: S/R initATI'
   ENDIF ! IF ( .NOT.monotonic( x, NAtiPts ) )
@@ -344,14 +344,14 @@ CONTAINS
   ! Either read from an BTYFile or set +/- infty
   SELECT CASE ( BotBTY )
   CASE ( '~', '*' )
-    OPEN( UNIT=BTYFile, FILE=TRIM(IHOP_fileroot) // '.bty', &
+    OPEN( UNIT=BTYFile, FILE=TRIM(BELLI_fileroot) // '.bty', &
           STATUS='OLD', IOSTAT=IOStat, ACTION='READ' )
     IF ( IOSTAT.NE.0 ) THEN
 # ifdef BELLI_WRITE_OUT
       WRITE(msgBuf,'(2A)') 'BDRYMOD initBTY: ', &
         'Unable to open bathymetry file'
       ! In adjoint mode we do not write output besides on the first run
-      IF (IHOP_dumpfreq.GE.0) CALL PRINT_ERROR( msgBuf,myThid )
+      IF (BELLI_dumpfreq.GE.0) CALL PRINT_ERROR( msgBuf,myThid )
 # endif /* BELLI_WRITE_OUT */
       STOP 'ABNORMAL END: S/R initBTY'
     ENDIF ! IF ( IOSTAT.NE.0 )
@@ -365,7 +365,7 @@ CONTAINS
       WRITE(msgBuf,'(2A)') 'BDRYMOD initBTY: ', &
         'Unknown option for selecting bathymetry interpolation'
       ! In adjoint mode we do not write output besides on the first run
-      IF (IHOP_dumpfreq.GE.0) CALL PRINT_ERROR( msgBuf,myThid )
+      IF (BELLI_dumpfreq.GE.0) CALL PRINT_ERROR( msgBuf,myThid )
 # endif /* BELLI_WRITE_OUT */
       STOP 'ABNORMAL END: S/R initBTY'
     END SELECT ! btyType( 1:1 )
@@ -380,7 +380,7 @@ CONTAINS
       WRITE(msgBuf,'(2A)') 'BDRYMOD initBTY: ', &
         'Insufficient memory for bathymetry data: reduce # bty points'
       ! In adjoint mode we do not write output besides on the first run
-      IF (IHOP_dumpfreq.GE.0) CALL PRINT_ERROR( msgBuf,myThid )
+      IF (BELLI_dumpfreq.GE.0) CALL PRINT_ERROR( msgBuf,myThid )
 # endif /* BELLI_WRITE_OUT */
       STOP 'ABNORMAL END: S/R initBTY'
     ENDIF ! IF ( IAllocStat.NE.0 )
@@ -393,7 +393,7 @@ CONTAINS
       WRITE(msgBuf,'(2A)') 'BDRYMOD initBTY: ', &
         'Unknown option for selecting bathymetry interpolation'
       ! In adjoint mode we do not write output besides on the first run
-      IF (IHOP_dumpfreq.GE.0) CALL PRINT_ERROR( msgBuf,myThid )
+      IF (BELLI_dumpfreq.GE.0) CALL PRINT_ERROR( msgBuf,myThid )
 # endif /* BELLI_WRITE_OUT */
       STOP 'ABNORMAL END: S/R initBTY'
     END SELECT ! btyType( 2:2 )
@@ -439,7 +439,7 @@ CONTAINS
             'belli and gcm bathymetry vary, belli:', Bot(ii)%x(2), &
             'gcm:', gcmmax
           ! In adjoint mode we do not write output besides on first run
-          IF (IHOP_dumpfreq.GE.0) &
+          IF (BELLI_dumpfreq.GE.0) &
             CALL PRINT_MESSAGE(msgBuf, errorMessageUnit, &
                                 SQUEEZE_RIGHT, myThid)
         ENDIF
@@ -455,7 +455,7 @@ CONTAINS
         WRITE(msgBuf,'(2A)') 'BDRYMOD initBTY: ', &
           'Unknown option for selecting bathymetry interpolation'
         ! In adjoint mode we do not write output besides on first run
-        IF (IHOP_dumpfreq.GE.0) CALL PRINT_ERROR( msgBuf,myThid )
+        IF (BELLI_dumpfreq.GE.0) CALL PRINT_ERROR( msgBuf,myThid )
 # endif /* BELLI_WRITE_OUT */
         STOP 'ABNORMAL END: S/R initBTY'
       END SELECT ! btyType( 2:2 )
@@ -465,7 +465,7 @@ CONTAINS
         WRITE(msgBuf,'(2A)') 'BDRYMOD initBTY: ', &
           'Bathymetry drops below lowest point in the sound speed profile'
         ! In adjoint mode we do not write output besides on first run
-        IF (IHOP_dumpfreq.GE.0) CALL PRINT_ERROR( msgBuf,myThid )
+        IF (BELLI_dumpfreq.GE.0) CALL PRINT_ERROR( msgBuf,myThid )
 # endif /* BELLI_WRITE_OUT */
           STOP 'ABNORMAL END: S/R initBTY'
       ENDIF ! IF ( Bot( ii )%x( 2 ).GT.DepthB )
@@ -482,7 +482,7 @@ CONTAINS
       WRITE(msgBuf,'(2A)') 'BDRYMOD initBTY: ', &
         'Insufficient memory for bathymetry data'
       ! In adjoint mode we do not write output besides on first run
-      IF (IHOP_dumpfreq.GE.0) CALL PRINT_ERROR( msgBuf,myThid )
+      IF (BELLI_dumpfreq.GE.0) CALL PRINT_ERROR( msgBuf,myThid )
 #  endif /* BELLI_WRITE_OUT */
       STOP 'ABNORMAL END: S/R initBTY'
     ENDIF ! IF ( IAllocStat.NE.0 )
@@ -511,7 +511,7 @@ CONTAINS
     WRITE(msgBuf,'(2A)') 'BDRYMOD initBTY: ', &
       'Bathymetry ranges are not monotonically increasing'
     ! In adjoint mode we do not write output besides on first run
-    IF (IHOP_dumpfreq.GE.0) CALL PRINT_ERROR( msgBuf,myThid )
+    IF (BELLI_dumpfreq.GE.0) CALL PRINT_ERROR( msgBuf,myThid )
 # endif /* BELLI_WRITE_OUT */
     STOP 'ABNORMAL END: S/R initBTY'
   ENDIF ! IF ( .NOT.monotonic( x, NBtyPts ) )
@@ -731,7 +731,7 @@ CONTAINS
   ELSE
 #ifdef BELLI_WRITE_OUT
     ! In adjoint mode we do not write output besides on the first run
-    IF (IHOP_dumpfreq.GE.0) THEN
+    IF (BELLI_dumpfreq.GE.0) THEN
       WRITE(msgBuf,'(A,F10.4)') 'r = ', r
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
       WRITE(msgBuf,'(A,F10.4)') 'rLeft  = ', Top( 1       )%x( 1 )
@@ -782,7 +782,7 @@ CONTAINS
   ELSE
 #ifdef BELLI_WRITE_OUT
     ! In adjoint mode we do not write output besides on the first run
-    IF (IHOP_dumpfreq.GE.0) THEN
+    IF (BELLI_dumpfreq.GE.0) THEN
       WRITE(msgBuf,'(A,F10.4)') 'r = ', r
       CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
       WRITE(msgBuf,'(A,F10.4)') 'rLeft  = ', Bot( 1       )%x( 1 )
@@ -894,9 +894,9 @@ CONTAINS
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 
     IF (BotTop.EQ.'Top') THEN
-      WRITE(msgBuf,'(3A)') '  ATIFile = ', TRIM( IHOP_fileroot ), '.ati'
+      WRITE(msgBuf,'(3A)') '  ATIFile = ', TRIM( BELLI_fileroot ), '.ati'
     ELSE ! 'Bot'
-      WRITE(msgBuf,'(3A)') '  BTYFile = ', TRIM( IHOP_fileroot ), '.bty'
+      WRITE(msgBuf,'(3A)') '  BTYFile = ', TRIM( BELLI_fileroot ), '.bty'
     ENDIF
     CALL PRINT_MESSAGE( msgbuf, PRTFile, SQUEEZE_RIGHT, myThid )
 

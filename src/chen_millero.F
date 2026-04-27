@@ -68,7 +68,7 @@ C initiate local variables
       temp = 0. _d 0
 
 C pressure in dbar (for SW_TEMP)
-C     let k=0 define the surface, a required level for ihop
+C     let k=0 define the surface, a required level for belli
       IF (k.EQ.0) THEN
        temp = SW_TEMP( SALT(i,j,1,bi,bj),
      &          THETA(i,j,1,bi,bj), pres, zeroRL )

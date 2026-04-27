@@ -70,11 +70,11 @@ C     !LOCAL VARIABLES:
       _RL      active_data_t
       REAL*8   vec_tmp(2)
 
-      IF (ihopDoNcOutput) THEN
+      IF (belliDoNcOutput) THEN
         vec_start = irec
         vec_count = 1
 
-        err = NF_INQ_VARID( fid, ihop_nameequi, varId )
+        err = NF_INQ_VARID( fid, belli_nameequi, varId )
         CALL BELLI_COST_NF_ERROR('act_file_c 1',err,bi,bj,myThid)
 
       ENDIF
@@ -87,7 +87,7 @@ C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
 
         _BEGIN_MASTER( myThid )
 
-        IF (ihopDoNcOutput) THEN
+        IF (belliDoNcOutput) THEN
           err = NF_GET_VARA_DOUBLE( fid, varId, 
      &          vec_start, vec_count, active_var )
           CALL BELLI_COST_NF_ERROR('act_file_c 2',err,bi,bj,myThid)
@@ -113,7 +113,7 @@ C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
 
         _BEGIN_MASTER( myThid )
 
-        IF (ihopDoNcOutput) THEN
+        IF (belliDoNcOutput) THEN
           err = NF_GET_VARA_DOUBLE( fid, varId, 
      &          vec_start, vec_count, active_data_t )
           CALL BELLI_COST_NF_ERROR('act_file_c 3',err,bi,bj,myThid)
@@ -163,7 +163,7 @@ C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
 
         _BEGIN_MASTER( myThid )
 
-        IF (ihopDoNcOutput) THEN
+        IF (belliDoNcOutput) THEN
           err = NF_GET_VARA_DOUBLE( fid, varId,
      &          vec_start, vec_count, active_var )
           CALL BELLI_COST_NF_ERROR('act_file_c 5',err,bi,bj,myThid)
@@ -241,11 +241,11 @@ C     !LOCAL VARIABLES:
       _RL      active_data_t
       REAL*8   vec_tmp(2)
 
-      IF (ihopDoNcOutput) THEN
+      IF (belliDoNcOutput) THEN
         vec_start = irec
         vec_count = 1
 
-        err = NF_INQ_VARID( fid, ihop_nameequi, varId1 )
+        err = NF_INQ_VARID( fid, belli_nameequi, varId1 )
         CALL BELLI_COST_NF_ERROR('act_file_c 6',err,bi,bj,myThid)
 
       ENDIF
@@ -259,12 +259,12 @@ C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
 
         _BEGIN_MASTER( myThid )
 
-        IF (ihopDoNcOutput) THEN
+        IF (belliDoNcOutput) THEN
           err = NF_PUT_VARA_DOUBLE( fid, varId1, 
      &          vec_start, vec_count, active_var )
           CALL BELLI_COST_NF_ERROR('act_file_c 7',err,bi,bj,myThid)
 
-          err = NF_INQ_VARID( fid, 'ihopObs_ind_glob_tiled', varId2 )
+          err = NF_INQ_VARID( fid, 'bObs_ind_glob_tiled', varId2 )
           CALL BELLI_COST_NF_ERROR('act_file_c 8',err,bi,bj,myThid)
           err = NF_PUT_VAR1_INT( fid, varId2, vec_start, irecglob )
           CALL BELLI_COST_NF_ERROR('act_file_c 9',err,bi,bj,myThid)
@@ -292,7 +292,7 @@ C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
 
         _BEGIN_MASTER( myThid )
 
-        IF (ihopDoNcOutput) THEN
+        IF (belliDoNcOutput) THEN
           err = NF_GET_VARA_DOUBLE( fid, varId1,
      &          vec_start, vec_count, active_data_t )
           CALL BELLI_COST_NF_ERROR('act_file_c10',err,bi,bj,myThid)
@@ -336,7 +336,7 @@ C     >>>>>>>>>>>>>>>>>>>             <<<<<<<<<<<<<<<<<<<
 
         _BEGIN_MASTER( myThid )
 
-        IF (ihopDoNcOutput) THEN
+        IF (belliDoNcOutput) THEN
           err = NF_PUT_VARA_DOUBLE( fid, varId1,
      &          vec_start, vec_count, active_var )
           CALL BELLI_COST_NF_ERROR('act_file_c12',err,bi,bj,myThid)
@@ -413,11 +413,11 @@ C     !LOCAL VARIABLES:
       _RL      active_data_t
       REAL*8   vec_tmp(2)
 
-      IF (ihopDoNcOutput) THEN
+      IF (belliDoNcOutput) THEN
         vec_start = irecglob
         vec_count = 1
 
-        err = NF_INQ_VARID( fid, ihop_nameequi, varId )
+        err = NF_INQ_VARID( fid, belli_nameequi, varId )
         CALL BELLI_COST_NF_ERROR('act_file_c13',err,1,1,myThid)
 
       ENDIF
@@ -538,11 +538,11 @@ C     !LOCAL VARIABLES:
       _RL      active_data_t
       REAL*8   vec_tmp(2)
 
-      IF (ihopDoNcOutput) THEN
+      IF (belliDoNcOutput) THEN
         vec_start = irecglob
         vec_count = 1
 
-        err = NF_INQ_VARID( fid, ihop_nameequi, varId )
+        err = NF_INQ_VARID( fid, belli_nameequi, varId )
         CALL BELLI_COST_NF_ERROR('act_file_c18',err,1,1,myThid)
 
       ENDIF

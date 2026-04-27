@@ -7,7 +7,7 @@ MODULE belli_mod
 !   Ivana Escobar
 ! </CONTACT>
 ! !DESCRIPTION:
-! Defines modules used in belli
+! Defines F90 scoped variables in pkg/belli
 
 ! !USES:
   IMPLICIT NONE

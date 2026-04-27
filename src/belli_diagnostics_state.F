@@ -36,11 +36,11 @@ CEOP
 
 #ifdef BELLI_3D_STATE
 C sound speed [m/s]
-       CALL DIAGNOSTICS_FILL( ihop_ssp,'SVEL    ',
+       CALL DIAGNOSTICS_FILL( belli_ssp,'SVEL    ',
      &                        0, Nr, 0, 1, 1, myThid )
 #endif /* BELLI_3D_STATE */
 C sonic layer depth [m]
-       CALL DIAGNOSTICS_FILL( ihop_sld,'SLD     ',
+       CALL DIAGNOSTICS_FILL( belli_sld,'SLD     ',
      &                        0, 1, 1, 1, 1, myThid )
       ENDIF
 #endif /* ALLOW_DIAGNOSTICS */
