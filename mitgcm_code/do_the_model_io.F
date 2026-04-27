@@ -71,7 +71,7 @@ C       |-- MATRIX_OUTPUT
 C       |
 C       |-- GCHEM_OUTPUT
 C       |
-C       |-- IHOP_OUTPUT
+C       |-- BELLI_OUTPUT
 C       |
 C       |-- CPL_OUTPUT
 C       |
@@ -254,10 +254,10 @@ C--   Do GCHEM diagnostics.
      & CALL GCHEM_OUTPUT( myTime, myIter, myThid )
 #endif
 
-#ifdef ALLOW_IHOP
-C--   Do IHOP diagnostics.
-      IF (useIHOP)
-     & CALL IHOP_OUTPUT( myTime, myIter, myThid )
+#ifdef ALLOW_BELLI
+C--   Do BELLI diagnostics.
+      IF (useBELLI)
+     & CALL BELLI_OUTPUT( myTime, myIter, myThid )
 #endif
 
 #ifdef ALLOW_OFFLINE

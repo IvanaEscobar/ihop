@@ -1,4 +1,4 @@
-#include "IHOP_OPTIONS.h"
+#include "BELLI_OPTIONS.h"
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 !BOP
 !MODULE: atten_mod
@@ -11,16 +11,16 @@ MODULE atten_mod
 !  Includes a formula for volume attenuation
 
 ! !USES:
-#ifdef IHOP_WRITE_OUT
-  USE ihop_mod, only: PRTFile
+#ifdef BELLI_WRITE_OUT
+  USE belli_mod, only: PRTFile
 #endif
   IMPLICIT NONE
 ! == Global variables ==
 #include "SIZE.h"
 #include "EEPARAMS.h"
 #include "PARAMS.h"
-#include "IHOP_SIZE.h"
-#include "IHOP.h"
+#include "BELLI_SIZE.h"
+#include "BELLI.h"
 
 ! !SCOPE: 
   PRIVATE
@@ -99,7 +99,7 @@ CONTAINS
 ! freq0 is the reference frequency for which the dB/meter was specified
 !  (used only for 'm')
 
-  afreq = 2.0 * PI * IHOP_freq
+  afreq = 2.0 * PI * BELLI_freq
 
   !  Convert to Nepers/m
   alphaT = 0.0
@@ -110,20 +110,20 @@ CONTAINS
     alphaT = alpha / 8.6858896D0
   CASE ( 'm' )   ! dB/m with power law
     alphaT = alpha / 8.6858896D0
-    IF ( IHOP_freq.LT.fT ) THEN   ! frequency raised to the power beta
-      alphaT = alphaT * ( IHOP_freq / IHOP_freq ) ** beta
+    IF ( BELLI_freq.LT.fT ) THEN   ! frequency raised to the power beta
+      alphaT = alphaT * ( BELLI_freq / BELLI_freq ) ** beta
     ELSE                    ! linear in frequency
-      alphaT = alphaT * ( IHOP_freq / IHOP_freq ) * &
-                ( fT / IHOP_freq ) ** ( beta - 1 )
+      alphaT = alphaT * ( BELLI_freq / BELLI_freq ) * &
+                ( fT / BELLI_freq ) ** ( beta - 1 )
    ENDIF
 
   CASE ( 'F' )   ! dB/(m kHz)
-    alphaT = alpha * IHOP_freq / 8685.8896D0
+    alphaT = alpha * BELLI_freq / 8685.8896D0
   CASE ( 'W' )   ! dB/wavelength
-    IF ( c.NE.0.0 ) alphaT = alpha * IHOP_freq / ( 8.6858896D0 * c )
+    IF ( c.NE.0.0 ) alphaT = alpha * BELLI_freq / ( 8.6858896D0 * c )
    !        The following lines give f^1.25 frequency dependence
-   !        FAC = SQRT( SQRT( IHOP_freq / 50.0 ) )
-   !        IF ( c /= 0.0 ) alphaT=FAC*alpha*IHOP_freq / ( 8.6858896D0*c )
+   !        FAC = SQRT( SQRT( BELLI_freq / 50.0 ) )
+   !        IF ( c /= 0.0 ) alphaT=FAC*alpha*BELLI_freq / ( 8.6858896D0*c )
   CASE ( 'Q' )   ! Quality factor
     IF ( c * alpha.NE.0.0 ) alphaT = afreq / ( 2.0 * c * alpha )
   CASE ( 'L' )   ! loss parameter
@@ -137,7 +137,7 @@ CONTAINS
   ! volume attenuation
   SELECT CASE ( AttenUnit( 2:2 ) )
   CASE ( 'T' )
-    f2 = ( IHOP_freq / 1000.0 ) ** 2
+    f2 = ( BELLI_freq / 1000.0 ) ** 2
 
     ! Original formula from Thorp 1967
     ! Thorp = 40.0 * f2 / ( 4100.0+f2 ) + 0.1 * f2 / ( 1.0+f2 )! dB/kyard
@@ -150,7 +150,7 @@ CONTAINS
     alphaT = alphaT + Thorp
 
   CASE ( 'F' )   ! Francois-Garrison
-    FG     = Franc_Garr( IHOP_freq / 1000 )   ! dB/km
+    FG     = Franc_Garr( BELLI_freq / 1000 )   ! dB/km
     FG     = FG / 8685.8896              ! Nepers / m
     alphaT = alphaT + FG
 
@@ -158,7 +158,7 @@ CONTAINS
     DO iBio = 1, NBioLayers
       IF ( z.GE.bio( iBio )%Z1 .AND. z.LE.bio( iBio )%Z2 ) THEN
         a = bio( iBio )%a0 / ( ( 1.0-bio( iBio )%f0**2 &
-               / IHOP_freq**2  )**2 &
+               / BELLI_freq**2  )**2 &
                + 1.0 / bio( iBio )%Q**2 ) ! dB/km
         a = a / 8685.8896              ! Nepers / m
         alphaT = alphaT + a
@@ -176,9 +176,9 @@ CONTAINS
   CRCI   = CMPLX( c, alphaT, KIND=_RL90 )
 
   IF ( alphaT.GT.c ) THEN
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
     ! In adjoint mode we do not write output besides on the first run
-    IF (IHOP_dumpfreq.LT.0) THEN
+    IF (BELLI_dumpfreq.LT.0) THEN
       WRITE( PRTFile, * ) 'Complex sound speed: ', CRCI
       WRITE( PRTFile, '(2A)' ) 'Usually this means you have an attenuation',&
         'that is way too high'
@@ -186,7 +186,7 @@ CONTAINS
 
     WRITE(errorMessageUnit,'(2A)') 'ATTENMOD CRCI: complex sound speed',&
       'has an imaginary part > real part'
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
     STOP 'ABNORMAL END: S/R CRCI'
   ENDIF ! IF ( alphaT.GT.c )
 

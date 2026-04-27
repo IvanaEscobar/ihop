@@ -1,0 +1,212 @@
+!     *==========================================================*
+!     | SUBROUTINE WRITERAYOUTPUT  is passive                    |
+!     *==========================================================*
+!$TAF SUBROUTINE writeray::writerayoutput INPUT   = 1, 2, 3, 4, 5, 6
+!$TAF SUBROUTINE writeray::writerayoutput OUTPUT  =
+!$TAF SUBROUTINE writeray::writerayoutput MODULE belli_mod INPUT = rad2deg, srcdeclangle
+!$TAF SUBROUTINE writeray::writerayoutput MODULE bdry_mod INPUT = bdry
+
+!     *==========================================================*
+!     | SUBROUTINE WRITEARRIVALSACSII  is passive                |
+!     | SUBROUTINE WRITEARRVIALSBINARY is passive                |
+!     | SUBROUTINE OPENOUTPUTFILES     is passive                |
+!     *==========================================================*
+!$TAF SUBROUTINE arr_mod::writearrivalsascii INPUT   = 1, 2, 3, 4
+!$TAF SUBROUTINE arr_mod::writearrivalsascii OUTPUT  =
+
+!$TAF SUBROUTINE arr_mod::writearrivalsbinary INPUT   = 1, 2, 3, 4
+!$TAF SUBROUTINE arr_mod::writearrivalsbinary OUTPUT  =
+
+!$TAF SUBROUTINE belli_init_diag::initprtfile INPUT   = 1, 2, 3
+!$TAF SUBROUTINE belli_init_diag::initprtfile OUTPUT  =
+!$TAF SUBROUTINE belli_init_diag::openPRTfile INPUT   = 1, 2, 3
+!$TAF SUBROUTINE belli_init_diag::openPRTfile OUTPUT  =
+!$TAF SUBROUTINE belli_init_diag::openOutputFiles INPUT   = 1, 2, 3, 4
+!$TAF SUBROUTINE belli_init_diag::openOutputFiles OUTPUT  =
+
+!     *==========================================================*
+!     | SUBROUTINE READSSP  is passive                           |
+!     | SUBROUTINE WRITESSP is passive                           |
+!     *==========================================================*
+!$TAF SUBROUTINE ssp_mod::readssp INPUT   = 1, 2
+!$TAF SUBROUTINE ssp_mod::readssp OUTPUT  =
+!!$TAF SUBROUTINE ssp_mod::readssp MODULE atten_mod INPUT = CRCI
+
+!$TAF SUBROUTINE ssp_mod::writessp INPUT   = 1
+!$TAF SUBROUTINE ssp_mod::writessp OUTPUT  =
+!$TAF SUBROUTINE ssp_mod::writessp MODULE belli_mod INPUT = PRTFile
+!$TAF SUBROUTINE ssp_mod::writessp MODULE ssp_mod INPUT = SSP
+
+!     *==========================================================*
+!     | SUBROUTINE READPAT  is passive                           |
+!     *==========================================================*
+!$TAF SUBROUTINE beampat::readpat INPUT   = 1
+!$TAF SUBROUTINE beampat::readpat OUTPUT  =
+!$TAF SUBROUTINE beampat::readpat MODULE beampat OUTPUT  = SrcBmPat
+
+!     *==========================================================*
+!     | SUBROUTINE READREFLECTIONCOEFFICIENT  is passive         |
+!     | SUBROUTINE WRITEREFCOEF               is passive         |
+!     *==========================================================*
+!$TAF SUBROUTINE refcoef::readreflectioncoefficient INPUT   = 1, 2, 3
+!$TAF SUBROUTINE refcoef::readreflectioncoefficient OUTPUT  =
+!$TAF SUBROUTINE refcoef::readreflectioncoefficient MODULE refCoef OUTPUT = NBotPts,NTopPts
+!$TAF SUBROUTINE refcoef::readreflectioncoefficient MODULE refCoef OUTPUT = NkTab
+!$TAF SUBROUTINE refcoef::readreflectioncoefficient MODULE refCoef OUTPUT = iTab,xTab,fTab,gTab
+!$TAF SUBROUTINE refcoef::readreflectioncoefficient MODULE refCoef OUTPUT = RBot,RTop
+!$TAF SUBROUTINE refcoef::writerefcoef INPUT   = 1
+!$TAF SUBROUTINE refcoef::writerefcoef OUTPUT  =
+!$TAF SUBROUTINE refcoef::writerefcoef MODULE bdry_mod INPUT = Bdry
+
+!     *==========================================================*
+!     | SUBROUTINE INITATI  is passive                           |
+!     | SUBROUTINE INITBTY  is passive                           |
+!     *==========================================================*
+!$TAF SUBROUTINE bdry_mod::initati INPUT   = 1, 2, 3
+!$TAF SUBROUTINE bdry_mod::initati OUTPUT  =
+!$TAF SUBROUTINE bdry_mod::initati MODULE bdry_mod OUTPUT  = top
+
+!$TAF SUBROUTINE bdry_mod::initbty INPUT   = 1, 2, 3
+!$TAF SUBROUTINE bdry_mod::initbty OUTPUT  =
+!$TAF SUBROUTINE bdry_mod::initbty MODULE bdry_mod OUTPUT  = bot
+
+!     *==========================================================*
+!     | PROCEDURE SORT  is passive                               |
+!     |     SUBROUTINE SORT_SNGL  is passive                     |
+!     |     SUBROUTINE SORT_DBLE  is passive                     |
+!     |     SUBROUTINE SORT_CMPLX is passive                     |
+!     *==========================================================*
+!$TAF SUBROUTINE sort_mod::sort_sngl INPUT   = 1, 2
+!$TAF SUBROUTINE sort_mod::sort_sngl OUTPUT  =
+
+!$TAF SUBROUTINE sort_mod::sort_dble INPUT   = 1, 2
+!$TAF SUBROUTINE sort_mod::sort_dble OUTPUT  =
+
+!$TAF SUBROUTINE sort_mod::sort_cmplx INPUT   = 1, 2
+!$TAF SUBROUTINE sort_mod::sort_cmplx OUTPUT  =
+
+!     *==========================================================*
+!     | SUBROUTINE READVECTOR  is passive                        |
+!     | SUBROUTINE READFREQVEC is passive                        |
+!     *==========================================================*
+!$TAF SUBROUTINE srpos_mod::readvector INPUT   = 1, 2, 3, 4, 5
+!$TAF SUBROUTINE srpos_mod::readvector OUTPUT  =    2
+!$TAF SUBROUTINE srpos_mod::readvector DEPEND  = 1
+!$TAF SUBROUTINE srpos_mod::readvector MODULE sort_mod INPUT = sort
+!$TAF SUBROUTINE srpos_mod::readvector MODULE subtab_mod INPUT = subtab
+
+!$TAF SUBROUTINE srpos_mod::readfreqvec INPUT   = 1, 2
+!$TAF SUBROUTINE srpos_mod::readfreqvec OUTPUT  =
+!$TAF SUBROUTINE srpos_mod::readfreqvec MODULE subtab_mod INPUT = subtab
+
+!================================================================*
+!     *======================= COST FXN =========================*
+!================================================================*
+
+!     *==========================================================*
+!     | SUBROUTINE BELLI_COST_READ_OBS  is passive                |
+!     *==========================================================*
+!$TAF SUBROUTINE  belli_cost_read_obs   INPUT  =  1,2,3, 5
+!$TAF SUBROUTINE  belli_cost_read_obs   DEPEND =  1,2,3
+!$TAF SUBROUTINE  belli_cost_read_obs   OUTPUT =        4
+
+!     *==========================================================*
+!     | SUBROUTINE ACTIVE_READ_BELLI_TILE is passive              |
+!     *==========================================================*
+!$TAF SUBROUTINE active_read_belli_tile FTLNAME = g_active_read_belli_tile
+!$TAF SUBROUTINE active_read_belli_tile ADNAME  = adactive_read_belli_tile
+!$TAF SUBROUTINE active_read_belli_tile INPUT   = 1, 3,4,5,6,7,8,9
+!$TAF SUBROUTINE active_read_belli_tile OUTPUT  =   2
+!$TAF SUBROUTINE active_read_belli_tile ACTIVE  =   2
+!$TAF SUBROUTINE active_read_belli_tile DEPEND  = 1, 3,4,5,6,7,8
+
+!     *==========================================================*
+!     | SUBROUTINE ACTIVE_WRITE_BELLI_TILE is passive             |
+!     *==========================================================*
+!$TAF SUBROUTINE active_write_belli_tile FTLNAME = g_active_write_belli_tile
+!$TAF SUBROUTINE active_write_belli_tile ADNAME  = adactive_write_belli_tile
+!$TAF SUBROUTINE active_write_belli_tile INPUT   = 1,2,3,4,5,6,7,8
+!$TAF SUBROUTINE active_write_belli_tile OUTPUT  =               8
+!$TAF SUBROUTINE active_write_belli_tile ACTIVE  =   2,          8
+!$TAF SUBROUTINE active_write_belli_tile DEPEND  = 1,  3,4,5,6,7
+
+!     *==========================================================*
+!     | SUBROUTINE ACTIVE_READ_BELLI_GLOB is passive              |
+!     *==========================================================*
+!$TAF SUBROUTINE active_read_belli_glob FTLNAME = g_active_read_belli_glob
+!$TAF SUBROUTINE active_read_belli_glob ADNAME  = adactive_read_belli_glob
+!$TAF SUBROUTINE active_read_belli_glob INPUT   = 1, 3,4,5,6,7
+!$TAF SUBROUTINE active_read_belli_glob OUTPUT  =   2
+!$TAF SUBROUTINE active_read_belli_glob ACTIVE  =   2
+!$TAF SUBROUTINE active_read_belli_glob DEPEND  = 1, 3,4,5,6
+
+!     *==========================================================*
+!     | SUBROUTINE ACTIVE_WRITE_BELLI_GLOB is passive             |
+!     *==========================================================*
+!$TAF SUBROUTINE active_write_belli_glob FTLNAME = g_active_write_belli_glob
+!$TAF SUBROUTINE active_write_belli_glob ADNAME  = adactive_write_belli_glob
+!$TAF SUBROUTINE active_write_belli_glob INPUT   = 1,2,3,4,5,6
+!$TAF SUBROUTINE active_write_belli_glob OUTPUT  =           6
+!$TAF SUBROUTINE active_write_belli_glob ACTIVE  =   2,      6
+!$TAF SUBROUTINE active_write_belli_glob DEPEND  = 1,  3,4,5
+
+!     *==========================================================*
+!     | NetCDF functions that are passive                        |
+!     *==========================================================*
+!$TAF FUNCTION NF_OPEN                INPUT = 1,2,3
+!$TAF FUNCTION NF_CLOSE               INPUT = 1
+!$TAF FUNCTION NF_SYNC                INPUT = 1
+!$TAF FUNCTION NF_STRERROR            INPUT = 1
+!$TAF FUNCTION NF_INQ_VARID           INPUT = 1,2,3
+!$TAF FUNCTION NF_PUT_VARA_DOUBLE     INPUT = 1,2,3,4,5
+!$TAF SUBROUTINE BELLI_COST_NF_ERROR   INPUT = 1,2,3,4,5
+!$TAF SUBROUTINE BELLI_COST_NC_CLOSE   INPUT = 1
+
+!     *==========================================================*
+!     | MPI functions that are passive                           |
+!     *==========================================================*
+!$TAF FUNCTION MPI_barrier                  FTLNAME = MPI_barrier
+!$TAF FUNCTION MPI_barrier                  ADNAME  = MPI_barrier
+!$TAF FUNCTION MPI_barrier                  INPUT   = 1,2
+!$TAF FUNCTION MPI_barrier                  OUTPUT  =
+!$TAF FUNCTION MPI_barrier                  ACTIVE  =
+!$TAF FUNCTION MPI_barrier                  DEPEND  = 1,2
+
+!$TAF FUNCTION MPI_bcast                    FTLNAME = MPI_bcast
+!$TAF FUNCTION MPI_bcast                    ADNAME  = MPI_bcast
+!$TAF FUNCTION MPI_bcast                    INPUT   = 1,2,3,4,5,6
+!$TAF FUNCTION MPI_bcast                    OUTPUT  = 1
+!$TAF FUNCTION MPI_bcast                    ACTIVE  = 1,  3
+!$TAF FUNCTION MPI_bcast                    DEPEND  =   2,3,4,5,6
+!!!$TAF FUNCTION MPI_Type_free                FTLNAME = MPI_Type_free
+!!!$TAF FUNCTION MPI_Type_free                ADNAME  = MPI_Type_free
+!!$TAF FUNCTION MPI_Type_free                INPUT   = 1,2
+!!!$TAF FUNCTION MPI_Type_free                OUTPUT  =
+!!$TAF FUNCTION MPI_Type_free                ACTIVE  = 
+!!!$TAF FUNCTION MPI_Type_free                DEPEND  =   2
+!!!$TAF FUNCTION MPI_Type_commit              FTLNAME = MPI_Type_commit
+!!!$TAF FUNCTION MPI_Type_commit              ADNAME  = MPI_Type_commit
+!!$TAF FUNCTION MPI_Type_commit              INPUT   = 1,2
+!!!$TAF FUNCTION MPI_Type_commit              OUTPUT  =
+!!$TAF FUNCTION MPI_Type_commit              ACTIVE  =
+!!!$TAF FUNCTION MPI_Type_commit              DEPEND  =   2
+
+!!$TAF FUNCTION MPI_get_address              FTLNAME = MPI_get_address
+!!$TAF FUNCTION MPI_get_address              ADNAME  = MPI_get_address
+!!$TAF FUNCTION MPI_get_address              INPUT   = 1,2,3
+!!$TAF FUNCTION MPI_get_address              OUTPUT  =   2
+!!$TAF FUNCTION MPI_get_address              ACTIVE  = 1
+!!$TAF FUNCTION MPI_get_address              DEPEND  =   2,3
+!!!$TAF FUNCTION MPI_Type_create_struct       FTLNAME = MPI_Type_create_struct
+!!!$TAF FUNCTION MPI_Type_create_struct       ADNAME  = MPI_Type_create_struct
+!!$TAF FUNCTION MPI_Type_create_struct       INPUT   = 1,2,3,4,5,6
+!!$TAF FUNCTION MPI_Type_create_struct       OUTPUT  =         5
+!!!$TAF FUNCTION MPI_Type_create_struct       ACTIVE  =         5
+!!!$TAF FUNCTION MPI_Type_create_struct       DEPEND  = 1,2,3,4,  6
+
+!!$TAF SUBROUTINE belli_mod::ray2dpttypeinit    FTLNAME = ray2dptytypeinit
+!!$TAF SUBROUTINE belli_mod::ray2dpttypeinit    ADNAME  = ray2dptytypeinit
+!!$TAF SUBROUTINE belli_mod::ray2dpttypeinit    INPUT   = 1,2,3,4
+!!$TAF SUBROUTINE belli_mod::ray2dpttypeinit    OUTPUT  =     3,4
+!!$TAF SUBROUTINE belli_mod::ray2dpttypeinit    ACTIVE  = 1,2,3,4
+!!$TAF SUBROUTINE belli_mod::ray2dpttypeinit    DEPEND  = 1,2

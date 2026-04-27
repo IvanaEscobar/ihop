@@ -1,4 +1,4 @@
-#include "IHOP_OPTIONS.h"
+#include "BELLI_OPTIONS.h"
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 !BOP
 !MODULE: writeRay
@@ -22,8 +22,8 @@ MODULE writeRay
 #include "EEPARAMS.h"
 #include "EESUPPORT.h"
 #include "PARAMS.h"
-#include "IHOP_SIZE.h"
-#include "IHOP.h"
+#include "BELLI_SIZE.h"
+#include "BELLI.h"
 
 ! !SCOPE: 
   PRIVATE
@@ -53,7 +53,7 @@ CONTAINS
   ! Assuming col2 is always depth
 
   ! !USES:
-  USE ihop_mod, only: rad2deg, SrcDeclAngle
+  USE belli_mod, only: rad2deg, SrcDeclAngle
   USE bdry_mod, only: Bdry
 
 ! !INPUT PARAMETERS:
@@ -73,7 +73,7 @@ CONTAINS
 !EOP
 
   ! In adjoint mode we do not write output besides on the first run
-  IF (IHOP_dumpfreq.LT.0) RETURN
+  IF (BELLI_dumpfreq.LT.0) RETURN
 
   ! compression: don't print reflection points
   N2    = 1
@@ -101,14 +101,14 @@ CONTAINS
   END DO Stepping
 
   ! write to output file
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
   WRITE( fUnit, '(F12.6)' ) SNGL( SrcDeclAngle )
   WRITE( fUnit, '(3I10)' ) N2, tBnc, bBnc
 
   DO is = 1, N2
     WRITE( fUnit, '(2G16.10)' ) col1(is), col2(is) 
   END DO
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
 
   RETURN
   END SUBROUTINE ! WriteRayOutput

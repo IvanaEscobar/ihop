@@ -47,7 +47,7 @@ C       |-- PTRACERS_CHECK
 C       |
 C       |-- GCHEM_CHECK
 C       |
-C       |-- IHOP_CHECK
+C       |-- BELLI_CHECK
 C       |
 C       |-- OFFLINE_CHECK
 C       |
@@ -328,10 +328,10 @@ C---  Continue with standard packages (with standard usePKG flag)
       IF ( useGCHEM ) CALL PACKAGES_ERROR_MSG( 'GCHEM', ' ', myThid )
 #endif
 
-#ifdef ALLOW_IHOP
-      IF ( useIHOP ) CALL IHOP_CHECK( myThid )
+#ifdef ALLOW_BELLI
+      IF ( useBELLI ) CALL BELLI_CHECK( myThid )
 #else
-      IF ( useIHOP ) CALL PACKAGES_ERROR_MSG( 'IHOP', ' ', myThid )
+      IF ( useBELLI ) CALL PACKAGES_ERROR_MSG( 'BELLI', ' ', myThid )
 #endif
 
 #ifndef ALLOW_RBCS

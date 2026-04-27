@@ -56,7 +56,7 @@ C     involves many new dependencies that we would like to avoid in general.
 C   Only relevant within DEPTH_CONTROL code:
 # define USE_SMOOTH_MIN
 #endif /* ALLOW_DEPTH_CONTROL */
-C try these for pkg/ihop
+C try these for pkg/belli
 #define USE_SMOOTH_MIN
 
 C       >>> Generic Control.

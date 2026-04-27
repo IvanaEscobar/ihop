@@ -1,4 +1,4 @@
-#include "IHOP_OPTIONS.h"
+#include "BELLI_OPTIONS.h"
 !---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 !BOP
 !MODULE: refCoef
@@ -15,15 +15,15 @@ MODULE refCoef
 ! **************************************************************************** !
 
 ! !USES:
-  USE ihop_mod,   only: PRTFile, BRCFile, TRCFile, IRCFile
+  USE belli_mod,   only: PRTFile, BRCFile, TRCFile, IRCFile
   IMPLICIT NONE
 ! == Global variables ==
 #include "SIZE.h"
 #include "EEPARAMS.h"
 #include "PARAMS.h"
 #include "GRID.h"
-#include "IHOP_SIZE.h"
-#include "IHOP.h"
+#include "BELLI_SIZE.h"
+#include "BELLI.h"
 
 ! !SCOPE: 
   PRIVATE
@@ -95,14 +95,14 @@ CONTAINS
 
   ! == read any Reflection Coefficients ==
   IF ( BotRC.EQ.'F' ) THEN
-    OPEN( FIlE=TRIM( IHOP_fileroot )//'.brc', UNIT=BRCFile, STATUS='OLD',&
+    OPEN( FIlE=TRIM( BELLI_fileroot )//'.brc', UNIT=BRCFile, STATUS='OLD',&
           IOSTAT=IOStat, ACTION='READ', ACCESS='direct', RECL=100 )
     IF ( IOStat.NE.0 ) THEN
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
       WRITE(msgBuf,'(2A)')'REFCOEF ReadReflectionCoeffcient: ',&
         'Unable to open Bottom Reflection Coefficient file'
       CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
       STOP 'ABNORMAL END: S/R ReadReflectionCoefficient'
     ENDIF
 
@@ -111,11 +111,11 @@ CONTAINS
 
     ALLOCATE( RBot( NBotPts ), Stat=IAllocStat )
     IF ( IAllocStat.NE.0 ) THEN
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
       WRITE(msgBuf,'(2A)') 'REFCOEF ReadReflectionCoeffcient: ', &
         'Insufficient memory for bot. refl. coef.: reduce # points'
       CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
       STOP 'ABNORMAL END: S/R ReadReflectionCoefficient'
     ENDIF
 
@@ -140,14 +140,14 @@ CONTAINS
 
   ! Optionally read in top reflection coefficient
   IF ( TopRC.EQ.'F' ) THEN
-    OPEN( FIlE=TRIM( IHOP_fileroot )//'.trc', UNIT=TRCFile, STATUS='OLD',&
+    OPEN( FIlE=TRIM( BELLI_fileroot )//'.trc', UNIT=TRCFile, STATUS='OLD',&
           IOSTAT=IOStat, ACTION='READ', ACCESS='direct', RECL=100 )
     IF ( IOStat.NE.0 ) THEN
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
       WRITE(msgBuf,'(2A)') 'REFCOEF ReadReflectionCoeffcient: ', &
         'Unable to open Top Reflection Coefficient file'
       CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
       STOP 'ABNORMAL END: S/R ReadReflectionCoefficient'
     ENDIF
 
@@ -156,11 +156,11 @@ CONTAINS
 
     ALLOCATE( RTop( NTopPts ), Stat=IAllocStat )
     IF ( IAllocStat.NE.0 ) THEN
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
       WRITE(msgBuf,'(2A)') 'REFCOEF ReadReflectionCoeffcient: ', &
         'Insufficient memory for top refl. coef.: reduce # points'
       CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
       STOP 'ABNORMAL END: S/R ReadReflectionCoefficient'
     ENDIF
 
@@ -186,14 +186,14 @@ CONTAINS
 
   ! Optionally read in internal reflection coefficient data
   IF ( BotRC.EQ.'P' ) THEN
-    OPEN( FIlE=TRIM( IHOP_fileroot )//'.irc', UNIT=TRCFile, STATUS='OLD',&
+    OPEN( FIlE=TRIM( BELLI_fileroot )//'.irc', UNIT=TRCFile, STATUS='OLD',&
           IOSTAT=IOStat, ACTION='READ', ACCESS='direct', RECL=100 )
     IF ( IOStat.NE.0 ) THEN
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
       WRITE(msgBuf,'(2A)') 'REFCOEF ReadReflectionCoeffcient: ', &
         'Unable to open Internal Reflection Coefficient file'
       CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
       STOP 'ABNORMAL END: S/R ReadReflectionCoefficient'
     ENDIF
 
@@ -205,11 +205,11 @@ CONTAINS
     ALLOCATE( xTab( NkTab ), fTab( NkTab ), gTab( NkTab ), iTab( NkTab ), &
               Stat=IAllocStat )
     IF ( IAllocStat.NE.0 ) THEN
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
       WRITE(msgBuf,'(2A)') 'REFCOEF ReadReflectionCoeffcient: ', &
         'Too many points in reflection coefficient'
       CALL PRINT_ERROR( msgBuf,myThid )
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
       STOP 'ABNORMAL END: S/R ReadReflectionCoefficient'
     ENDIF
 
@@ -272,15 +272,15 @@ CONTAINS
     !iRight = 2
     RInt%R   = 0.0     ! R( iLeft  )%R
     RInt%phi = 0.0     ! R( iLeft  )%phi
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
     ! In adjoint mode we do not write output besides on the first run
-    IF ( IHOP_dumpfreq.GE.0 ) THEN
+    IF ( BELLI_dumpfreq.GE.0 ) THEN
     WRITE( PRTFile, '(2A)' ) 'Warning in InterpolateReflectionCoefficient : ',&
       'Ref. Coef. being set to 0 outside tabulated domain'
     WRITE( PRTFile, * ) 'angle = ', thetaIntr, 'lower limit = ', &
       R( iLeft )%theta
     ENDIF
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
 
   ELSEIF ( thetaIntr.GT.R( iRight )%theta ) THEN
     !iLeft = NPts - 1
@@ -435,13 +435,13 @@ CONTAINS
   ! I/O on main thread only
   _BEGIN_MASTER(myThid)
 
-#ifdef IHOP_WRITE_OUT
+#ifdef BELLI_WRITE_OUT
   IF ( BotRC.EQ.'F' ) THEN
     WRITE( PRTFile,'(A)' ) &
       '__________________________________________________________________________'
     WRITE( PRTFile,'(A)' )
     WRITE( PRTFile,'(A)' ) 'Using tabulated bottom reflection coef.'
-    WRITE( PRTFile,'(2A)' ) 'BRCFile=', TRIM( IHOP_fileroot )//'.brc'
+    WRITE( PRTFile,'(2A)' ) 'BRCFile=', TRIM( BELLI_fileroot )//'.brc'
 
     WRITE( PRTFile,'(2A,I10)' ) 'Number of points in bottom reflection ', &
       'coefficient = ', NBotPts
@@ -452,7 +452,7 @@ CONTAINS
       '__________________________________________________________________________'
     WRITE( PRTFile,'(A)' )
     WRITE( PRTFile,'(A)' ) 'Using tabulated top reflection coef.'
-    WRITE( PRTFile,'(2A)' ) 'TRCFile=', TRIM( IHOP_fileroot )//'.trc'
+    WRITE( PRTFile,'(2A)' ) 'TRCFile=', TRIM( BELLI_fileroot )//'.trc'
 
     WRITE( PRTFile,'(2A,I10)' ) 'Number of points in top reflection ', &
       'coefficient = ', NTopPts
@@ -464,7 +464,7 @@ CONTAINS
     WRITE( PRTFile, '(2A,I10)' ) 'Number of points in internal reflection ', &
       'coefficient = ', NkTab
   ENDIF
-#endif /* IHOP_WRITE_OUT */
+#endif /* BELLI_WRITE_OUT */
 
   ! I/O on main thread only
   _END_MASTER(myThid)

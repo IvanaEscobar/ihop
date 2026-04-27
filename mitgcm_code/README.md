@@ -1,1 +1,1 @@
-MITgcm code modifications outside of `pkg/ihop` _required_ to run with `pkg/ihop`
+MITgcm code modifications outside of `pkg/belli` _required_ to run with `pkg/belli`

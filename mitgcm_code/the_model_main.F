@@ -790,12 +790,12 @@ C       Close all open NetCDF files
       ENDIF
 #endif /* ALLOW_OBSFIT */
 
-#ifdef ALLOW_IHOP
-      IF ( useIHOP ) THEN
+#ifdef ALLOW_BELLI
+      IF ( useBELLI ) THEN
 C       Close all open NetCDF files
-        CALL IHOP_COST_NC_CLOSE( myThid )
+        CALL BELLI_COST_NC_CLOSE( myThid )
       ENDIF
-#endif /* ALLOW_IHOP */
+#endif /* ALLOW_BELLI */
 
 C--   This timer encompasses the whole code
       CALL TIMER_STOP ('ALL                    [THE_MODEL_MAIN]',myThid)
