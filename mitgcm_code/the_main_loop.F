@@ -30,8 +30,8 @@
 #ifdef ALLOW_BLING
 # include "BLING_OPTIONS.h"
 #endif
-#ifdef ALLOW_IHOP
-# include "IHOP_OPTIONS.h"
+#ifdef ALLOW_BELLI
+# include "BELLI_OPTIONS.h"
 #endif
 #ifdef ALLOW_EXF
 # include "EXF_OPTIONS.h"
@@ -211,11 +211,11 @@ C-- keep tamc.h here without ALLOW_AUTODIFF_TAMC for ALLOW_TAMC_CHECKPOINTING
 #   include "OBSFIT_SIZE.h"
 #   include "OBSFIT.h"
 #  endif
-#  ifdef ALLOW_IHOP
-#   include "IHOP_SIZE.h"
-#   include "IHOP.h"
+#  ifdef ALLOW_BELLI
+#   include "BELLI_SIZE.h"
+#   include "BELLI.h"
 #   ifdef ALLOW_COST
-#    include "IHOP_COST.h"
+#    include "BELLI_COST.h"
 #   endif
 #  endif
 #  ifdef ALLOW_ECCO
@@ -375,8 +375,8 @@ CADJ STORE r_low_si                 = tapelev_init, key=1
 CADJ STORE co2atmos = tapelev_init, key = 1
 CADJ STORE alpha    = tapelev_init, key = 1
 # endif
-!# ifdef ALLOW_IHOP
-!!!ADJ STORE IHOP vars here to tapelev_init (?)
+!# ifdef ALLOW_BELLI
+!!!ADJ STORE BELLI vars here to tapelev_init (?)
 !# endif
 #endif
 
@@ -531,10 +531,10 @@ CADJ INIT comlev1_bibj_k_ptracers = COMMON,
 CADJ &    nchklev_1*nSx*nSy*PTRACERS_num*Nr
 #   endif /* ALLOW_PTRACERS */
 c--
-!#   ifdef ALLOW_IHOP
+!#   ifdef ALLOW_BELLI
 !! for ssp_mod>gcmSSP; make local?
-!!$TAF INIT comlev1_bibj_ij_ihop = COMMON, nchklev_1*nSx*nSy*(2*OLy+sNy)*(2*OLx+sNx)
-!#   endif /* ALLOW_IHOP */
+!!$TAF INIT comlev1_bibj_ij_belli = COMMON, nchklev_1*nSx*nSy*(2*OLy+sNy)*(2*OLx+sNx)
+!#   endif /* ALLOW_BELLI */
 c--
 #   ifdef ALLOW_MOM_COMMON
 #   ifndef AUTODIFF_DISABLE_LEITH
@@ -718,17 +718,17 @@ c--     Accumulate in-situ time averages of theta, salt, and SSH.
       ENDIF
 #endif /* ALLOW_OBSFIT */
 
-#ifdef ALLOW_IHOP
-      IF (useIHOP) THEN
+#ifdef ALLOW_BELLI
+      IF (useBELLI) THEN
 #ifdef ALLOW_DEBUG
-        IF (debugMode) CALL DEBUG_CALL('IHOP_COST_INLOOP',myThid)
+        IF (debugMode) CALL DEBUG_CALL('BELLI_COST_INLOOP',myThid)
 #endif
 c--     Accumulate in-situ acoutsic travel times.
-        CALL TIMER_START('IHOP_COST_INLOOP   [MAIN_DO_LOOP]', myThid)
-        CALL IHOP_COST_INLOOP( myTime, myIter, myThid )
-        CALL TIMER_STOP ('IHOP_COST_INLOOP   [MAIN_DO_LOOP]', myThid)
+        CALL TIMER_START('BELLI_COST_INLOOP   [MAIN_DO_LOOP]', myThid)
+        CALL BELLI_COST_INLOOP( myTime, myIter, myThid )
+        CALL TIMER_STOP ('BELLI_COST_INLOOP   [MAIN_DO_LOOP]', myThid)
       ENDIF
-#endif /* ALLOW_IHOP */
+#endif /* ALLOW_BELLI */
 
       CALL TIMER_START('MAIN_DO_LOOP        [THE_MAIN_LOOP]', myThid)
       CALL MAIN_DO_LOOP( iloop, myTime, myIter, myThid )
@@ -797,18 +797,18 @@ c--   Compute all obsfit cost function contributions.
       ENDIF
 #endif /* ALLOW_OBSFIT */
 
-#ifdef ALLOW_IHOP
-      IF ( useIHOP ) THEN
+#ifdef ALLOW_BELLI
+      IF ( useBELLI ) THEN
 c--   Accumulate travel times
-        CALL TIMER_START('IHOP_COST_INLOOP    [THE_MAIN_LOOP]', myThid)
-        CALL IHOP_COST_INLOOP( endtime, myIter, myThid )
-        CALL TIMER_STOP ('IHOP_COST_INLOOP    [THE_MAIN_LOOP]', myThid)
-c--   Compute all ihop cost function contributions.
-        CALL TIMER_START('IHOP_COST   [THE_MAIN_LOOP]', myThid)
-        CALL IHOP_COST( myTime, myIter, myThid )
-        CALL TIMER_STOP ('IHOP_COST   [THE_MAIN_LOOP]', myThid)
+        CALL TIMER_START('BELLI_COST_INLOOP    [THE_MAIN_LOOP]', myThid)
+        CALL BELLI_COST_INLOOP( endtime, myIter, myThid )
+        CALL TIMER_STOP ('BELLI_COST_INLOOP    [THE_MAIN_LOOP]', myThid)
+c--   Compute all belli cost function contributions.
+        CALL TIMER_START('BELLI_COST   [THE_MAIN_LOOP]', myThid)
+        CALL BELLI_COST( myTime, myIter, myThid )
+        CALL TIMER_STOP ('BELLI_COST   [THE_MAIN_LOOP]', myThid)
       ENDIF
-#endif /* ALLOW_IHOP */
+#endif /* ALLOW_BELLI */
 
 #ifdef ALLOW_ECCO
       IF ( useECCO ) THEN

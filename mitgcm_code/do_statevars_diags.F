@@ -121,11 +121,11 @@ C                    and stagger/synchronous TimeStep
        ENDIF
 #endif /* ALLOW_MYPACKAGE */
 
-#ifdef ALLOW_IHOP
-       IF ( seqFlag.EQ.0 .AND. useIHOP ) THEN
-         CALL IHOP_DIAGNOSTICS_STATE( myTime, myIter, myThid )
+#ifdef ALLOW_BELLI
+       IF ( seqFlag.EQ.0 .AND. useBELLI ) THEN
+         CALL BELLI_DIAGNOSTICS_STATE( myTime, myIter, myThid )
        ENDIF
-#endif /* ALLOW_IHOP */
+#endif /* ALLOW_BELLI */
 
       ENDIf
 #endif /* ALLOW_DIAGNOSTICS */

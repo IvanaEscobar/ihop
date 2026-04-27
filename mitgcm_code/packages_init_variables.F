@@ -70,7 +70,7 @@ C       |-- LONGSTEP_INIT_VARIA
 C       |
 C       |-- GCHEM_INIT_VARI
 C       |
-C       |-- IHOP_INIT_VARIA
+C       |-- BELLI_INIT_VARIA
 C       |
 C       |-- RBCS_INIT_VARIA
 C       |
@@ -351,12 +351,12 @@ C--   Initialise float position
       ENDIF
 #endif /* ALLOW_GCHEM */
 
-C--   Initialize pkg/ihop
-#ifdef ALLOW_IHOP
-      IF (useIHOP) THEN
-        CALL IHOP_INIT_VARIA( myThid )
+C--   Initialize pkg/belli
+#ifdef ALLOW_BELLI
+      IF (useBELLI) THEN
+        CALL BELLI_INIT_VARIA( myThid )
       ENDIF
-#endif /* ALLOW_IHOP */
+#endif /* ALLOW_BELLI */
 
 #ifdef ALLOW_RBCS
       IF ( useRBCS ) THEN
@@ -593,14 +593,14 @@ C--   Initialise pkg/obsfit
       ENDIF
 #endif /* ALLOW_OBSFIT */
 
-C--   Initialize pkg/ihop cost
-#ifdef ALLOW_IHOP
+C--   Initialize pkg/belli cost
+#ifdef ALLOW_BELLI
 # ifdef ALLOW_COST
-      IF (useIHOP) THEN
-        CALL IHOP_COST_INIT_VARIA( myThid )
+      IF (useBELLI) THEN
+        CALL BELLI_COST_INIT_VARIA( myThid )
       ENDIF
 # endif /* ALLOW_COST */
-#endif /* ALLOW_IHOP */
+#endif /* ALLOW_BELLI */
 
 C--   Initialise pkg/ecco (and related pkgs components)
 #ifdef ALLOW_ECCO

@@ -70,8 +70,8 @@ C       |-- PROFILES_INIT_FIXED
 C       |
 C       |-- OBSFIT_INIT_FIXED
 C       |
-C       |-- IHOP_INIT_FIXED
-C       |   |- IHOP_COST_INIT_FIXED
+C       |-- BELLI_INIT_FIXED
+C       |   |- BELLI_COST_INIT_FIXED
 C       |
 C       |-- FLT_INIT_FIXED
 C       |
@@ -397,17 +397,17 @@ C--   provide the weight files.
       ENDIF
 #endif
 
-#ifdef ALLOW_IHOP
-      IF (useIHOP) THEN
+#ifdef ALLOW_BELLI
+      IF (useBELLI) THEN
 # ifdef ALLOW_DEBUG
-        IF (debugMode) CALL DEBUG_CALL('IHOP_INIT_FIXED',myThid)
+        IF (debugMode) CALL DEBUG_CALL('BELLI_INIT_FIXED',myThid)
 # endif
-        CALL IHOP_INIT_FIXED(myThid)
+        CALL BELLI_INIT_FIXED(myThid)
 # ifdef ALLOW_COST
 #  ifdef ALLOW_DEBUG
-        IF (debugMode) CALL DEBUG_CALL('IHOP_COST_INIT_FIXED',myThid)
+        IF (debugMode) CALL DEBUG_CALL('BELLI_COST_INIT_FIXED',myThid)
 #  endif
-        CALL IHOP_COST_INIT_FIXED(myThid)
+        CALL BELLI_COST_INIT_FIXED(myThid)
 # endif
       ENDIF
 #endif

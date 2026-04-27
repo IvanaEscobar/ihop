@@ -96,7 +96,7 @@ C     &          useOBSFIT,
      &          useRunClock,
      &          useEMBED_FILES,
      &          useMYPACKAGE,
-     &          useIHOP
+     &          useBELLI
 
       _BEGIN_MASTER(myThid)
 
@@ -163,7 +163,7 @@ C      useOBSFIT       =.FALSE.
       useRunClock     =.FALSE.
       useEMBED_FILES  =.FALSE.
       useMYPACKAGE    =.FALSE.
-      useIHOP         =.FALSE.
+      useBELLI         =.FALSE.
 
 C-    Adjust default to account for pkgs without run-time On/Off switch
 #ifdef ALLOW_AUTODIFF
@@ -229,7 +229,7 @@ C      ENDIF
 C      IF (useOBSFIT) useCAL = .TRUE.
       IF (useECCO) useCAL = .TRUE.
 # ifdef ALLOW_COST
-      IF (useIHOP) useCAL = .TRUE.
+      IF (useBELLI) useCAL = .TRUE.
 # endif
 #endif
 
@@ -363,8 +363,8 @@ C----- pkgs with a standard "usePKG" On/Off switch in "data.pkg":
 #ifdef ALLOW_GCHEM
       CALL PACKAGES_PRINT_MSG( useGCHEM,      'GCHEM',       ' ' )
 #endif
-#ifdef ALLOW_IHOP
-      CALL PACKAGES_PRINT_MSG( useIHOP,       'IHOP',       ' ' )
+#ifdef ALLOW_BELLI
+      CALL PACKAGES_PRINT_MSG( useBELLI,       'BELLI',       ' ' )
 #endif
 #ifdef ALLOW_RBCS
       CALL PACKAGES_PRINT_MSG( useRBCS,       'RBCS',        ' ' )

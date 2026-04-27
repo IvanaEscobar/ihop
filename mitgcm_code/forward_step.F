@@ -37,8 +37,8 @@
 #ifdef ALLOW_BLING
 # include "BLING_OPTIONS.h"
 #endif
-#ifdef ALLOW_IHOP
-# include "IHOP_OPTIONS.h"
+#ifdef ALLOW_BELLI
+# include "BELLI_OPTIONS.h"
 #endif
 #ifdef ALLOW_EXF
 # include "EXF_OPTIONS.h"
@@ -213,7 +213,7 @@ C       |-- LONGSTEP_THERMODYNAMICS
 C       |
 C       |-- GCHEM_FORCING_SEP
 C       |
-C       ?IHOP HERE FOR NOW?
+C       ?BELLI HERE FOR NOW?
 C       |
 C       |-- DO_FIELDS_BLOCKING_EXCHANGES
 C       |
@@ -332,9 +332,9 @@ C     == Global variables ==
 #  include "BLING_VARS.h"
 #  include "BLING_LOAD.h"
 # endif
-# ifdef ALLOW_IHOP
-#  include "IHOP_SIZE.h"
-#  include "IHOP.h"
+# ifdef ALLOW_BELLI
+#  include "BELLI_SIZE.h"
+#  include "BELLI.h"
 # endif
 # ifdef ALLOW_OBCS
 #  include "OBCS_PARAMS.h"
@@ -1116,15 +1116,15 @@ CADJ STORE pTracer     = comlev1, key = ikey_dynamics, kind = isbyte
 # endif
 #endif
 
-#ifdef ALLOW_IHOP
+#ifdef ALLOW_BELLI
 C--   Acoustical physics
-      IF ( useIHOP ) THEN
-       CALL IHOP_SOUND_SPEED( myThid )
-       CALL TIMER_START('IHOP_DRIVER           [FORWARD_STEP]',myThid)
-       CALL IHOP_DRIVER( myTime,myIter,myThid )
-       CALL TIMER_STOP ('IHOP_DRIVER           [FORWARD_STEP]',myThid)
+      IF ( useBELLI ) THEN
+       CALL BELLI_SOUND_SPEED( myThid )
+       CALL TIMER_START('BELLI_DRIVER           [FORWARD_STEP]',myThid)
+       CALL BELLI_DRIVER( myTime,myIter,myThid )
+       CALL TIMER_STOP ('BELLI_DRIVER           [FORWARD_STEP]',myThid)
       ENDIF
-#endif /* ALLOW_IHOP */
+#endif /* ALLOW_BELLI */
 
 #ifdef ALLOW_DIAGNOSTICS
       IF ( useDiagnostics ) THEN
